@@ -1,0 +1,166 @@
+{% extends 'TICKETIT_MAIN.html' %}
+
+
+{% block title %} AMBIENTES DISPONIBLES DE LOS SISTEMAS WEB {% endblock %}
+
+{% block body %}
+
+
+<div class="row">
+    <div class="col-lg-1">
+        <a href="http://104.237.140/TICKETIT/public/auto/login/{{username}}" type="button" class="btn btn-primary btnBack"><i
+                class="material-icons">arrow_back</i></a>
+        <!-- <a href="http://45.33.4.28/TICKETIT/public/admin/dashboard" type="button" class="btn btn-info btnBack"><i class="material-icons">arrow_back</i></a> -->
+    </div>
+
+    <div class="col-lg-12">
+
+        <input type="hidden" id="user_id" value="{{id}}">
+        <input type="hidden" id="user_name" value="{{username}}">
+
+        <div class="card card-table comman-shadow shadow-lg">
+            <div class="card-body">
+                <div class="row align-items-center">
+                    <div class="col">
+                        <h3 class="page-title">AMBIENTES DISPONIBLES DE LOS SISTEMAS WEB</h3>
+                    </div>
+                </div>
+                <br>
+
+                <div class="row">
+                    <div class="table-responsive">
+                        <table id="envSistemas" class="table table-hover table-center table-bordered table-striped"
+                            style="width:100%">
+                            <thead class="thead-light">
+                                <tr>
+                                    <th class="text-center">#</th>
+                                    <th class="text-center">Sistema</th>
+                                    <th class="text-center">Descripcion</th>
+                                    <th class="text-center">Env</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+
+            </div>
+        </div>
+
+    </div>
+</div>
+
+
+{% endblock %}
+
+
+
+{% block scripts %}
+
+
+<script>
+    $(document).ready(function () {
+        var buttons = "Bfrtlip";
+
+        var csrfToken = "{{ csrf_token }}";
+
+        var toastMixin = Swal.mixin({
+            toast: true,
+            icon: 'success',
+            title: 'General Title',
+            animation: false,
+            position: 'top-right',
+            showConfirmButton: false,
+            timer: 2000,
+            timerProgressBar: true,
+            didOpen: (toast) => {
+                toast.addEventListener('mouseenter', Swal.stopTimer)
+                toast.addEventListener('mouseleave', Swal.resumeTimer)
+            }
+        });
+
+        userid = $('#user_id').val();
+        username = $('#user_name').val();
+
+        envSistemas = $("#envSistemas").DataTable({
+            scrollX: true,
+            scrollCollapse: true,
+            scrollY: '450px',
+            pageLength: 50,
+            initComplete: function () {
+            },
+            ajax: {
+                beforeSend: function (xhr, type) {
+                    if (!type.crossDomain) {
+                        xhr.setRequestHeader(
+                            'X-CSRF-Token',
+                            $(
+                                'meta[name="csrf-token"]'
+                            ).attr('content'));
+                    }
+                },
+                url: `{% url 'sistemas_urls' %}`,
+                type: "GET",
+                dataScr: 'data',
+            },
+            dom: buttons,
+            language: {
+                url: "//cdn.datatables.net/plug-ins/1.11.5/i18n/es-ES.json",
+            },
+            colReorder: {
+                realtime: false,
+            },
+            buttons: [{
+                extend: 'excel',
+                text: '<i class="fas fa-file-excel"></i>',
+                titleAttr: 'Excel',
+                className: 'btn btn-success',
+            },
+            {
+                extend: 'pdf',
+                text: '<i class="fas fa-file-pdf"></i>',
+                titleAttr: 'PDF',
+                className: 'btn btn-danger',
+            },
+            {
+                extend: 'print',
+                text: '<i class="fas fa-print"></i>',
+                titleAttr: 'Imprimir',
+                className: 'btn btn-null',
+                orientation: 'landscape'
+            }
+            ],
+            columns: [
+                {
+                    data: 'PKmodulo'
+                },
+                {
+                    data: 'Nombre'
+                },
+                {
+                    data: 'Descripcion'
+                },
+                {
+                    data: null,
+                    render: function (data, type, row) {
+                        return "<div class='text-center'>" +
+                            "<div class='btn-group'>" +
+                            "<a href='" + data.Url_Produccion + "/" + username + "' type='button' class='btn btn-primary btn-sm btnProd' title='Producción'><i class='material-icons'>api</i></a>" +
+                            "<a href='" + data.Url_Testing + "/" + username + "' type='button' class='btn btn-warning btn-sm btnTest' title='Testing'><i class='material-icons'>developer_mode</i></a>" +
+                            "</div></div>";
+                    },
+                }
+            ],
+            order: [[1, "asc"]]
+        });
+
+
+
+    });
+</script>
+
+
+
+{% endblock %}

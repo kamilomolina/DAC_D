@@ -1,0 +1,859 @@
+{% extends 'DAC_MAIN.html' %}
+
+
+{% block title %} REPORTE VENTAS PERDIDAS {% endblock %}
+
+{% block body %}
+
+{% include 'complementos/btnBack.html' %}
+
+<div class="container-margin p-3 viewSection">
+    <div class="row">
+        <h4 class=""> <i class="material-icons nav__icon">monetization_on</i>
+            REPORTE VENTAS PERDIDAS
+        </h4>
+
+        <style>
+            @media print {
+    /* Estilos específicos para imprimir aquí */
+    th, td {
+        border: 1px solid #ddd !important;
+    }
+    tfoot th {
+        text-align: right !important;
+    }
+}
+        </style>
+
+        <input type="hidden" id="user_id" value="{{id}}">
+        <input type="hidden" id="user_name" value="{{username}}">
+
+        <div class="col-sm p-2 shadow-lg border m-2 rounded-4">
+
+            <div class="row d-flex justify-content-start align-items-end">
+                <div class="col-lg-2">
+                    <div class="form-group">
+                        <label for="formato_select" class="col-form-label">Empresa:</label>
+                        <select class="form-select form-select-sm" name="formato_select" id="formato_select">
+                            <option value="#">Seleccione un Formato</option>
+                            {% if acceso == 1 %}
+                            <option value="1">DISTRIBUIDORA</option>
+                            {% elif acceso == 2 %}
+                            <option value="2">SUPERMERCADO</option>
+                            {% elif acceso == 3 %}
+                            <option value="1">DISTRIBUIDORA</option>
+                            <option value="2">SUPERMERCADO</option>
+                            {% endif %}
+                        </select>
+                    </div>
+                </div>
+
+                <div class="col-lg-1">
+                    <label>Desde</label>
+                    <input type="date" id="periodoInicio" class="form-control form-control-sm pickedDate"
+                        value="{{ date2 }}">
+                </div>
+                <div class="col-lg-1">
+                    <label>Hasta</label>
+                    <input type="date" id="periodoFinal" class="form-control form-control-sm pickedDate"
+                        value="{{ date2 }}">
+                </div>
+
+                <div class="col-sm-2">
+                    <button type="button" class="btn btn-secondary btn-sm" id="btnLoadData">Cargar</button>
+                </div>
+            </div>
+
+            <hr>
+
+            <br>
+
+            <div class="row p-2">
+
+                <div class="row d-flex justify-content-end">
+
+                    <span><b>Filtros Rápidos</b></span>
+
+                    <div class="mainFilters">
+
+                        <div class="row f-flex justify-content-end">
+
+
+                            <div class="col-sm">
+                                <label for="">Cliente</label>
+                                <input type="text" class="form-control form-control-sm tableMainFilters"
+                                    id="filterClienteTable" placeholder="Cliente">
+                            </div>
+
+                            <div class="col-sm">
+                                <label for="">Producto</label>
+                                <input type="text" class="form-control form-control-sm tableMainFilters"
+                                    id="filterProductoTable" placeholder="Producto">
+                            </div>
+
+                            <div class="col-sm">
+                                <label for="">Almacen:</label>
+                                <select class="form-select form-select-sm" name="filterAlmacenTable"
+                                    id="filterAlmacenTable">
+                                    <option value="">TODOS</option>
+                                </select>
+                            </div>
+
+                            <div class="col-sm">
+                                <label for="">Motivo:</label>
+                                <select id="filterMotivoTable" class="form-select form-select-sm"
+                                    name="filterMotivoTable">
+                                    <option value="">TODOS</option>
+                                    {% for motivo in motivos %}
+                                    <option value="{{ motivo.nombre_motivo }}">{{ motivo.nombre_motivo }}
+                                    </option>
+                                    {% endfor %}
+                                </select>
+                            </div>
+
+                            <div class="col-sm">
+                                <label for="">Empresa:</label>
+                                <select class="form-select form-select-sm" name="filterEmpresaTable"
+                                    id="filterEmpresaTable">
+                                    <option value="">TODAS</option>
+                                    <option value="DISTRIBUIDORA">DISTRIBUIDORA</option>
+                                    <option value="SUPERMERCADO">SUPERMERCADO</option>
+                                </select>
+                            </div>
+
+                            <div class="col-sm">
+                                <label for="">Sistema:</label>
+                                <select class="form-select form-select-sm" name="filterSistemaTable"
+                                    id="filterSistemaTable">
+                                    <option value="">TODOS</option>
+                                    <option value="APP VENTAS">APP VENTAS</option>
+                                    <option value="CONTROL TOTAL">CONTROL TOTAL</option>
+                                    <option value="DAC">DAC</option>
+                                </select>
+                            </div>
+
+                        </div>
+
+                        <div class="row f-flex justify-content-end">
+                            <div class="col-sm">
+                                <label for="">Ruta Actual</label>
+                                <input type="text" class="form-control form-control-sm tableMainFilters"
+                                    id="filterRutaTable" placeholder="Ruta">
+                            </div>
+
+                            <div class="col-sm">
+                                <label for="">Vendedor Actual</label>
+                                <input type="text" class="form-control form-control-sm tableMainFilters"
+                                    id="filterVendedorTable" placeholder="Vendedor">
+                            </div>
+
+                            <div class="col-sm">
+                                <label for="">Canal Actual</label>
+                                <input type="text" class="form-control form-control-sm tableMainFilters"
+                                    id="filterCanalTable" placeholder="Canal">
+                            </div>
+
+                            <div class="col-sm">
+                                <label for="">Proveedor</label>
+                                <input type="text" class="form-control form-control-sm tableMainFilters"
+                                    id="filterProveedorTable" placeholder="Proveedor">
+                            </div>
+
+                            <div class="col-sm">
+                                <label for="">Subgrupo</label>
+                                <input type="text" class="form-control form-control-sm tableMainFilters"
+                                    id="filterSubgrupoTable" placeholder="Subgrupo">
+                            </div>
+
+                            <div class="col-sm">
+                                <label for="">Grupo</label>
+                                <input type="text" class="form-control form-control-sm tableMainFilters"
+                                    id="filterGrupoTable" placeholder="Grupo">
+                            </div>
+
+                            <div class="col-sm">
+                                <label for="">Categoria</label>
+                                <input type="text" class="form-control form-control-sm tableMainFilters"
+                                    id="filterCategoriaTable" placeholder="Categoria">
+                            </div>
+
+                            <div class="col-sm">
+                                <label for="">Marca</label>
+                                <input type="text" class="form-control form-control-sm tableMainFilters"
+                                    id="filterMarcaTable" placeholder="Marca">
+                            </div>
+
+                        </div>
+
+                    </div>
+
+                </div>
+            </div>
+
+        </div>
+
+
+        <div class="row">
+            <div class="table-responsive">
+                <table id="tableReporteVentasPerdidas"
+                    class="table rounded-4 table-sm table-bordered table-striped align-middle mb-0 table-principal"
+                    style="width:100%">
+
+                    <thead class="bg-light">
+                        <tr>
+                            <th class="text-center">#</th>
+                            <th class="text-center">Fecha</th>
+                            <th class="text-center">ID Cliente</th>
+                            <th class="text-center">Nombre Cliente</th>
+                            <th class="text-center">ID Equivalencia x Categoria</th>
+                            <th class="text-center">ID Producto</th>
+                            <th class="text-center">Nombre Producto</th>
+                            <th class="text-center">Presentación</th>
+                            <th class="text-center">ID Almacén</th>
+                            <th class="text-center">Almacén</th>
+
+
+                            <th class="text-center">Cantidad</th>
+                            <th class="text-center">Existencia</th>
+                            <th class="text-center">Diferencia</th>
+
+                            <th class="text-center">Cantidad</th>
+                            <th class="text-center">Precio Venta Perdida</th>
+                            <th class="text-center">Total Venta Perdida</th>
+
+                            <th class="text-center">Cantidad</th>
+                            <th class="text-center">Precio Max.</th>
+                            <th class="text-center">Total Precio Max.</th>
+
+                            <th class="text-center">Cantidad</th>
+                            <th class="text-center">Precio Min.</th>
+                            <th class="text-center">Total Precio Min.</th>
+
+                            <th class="text-center">Cantidad</th>
+                            <th class="text-center">Precio Competencia Ingresado</th>
+                            <th class="text-center">Total Precio Competencia</th>
+
+                            <th class="text-center">Creado Por</th>
+
+                            <th class="text-center">ID Motivo</th>
+                            <th class="text-center">Nombre Motivo</th>
+                            <th class="text-center">Comentario</th>
+
+                            <th class="text-center">ID Competencia</th>
+                            <th class="text-center">Nombre Competencia</th>
+
+                            <th class="text-center">Empresa</th>
+                            <th class="text-center">Sistema</th>
+
+                            <th class="text-center">ID Ruta</th>
+                            <th class="text-center">Ruta</th>
+                            <th class="text-center">Nombre Vendedor</th>
+                            <th class="text-center">ID Supervisor</th>
+                            <th class="text-center">Nombre Supervisor</th>
+                            <th class="text-center">ID Canal Venta</th>
+                            <th class="text-center">Descripción Canal Venta</th>
+
+                            <th class="text-center">ID Proveedor</th>
+                            <th class="text-center">Nombre Proveedor</th>
+                            <th class="text-center">Comprador</th>
+                            <th class="text-center">PKsubgrupo</th>
+                            <th class="text-center">Código Subgrupo</th>
+                            <th class="text-center">Subgrupo</th>
+                            <th class="text-center">PKgrupo</th>
+                            <th class="text-center">Código Grupo</th>
+                            <th class="text-center">Grupo</th>
+                            <th class="text-center">Código Categoría</th>
+                            <th class="text-center">Nombre Categoría</th>
+                            <th class="text-center">Código Marca</th>
+                            <th class="text-center">Marca</th>
+
+
+                        </tr>
+                    </thead>
+
+                    <tbody>
+
+                    </tbody>
+
+                    <tfoot>
+                        <tr>
+                            <th></th>
+                            <th></th>
+                            <th></th>
+                            <th></th>
+                            <th></th>
+                            <th></th>
+                            <th></th>
+                            <th></th>
+                            <th></th>
+                            <th></th>
+                            <th></th>
+                            <th></th>
+                            <th></th>
+                            <th></th>
+                            <th></th>
+                            <th></th>
+                            <th></th>
+                            <th></th>
+                            <th></th>
+                            <th></th>
+                            <th></th>
+                            <th></th>
+                            <th></th>
+                            <th></th>
+                            <th></th>
+                            <th></th>
+                            <th></th>
+                            <th></th>
+                            <th></th>
+                            <th></th>
+                            <th></th>
+                            <th></th>
+                            <th></th>
+                            <th></th>
+                            <th></th>
+                            <th></th>
+                            <th></th>
+                            <th></th>
+                            <th></th>
+                            <th></th>
+                            <th></th>
+                            <th></th>
+                            <th></th>
+                            <th></th>
+                            <th></th>
+                            <th></th>
+                            <th></th>
+                            <th></th>
+                            <th></th>
+                            <th></th>
+                            <th></th>
+                            <th></th>
+                            <th></th>
+                        </tr>
+                    </tfoot>
+
+                </table>
+            </div>
+        </div>
+
+    </div>
+</div>
+</div>
+
+
+{% endblock %}
+
+
+{% block scripts %}
+
+
+<script>
+    $(document).ready(function () {
+        var buttons = "Bfrtlip";
+
+        var csrfToken = "{{ csrf_token }}";
+
+        var user_id = $('#user_id').val();
+        var user_name = $('#user_name').val();
+
+        $('html, body').animate({
+            scrollTop: $('.viewSection').offset().top
+        }, 'slow');
+
+        $('#formato_select').val('#').change();
+
+        $("#tableReporteVentasPerdidas").DataTable({
+            language: {
+                url: "//cdn.datatables.net/plug-ins/1.11.5/i18n/es-ES.json",
+            },
+        });
+
+
+        function cargarAlmacenSuper() {
+            $.ajax({
+                url: '/DAC/ventas/obtener_almacenes/', // Asegúrate de reemplazar esto con la ruta correcta a tu función de vista
+                type: 'GET', // Método HTTP utilizado
+                dataType: 'json', // Tipo de datos esperado
+                success: function (response) {
+                    // Elimina las opciones existentes, excepto la primera
+                    var select = $('#filterAlmacenTable');
+                    select.empty();
+
+                    select.append($('<option>', {
+                        value: '',
+                        text: 'TODOS'
+                    }));
+
+                    // Itera sobre el arreglo de clientes y los añade al select
+                    $.each(response.almacen, function (i, almacen) {
+                        // Verifica que nombre_cliente y id_cliente existan antes de usarlos
+                        if (almacen.almacen && almacen.almacen) {
+                            $('#filterAlmacenTable').append(new Option(almacen.almacen.trim(), almacen.almacen));
+                        }
+                    });
+
+                },
+                error: function (xhr, status, error) {
+                    console.error("Error al cargar los motivos: ", error);
+                }
+            });
+        }
+
+        function cargarAlmacenDistribuidora() {
+            $.ajax({
+                url: '/DAC/ventas/obtener_almacenes_dc/', // Asegúrate de reemplazar esto con la ruta correcta a tu función de vista
+                type: 'GET', // Método HTTP utilizado
+                dataType: 'json', // Tipo de datos esperado
+                success: function (data) {
+                    // Elimina las opciones existentes, excepto la primera
+                    var select = $('#filterAlmacenTable');
+                    select.empty();
+
+                    select.append($('<option>', {
+                        value: '',
+                        text: 'TODOS'
+                    }));
+
+                    // Itera sobre el arreglo de clientes y los añade al select
+                    $.each(data.almacenesData, function (index, alm) {
+                        select.append($('<option>', {
+                            value: alm.almacen,
+                            text: alm.almacen
+                        }));
+                    });
+
+                },
+                error: function (xhr, status, error) {
+                    console.error("Error al cargar los almacenes: ", error);
+
+                    var select = $('#filterAlmacenTable');
+                    select.empty();
+
+                    select.append($('<option>', {
+                        value: '#',
+                        text: 'Seleccione un Almacen'
+                    }));
+                }
+            });
+        }
+
+
+        document.getElementById("formato_select").addEventListener("change", function () {
+            var selectedOption = this.value;
+
+            if (selectedOption === "1") {
+                cargarAlmacenDistribuidora();
+
+            } else if (selectedOption === "2") {
+                cargarAlmacenSuper();
+            }
+        });
+
+        $('#btnLoadData').click(function (e) {
+            e.preventDefault();
+
+            formato = $('#formato_select').val();
+            date1 = $('#periodoInicio').val();
+            date2 = $('#periodoFinal').val();
+
+            if (formato == "#") {
+                Swal.fire("", "Debes seleccionar una Empresa!", "warning");
+            } else {
+                Swal.fire({
+                    title: '',
+                    html: '<b>Cargando Datos</b>',
+                    didOpen: () => {
+                        Swal.showLoading()
+                    },
+                    allowOutsideClick: false, // Evita que el usuario cierre el modal haciendo clic fuera de él
+                    showConfirmButton: false // Oculta el botón de confirmación
+                });
+
+                $("#tableReporteVentasPerdidas").DataTable().clear().destroy();
+
+                tableReporteVentasPerdidas = $("#tableReporteVentasPerdidas").DataTable({
+                    scrollX: true,
+                    scrollCollapse: true,
+                    scrollY: '400px',
+                    pageLength: 50,
+                    fixedColumns: {
+                        left: 4
+                    },
+                    initComplete: function () {
+
+                    },
+                    initComplete: function () {
+                        Swal.close();
+                    },
+                    drawCallback: function (settings) {
+                        let dollarUSLocale = Intl.NumberFormat("en-US", {
+                            minimumFractionDigits: 2,
+                            maximumFractionDigits: 2
+                        });
+
+                        let intergerLocale = Intl.NumberFormat("en-US", {
+                            minimumFractionDigits: 0,
+                            maximumFractionDigits: 0
+                        });
+
+                        var api = this.api();
+                        // Calcula los totales para las columnas 2, 3 y 4
+                        [10, 11, 12, 13, 14, 15, 16, 17, 18, 19, 20, 21, 22, 23, 24].forEach(function (colIndex) {
+                            var total = api
+                                .column(colIndex, { search: 'applied' })
+                                .data()
+                                .reduce(function (a, b) {
+                                    return parseFloat(a) + parseFloat(b);
+                                }, 0);
+                            // Actualiza el footer
+                            var columnFooter = $(api.column(colIndex).footer());
+                            columnFooter.html(dollarUSLocale.format(total));
+                            columnFooter.css('text-align', 'right');
+                        });
+                    },
+                    ajax: {
+                        beforeSend: function (xhr, type) {
+                            if (!type.crossDomain) {
+                                xhr.setRequestHeader(
+                                    'X-CSRF-Token',
+                                    $(
+                                        'meta[name="csrf-token"]'
+                                    ).attr('content'));
+                            }
+                        },
+                        url: `{% url 'data_reporte_venta_perdida' %}`,
+                        type: "POST",
+                        dataScr: 'data',
+                        data: {
+                            formato: formato,
+                            date1: date1,
+                            date2: date2,
+                            csrfmiddlewaretoken: csrfToken
+                        },
+                    },
+                    dom: buttons,
+                    language: {
+                        url: "//cdn.datatables.net/plug-ins/1.11.5/i18n/es-ES.json",
+                    },
+                    colReorder: {
+                        realtime: false,
+                    },
+                    buttons: [{
+                        extend: 'excel',
+                        text: '<i class="fas fa-file-excel"></i>',
+                        titleAttr: 'Excel',
+                        className: 'btn btn-success',
+                    },
+                    {
+                        extend: 'pdf',
+                        text: '<i class="fas fa-file-pdf"></i>',
+                        titleAttr: 'PDF',
+                        className: 'btn btn-danger',
+                    },
+                    {
+                        extend: 'print',
+                        text: '<i class="fas fa-print"></i>',
+                        titleAttr: 'Imprimir',
+                        className: 'btn btn-null',
+                        orientation: 'landscape'
+                    }
+                    ],
+                    columns: [
+                        {
+                            data: "id_venta_perdida"
+                        },
+                        {
+                            data: "fecha_text"
+                        },
+                        {
+                            data: "id_cliente"
+                        },
+                        {
+                            data: "nombre_cliente"
+                        },
+                        {
+                            data: "id_equivalencia_x_categoria"
+                        },
+                        {
+                            data: "id_producto"
+                        },
+                        {
+                            data: "nombre_producto"
+                        },
+                        {
+                            data: "presentacion"
+                        },
+                        {
+                            data: "id_almacen"
+                        },
+                        {
+                            data: "almacen",
+                            className: "rightBorderStyle"
+                        },
+
+
+                        {
+                            data: "cantidad",
+                            className: 'currency',
+                            render: $.fn.dataTable.render.number(',', '.', 2)
+                        },
+                        {
+                            data: "existencia",
+                            className: 'currency',
+                            render: $.fn.dataTable.render.number(',', '.', 2)
+                        },
+                        {
+                            data: "restante",
+                            className: 'currency rightBorderStyle',
+                            render: $.fn.dataTable.render.number(',', '.', 2)
+                        },
+
+
+
+                        {
+                            data: "cantidad",
+                            className: 'currency',
+                            render: $.fn.dataTable.render.number(',', '.', 2)
+                        },
+                        {
+                            data: "precio_vp",
+                            className: 'currency',
+                            render: $.fn.dataTable.render.number(',', '.', 2)
+                        },
+                        {
+                            data: "total_vp",
+                            className: 'currency rightBorderStyle',
+                            render: $.fn.dataTable.render.number(',', '.', 2)
+                        },
+
+
+                        {
+                            data: "cantidad",
+                            className: 'currency',
+                            render: $.fn.dataTable.render.number(',', '.', 2)
+                        },
+                        {
+                            data: "precio_max",
+                            className: 'currency',
+                            render: $.fn.dataTable.render.number(',', '.', 2)
+                        },
+                        {
+                            data: "total_max",
+                            className: 'currency rightBorderStyle',
+                            render: $.fn.dataTable.render.number(',', '.', 2)
+                        },
+
+
+
+                        {
+                            data: "cantidad",
+                            className: 'currency',
+                            render: $.fn.dataTable.render.number(',', '.', 2)
+                        },
+                        {
+                            data: "precio_min",
+                            className: 'currency',
+                            render: $.fn.dataTable.render.number(',', '.', 2)
+                        },
+                        {
+                            data: "total_min",
+                            className: 'currency rightBorderStyle',
+                            render: $.fn.dataTable.render.number(',', '.', 2)
+                        },
+
+
+
+                        {
+                            data: "cantidad",
+                            className: 'currency',
+                            render: $.fn.dataTable.render.number(',', '.', 2)
+                        },
+                        {
+                            data: "precio_competencia",
+                            className: 'currency',
+                            render: $.fn.dataTable.render.number(',', '.', 2)
+                        },
+                        {
+                            data: "total_competencia",
+                            className: 'currency rightBorderStyle',
+                            render: $.fn.dataTable.render.number(',', '.', 2)
+                        },
+
+
+
+
+                        {
+                            data: "creado_por",
+                            className: "rightBorderStyle"
+                        },
+
+
+
+                        {
+                            data: "id_motivo"
+                        },
+                        {
+                            data: "nombre_motivo"
+                        },
+                        {
+                            data: "comentario",
+                            className: "rightBorderStyle"
+                        },
+
+
+
+                        {
+                            data: "id_competencia"
+                        },
+                        {
+                            data: "nombre_competencia",
+                            className: "rightBorderStyle"
+                        },
+
+
+
+                        {
+                            data: "empresa"
+                        },
+                        {
+                            data: "sistema",
+                            className: "rightBorderStyle"
+                        },
+
+
+
+                        {
+                            data: "id_ruta"
+                        },
+                        {
+                            data: "ruta"
+                        },
+                        {
+                            data: "nombre_vendedor"
+                        },
+                        {
+                            data: "id_supervisor"
+                        },
+                        {
+                            data: "nombre_supervisor"
+                        },
+                        {
+                            data: "id_canal_venta"
+                        },
+                        {
+                            data: "descripcion_canal_venta",
+                            className: "rightBorderStyle"
+                        },
+
+
+
+                        {
+                            data: "id_proveedor"
+                        },
+                        {
+                            data: "nombre_proveedor"
+                        },
+                        {
+                            data: "Comprador"
+                        },
+                        {
+                            data: "PKsubgrupo"
+                        },
+                        {
+                            data: "CodigoSubgrupo"
+                        },
+                        {
+                            data: "SubGrupo"
+                        },
+                        {
+                            data: "PKgrupo"
+                        },
+                        {
+                            data: "CodigoGrupo"
+                        },
+                        {
+                            data: "Grupo"
+                        },
+                        {
+                            data: "CodigoCategoria"
+                        },
+                        {
+                            data: "NombreCategoria"
+                        },
+                        {
+                            data: "CodigoMarca"
+                        },
+                        {
+                            data: "Marca"
+                        },
+                    ],
+                    columnDefs: [{
+                        targets: [0, 2, 4, 5, 8],
+                        visible: false,
+                        searchable: true
+                    }],
+
+                    //  24, 27, 31, 34, 36, 38, 41, 44
+                });
+
+
+                // FIRST ROW
+                $('#filterClienteTable').keyup(function () {
+                    tableReporteVentasPerdidas.column(3).search(this.value).draw();
+                });
+                $('#filterProductoTable').keyup(function () {
+                    tableReporteVentasPerdidas.column(6).search(this.value).draw();
+                });
+                $('#filterAlmacenTable').change(function () {
+                    tableReporteVentasPerdidas.column(9).search(this.value).draw();
+                });
+                $('#filterMotivoTable').change(function () {
+                    tableReporteVentasPerdidas.column(27).search(this.value).draw();
+                });
+                $('#filterEmpresaTable').change(function () {
+                    tableReporteVentasPerdidas.column(31).search(this.value).draw();
+                });
+                $('#filterSistemaTable').change(function () {
+                    tableReporteVentasPerdidas.column(32).search(this.value).draw();
+                });
+
+                // SECOND ROW
+                $('#filterRutaTable').keyup(function () {
+                    tableReporteVentasPerdidas.column(34).search(this.value).draw();
+                });
+                $('#filterVendedorTable').keyup(function () {
+                    tableReporteVentasPerdidas.column(35).search(this.value).draw();
+                });
+                $('#filterCanalTable').keyup(function () {
+                    tableReporteVentasPerdidas.column(39).search(this.value).draw();
+                });
+                $('#filterProveedorTable').keyup(function () {
+                    tableReporteVentasPerdidas.column(41).search(this.value).draw();
+                });
+                $('#filterSubgrupoTable').keyup(function () {
+                    tableReporteVentasPerdidas.column(45).search(this.value).draw();
+                });
+                $('#filterGrupoTable').keyup(function () {
+                    tableReporteVentasPerdidas.column(48).search(this.value).draw();
+                });
+                $('#filterCategoriaTable').keyup(function () {
+                    tableReporteVentasPerdidas.column(50).search(this.value).draw();
+                });
+                $('#filterMarcaTable').keyup(function () {
+                    tableReporteVentasPerdidas.column(52).search(this.value).draw();
+                });
+
+
+
+            }
+
+        });
+
+
+    });
+</script>
+
+
+
+{% endblock %}

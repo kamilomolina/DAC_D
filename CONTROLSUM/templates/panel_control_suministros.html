@@ -1,0 +1,268 @@
+{% extends 'menu_control_suministros.html' %}
+{% load static %}
+
+{% block title %}
+PANTALLA PRINCIPAL
+{% endblock %}
+
+{% block body %}
+
+
+<h3 class="page-title mb-4 d-flex justify-content-between align-items-center">
+    <strong>BIENVENIDO AL SISTEMA DE CONTROL DE SUMINISTROS, {{ userName }}</strong>
+
+    <!-- Ícono de campanita en la barra de navegación -->
+    <div style="position: relative;">
+        <i class="fas fa-bell fa-2x" id="notificationIcon" style="cursor: pointer;"></i>
+        <!-- Contador de notificaciones -->
+        <span id="notificationCount" class="badge"
+            style="position: absolute; top: -5px; right: -5px; font-size: 12px; color: white; background-color: red;">0</span>
+
+    </div>
+</h3>
+
+<!-- Contenedor para mostrar las notificaciones -->
+<div id="notificationList"
+    style="display: none; position: absolute; top: 40px; right: 10px; background-color: white; border: 1px solid #ccc; width: 300px; padding: 10px; box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1); z-index: 9999;">
+    <h5>Notificaciones</h5>
+    <ul id="notifications"></ul>
+</div>
+
+<!-- Estadísticas de suministros -->
+<div class="row">
+    <!-- Card 1: Suministros por Categoría (Izquierda) -->
+    <div class="col-md-4"> <!-- Ocupa 4 columnas a la izquierda -->
+        <div class="card">
+            <div class="card-body">
+                <h5 class="card-title">
+                    <i class="fas fa-list fa-2x"></i> <strong>Suministros por Categoría</strong>
+                </h5>
+                <!-- Contenedor para los cards -->
+                <div id="totalCategorias">
+     </div>
+    </div>
+                 <!-- Los cards de las categorías se generarán dinámicamente con JavaScript -->
+                </div>
+            </div>
+      
+    <!-- Columna que contiene Total de Suministros y Costo Total a la derecha -->
+    <div class="col-md-8"> <!-- Ocupa 8 columnas a la derecha -->
+        <div class="row">
+            <!-- Card 2: Total de Suministros -->
+            <div class="col-md-6 mb-3">
+                <div class="card">
+                    <div class="card-body">
+                        <h5 class="card-title">
+                            <i class="fas fa-box fa-2x"></i> <strong>Total de Suministros</strong>
+                        </h5>
+                        <p id="totalSuministros" class="card-text">Cargando...</p>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Card 3: Costo Total en Adquisiciones 
+            <div class="col-md-6">
+                <div class="card">
+                    <div class="card-body">
+                        <h5 class="card-title">
+                            <i class="fas fa-credit-card fa-2x"></i> <strong>Costo Total en Adquisiciones</strong>
+                        </h5>
+                        <p id="totalCosto" class="card-text">Cargando...</p>
+                    </div>
+                </div>
+            </div>-->
+            <!-- Contenedor para las dos primeras gráficas (barras y lineal) en la misma fila -->
+            <div id="gráficasContainerTop" style="display: flex; justify-content: space-between; gap: 5px;">
+                <canvas id="suministrosChartBar" style="flex: 1; max-width: 100%; height: 380px;""></canvas>
+                <!-- <canvas id=" suministrosChartAlmacen" style="flex: 1; max-width: 50%; height: 200px;""></canvas> -->
+            </div>            
+        </div>
+    </div>
+</div>
+
+
+<hr>
+
+ {% endblock %}
+
+{% block scripts %}
+<!-- <script src=" https://cdn.jsdelivr.net/npm/chart.js"></script> -->
+<script src="https://cdn.jsdelivr.net/npm/chart.js@3.9.1/dist/chart.min.js"></script>
+
+
+<script>
+    $(document).ready(function () {
+        var csrfToken = "{{ csrf_token }}";
+
+        // Configuración de notificación tipo Toast con SweetAlert2
+        var toastMixin = Swal.mixin({
+            toast: true,
+            icon: 'success',
+            title: 'General Title',
+            animation: false,
+            position: 'top-right',
+            showConfirmButton: false,
+            timer: 2000,
+            timerProgressBar: true,
+            didOpen: (toast) => {
+                toast.addEventListener('mouseenter', Swal.stopTimer);
+                toast.addEventListener('mouseleave', Swal.resumeTimer);
+            }
+        });
+
+        // Mensaje de bienvenida
+        Swal.fire({
+            icon: 'info',
+            title: '¡Bienvenido, ' + '{{ userName }}!',
+            text: 'Aquí tienes un resumen de tus suministros.',
+            confirmButtonText: 'Cerrar'
+        });
+
+        // Obtener datos de la vista 'dashboard'
+        fetch(`{% url 'dashboard' %}`)
+            .then(response => response.json())
+            .then(data => {
+                // Actualizar total de costo con formato adecuado
+                // const totalCostoElem = document.getElementById('totalCosto');
+                // const formattedCosto = $.fn.dataTable.render.number(',', '.', 2).display(data.total_costo);
+                // totalCostoElem.innerText = formattedCosto;
+                // totalCostoElem.style.fontSize = '60px';
+                // totalCostoElem.style.textAlign = 'right';
+                // totalCostoElem.style.animation = 'slideIn 1s ease-in-out';
+
+                // Actualizar total de suministros
+                const totalSuministrosElem = document.getElementById('totalSuministros');
+                totalSuministrosElem.innerText = data.total_suministros;
+                totalSuministrosElem.style.fontSize = '60px';
+                totalSuministrosElem.style.textAlign = 'right';
+                totalSuministrosElem.style.animation = 'slideIn 1s ease-in-out';
+
+                // Configuración de gráficos de suministros por mes
+                var nombresMeses = ["Enero", "Febrero", "Marzo", "Abril", "Mayo", "Junio",
+                    "Julio", "Agosto", "Septiembre", "Octubre", "Noviembre", "Diciembre"];
+                var colores = [
+                    'rgba(255, 99, 132, 0.6)', 'rgba(54, 162, 235, 0.6)', 'rgba(255, 206, 86, 0.6)',
+                    'rgba(75, 192, 192, 0.6)', 'rgba(153, 102, 255, 0.6)', 'rgba(255, 159, 64, 0.6)',
+                    'rgba(231, 76, 60, 0.6)', 'rgba(46, 204, 113, 0.6)', 'rgba(52, 152, 219, 0.6)',
+                    'rgba(241, 196, 15, 0.6)', 'rgba(155, 89, 182, 0.6)', 'rgba(230, 126, 34, 0.6)'
+                ];
+
+                let datosMeses = {};
+                for (let i = 1; i <= 12; i++) {
+                    datosMeses[i] = 0;
+                }
+                data.suministros_mes.forEach(item => {
+                    datosMeses[item.mes] = item.cantidad;
+                });
+                var meses = Object.keys(datosMeses).map(m => nombresMeses[m - 1]);
+                var cantidades = Object.values(datosMeses);
+
+                var ctxBar = document.getElementById('suministrosChartBar').getContext('2d');
+                new Chart(ctxBar, {
+                    type: 'bar',
+                    data: {
+                        labels: meses,
+                        datasets: [{
+                            label: 'Suministros por Mes',
+                            data: cantidades,
+                            backgroundColor: colores,
+                            borderColor: colores.map(color => color.replace('0.6', '1')),
+                            borderWidth: 1
+                        }]
+                    },
+                    options: {
+                        responsive: true,
+                        animation: {
+                            duration: 1500,
+                            easing: 'easeOutBounce'
+                        },
+                        scales: {
+                            y: { beginAtZero: true }
+                        }
+                    }
+                });
+
+                // Mostrar categorías de suministros en cards dinámicos
+                const categoriasElem = document.getElementById('totalCategorias');
+                categoriasElem.innerHTML = "";
+                data.categorias.forEach(categoria => {
+                    const card = document.createElement('div');
+                    card.classList.add('card', 'mb-3');
+                    const cardBody = document.createElement('div');
+                    cardBody.classList.add('card-body');
+                    const cardTitle = document.createElement('h5');
+                    cardTitle.classList.add('card-title');
+                    
+                    // Mostrar nombre de la categoría y número en la misma línea, con un margen entre ellos
+                    cardTitle.innerHTML = `
+                        <i class="fas fa-dot-circle fa-2x"></i>
+                        <strong>${categoria.categoria || 'Nombre no disponible'}</strong> 
+                        <span class="fs-1 fw-bold ms-3">${categoria.count || 0}</span>`;
+
+                    const cardText = document.createElement('p');
+                    cardText.classList.add('card-text');
+                    
+                    cardBody.appendChild(cardTitle);
+                    cardBody.appendChild(cardText);
+                    card.appendChild(cardBody);
+                    categoriasElem.appendChild(card);
+                })
+            })
+            .catch(error => {
+                console.error('Error:', error);
+            });
+
+        // Manejo de notificaciones de stock bajo o sobregirado
+        document.getElementById('notificationIcon').addEventListener('click', function () {
+            const notificationList = document.getElementById('notificationList');
+            const notificationCountElem = document.getElementById('notificationCount');
+            notificationList.style.display = (notificationList.style.display === 'block') ? 'none' : 'block';
+            notificationCountElem.style.display = (notificationList.style.display === 'block') ? 'none' : 'inline-block';
+        });
+
+        fetch('{% url "obtener_stock_bajo_data" %}')
+            .then(response => response.json())
+            .then(data => {
+                const notificationsList = document.getElementById('notifications');
+                notificationsList.innerHTML = '';
+                data.suministros_bajos.forEach(suministro => {
+                    const li = document.createElement('li');
+                    li.textContent = `El suministro de ${suministro.nombre} está ${suministro.cantidad_stock < suministro.cantidad_minima ? 'bajo de stock. Toca aquí.' : 'sobregirado. Toca aquí'}`;
+                    li.style.cursor = 'pointer';
+                    li.addEventListener('click', function () {
+                        window.location.href = '{% url "listado_suministro_data" %}';
+                    });
+                    notificationsList.appendChild(li);
+                });
+            })
+            .catch(error => {
+                console.error('Error al obtener suministros bajos:', error);
+            });
+
+
+        $(document).ready(function () {
+                fetch(`{% url 'obtener_stock_bajo_data' %}`)
+                .then(response => response.json())
+                .then(data => {
+                    console.log(data);  // Verifica qué datos están llegando
+                    const suministrosBajos = data.suministros_bajos;  // Asegúrate de que el nombre coincida
+
+                    if (suministrosBajos.length > 0) {
+                        notificationIcon.classList.add('shake'); // Activa la animación
+                        document.getElementById('notificationCount').innerText = suministrosBajos.length;
+
+                        // Detener la animación después de 3 segundos
+                        setTimeout(() => {
+                            notificationIcon.classList.remove('shake');
+                        }, 5000);
+                    }
+                })
+                .catch(error => {
+                console.error('Error al obtener datos de suministros bajos:', error);
+            });
+        });
+
+    });
+</script>
+
+{% endblock %}

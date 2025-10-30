@@ -1,0 +1,123 @@
+<div class="modal fade" id="modalAsignacion" tabindex="-1" aria-labelledby="modalAsignacionLabel" aria-hidden="true"
+    data-bs-keyboard="false" data-bs-backdrop="static">
+    <div class="modal-dialog modal-lg">
+        <div class="modal-content">
+            <div class="modal-header" style="background-color: #697a8a; color: white;">
+                <h5 class="modal-title modalAsignacionLabel" id="modalAsignacionLabel">
+                    <i class="material-icons me-2 text-gray">AGREGAR ASIGNACION</i>
+                </h5>
+                <!--<button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal" aria-label="Close"></button> -->
+            </div>
+
+            <form id="formAsignacion">
+                <div class="modal-body">
+                    <!-- Nombre Completo del Usuario -->
+                    <div class="row">
+                        <div class="form-group">
+                            <label for=""><strong>Nombre Completo:</strong></label>
+                            <select id="nombre_completo" class="form-select form-select-sm" name="nombre_completo">
+                                <option value="#">Seleccione el nombre completo del usuario:</option>
+                                {% for us in usuarios %}
+                                <option value="{{ us.PKUsuario }}">{{ us.Nombre }}</option>
+                                {% endfor %}
+                            </select>
+                        </div>
+                    </div>
+
+                    <div class="row">
+                        <!-- Usuario -->
+                        <div class="col-sm-4">
+                            <div class="form-group">
+                                <label for=""><strong>Usuario:</strong></label>
+                                <input type="text" id="usuario" class="form-control " name="usuario"
+                                    readonly disabled>
+                            </div>
+                        </div>
+
+                        <!-- Grupo a los que pertenece -->
+                        <div class="col-sm-4">
+                            <div class="form-group">
+                                <label for="grupos"><strong>Área/Grupo:</strong></label>
+                                <select id="grupos" class="form-select" name="grupos">
+                                    <option value="#">Seleccione el grupo:</option>
+                                </select>
+                            </div>
+                        </div>
+
+                        <!-- Categoria del Suministro -->
+                        <div class="col-sm-4">
+                            <div class="form-group">
+                                <label for=""><strong>Categoría del Suministro:</strong></label>
+                                <select id="categoria" class="form-select" name="categoria">
+                                    <option value="#">Seleccione la categoría del suministro:</option>
+                                    {% for cat in categorias %}
+                                    <option value="{{ cat.id_categoria }}">{{ cat.nombre_categoria }}</option>
+                                    {% endfor %}
+                                </select>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="row">
+                        <!-- Selección del Suministro -->
+                        <div class="col-md-4">
+                            <div class="form-group">
+                                <label for="suministro"><strong>Suministro:</strong></label>
+                                <select id="suministro" class="form-select" name="suministro">
+                                    <option value="#">Seleccione el suministro:</option>
+                                </select>
+                            </div>
+                        </div>
+                    
+                        <!-- Cantidad para asignar Suministro -->
+                        <div class="col-md-4">
+                            <div class="form-group">
+                                <label for="cantidad"><strong>Cantidad a asignar:</strong></label>
+                                <input type="number" class="form-control" id="cantidad" name="cantidad">
+                            </div>
+                        </div>
+                    
+                        <!-- Fecha de asignación -->
+                        <div class="col-md-4">
+                            <div class="form-group">
+                                <label for="fecha_asignacion"><strong>Fecha:</strong></label>
+                                <input type="date" class="form-control" id="fecha_asignacion" name="fecha_asignacion">
+                            </div>
+                        </div>
+                    </div>                    
+
+                    <!-- Agrega un comentario de la asignacion -->
+                    <div class="row mb-3">
+                        <div class="form-group">
+                            <label for="comentario"><strong>Comentario:</strong></label>
+                            <textarea class="form-control" id="comentario" name="comentario"
+                                rows="3"></textarea>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="modal-footer">
+                    <button type="submit" class="btn btn-outline-success w-20">Agregar</button>
+                    <button type="button" class="btn btn-outline-danger w-20" data-bs-dismiss="modal">Cancelar</button>
+                </div>
+            </form>
+
+        </div>
+    </div>
+
+</div>
+
+<script>
+    $('#modalAsignacion').on('shown.bs.modal', function (e) {
+        if ($.fn.select2 && $('#nombre_completo').hasClass('select2-hidden-accesible')) {
+            $('#nombre_completo').select2('destroy');
+        }
+
+        $('#nombre_completo').select2({
+            placeholder: "Seleccione",
+            with: "100%",
+            allowClear: true,
+            dropdownParent: $('#modalAsignacion')
+        });
+    });
+</script>

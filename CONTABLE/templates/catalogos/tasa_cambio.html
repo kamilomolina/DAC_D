@@ -1,0 +1,325 @@
+{% extends 'componentes/menu_contable.html' %}
+{% load static %}
+
+{% block title %}
+TASA DE CAMBIO
+{% endblock %}
+
+
+{% block body %}
+
+<div class="row align-items-center">
+    <div class="col d-flex align-items-center">
+        <button id="toggle-sidebar" class="hamburger btnMenu me-3" title="Mostrar/Ocultar Menu">
+            <i class="fas fa-bars"></i>
+        </button>
+        <h3 class="page-title mb-0">TASA DE CAMBIO</h3>
+    </div>
+
+    <div class="col-auto text-end float-end ms-auto download-grp">
+        <button class="btn btn-sm btn-success" id="btnNuevo" title="Crear Nuevo"><i class="fas fa-plus me-2"></i>
+            Nuevo</button>
+    </div>
+</div>
+
+<hr>
+
+<div class="row">
+    <div class="table-responsive">
+        <table id="tasaCambio_Table"
+            class="table table-striped table-bordered mb-0 table-sm rounded-4 table-hover align-middle"
+            style="width: 100%;">
+            <thead class="table-gradient text-dark">
+                <tr>
+                    <th>#</th>
+                    <th>Fecha</th>
+                    <th>Tasa Cambio</th>
+                    <th>Tasa Compra</th>
+                    <th>Tasa Banco</th>
+                    <th>Estado</th>
+                    <th>Acciones</th>
+                </tr>
+            </thead>
+
+            <tbody>
+
+            </tbody>
+        </table>
+    </div>
+</div>
+
+{% include 'catalogos/modales_catalogos/m_tasa_cambio.html' %}
+
+{% endblock %}
+
+
+
+{% block scripts %}
+
+<script>
+    $(document).ready(function () {
+        var csrfToken = "{{ csrf_token }}";
+        var tasaCambio_Table, tasa_id, opcion;
+
+        var toastMixin = Swal.mixin({
+            toast: true,
+            icon: 'success',
+            title: 'General Title',
+            animation: false,
+            position: 'top-right',
+            showConfirmButton: false,
+            timer: 2000,
+            timerProgressBar: true,
+            didOpen: (toast) => {
+                toast.addEventListener('mouseenter', Swal.stopTimer);
+                toast.addEventListener('mouseleave', Swal.resumeTimer);
+            }
+        });
+
+        let dollarUSLocale = Intl.NumberFormat("en-US", {
+            minimumFractionDigits: 2,
+            maximumFractionDigits: 2
+        });
+
+        let intergerLocale = Intl.NumberFormat("en-US", {
+            minimumFractionDigits: 0,
+            maximumFractionDigits: 0
+        });
+
+        /* MENU ID Y SUBMENU ID */
+        $('#catalogosMenu, #tasaCambio_submenu').addClass('active');
+
+
+        tasaCambio_Table = $('#tasaCambio_Table').DataTable({
+            autoWidth: false,
+            scrollX: true,
+            scrollY: '350px',
+            scrollCollapse: true,
+            pageLength: 50,
+            dom: 'rftip',
+            language: {
+                url: "{% static 'app/th/json/es-ES.json' %}",
+            },
+            ajax: {
+                url: `{% url 'dataTasaCambio' %}`,
+                type: "POST",
+                dataScr: 'data',
+                data: {
+                    opcion: 0,
+                    csrfmiddlewaretoken: csrfToken
+                },
+            },
+            colReorder: {
+                realtime: false,
+            },
+            buttons: [
+                {
+                    extend: 'excel',
+                    text: '<i class="fas fa-file-excel"></i>',
+                    titleAttr: 'Exportar a Excel',
+                    className: 'btn btn-success',
+                },
+                {
+                    extend: 'pdf',
+                    text: '<i class="fas fa-file-pdf"></i>',
+                    titleAttr: 'Exportar a PDF',
+                    className: 'btn btn-danger',
+                },
+                {
+                    extend: 'print',
+                    text: '<i class="fas fa-print"></i>',
+                    titleAttr: 'Imprimir',
+                    className: 'btn btn-primary',
+                    orientation: 'landscape'
+                }
+            ],
+            columns: [
+                {
+                    data: 'PkTasaCambio',
+                },
+                {
+                    data: 'Fecha',
+                },
+                {
+                    data: 'TasaCambio',
+                    className: 'currency',
+                    render: $.fn.dataTable.render.number(',', '.', 4)
+                },
+                {
+                    data: 'TasaCompra',
+                    className: 'currency',
+                    render: $.fn.dataTable.render.number(',', '.', 4)
+                },
+                {
+                    data: 'TasaBanco',
+                    className: 'currency',
+                    render: $.fn.dataTable.render.number(',', '.', 4)
+                },
+                {
+                    data: 'estado',
+                    className: 'text-center',
+                    render: function (data, type, row) {
+                        var badge = "";
+                        if (data == 3) {
+                            badge +=
+                                '<span class="badge badge-pill bg-danger">DESHABILITADO</span>';
+                        } else {
+                            badge +=
+                                '<span class="badge badge-pill bg-success">ACTIVO</span>';
+                        }
+
+                        return badge;
+                    },
+                },
+                {
+                    data: null,
+                    width: '3%',
+                    title: "Acciones",
+                    render: function (data, type, row) {
+                        return `
+                            <div class="text-center">
+                                <div class="btn-group">
+                                    
+                                    <button class="btn btn-warning btn-sm editTasa" data-id="${row.PkTasaCambio}">
+                                        <i class="fas fa-edit"></i>
+                                    </button> 
+                                    <button class="btn btn-danger btn-sm statusTasa" data-id="${row.PkTasaCambio}">
+                                        <i class="fas fa-sync-alt"></i>
+                                    </button> 
+                                
+                                </div>
+                            </div>
+                            `;
+                    }
+                }
+            ],
+            order: [[1, "desc"]],
+        });
+
+        $('#btnNuevo').click(function (e) {
+            e.preventDefault();
+
+            $('#formTasaCambio').trigger('reset');
+            $('#modalTasaCambioLabel').text('CREAR NUEVA TASA DE CAMBIO');
+            $('#modalTasaCambio').modal('show');
+
+            opcion = 1;
+            tasa_id = null;
+        });
+
+
+        $(document).on('click', '.editTasa', function () {
+            $('#formCuentasNIC').trigger('reset');
+
+            opcion = 2;
+            filaTasaCambio = $(this).closest('tr');
+            tasa_id = $(this).data('id');
+            fecha = filaTasaCambio.find("td:eq(1)").text();
+            tasaCambio = filaTasaCambio.find("td:eq(2)").text();
+            tasaCompra = filaTasaCambio.find("td:eq(3)").text();
+            tasaBanco = filaTasaCambio.find("td:eq(4)").text();
+
+            $('#tasaFecha').val(fecha);
+            $('#tasaCambio').val(tasaCambio);
+            $('#tasaCompra').val(tasaCompra);
+            $('#tasaBanco').val(tasaBanco);
+
+            $('#modalTasaCambioLabel').text('EDITAR TASA DE CAMBIO ');
+            $('#modalTasaCambio').modal('show');
+        });
+
+
+        $(document).on('click', '.statusTasa', function () {
+            $('#formTasaCambio').trigger('reset');
+
+            filaTasaCambio = $(this).closest('tr');
+            tasa_id = $(this).data('id');
+
+            $.ajax({
+                url: "{% url 'update_status_tasa_cambio' %}",
+                type: "POST",
+                data: {
+                    tasa_id: tasa_id,
+                    csrfmiddlewaretoken: csrfToken
+                },
+                success: function (data) {
+                    if (data.save == 1) {
+                        toastMixin.fire({
+                            animation: true,
+                            title: 'Estado de Tasa de Cambio Editado!'
+                        });
+                        tasaCambio_Table.ajax.reload(null, false);
+                    } else {
+                        Swal.fire("", "Error D: " + data.error, "error");
+                    }
+                }
+            });
+        });
+
+
+        
+
+        $('#formTasaCambio').submit(function (e) {
+            e.preventDefault();
+
+            fecha = $('#tasaFecha').val();
+            tasaCambio = $('#tasaCambio').val();
+            tasaCompra = $('#tasaCompra').val();
+            tasaBanco = $('#tasaBanco').val();
+
+            if (!fecha || !tasaCambio || !tasaCompra || !tasaBanco) {
+                Swal.fire("", "Debes llenar todos los campos!", "warning");
+            } else {
+
+                $.ajax({
+                    url: "{% url 'insert_update_tasa_cambio' %}", 
+                    type: "POST",
+                    data: {
+                        tasa_id: tasa_id,
+                        fecha: fecha,
+                        tasaCambio: tasaCambio,
+                        tasaCompra: tasaCompra,
+                        tasaBanco: tasaBanco,
+                        opcion: opcion,
+                        csrfmiddlewaretoken: csrfToken
+                    },
+                    success: function (data) {
+                        if (data.save == 1) {
+                            if (opcion == 1) {
+                                if (data.existe == 0) {
+                                    $('#modalTasaCambio').modal('hide');
+
+                                    toastMixin.fire({
+                                        animation: true,
+                                        title: 'Tasa de Cambio Creada!'
+                                    });
+                                } else {
+                                    Swal.fire("", "Ya existe una Tasa de Cambio para esta Fecha!", "warning");
+                                }
+                            } else {
+                                $('#modalTasaCambio').modal('hide');
+
+                                toastMixin.fire({
+                                    animation: true,
+                                    title: 'Tasa de Cambio Editada!'
+                                });
+                            }
+
+                            tasaCambio_Table.ajax.reload(null, false);
+                        } else {
+                            Swal.fire("", "Error D: " + data.error, "error");
+                        }
+                    }
+                });
+                
+            }
+
+        });
+
+        
+
+
+        /*  */
+    });
+</script>
+{% endblock %}

@@ -1,0 +1,63 @@
+<div class="modal fade" id="modalAlmacen" tabindex="-1" aria-labelledby="modalAlmacenLabel" aria-hidden="true"
+    data-bs-keyboard="false" data-bs-backdrop="static">
+    <div class="modal-dialog modal-lg">
+        <div class="modal-content">
+            <div class="modal-header" style="background-color: #697a8a; color: white;">
+                <h5 class="modal-title modalAlmacenLabel" id="modalAlmacenLabel">
+                    <i class="material-icons me-2 text-gray">AGREGAR ALMACEN</i>
+                </h5>
+                <!--<button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal" aria-label="Close"></button> -->
+            </div>
+
+            <form id="formAlmacenes">
+                <div class="modal-body">
+            
+                    <!-- NOMBRE DEL ALMACÉN Y UBICACIÓN EN LA MISMA FILA -->
+                    <div class="row mb-3">
+                        <!-- Nombre del Almacén -->
+                        <div class="col-md-6">
+                            <div class="form-group">
+                                <label for="nombre_almacen"><strong>Nombre del Almacén:</strong></label>
+                                <input type="text" class="form-control form-control-sm" id="nombre_almacen" name="nombre_almacen" placeholder="Escriba el nombre del almacén">
+                            </div>
+                        </div>
+            
+                        <!-- Ubicación del Almacén -->
+                        <div class="col-md-6">
+                            <div class="form-group">
+                                <label for="ubicacion"><strong>Ubicación del Almacén:</strong></label>
+                                <textarea class="form-control form-control-sm" id="ubicacion" name="ubicacion" placeholder="Escriba la ubicación"></textarea>
+                            </div>
+                        </div>
+                    </div>
+            
+                    <div class="row mb-3">
+                        <!-- Area -->
+                        <div class="col-md-6">
+                            <label for="area"><strong>Área:</strong></label>
+                            <select id="area" class="form-select form-select-sm" name="area">
+                                <option value="#">Cargando áreas...</option>
+                            </select>
+                        </div>
+                    
+                        <!-- Fecha de Creación -->
+                        <div class="col-md-6">
+                            <label for="fecha"><strong>Fecha de Creación:</strong></label>
+                            <input type="date" class="form-control form-control-sm" id="fecha" name="fecha">
+                        </div>
+                    </div>
+                    
+            
+                </div>
+            
+                <div class="modal-footer">
+                    <button type="submit" class="btn btn-outline-success w-20"><strong>Agregar</strong></button>
+                    <button type="button" class="btn btn-outline-danger w-20" data-bs-dismiss="modal"><strong>Cancelar</strong></button>
+                </div>
+            </form>            
+
+        </div>
+    </div>
+
+</div>
+<!-- Al final de tu archivo HTML, justo antes de </body> -->

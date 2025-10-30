@@ -1,0 +1,465 @@
+{% load static %}
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.0.2/dist/css/bootstrap.min.css" rel="stylesheet"
+        integrity="sha384-EVSTQN3/azprG1Anm3QDgpJLIm9Nao0Yz1ztcQTwFspd3yD65VohhpuuCOmLASjC" crossorigin="anonymous">
+
+    <script src="https://cdn.jsdelivr.net/npm/@popperjs/core@2.9.2/dist/umd/popper.min.js"
+        integrity="sha384-IQsoLXl5PILFhosVNubq5LC7Qb9DXgDA9i+tQ8Zj3iwWAwPtgFTxbJ8NT4GN1R8p" crossorigin="anonymous">
+        </script>
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.0.2/dist/js/bootstrap.min.js"
+        integrity="sha384-cVKIPhGWiC2Al4u+LWgxfKTRIcfu0JTxR+EQDz/bgldoEyl4H0zUF0QKbrJ0EcQF" crossorigin="anonymous">
+        </script>
+
+    <link href="https://fonts.googleapis.com/icon?family=Material+Icons" rel="stylesheet">
+
+    <link rel="stylesheet" href="https://cdn.datatables.net/1.13.7/css/jquery.dataTables.min.css">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/twitter-bootstrap/5.2.0/css/bootstrap.min.css">
+
+    <link href="https://cdn.datatables.net/1.13.8/css/jquery.dataTables.css" rel="stylesheet">
+    <link href="https://cdn.datatables.net/buttons/2.4.2/css/buttons.dataTables.css" rel="stylesheet">
+    <link href="https://cdn.datatables.net/fixedcolumns/4.3.0/css/fixedColumns.dataTables.css" rel="stylesheet">
+    <link href="https://cdn.datatables.net/fixedheader/3.4.0/css/fixedHeader.dataTables.css" rel="stylesheet">
+    <link href="https://cdn.datatables.net/searchpanes/2.2.0/css/searchPanes.dataTables.css" rel="stylesheet">
+    <link href="https://cdn.datatables.net/select/1.7.0/css/select.dataTables.css" rel="stylesheet">
+    <link rel="icon" type="image/png" sizes="16x16" href="{% static 'app/cws/images/favicon-16x16.png' %}">
+
+    <script src="https://kit.fontawesome.com/e716b78aa6.js" crossorigin="anonymous"></script>
+
+    <script src="https://unpkg.com/sweetalert/dist/sweetalert.min.js"></script>
+
+    <script type="text/javascript" src="https://code.highcharts.com/stock/highstock.js"></script>
+    <script src="https://code.highcharts.com/modules/exporting.js"></script>
+    <script src="https://code.highcharts.com/modules/export-data.js"></script>
+    <script src="https://code.highcharts.com/modules/accessibility.js"></script>
+
+    <link rel="stylesheet" href="{% static 'app/css/CWS.css' %}">
+
+    <title>Talento Humano</title>
+
+    <style>
+        .toast-success {
+            background-color: #51A351 !important;
+        }
+
+        .toast-message {
+            color: #FFFFFF !important;
+        }
+
+        body {
+            margin: 0;
+            font-family: Arial, sans-serif;
+            min-height: 100vh;
+            display: flex;
+            flex-direction: column;
+            position: relative;
+            overflow-x: hidden;
+        }
+
+        body::before {
+            content: "";
+            position: absolute;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background: linear-gradient(135deg, rgba(52, 208, 88, 0.4), rgba(0, 123, 255, 0.4));
+            background-size: 400% 400%;
+            animation: gradientBackground 15s ease infinite;
+            z-index: -1;
+        }
+
+        @keyframes gradientBackground {
+            0% {
+                background-position: 0% 50%;
+            }
+
+            50% {
+                background-position: 100% 50%;
+            }
+
+            100% {
+                background-position: 0% 50%;
+            }
+        }
+
+        .main-wrapper {
+            flex: 1;
+            display: flex;
+            flex-direction: column;
+            z-index: 0;
+        }
+
+        .page-wrapper {
+            flex: 1;
+            padding: 10px;
+            display: flex;
+            align-items: flex-start;
+            justify-content: center;
+            overflow: hidden;
+            margin-top: 20px;
+            /* Ajuste para subir la tarjeta principal */
+        }
+
+        .card {
+            background-color: #ffffff;
+            border-radius: 10px;
+            box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
+            width: 100%;
+            padding: 20px;
+            margin: 10px;
+        }
+
+        .icon-card {
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            flex-direction: column;
+            padding: 20px;
+            text-align: center;
+            background-color: #fff;
+            border: 1px solid #ddd;
+            border-radius: 8px;
+            box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
+            transition: transform 0.3s, background-color 0.3s, color 0.3s;
+            margin: 10px;
+        }
+
+        .icon-card:hover {
+            transform: translateY(-5px);
+            background-color: #e0f7fa;
+            /* Color de fondo al pasar el mouse */
+        }
+
+        .icon-card:active {
+            transform: translateY(-2px);
+            background-color: #b2ebf2;
+            /* Color de fondo al hacer clic */
+        }
+
+        .material-icons {
+            font-size: 48px;
+            color: #ff4081;
+            /* Color inicial contrastante */
+            transition: color 0.3s;
+        }
+
+        .icon-card:hover .material-icons {
+            color: #f50057;
+            /* Color del icono al pasar el mouse */
+        }
+
+        .icon-card:active .material-icons {
+            color: #c51162;
+            /* Color del icono al hacer clic */
+        }
+
+        .header {
+            padding: 10px 20px;
+            background-color: #205c634c;
+            color: #fff;
+            display: flex;
+            justify-content: flex-end;
+            align-items: center;
+            z-index: 10;
+            /* Asegurarse que esté encima de otros elementos */
+            position: relative;
+        }
+
+        .header .user-menu {
+            display: flex;
+            align-items: center;
+            list-style: none;
+        }
+
+        .header .user-text h6 {
+            font-family: 'Roboto', sans-serif;
+            font-weight: 700;
+            margin: 0;
+        }
+
+        .header .user-menu .nav-item {
+            margin-left: 20px;
+            position: relative;
+        }
+
+        .header .user-menu .nav-item .user-img {
+            display: flex;
+            align-items: center;
+        }
+
+        .dropdown-menu {
+            width: 220px;
+            padding: 10px;
+            z-index: 1000;
+            /* Mayor valor para asegurar que esté encima de otros elementos */
+            position: absolute;
+            top: 90%;
+            right: 0;
+            box-shadow: 0 2px 10px rgba(0, 0, 0, 0.1);
+            transform: translateY(-10px);
+            /* Ajuste adicional para subir la tarjeta */
+        }
+
+        .user-header {
+            display: flex;
+            align-items: center;
+            padding-bottom: 10px;
+            border-bottom: 1px solid #e9ecef;
+        }
+
+        .user-header .avatar {
+            margin-right: 10px;
+        }
+
+        .user-text h6 {
+            margin: 0;
+            font-size: 16px;
+            font-weight: 700;
+        }
+
+        .user-text {
+            display: flex;
+            flex-direction: column;
+            align-items: flex-start;
+        }
+
+        .dropdown-item-container {
+            margin-top: 10px;
+            display: flex;
+            justify-content: center;
+        }
+
+        .dropdown-item {
+            width: 100%;
+            text-align: center;
+        }
+
+        footer {
+            padding: 10px;
+            text-align: center;
+            background-color: rgba(32, 92, 99, 0.3);
+            color: #fff;
+        }
+
+        .page-title {
+            margin-bottom: 20px;
+            font-size: 18px;
+            font-weight: bold;
+            text-align: center;
+        }
+
+        @media (min-width: 768px) {
+            .page-title {
+                font-size: 24px;
+            }
+        }
+
+        .container {
+            display: flex;
+            justify-content: center;
+            width: 100%;
+        }
+
+        .row {
+            width: 100%;
+            display: flex;
+            justify-content: space-around;
+            flex-wrap: wrap;
+        }
+
+        @media (max-width: 576px) {
+            .icon-card {
+                padding: 15px;
+                margin: 5px;
+            }
+
+            .material-icons {
+                font-size: 36px;
+            }
+        }
+
+        @media (max-width: 576px) {
+            .row {
+                flex-direction: column;
+                align-items: center;
+            }
+
+            .icon-card {
+                width: 90%;
+                margin: 5px 0;
+            }
+        }
+    </style>
+
+</head>
+
+<body>
+    <div class="main-wrapper">
+        <div class="header" id="header-navbar">
+            <ul class="nav user-menu">
+                <li class="nav-item dropdown has-arrow new-user-menus">
+                    <a href="#" class="dropdown-toggle nav-link" data-bs-toggle="dropdown">
+                        <span class="user-img">
+                            <img class="rounded-circle" src="{% static 'app/ticketit/images/avatar-01.png' %}"
+                                width="31">
+                        </span>
+                    </a>
+                    <div class="dropdown-menu">
+                        <div class="user-header">
+                            <div class="avatar avatar-sm">
+                                <img src="{% static 'app/ticketit/images/avatar-01.png' %}"
+                                    class="avatar-img rounded-circle">
+                            </div>
+                            <div class="user-text">
+                                <h6>{{ fullName }}</h6>
+                            </div>
+                        </div>
+                        <div class="dropdown-item-container">
+                            <a class="dropdown-item" href="{% url 'logoutRequest' %}">Salir</a>
+                        </div>
+                    </div>
+                </li>
+            </ul>
+        </div>
+        <div class="page-wrapper content container-fluid">
+            <div class="card comman-shadow shadow-lg">
+                <div class="card-body">
+                    <div class="row align-items-center">
+                        <div class="col">
+                            <h3 class="page-title">Apartados del Kanban</h3>
+                        </div>
+                    </div>
+                    <br>
+                    <div class="container py-5">
+                        <div class="row">
+                            <div class="col">
+                                <div class="icon-card clickedModule">
+                                    <input type="hidden" value="TH100" class="moduleValue">
+                                    <input type="hidden" value="kanban" class="moduleUrl">
+                                    <input type="hidden" value="kanban" class="nombreApartado">
+                                    <span class="material-icons">task_alt</span>
+                                    <p>Kanban</p>
+
+
+                                </div>
+                            </div>
+
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <footer>
+            <p class="text-capitalize">COPYRIGHT © 2024. V1.1 - RM</p>
+        </footer>
+    </div>
+
+    <script src="https://code.jquery.com/jquery-3.6.0.js"></script>
+    <script src="https://cdn.datatables.net/1.13.7/js/jquery.dataTables.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/jszip/3.10.1/jszip.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/pdfmake/0.2.7/pdfmake.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/pdfmake/0.2.7/vfs_fonts.js"></script>
+    <script src="https://cdn.datatables.net/1.13.8/js/jquery.dataTables.js"></script>
+    <script src="https://cdn.datatables.net/buttons/2.4.2/js/dataTables.buttons.js"></script>
+    <script src="https://cdn.datatables.net/buttons/2.4.2/js/buttons.html5.js"></script>
+    <script src="https://cdn.datatables.net/buttons/2.4.2/js/buttons.print.js"></script>
+    <script src="https://cdn.datatables.net/fixedcolumns/4.3.0/js/dataTables.fixedColumns.js"></script>
+    <script src="https://cdn.datatables.net/fixedheader/3.4.0/js/dataTables.fixedHeader.js"></script>
+    <script src="https://cdn.datatables.net/searchpanes/2.2.0/js/dataTables.searchPanes.js"></script>
+    <script src="https://cdn.datatables.net/select/1.7.0/js/dataTables.select.js"></script>
+
+    <script src="https://cdn.datatables.net/plug-ins/1.13.1/api/sum().js"></script>
+    <script src="https://cdn.datatables.net/plug-ins/1.12.1/sorting/currency.js"></script>
+
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/FileSaver.js/2.0.5/FileSaver.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.17.0/xlsx.full.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/TableExport/5.2.0/js/tableexport.min.js"></script>
+    <script src="https://unpkg.com/xlsx/dist/xlsx.full.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
+
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/chosen/1.8.7/chosen.min.css">
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/chosen/1.8.7/chosen.jquery.min.js"></script>
+
+    <script src="https://cdn.jsdelivr.net/npm/autonumeric@4.6.0/dist/autoNumeric.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/jquery.inputmask/5.0.6/jquery.inputmask.min.js"></script>
+
+
+
+    <script>
+        $(document).ready(function () {
+            $(".formattedMoneyInputs").inputmask("decimal", {
+                radixPoint: ".",
+                groupSeparator: ",",
+                digits: 2,
+                autoGroup: true,
+                rightAlign: false,
+                removeMaskOnSubmit: true,
+            });
+
+            var csrfToken = "{{ csrf_token }}";
+            var user_id = "{{ user_id }}";
+            var userName = "{{ userName }}";
+
+            localStorage.setItem('jwtToken', '{{token}}');
+
+            $(document).on('click', '.clickedModule', function () {
+                var modulo = $(this).closest('.clickedModule').find('.moduleValue').val();
+                var nombre_apartado = $(this).closest('.clickedModule').find('.nombreApartado').val();
+                var url = $(this).closest('.clickedModule').find('.moduleUrl').val();
+
+                var token = localStorage.getItem('jwtToken');
+
+                // Imprimir la URL que se está construyendo
+                console.log("URL generada:", url);
+
+                Swal.fire({
+                    didOpen: () => {
+                        Swal.showLoading();
+                    },
+                    allowOutsideClick: false,
+                    showConfirmButton: false
+                });
+
+                $.ajax({
+                    url: "{% url 'menuRequest' %}",  // Se usa Django template para configurar la URL de la vista
+                    type: "POST",
+                    data: {
+                        menu: modulo,
+                        user_id: user_id,
+                        username: userName,
+                        csrfmiddlewaretoken: csrfToken
+                    },
+                    dataType: "json",
+                    success: function (data) {
+                        Swal.close();
+
+                        if (data.save == 1) {
+                            if (data.module == 1) {
+                                // Asegúrate de que la URL apunta a 'kanban_principal'
+                                var redirectUrl = "{% url 'kanban_principal' %}";
+
+                                // Redirigir al usuario a la página principal de Kanban
+                                window.location = redirectUrl;
+                            } else {
+                                Swal.fire("", "No tienes acceso al Módulo!", "warning");
+                            }
+                        } else {
+                            Swal.fire("", "Error D: " + data.error, "error");
+                        }
+                    }
+                });
+            });
+        });
+    </script>
+
+
+</body>
+
+</html>

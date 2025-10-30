@@ -1,0 +1,242 @@
+{% load static %}
+<!doctype html>
+<html lang="en">
+
+<head>
+    <title>{% block title %}{% endblock %}</title>
+    <!-- Required meta tags -->
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1, shrink-to-fit=no">
+
+    <link rel="preconnect" href="https://fonts.gstatic.com">
+    <link href="https://fonts.googleapis.com/css2?family=Nunito:wght@300;400;600;700;800&display=swap" rel="stylesheet">
+
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.0.2/dist/css/bootstrap.min.css" rel="stylesheet"
+        integrity="sha384-EVSTQN3/azprG1Anm3QDgpJLIm9Nao0Yz1ztcQTwFspd3yD65VohhpuuCOmLASjC" crossorigin="anonymous">
+
+    <script src="https://cdn.jsdelivr.net/npm/@popperjs/core@2.9.2/dist/umd/popper.min.js"
+        integrity="sha384-IQsoLXl5PILFhosVNubq5LC7Qb9DXgDA9i+tQ8Zj3iwWAwPtgFTxbJ8NT4GN1R8p" crossorigin="anonymous">
+        </script>
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.0.2/dist/js/bootstrap.min.js"
+        integrity="sha384-cVKIPhGWiC2Al4u+LWgxfKTRIcfu0JTxR+EQDz/bgldoEyl4H0zUF0QKbrJ0EcQF" crossorigin="anonymous">
+        </script>
+
+    <link href="https://fonts.googleapis.com/icon?family=Material+Icons" rel="stylesheet">
+
+    <link rel="stylesheet" href="https://cdn.datatables.net/1.13.7/css/jquery.dataTables.min.css">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/twitter-bootstrap/5.2.0/css/bootstrap.min.css">
+
+    <link href="https://cdn.datatables.net/1.13.8/css/jquery.dataTables.css" rel="stylesheet">
+    <link href="https://cdn.datatables.net/buttons/2.4.2/css/buttons.dataTables.css" rel="stylesheet">
+    <link href="https://cdn.datatables.net/fixedcolumns/4.3.0/css/fixedColumns.dataTables.css" rel="stylesheet">
+    <link href="https://cdn.datatables.net/fixedheader/3.4.0/css/fixedHeader.dataTables.css" rel="stylesheet">
+    <link href="https://cdn.datatables.net/searchpanes/2.2.0/css/searchPanes.dataTables.css" rel="stylesheet">
+    <link href="https://cdn.datatables.net/select/1.7.0/css/select.dataTables.css" rel="stylesheet">
+
+
+    <script src="https://kit.fontawesome.com/e716b78aa6.js" crossorigin="anonymous"></script>
+
+    <script src="https://unpkg.com/sweetalert/dist/sweetalert.min.js"></script>
+
+    <script type="text/javascript" src="https://code.highcharts.com/stock/highstock.js"></script>
+    <script src="https://code.highcharts.com/modules/exporting.js"></script>
+    <script src="https://code.highcharts.com/modules/export-data.js"></script>
+    <script src="https://code.highcharts.com/modules/accessibility.js"></script>
+
+
+    <meta name="application-name" content="CONTABLE" />
+    <meta name="msapplication-TileColor" content="#FFFFFF" />
+
+    <link rel="stylesheet" href="{% static 'app/css/CONTA_CSS.css' %}">
+
+</head>
+
+
+<div class="modal fade" id="accessModal" tabindex="-1" role="dialog" aria-labelledby="accessModalLabel"
+    aria-hidden="true">
+    <div class="modal-dialog" role="document">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title" id="accessModalLabel">ACCESO NO AUTORIZADO</h5>
+                <button type="button" class="close" data-bs-dismiss="modal" aria-label="Close">
+                    <span aria-hidden="true">&times;</span>
+                </button>
+            </div>
+            <div class="modal-body">
+
+            </div>
+            <div class="modal-footer">
+                <h6>PUEDES SOLICITAR EL TICKET # 2 ACCESO A SISTEMA</h6>
+                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cerrar</button>
+            </div>
+        </div>
+    </div>
+</div>
+
+<body>
+
+    <nav id="menuDiv" style="display: none" class="navbar navbar-expand-lg justify-content-start">
+
+        <div class="dropdown ms-5">
+            <a class="nav-link text-center" href="{% url 'panel_contabilidad' %}" id="dashboardMenu">
+                <i class="material-icons d-block">dashboard</i>
+                Dashboard
+            </a>
+        </div>
+
+        <div class="dropdown ms-5">
+            <a class="nav-link  text-center" href="#" id="contabilidadMenu" data-bs-toggle="dropdown">
+                <i class="material-icons d-block">account_balance</i>
+                Contabilidad
+            </a>
+
+            <div class="dropdown-menu" aria-labelledby="contabilidadMenu">
+
+                <a href="{% url 'conta_new_edit_partida' 0 2 %}" id="nuevaPartidaManual_submenu"
+                    class="dropdown-item menu-link" data-menu-num="#" data-validacion="#">Nueva Partida Manual</a>
+
+                <a href="{% url 'conta_libro_mayor' 2 %}" id="libroMayor_submenu"
+                    class="dropdown-item menu-link" data-menu-num="#" data-validacion="#">Libro Mayor</a>
+
+                    
+                <a href="{% url 'conta_entregar_periodos' 2 %}" id="entregarPeriodos_submenu"
+                class="dropdown-item menu-link" data-menu-num="#" data-validacion="#">Entregar Periodos</a>
+
+            </div>
+        </div>
+
+
+        <div class="dropdown ms-5">
+            <a class="nav-link  text-center" href="#" id="catalogosMenu" data-bs-toggle="dropdown">
+                <i class="material-icons d-block">table_view</i>
+                Catalogos
+            </a>
+
+            <div class="dropdown-menu" aria-labelledby="catalogosMenu">
+
+                <a href="{% url 'conta_clasificacion_cuentas_nic' %}" id="clasificacionCuentasNIC_submenu"
+                    class="dropdown-item menu-link" data-menu-num="#" data-validacion="#">Clasificacion Cuentas
+                    NIC</a>
+
+                <a href="{% url 'conta_clasificacion_cuentas' %}" id="clasificacionCuentas_submenu"
+                    class="dropdown-item menu-link" data-menu-num="#" data-validacion="#">Clasificacion Tipos de
+                    Cuentas</a>
+
+                <a href="{% url 'cuentas_contables' %}" id="cuentasContables_submenu" class="dropdown-item menu-link"
+                    data-menu-num="#" data-validacion="#">Cuentas Contables</a>
+
+                <a href="{% url 'cuentas_gastos' %}" id="cuentasGastos_submenu" class="dropdown-item menu-link"
+                    data-menu-num="#" data-validacion="#">Cuentas de Gastos</a>
+
+                <a href="{% url 'cuentas_nic' %}" id="cuentasNIC_submenu" class="dropdown-item menu-link"
+                    data-menu-num="#" data-validacion="#">Cuentas NIC</a>
+
+                <a href="{% url 'firmas_view' %}" id="firmas_submenu" class="dropdown-item menu-link" data-menu-num="#"
+                    data-validacion="#">Firmas Financieras</a>
+
+                <a href="{% url 'conta_tasa_cambio' %}" id="tasaCambio_submenu" class="dropdown-item menu-link"
+                    data-menu-num="#" data-validacion="#">Tasa de Cambio</a>
+
+            </div>
+        </div>
+
+    </nav>
+
+    <div class="page-wrapper">
+        <div class="content container-fluid">
+
+            {% block body %}
+
+            {% endblock %}
+
+        </div>
+    </div>
+
+    <script src="https://code.jquery.com/jquery-3.6.0.js"></script>
+    <script src="https://cdn.datatables.net/1.13.7/js/jquery.dataTables.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/jszip/3.10.1/jszip.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/pdfmake/0.2.7/pdfmake.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/pdfmake/0.2.7/vfs_fonts.js"></script>
+    <script src="https://cdn.datatables.net/1.13.8/js/jquery.dataTables.js"></script>
+    <script src="https://cdn.datatables.net/buttons/2.4.2/js/dataTables.buttons.js"></script>
+    <script src="https://cdn.datatables.net/buttons/2.4.2/js/buttons.html5.js"></script>
+    <script src="https://cdn.datatables.net/buttons/2.4.2/js/buttons.print.js"></script>
+    <script src="https://cdn.datatables.net/fixedcolumns/4.3.0/js/dataTables.fixedColumns.js"></script>
+    <script src="https://cdn.datatables.net/fixedheader/3.4.0/js/dataTables.fixedHeader.js"></script>
+    <script src="https://cdn.datatables.net/searchpanes/2.2.0/js/dataTables.searchPanes.js"></script>
+    <script src="https://cdn.datatables.net/select/1.7.0/js/dataTables.select.js"></script>
+
+    <script src="https://cdn.datatables.net/plug-ins/1.13.1/api/sum().js"></script>
+    <script src="https://cdn.datatables.net/plug-ins/1.12.1/sorting/currency.js"></script>
+
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/FileSaver.js/2.0.5/FileSaver.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.17.0/xlsx.full.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/TableExport/5.2.0/js/tableexport.min.js"></script>
+    <script src="https://unpkg.com/xlsx/dist/xlsx.full.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
+
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/chosen/1.8.7/chosen.min.css">
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/chosen/1.8.7/chosen.jquery.min.js"></script>
+
+    <script src="https://cdn.jsdelivr.net/npm/autonumeric@4.6.0/dist/autoNumeric.min.js"></script>
+
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/jquery.inputmask/5.0.6/jquery.inputmask.min.js"></script>
+
+    <link href="https://cdn.jsdelivr.net/npm/select2@4.1.0-rc.0/dist/css/select2.min.css" rel="stylesheet" />
+    <script src="https://cdn.jsdelivr.net/npm/select2@4.1.0-rc.0/dist/js/select2.min.js"></script>
+
+
+    <script>
+        $(document).ready(function () {
+            $('body').addClass('mini-sidebar');
+
+
+            document.getElementById('toggle-sidebar').addEventListener('click', function () {
+                const sidebar = document.getElementById('sidebar');
+                sidebar.classList.toggle('hidden');
+            });
+
+            document.querySelectorAll('.submenu > a').forEach(menu => {
+                menu.addEventListener('click', function (e) {
+                    e.preventDefault();
+                    const parent = this.parentElement;
+                    parent.classList.toggle('active');
+                });
+            });
+
+            $(".formattedMoneyInputs").inputmask("decimal", {
+                radixPoint: ".",
+                groupSeparator: ",",
+                digits: 2,
+                autoGroup: true,
+                rightAlign: false,
+                removeMaskOnSubmit: true,
+            });
+
+            $(".formattedMoney4DecimalsInputs").inputmask("decimal", {
+                radixPoint: ".",
+                groupSeparator: ",",
+                digits: 4,
+                autoGroup: true,
+                rightAlign: false,
+                removeMaskOnSubmit: true,
+            });
+
+            $.ajaxSetup({
+                headers: {
+                    'API-Token': '2e078366ee3366544e4132ebb24eb2948270bbce69aa8ff22a30a2422cc12a7e'
+                }
+            });
+
+            $('.btnMenu').click(function () {
+                $('#menuDiv').toggle();
+            });
+
+            $('#menuDiv').toggle();
+        });
+    </script>
+
+    {% block scripts %}{% endblock %}
+</body>
+
+</html>

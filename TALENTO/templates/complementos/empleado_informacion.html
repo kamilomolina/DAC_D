@@ -1,0 +1,558 @@
+<div class="row">
+    <div class="col-md-12">
+        <div class="card position-relative mt-4">
+            <div class="card-body">
+                <h4 class="section-title text-primary animate__animated animate__fadeInDown">Información Personal</h4>
+                <!-- Contacto -->
+                <form id="form-informacion-personal">
+                    <h5 class="subsection-title d-flex align-items-center">
+                        <i class="material-icons me-2 text-gray ">contact_mail</i> Contacto
+                    </h5>
+                    <div class="custom-divider"></div>
+                    <div class="row mb-2 align-items-center">
+                        <div class="col-md-3 d-flex align-items-center">
+                            <label for="direccion-contacto" class="form-label">Dirección:</label>
+                            <input type="text" id="direccion-contacto" name="direccion_contacto"
+                                class="form-control input-underline" placeholder="Dirección personal">
+                        </div>
+                        <div class="col-md-3 d-flex align-items-center">
+                            <label for="punto-referencia" class="form-label">Punto de Referencia:</label>
+                            <input type="text" id="punto-referencia" name="punto_referencia"
+                                class="form-control input-underline" placeholder="Punto de referencia">
+                        </div>
+                        <div class="col-md-3 d-flex align-items-center">
+                            <label for="correo-contacto" class="form-label">Correo Personal:</label>
+                            <input type="text" id="correo-contacto" name="correo_contacto"
+                                class="form-control input-underline" placeholder="Dirección personal">
+                        </div>
+                        <div class="col-md-3 d-flex align-items-center">
+                            <label for="rtn" class="form-label">RTN:</label>
+                            <input type="text" id="rtn" name="rtn" class="form-control input-underline"
+                                placeholder="0000-0000-000000">
+                        </div>
+
+
+                    </div>
+
+                    <div class="row mb-2 align-items-center">
+
+
+
+                        <div class="col-md-3 d-flex align-items-center">
+                            <label for="telefono-personal" class="form-label">Teléfono Personal:</label>
+                            <input type="tel" id="telefono-personal" name="telefono_personal"
+                                class="form-control input-underline" placeholder="xxxx-xxxx">
+                        </div>
+
+                        <div class="col-md-3 d-flex align-items-center">
+                            <label for="tipo-vehiculo" class="form-label">Tipo Vehículo:</label>
+                            <select id="tipo-vehiculo" name="tipo_vehiculo" class="form-control input-underline select2"
+                                style="width: 100%;" placeholder="tipo-vehiculo">
+                                <option value=""></option>
+                                {% for sangre in vehiculo %}
+                                <option value="{{ sangre.0 }}">{{ sangre.1 }}</option>
+                                {% endfor %}
+                            </select>
+                        </div>
+                        <div class="col-md-3 d-flex align-items-center">
+                            <label for="placa-vehiculo" class="form-label">Placa Vehículo:</label>
+                            <input type="text" id="placa-vehiculo" name="placa_vehiculo"
+                                class="form-control input-underline" placeholder="Placa vehículo">
+                        </div>
+
+
+                    </div>
+                    <!-- Datos de Residencia  -->
+                    <h5 class="subsection-title d-flex align-items-center">
+                        <i class="material-icons me-2 text-gray">home</i> Datos de Residencia
+                    </h5>
+                    <div class="custom-divider"></div>
+
+                    <div class="row mb-2 align-items-center">
+                        <div class="col-md-4 d-flex align-items-center">
+                            <label for="residencia" class="form-label custom-margin-right">Pais Residencia: </label>
+                            <select id="residencia" name="residencia" class="form-control input-underline select2 "
+                                style="width: 100%;">
+                                <option value="">Seleccione una opción</option>
+                                <option value="new-residencia">Crear nuevo pais de residencia</option>
+                                {% for pais in paises %}
+                                <option value="{{ pais.0 }}">{{ pais.1 }}</option>
+                                {% endfor %}
+                            </select>
+                        </div>
+
+                        <div class="col-md-4 d-flex align-items-center">
+                            <label for="departamento_pais" class="form-label custom-margin-right">Departamento: </label>
+                            <select id="departamento_pais" name="departamento_pais"
+                                class="form-control input-underline select2" style="width: 100%;">
+                                <option value="">Seleccione una opción</option>
+                                <option value="new-departamento-pais">Crear nuevo departamento</option>
+                                {% for pais in departament_pais %}
+                                <option value="{{ pais.1 }}">{{ pais.2 }}</option>
+                                {% endfor %}
+                            </select>
+
+                        </div>
+
+
+                        <div class="col-md-4 d-flex align-items-center">
+                            <label for="nuevo-municipio-departamento"
+                                class="form-label custom-margin-right">Municipio:</label>
+                            <select id="nuevo-municipio-departamento" name="nuevo_municipio_departamento"
+                                style="width: 100%;" class="form-control input-underline select2">
+                                <option value="">Seleccione una opción</option>
+                                <option value="new-municipio-departamento">Crear un nuevo municipio</option>
+                                {% for pais in municipies_departamento %}
+                                <option value="{{ pais.1 }}">{{ pais.2 }}</option>
+                                {% endfor %}
+                            </select>
+
+                        </div>
+
+                    </div>
+
+                    <div class="row mb-2 align-items-center">
+                     
+                        <div class="col-md-4 d-flex align-items-center">
+                            <label for="nuevo-barrio-ciudad" class="form-label custom-margin-right">Barrio y
+                                Colonia:</label>
+                            <select id="nuevo-barrio-ciudad" name="nuevo_barrio_ciudad" style="width: 100%;"
+                                class="form-control input-underline select2">
+                                <option value="">Seleccione una opción</option>
+                                <option value="new-barrio-ciudad">Crear nuevo barrio</option>
+                                {% for ciudad in barrios_municipios %}
+                                <option value="{{ ciudad.0 }}">{{ ciudad.2 }}</option>
+                                {% endfor %}
+                            </select>
+                        </div>
+
+
+
+                        <div class="col-md-4 d-flex align-items-center">
+                            <label for="direccion-km" class="form-label">Distancia KM:</label>
+                            <input type="text" id="distancia-km" name="distancia_km"
+                                class="form-control input-underline" placeholder="Distancia">
+                        </div>
+                    </div>
+
+                    <!-- Ciudadania -->
+                    <h5 class="subsection-title d-flex align-items-center">
+                        <i class="material-icons me-2 text-gray">flag</i> Ciudadania
+                    </h5>
+                    <div class="custom-divider"></div>
+                    <div class="row mb-2 align-items-center">
+
+                        <div class="col-md-4 d-flex align-items-center">
+                            <label for="nuevo-pais-nac" class="form-label">País Nacimiento:</label>
+                            <select id="nuevo-pais-nac" name="nuevo_pais_nac" style="width: 100%;"
+                                class="form-control input-underline select2" placeholder="Nivel certificado">
+                                <option value="">Seleccione una opción</option>
+                                <!-- <option value="new-pais-nac">Crear pais de nacimiento</option> -->
+                                {% for cer in paises %}
+                                <option value="{{ cer.0 }}">{{ cer.1 }}</option>
+                                {% endfor %}
+                            </select>
+                        </div>
+
+                        <div class="col-md-4 d-flex align-items-center">
+                            <label for="nacionalidad" class="form-label custom-margin-right">Nacionalidad: </label>
+                            <select id="nacionalidad" name="nacionalidad" class="form-control input-underline select2"
+                                style="width: 100%;">
+                                <option value="">Seleccione una opción</option>
+                                {% for cer in paises %}
+                                <option value="{{ cer.0 }}">{{ cer.7 }}</option>
+                                {% endfor %}
+
+                            </select>
+                        </div>
+
+
+
+                        <div class="col-md-4 d-flex align-items-center">
+                            <label for="pasaporte" class="form-label">Pasaporte:</label>
+                            <input type="text" id="pasaporte" name="pasaporte" class="form-control input-underline"
+                                placeholder="Pasaporte">
+                        </div>
+
+                    </div>
+                    <div class="row mb-2 align-items-center">
+                        <div class="col-md-4 d-flex align-items-center">
+                            <label for="ciudad-nac" class="form-label">Ciudad Nacimiento:</label>
+                            <input type="text" id="ciudad-nac" name="ciudad_nac" class="form-control input-underline"
+                                placeholder="Ciudad de nacimiento">
+                        </div>
+                        <div class="col-md-4 d-flex align-items-center">
+                            <label for="fecha-nac" class="form-label">Fecha Nacimiento:</label>
+                            <input type="date" id="fecha-nac" name="fecha_nac" class="form-control input-underline">
+                        </div>
+                        <div class="col-md-4 d-flex align-items-center">
+                            <label for="sexo" class="form-label custom-margin-right">Sexo: </label>
+                            <select id="sexo" name="sexo" class="form-control input-underline select2 "
+                                placeholder="Sexo" style="width: 100%;">
+                                <option value="">Seleccione una opción</option>
+                                {% for genero in generos %}
+                                <option value="{{ genero.0 }}">{{ genero.1 }}</option>
+                                {% endfor %}
+                            </select>
+                        </div>
+
+                    </div>
+                    <!-- Estado Familiar -->
+                    <h5 class="subsection-title d-flex align-items-center">
+                        <i class="material-icons me-2 text-gray">family_restroom</i> Estado Familiar
+                    </h5>
+                    <div class="custom-divider"></div>
+                    <div class="row mb-2 align-items-center">
+                        <div class="col-md-4 d-flex align-items-center">
+                            <label for="estado-civil" class="form-label">Estado Civil: </label>
+                            <select id="estado-civil" name="estado_civil" class="form-control input-underline select2"
+                                style="width: 100%;" placeholder="Estado civil">
+                                <option value="">Seleccione una opción</option>
+                                {% for estado_civil in civil %}
+                                <option value="{{ estado_civil.0 }}">{{ estado_civil.1 }}</option>
+                                {% endfor %}
+                            </select>
+                        </div>
+
+
+                        <div class="col-md-4 d-flex align-items-center">
+                            <label for="numero-hijos" class="form-label">Número de Hijos: </label>
+                            <input type="number" id="numero-hijos" name="numero_hijos"
+                                class="form-control input-underline" placeholder="número de hijos">
+                        </div>
+                    </div>
+                    <div class="row" style="margin-top: 1rem;">
+                        <div class="col-md-12">
+                            <div class="card">
+                                <div class="card-body" style="background-color: #f4f6f9;">
+                                    <div class="d-flex justify-content-between align-items-center">
+                                        <h4 class="card-title text-primary">Familiares Dependientes</h4>
+                                        <button type="button" id="btn-familiar-dependendiete"
+                                            class="btn btn-add-familiares mb-3 animate__animated animate__pulse animate__slow animate__infinite"
+                                            style="background-color: #f5c542; color: #ffffff;" data-toggle="modal"
+                                            data-target="#modalFamiliares">
+                                            <i class="material-icons">add</i>
+                                        </button>
+                                    </div>
+                                    <div class="table-responsive">
+                                        <table id="familiares-table-unique"
+                                            class="table table-striped table-bordered table-top-border"
+                                            style="width:100%">
+                                            <thead>
+                                                <tr>
+                                                    <th>#</th>
+                                                    <th>Nombre</th>
+                                                    <th>Teléfono</th>
+                                                    <th>Parentesco</th>
+                                                    <!-- <th>idParentesco</th> -->
+                                                    <th>Residencia</th>
+                                                    <th>Fecha Creado</th>
+                                                    <th>Creado Por</th>
+                                                    <th>Fecha Modificaco</th>
+                                                    <th>Modificado Por</th>
+                                                    <th>Acciones</th>
+                                                </tr>
+                                            </thead>
+                                            <tbody>
+                                            </tbody>
+                                        </table>
+                                    </div>
+
+                                </div>
+                            </div>
+                        </div>
+
+
+                    </div>
+
+                    <!-- Estado Familiar -->
+                    <h5 class="subsection-title d-flex align-items-center">
+                        <i class="material-icons me-2 text-gray">medical_services</i> Información Médica
+                    </h5>
+
+                    <div class="custom-divider"></div>
+                    <div class="row mb-2">
+                        <div class="col-md-5 d-flex align-items-center">
+                            <label for="tipo-sangre" class="form-label">Tipo de Sangre: </label>
+                            <select id="tipo-sangre" name="tipo_sangre" class="form-control input-underline select2"
+                                style="width: 100%;" placeholder="tipo-sangre">
+                                <option value=""></option>
+                                {% for sangre in sangres %}
+                                <option value="{{ sangre.0 }}">{{ sangre.1 }}</option>
+                                {% endfor %}
+                            </select>
+                        </div>
+                    </div>
+                    <div class="row mb-2 ">
+
+
+                        <div class="col-md-8">
+                            <div class="card">
+                                <div class="card-body" style="background-color: #f4f6f9;">
+                                    <div class="d-flex justify-content-between align-items-center">
+                                        <h4 class="card-title text-primary">Enfermedades de Base</h4>
+                                        <button type="button"
+                                            class="btn btn-add-enfermedades-base mb-3 animate__animated animate__pulse animate__slow animate__infinite"
+                                            style="background-color: #f5c542; color: #ffffff;" data-toggle="modal"
+                                            data-target="#modalCrearEnfermedadesBase">
+                                            <i class="material-icons">add</i>
+                                        </button>
+                                    </div>
+                                    <div class="table-responsive">
+                                        <table id="enfermedades-base-table"
+                                            class="table table-striped table-bordered table-top-border"
+                                            style="width:100%">
+                                            <thead>
+                                                <tr>
+                                                    <th>#</th>
+                                                    <th>Enfermedad</th>
+                                                    <!-- <th>codigo enfermedad</th> -->
+                                                    <!--  <th>Acciones</th> -->
+                                                </tr>
+                                            </thead>
+                                            <tbody>
+                                            </tbody>
+                                        </table>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+
+                    </div>
+
+
+                    <h5 class="subsection-title d-flex align-items-center">
+                        <i class="material-icons me-2 text-gray">contact_phone</i> Contactos de Emergencia
+                    </h5>
+
+                    <div class="custom-divider"></div>
+                    <div class="row" style="margin-top: 1rem;">
+
+                        <div class="col-md-8">
+                            <div class="card">
+                                <div class="card-body" style="background-color: #f4f6f9;">
+                                    <div class="d-flex justify-content-between align-items-center">
+                                        <h4 class="card-title text-primary">Contactos de Emergencia</h4>
+                                        <button type="button"
+                                            class="btn btn-add-contactos mb-3 animate__animated animate__pulse animate__slow animate__infinite"
+                                            style="background-color: #f5c542; color: #ffffff;" data-toggle="modal"
+                                            data-target="#contactosEmergenciaModal">
+                                            <i class="material-icons">add</i>
+                                        </button>
+                                    </div>
+                                    <div class="table-responsive">
+                                        <table id="contactos-emergencia-table"
+                                            class="table table-striped table-bordered table-top-border"
+                                            style="width:100%">
+                                            <thead>
+                                                <tr>
+                                                    <th>#</th>
+                                                    <th>Nombre</th>
+                                                    <th>Teléfono</th>
+                                                    <th>Parentesco</th>
+                                                    <!-- <th>codigo parentesco</th>
+                                            <th>Acciones</th> -->
+                                                </tr>
+                                            </thead>
+                                            <tbody>
+                                            </tbody>
+                                        </table>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+
+                    </div>
+
+                    <!-- Educación -->
+                    <h5 class="subsection-title d-flex align-items-center">
+                        <i class="material-icons me-2 text-gray">school</i> Educación
+                    </h5>
+                    <div class="custom-divider"></div>
+                    <div class="row mb-2 align-items-center">
+                        <div class="col-md-4 d-flex align-items-center">
+                            <label for="nivel-certificado" class="form-label">Nivel Certificado:</label>
+                            <select id="nivel-certificado" name="nivel_certificado" style="width: 100%;"
+                                class="form-control input-underline select2" placeholder="Nivel certificado">
+                                <option value="">Seleccione una opción</option>
+                                <option value="new-nivel-certificado">Crear un nivel certificado</option>
+                                {% for cer in certificaciones %}
+                                <option value="{{ cer.0 }}">{{ cer.1 }}</option>
+                                {% endfor %}
+                            </select>
+                        </div>
+                        <div class="col-md-4 d-flex align-items-center">
+                            <label for="nuevo-campo-estudio" class="form-label">Centro Educativo:</label>
+
+                            <select id="nuevo-campo-estudio" name="nuevo_campo_estudio" style="width: 100%;"
+                                class="form-control input-underline select2" placeholder="Nivel certificado">
+                                <option value="">Seleccione una opción</option>
+                                <option value="new-campo-estudio">Crear centro educativo</option>
+                                {% for cer in centros_educativos %}
+                                <option value="{{ cer.0 }}">{{ cer.1 }}</option>
+                                {% endfor %}
+                            </select>
+
+                        </div>
+
+                        <div class="col-md-4 d-flex align-items-center">
+                            <label for="profesion-empleado" class="form-label">Profesiones y Oficios:</label>
+                            <select id="profesion-empleado" name="profesion_empleado" style="width: 100%;"
+                                class="form-control input-underline select2" placeholder="Nivel certificado">
+                                <option value="">Seleccione una opción</option>
+                                <option value="new-profesion-empleado">Crear un nivel certificado</option>
+                                {% for cer in profesiones_oficios %}
+                                <option value="{{ cer.0 }}">{{ cer.1 }}</option>
+                                {% endfor %}
+                            </select>
+                        </div>
+
+                    </div>
+                    <h5 class="subsection-title d-flex align-items-center">
+                        <i class="material-icons me-2 text-gray">handshake</i> Asociaciones
+                    </h5>
+                    <div class="custom-divider"></div>
+
+                    <div class="row" style="margin-top: 1rem;">
+                        <div class="col-md-8">
+                            <div class="card">
+                                <div class="card-body" style="background-color: #f4f6f9;">
+                                    <div class="d-flex justify-content-between align-items-center ">
+                                        <h4 class="card-title text-primary">Participación en asociaciones</h4>
+                                        <button type="button"
+                                            class="btn btn-add-asociaciones mb-3 animate__animated animate__pulse animate__slow animate__infinite"
+                                            style="background-color: #f5c542; color: #ffffff;" data-toggle="modal"
+                                            data-target="#modalAsociaciones">
+                                            <i class="material-icons">add</i>
+                                        </button>
+                                    </div>
+                                    <div class="table-responsive">
+                                        <table id="asociaciones-table"
+                                            class="table table-striped table-bordered table-top-border"
+                                            style="width:100%">
+                                            <thead>
+                                                <tr>
+                                                    <th>#</th>
+                                                    <th>Nombre Asociación</th>
+                                                    <!-- <th>Codigo Asociación</th>
+                                            <th>Acciones</th> -->
+                                                </tr>
+                                            </thead>
+                                            <tbody>
+                                            </tbody>
+                                        </table>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="col-md-6">
+                            <div class="card invisible">
+                                <div
+                                    class="card-body d-flex justify-content-between align-items-center animate__animated animate__pulse animate__slow animate__infinite">
+                                    <h4 class="card-title text-primary">Familiares</h4>
+                                    <button type="button" class="btn btn-add"
+                                        style="background-color: #f5c542; color: #ffffff;">
+                                        <i class="material-icons">add</i>
+                                    </button>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </form>
+            </div>
+
+        </div>
+    </div>
+</div>
+
+
+
+
+
+<script>
+  
+        $(document).ready(function () {
+            $('#formCrearNivelCertificacion').on('submit', function (event) {
+                event.preventDefault(); // Evita el envío normal del formulario
+
+                // Obtener los valores del formulario
+                let certificacionName = $('#nuevo-nivel-certificado').val().trim(); // Trim para eliminar espacios
+                const creadoPor = $('#creado_por').val();
+
+                // Convertir el nombre del certificado a mayúsculas si no está vacío
+                certificacionName = certificacionName.toUpperCase();
+
+                // Validación simple
+                let errorMessage = '';
+
+                // Validar si se ha ingresado el nombre de la certificación
+                if (!certificacionName) {
+                    errorMessage += 'El campo "Nombre del Nivel de Certificación" es obligatorio.\n';
+                }
+
+                // Validar si se ha ingresado el usuario creador
+                if (!creadoPor) {
+                    errorMessage += 'Su sesión ha expirado. Por favor, inicie sesión nuevamente.\n';
+                }
+
+                // Si hay errores, mostrar el mensaje de error y detener la ejecución
+                if (errorMessage) {
+                    Swal.fire({
+                        icon: 'error',
+                        title: 'Campos Obligatorios',
+                        text: errorMessage.replace(/\n/g, ' '),  // Mostrar los errores en una sola línea
+                        confirmButtonText: 'Aceptar'
+                    });
+                    return;  // Detener la ejecución si hay errores
+                }
+
+                // Si no hay errores, proceder con la solicitud AJAX
+                $.ajax({
+                    type: 'POST',
+                    url: '{% url "crear_certificaciones" %}',  // Asegúrate de que esta URL esté definida en tus URLs de Django
+                    data: {
+                        'nivel_certificado': certificacionName,
+                        'creado_por': creadoPor,
+                        'csrfmiddlewaretoken': '{{ csrf_token }}'
+                    },
+                    success: function (response) {
+                        console.log('Respuesta del servidor:', response); // Verificar la respuesta del servidor
+                        if (response.status === 'success') {
+                            
+
+                            // Cerrar el modal
+                            $('#modalCrearNivelCertificado').modal('hide');
+
+                            // Añadir el nuevo nivel de certificación al select como la primera opción
+                            const newOption = new Option(certificacionName, response.id, true, true); // Mostrar el nombre, usar el ID como valor
+                            $('#nivel-certificado').prepend(newOption);
+                            $('#nivel-certificado').val(response.id).trigger('change'); // Seleccionar la nueva opción
+
+                            // Limpiar el formulario del modal
+                            $('#nuevo-nivel-certificado').val('');
+                        } else {
+                            Swal.fire({
+                                icon: 'error',
+                                title: 'Error',
+                                text: 'Ocurrió un error al crear la certificación. Inténtelo nuevamente.',
+                                confirmButtonText: 'Aceptar'
+                            });
+                            console.error('Error en la respuesta del servidor:', response.message);
+                        }
+                    },
+                    error: function (response) {
+                        Swal.fire({
+                            icon: 'error',
+                            title: 'Error',
+                            text: 'Ocurrió un error al crear la certificación. Inténtelo nuevamente.',
+                            confirmButtonText: 'Aceptar'
+                        });
+                        console.error('Error al crear certificación', response);
+                    }
+                });
+            });
+        
+        
+        });
+   
+</script>

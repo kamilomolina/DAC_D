@@ -1,0 +1,168 @@
+<div class="modal fade" id="modalSuministro" tabindex="-1" aria-labelledby="modalSuministroLabel" aria-hidden="true"
+    data-bs-keyboard="false" data-bs-backdrop="static">
+    <div class="modal-dialog modal-lg">
+        <div class="modal-content">
+            <div class="modal-header" style="background-color: #697a8a; color: white;">
+                <h5 class="modal-title modalSuministroLabel" id="modalSuministroLabel">
+                    <i class="material-icons me-2 text-gray">AGREGAR SUMINISTRO</i>
+                </h5>
+            </div>
+
+            <form id="formSuministro" enctype="multipart/form-data">
+                <div class="modal-body">
+                    <!-- Nombre y descripción del Suministro -->
+                    <div class="row mb-3">
+                        <div class="col-md-6">
+                            <label for="nombre_sum">Nombre del Suministro:</label>
+                            <input type="text" class="form-control form-control-sm" id="nombre_sum" name="nombre_sum">
+                        </div>
+                        <div class="col-md-6">
+                            <label for="descripcion">Descripción:</label>
+                            <textarea class="form-control form-control-sm" id="descripcion"
+                                name="descripcion"></textarea>
+                        </div>
+                    </div>
+
+                    <!-- Area y Categgoria -->
+                    <div class="row mb-3">
+                        <!-- Categoria -->
+                        <div class="col-md-6">
+                            <label for="categoria">Categoría del Suministro:</label>
+                            <select id="categoria" class="form-select form-select-sm" name="categoria">
+                                <option value="#">Seleccione la categoría:</option>
+                                {% for cat in categorias %}
+                                <option value="{{ cat.id_categoria }}">{{ cat.nombre_categoria }}</option>
+                                {% endfor %}
+                            </select>
+                        </div>
+                         <!-- Almacen -->
+                        <div class="col-md-6">
+                            <label for="almacen_suministro">Almacén:</label>
+                            <select id="almacen_suministro" class="form-select form-select-sm" name="almacen_suministro">
+                                <option value="#">Cargando almacén...</option>
+                            </select>
+                        </div>                        
+                    </div>
+
+                    <!-- Acreedor y Tipo -->
+                    <div class="row mb-3">
+
+                        <div class="col-md-6">
+                            <label for="acreedor">Acreedor:</label>
+                            <select id="acreedor" class="form-select form-select-sm" name="acreedor">
+                                <option value="#">Seleccione el acreedor:</option>
+                            </select>
+                        </div>
+                        <div class="col-md-6">
+                            <label for="area">Área:</label>
+                            <select id="area" class="form-select form-select-sm" name="area">
+                                <option value="#">Cargando áreas...</option>
+                            </select>
+                        </div>                        
+                    </div>
+
+                    <!-- Fecha de Adquisición -->
+                    <div class="row mb-3">
+                        <div class="col-md-6">
+                            <label for="fecha_adquisicion">Fecha de Adquisición:</label>
+                            <input type="date" class="form-control form-control-sm" id="fecha_adquisicion"
+                                name="fecha_adquisicion">
+                        </div>
+                    </div>
+
+                    <!-- Cantidades y Precio -->
+                    <div class="row mb-3">
+                        <div class="col-md-3">
+                            <label for="cantidad_inicial">Cantidad Máxima:</label>
+                            <input type="number" class="form-control form-control-sm" id="cantidad_inicial"
+                                name="cantidad_inicial" min="0" oninput="validateNumberInput(this)">
+                        </div>
+                        <div class="col-md-3">
+                            <label for="cantidad_stock">Cantidad en Stock:</label>
+                            <input type="number" class="form-control form-control-sm" id="cantidad_stock"
+                                name="cantidad_stock" min="0" oninput="validateNumberInput(this)">
+                        </div>
+                        <div class="col-md-3">
+                            <label for="cantidad_minima">Cantidad Mínima:</label>
+                            <input type="number" class="form-control form-control-sm" id="cantidad_minima"
+                                name="cantidad_minima" min="0" oninput="validateNumberInput(this)">
+                        </div>
+                        <div class="col-md-3">
+                            <label for="precio_unitario">Precio Unitario:</label>
+                            <input type="number" class="form-control form-control-sm" id="precio_unitario"
+                                name="precio_unitario" min="0" step="0.01" oninput="validateNumberInput(this)">
+                        </div>
+                    </div>
+
+                    <!-- Subir Imagen -->
+                    <div class="row mb-3">
+                        <div class="col-md-6">
+                            <input type="hidden" name="imagen_actual" id="imagen_actual">
+                            <label for="imagen_suministro">Imagen del Suministro:</label>
+                            <input type="file" class="form-control form-control-sm" id="imagen_suministro"
+                                name="imagen_suministro" accept="image/*" onchange="previewImage(event)">
+                        </div>
+                        <div class="col-md-6">
+                            <label for="imagen_preview">Vista previa de la Imagen:</label>
+                            <div id="imagen_preview" class="img-preview-container">
+                                <img id="imagenActual" src="#" alt="Vista previa" class="img-fluid"
+                                    style="display: none; max-width: 100%;">
+                                <p id="no_imagen" style="display: block;">No se ha seleccionado una imagen.</p>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="modal-footer">
+                        <button type="submit" class="btn btn-outline-success w-20"><strong>Agregar</strong></button>
+                        <button type="button" class="btn btn-outline-danger w-20"
+                            data-bs-dismiss="modal"><strong>Cancelar</strong></button>
+                    </div>
+            </form>
+        </div>
+    </div>
+</div>
+
+<script>
+    // Función para mostrar la vista previa de la imagen seleccionada
+    function previewImage(event) {
+        var file = event.target.files[0]; // Obtener el archivo seleccionado
+        if (file && file.type.startsWith('image/')) { // Verificar si es una imagen
+            var reader = new FileReader();
+
+            // Cuando el archivo esté cargado, actualizar la vista previa
+            reader.onload = function () {
+                var output = document.getElementById('imagenActual');
+                output.src = reader.result; // Establecer la fuente de la imagen a la data URL cargada
+                output.style.display = 'block';  // Mostrar la imagen
+                document.getElementById('no_imagen').style.display = 'none';  // Ocultar el mensaje de "no imagen"
+            };
+
+            reader.readAsDataURL(file); // Leer el archivo como una URL de datos
+        } else {
+            alert('Por favor selecciona una imagen válida');
+        }
+    }
+
+    // Limpiar el campo de imagen y la vista previa al cerrar el modal
+    var modal = document.getElementById('modalSuministro');
+    modal.addEventListener('hidden.bs.modal', function () {
+        // Limpiar el campo de entrada de la imagen
+        document.getElementById('imagen_suministro').value = '';
+
+        // Ocultar la vista previa de la imagen
+        document.getElementById('imagenActual').style.display = 'none';
+        document.getElementById('no_imagen').style.display = 'block'; // Mostrar el texto "No se ha seleccionado una imagen"
+    });
+
+    // Función para validar la entrada y permitir solo números
+    function validateNumberInput(input) {
+        // Elimina cualquier carácter que no sea un número o un punto (para decimales)
+        input.value = input.value.replace(/[^0-9.]/g, '');
+
+        // Permite solo un punto decimal
+        if ((input.value.match(/\./g) || []).length > 1) {
+            input.value = input.value.replace(/\.(?=.*\.)/, ''); // Elimina el segundo punto decimal
+        }
+    }
+
+</script>

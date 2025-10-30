@@ -1,0 +1,1391 @@
+{% extends 'menu_control_suministros.html' %}
+{% load static %}
+
+{% block title %}
+GESTION DE REQUISICIONES
+{% endblock %}
+
+
+{% block body %}
+
+<div class="row align-items-center">
+    <div class="col d-flex align-items-center">
+        <!-- <button id="toggle-sidebar" class="hamburger btnMenu me-3" title="Mostrar/Ocultar Menu">
+            <i class="fas fa-bars"></i>
+        </button> -->
+        <h3 class="page-title mb-0">
+            <i class="fas fa-check-circle"></i> <strong>LISTADO DE REQUISICIONES</strong>
+        </h3>
+    </div>
+
+    <div class="col-auto text-end float-end ms-auto download-grp">
+        <button class="btn btn-sm btn-success" style="background-color: #697a8a; text-align: justify;" id="btnNuevo"
+            title="Crear Nuevo"><i class="fas fa-plus me-2"></i>
+            <strong>Nueva Requisición</strong></button>
+    </div>
+</div>
+
+<hr>
+
+<br>
+
+<div class="row mb-3">
+    <div class="col-auto">
+        <label for="estadoFiltro" class="form-label"><strong>Filtrar por Estado</strong></label>
+        <select id="estadoFiltro" class="form-select" aria-label="Filtrar por Estado">
+            <option value="0">Todo el listado</option>
+            <option value="1">Listado de Requisiciones Activas</option>
+            <option value="3">Listado de Requisiciones Deshabilitadas</option>
+        </select>
+    </div>
+</div>
+
+<div class="row">
+    <div class="table-responsive bg-white shadow rounded-4 p-3">
+        <table id="Tabla_Requisiciones"
+            class="table table-hover table-bordered table-striped table-sm align-middle mb-0 rounded-4">
+            <thead class="text-white text-center rounded-4" style="background-color: #697a8a; text-align: center;">
+                <tr>
+                    <th class="rounded-start">No.</th>
+                    <th class="text-center">Solicitante</th>
+                    <th class="text-center">Grupo/Área</th>
+                    <th class="text-center">Acreedor</th>
+                    <th class="text-center">Fecha Pedido</th>
+                    <th class="text-center">Fecha Pago</th>
+                    <th class="text-center">Costo Total</th>
+                    <th class="text-center">Estado de Requisición</th>
+                    <th class="text-center">Estado</th>
+                    <th class="text-center">Acciones</th>
+                </tr>
+            </thead>
+            <tbody class="text-center">
+                <!-- Contenido dinámico -->
+            </tbody>
+        </table>
+    </div>
+</div>
+
+
+{% include 'Modales_S/agregar_requisicion.html' %}
+
+{% endblock %}
+
+
+{% block scripts %}
+
+<script>
+    $(document).ready(function () {
+        var csrfToken = "{{ csrf_token }}";
+        var cambiar_estado_actual = 0;
+        // var opcion = "{{ prueba }}";
+
+        var toastMixin = Swal.mixin({
+            toast: true,
+            icon: 'success',
+            title: 'General Title',
+            animation: false,
+            position: 'top-right',
+            showConfirmButton: false,
+            timer: 2000,
+            timerProgressBar: true,
+            didOpen: (toast) => {
+                toast.addEventListener('mouseenter', Swal.stopTimer);
+                toast.addEventListener('mouseleave', Swal.resumeTimer);
+            }
+        });
+
+        let dollarUSLocale = Intl.NumberFormat("en-US", {
+            minimumFractionDigits: 2,
+            maximumFractionDigits: 2
+        });
+
+        let intergerLocale = Intl.NumberFormat("en-US", {
+            minimumFractionDigits: 0,
+            maximumFractionDigits: 0
+
+        });
+
+        $('#menu_gestion_requisiciones, #listar_requisicion_submenu').addClass('active');
+
+        id_grupo_seleccionado = null;
+        id_categoria_seleccionada = null;
+        id_acreedor_seleccionado = null;
+        select_estado_requisicion = 0;
+
+        requisicion_id = null;
+
+        fillRequisicion()
+
+        function fillRequisicion() {
+
+            $("#Tabla_Requisiciones").DataTable().clear().destroy();
+
+            Tabla_Requisiciones = $("#Tabla_Requisiciones").DataTable({
+                autoWidth: false,
+                scrollX: true,
+                scrollY: '350px',
+                scrollCollapse: true,
+                pageLength: 30,
+                dom: 'Brftip',
+                language: {
+                    url: "{% static 'app/th/json/es-ES.json' %}",
+                },
+                ajax: {
+                    url: `{% url 'get_requisicion_data' %}`,
+                    type: "POST",
+                    dataScr: 'data',
+                    data: {
+                        varEstado: select_estado_requisicion,
+                        csrfmiddlewaretoken: csrfToken
+                    },
+                },
+                colReorder: {
+                    realtime: false,
+                },
+                buttons: [
+                    {
+                        extend: 'excel',
+                        text: '<i class="fas fa-file-excel"></i>',
+                        titleAttr: 'Excel',
+                        className: 'btn btn-success',
+                    },
+                    {
+                        extend: 'pdf',
+                        text: '<i class="fas fa-file-pdf"></i>',
+                        titleAttr: 'PDF',
+                        className: 'btn btn-danger',
+                    },
+                    {
+                        extend: 'print',
+                        text: '<i class="fas fa-print"></i>',
+                        titleAttr: 'Imprimir',
+                        className: 'btn btn-null',
+                        orientation: 'landscape'
+                    }
+                ],
+                columns: [
+                    {
+                        data: 'id_requisicion'
+                    },
+                    {
+                        data: 'Nombre',
+                    },
+                    {
+                        data: 'GrupoNombre',
+                    },
+                    {
+                        data: 'nombre_proveedor',
+                    },
+                    {
+                        data: 'fecha_pedido'
+                    },
+                    {
+                        data: 'fecha_pago'
+                    },
+                    {
+                        data: 'costo_total',
+                        className: 'formattMoney',
+                        render: $.fn.dataTable.render.number(',', '.', 2)
+                    },
+                    {
+                        data: 'estado_requisicion',
+                        className: 'text-center',
+                        render: function (data, type, row) {
+                            var badge = "";
+                            var estado = Number(data);
+
+                            if (estado === 1) {
+                                badge = '<span class="badge badge-pill bg-warning">PENDIENTE</span>';
+                            } else if (estado === 2) {
+                                badge = '<span class="badge badge-pill bg-info">EN PROCESO</span>';
+                            } else if (estado === 3) {
+                                badge = '<span class="badge badge-pill bg-success">COMPLETADO</span>';
+                            }
+
+                            return badge;
+                        }
+                    },
+                    {
+                        data: 'estado',
+                        className: 'text-center',
+                        render: function (data, type, row) {
+                            var badge = "";
+                            if (data == 3) {
+                                badge +=
+                                    '<span class="badge badge-pill custom-red">DESHABILITADO</span>';
+                            } else {
+                                badge +=
+                                    '<span class="badge badge-pill bg-success">ACTIVO</span>';
+                            }
+
+                            return badge;
+                        },
+                    },
+                    {
+                        data: null,
+                        width: '2%',
+                        title: "Acciones",
+                        render: function (data, type, row) {
+                            let botones = `
+                            <div class="text-center">
+                                <div class="btn-group">
+
+                                    <!-- Ver detalles -->
+                                    <button class="btn btn-info btn-sm verDetalles rounded-pill shadow-sm" title="Ver Detalles" data-id="${row.id_requisicion}">
+                                        <i class="fas fa-eye"></i>
+                                    </button>
+
+                                    <!-- Imprimir -->
+                                    <button class="btn btn-success btn-sm imprimirRequisicion rounded-pill shadow-sm" title="Imprimir Requisición" data-id="${row.id_requisicion}">
+                                        <i class="fas fa-print"></i> 
+                                    </button>
+
+                                    <!-- Estado -->
+                                    <button class="btn btn-warning btn-sm estadoR rounded-pill shadow-sm" title="Cambiar Estado" data-id="${row.id_requisicion}" data-estado="${row.estado_requisicion}">
+                                        <i class="fas fa-sync-alt"></i>
+                                    </button> 
+
+                                    <!-- Editar -->
+                                    <button class="btn btn-primary btn-sm editarRequisicion rounded-pill shadow-sm" title="Editar Requisición" data-id="${row.id_requisicion}" data-nombre="${row.PKUsuario}" data-categoria="${row.id_categoria}" data-proveedores="${row.id_proveedor}" data-grupos="${row.PKgrupo}" data-estado="${row.estado}">
+                                        <i class="fas fa-edit"></i>
+                                    </button> 
+                            `;
+
+                            // Solo mostrar el botón de "Anular/Habilitar" si el estado es PENDIENTE (1)
+                            if (row.estado_requisicion === 1) {
+                                botones += `
+                                    <button class="btn btn-danger btn-sm anularRequisicion rounded-pill shadow-sm" title="Anular/Habilitar" data-id="${row.id_requisicion}" data-estado="${row.estado}">
+                                        <i class="fas fa-sync-alt"></i>
+                                    </button>
+                                `;
+                            }
+
+                            botones += `
+                                </div>
+                            </div>
+                            `;
+
+                            return botones;
+                        }
+                    }
+                ],
+            });
+        }
+
+
+        // ------------------------------------------------------------------------------------------------------------------------------- //
+        // Agregar nueva requisicion
+        $('#btnNuevo').click(function (e) {
+            e.preventDefault();
+
+            // guardar_requisiciones_detalles = false;
+            $('#formRequisicion').trigger('reset');
+            $('#modalRequisicionLabel').html('<strong>Crear Nueva Requisicion</strong>');
+            $('#modalRequisicion').modal('show');
+
+            // Establecer valores por defecto para la nueva asignacion
+            opcion = 1;
+            requisicion_id = null;
+        });
+        // ------------------------------------------------------------------------------------------------------------------------------- //
+
+        // EDITAR REQUISICION
+        $(document).on('click', '.editarRequisicion', function () {
+            $('#formRequisicion').trigger('reset');
+
+            opcion = 2; // Para saber que es una operación de edición
+            requisicion_id = $(this).data('id');
+
+            $('#formRequisicion')[0].reset();  // Resetea el formulario
+            $('#tabla-articulos').html('');  // Limpia la tabla de artículos
+            $('#costo-total').text('0.00');  // Reinicia el costo total
+
+            // Habilitar todos los campos para poder editarlos
+            $('#formRequisicion input, #formRequisicion select, #formRequisicion textarea').prop('disabled', false).prop('readonly', false);
+
+            // Habilitar el botón "Guardar Requisición"
+            $('#agregar-articulo').prop('disabled', false);
+
+            // Mostrar el botón "Guardar Requisición"
+            $('button[type="submit"]').show();
+
+            // Deshabilitar el campo "precio_unitario"
+            $('#precio_unitario').prop('disabled', true);
+
+            // Mostrar un mensaje de carga
+            Swal.fire({
+                title: 'Cargando detalles...',
+                didOpen: () => {
+                    Swal.showLoading();
+                },
+                allowOutsideClick: false
+            });
+
+            cambiar_estado_actual = 2;
+
+            $.ajax({
+                url: "{% url 'actualizar_estado_requisicion' %}",  // URL para actualizar el estado a 'Editado'
+                type: "POST",
+                data: {
+                    id_requisicion: requisicion_id,
+                    estado: cambiar_estado_actual,  // Estado Editado
+                    csrfmiddlewaretoken: csrfToken
+                },
+                success: function () {
+                    // Ahora obtenemos los detalles de la requisición
+                    $.ajax({
+                        url: "{% url 'obtener_requisicion_y_detalle_data' %}",
+                        type: "GET",
+                        data: { 'id_requisicion': requisicion_id },
+                        success: function (data) {
+                            Swal.close();
+                            console.log("Respuesta de la requisición:", data);
+                            if (data.requisicion) {
+                                const requisicion = data.requisicion;
+                                console.log("Datos de requisición:", requisicion);
+
+                                // Llenar los campos del formulario con los datos de la requisición obtenidos
+                                $('#id_requisicion').val(requisicion.id_requisicion || '');
+                                $('#nombre_completo').val(requisicion.PKUsuario || '').change();
+                                id_grupo_seleccionado = requisicion.PKgrupo;
+
+                                // $('#categoria').val(requisicion.id_categoria || '').change();
+
+                                $('#acreedor').val(requisicion.id_proveedor || '').change();
+
+                                $('#fecha_pedido').val(requisicion.fecha_pedido || '');
+                                $('#fecha_pago').val(requisicion.fecha_pago || '');
+                                $('#costo-total').text(dollarUSLocale.format(parseFloat(requisicion.costo_total || 0)));
+                            }
+
+                            // Mostrar los detalles de los artículos en la tabla
+                            if (data.detalles && Array.isArray(data.detalles) && data.detalles.length > 0) {
+                                let tablaArticulos = '';
+                                let costoTotal = 0;
+                                data.detalles.forEach(function (articulo) {
+                                    const cantidad = articulo.cantidad || 0;
+                                    const precioUnitario = parseFloat(articulo.precio_unitario || 0);
+                                    const precioTotal = cantidad * precioUnitario;
+
+                                    tablaArticulos += `
+                            <tr data-id_detalle_requisicion="${articulo.id_detalle_requisicion}">
+                                <td>${articulo.nombre_suministro || ''}</td>
+                                <td>${cantidad}</td>
+                                <td>${dollarUSLocale.format(precioUnitario)}</td>
+                                <td>${dollarUSLocale.format(precioTotal)}</td>
+                                <td>${articulo.justificacion || ''}</td>
+                                <td class="estado">
+                                    <span class="badge badge-pill bg-success">ACTIVO</span> <!-- Estado por defecto -->
+                                </td>
+                                <td>
+                                    <button type="button" class="btn btn-primary btn-sm editarDetalle" title="Editar Detalle">
+                                        <i class="fas fa-edit"></i>
+                                    </button>
+                                    <button type="button" class="btn btn-danger btn-sm anularDetalle" title="Anular Detalle">
+                                        <i class="fas fa-sync-alt"></i>
+                                    </button>
+                                </td>
+                            </tr>
+                            `;
+                                    costoTotal += precioTotal;
+                                });
+                                $('#tabla-articulos').html(tablaArticulos);
+                                $('#costo-total').text(dollarUSLocale.format(costoTotal));
+                            }
+                            else {
+                                Swal.fire("", "No se encontraron suministros para esta requisición.", "warning");
+                            }
+
+                            // Mostrar el modal con los detalles
+                            $('#modalRequisicionLabel').html('<strong>Editar Requisición #' + requisicion_id + '</strong>');
+                            $('#modalRequisicion').modal('show');
+                        },
+                        error: function (xhr) {
+                            Swal.close();
+                            Swal.fire("", "Error al cargar los detalles. " + xhr.statusText, "error");
+                        }
+                    });
+                },
+                error: function (xhr) {
+                    Swal.close();
+                    Swal.fire("", "Error al actualizar el estado de la requisición. " + xhr.statusText, "error");
+                }
+            });
+        });
+
+
+        // Editar artículo en modo edición
+        $(document).on('click', '.editarDetalle', function () {
+            let fila = $(this).closest('tr');  // Obtener la fila más cercana
+            let detalle_id = fila.data('id_detalle_requisicion');  // Obtener ID del detalle
+            let boton = $(this);  // Guardar referencia al botón
+
+            if (boton.hasClass('modo-guardar')) {
+
+                // **Modo Guardar: Guardar los cambios en la base de datos**
+                let nuevaCantidad = $('#cantidad').val();
+                let nuevaJustificacion = $('#justificacion').val();
+                let nuevoSuministroId = $('#suministro').val();
+                let nuevoSuministroNombre = $('#suministro option:selected').text();
+                let nuevoPrecioUnitario = $('#precio_unitario').val();
+                let nuevoPrecioTotal = (parseFloat(nuevaCantidad) * parseFloat(nuevoPrecioUnitario)).toFixed(2);
+
+                $.ajax({
+                    url: "{% url 'editar_detalle_requisicion_data' %}",  // Ruta en Django
+                    type: "POST",
+                    data: {
+                        'id_detalle_requisicion': detalle_id,
+                        'suministro': nuevoSuministroId,
+                        'cantidad': nuevaCantidad,
+                        'justificacion': nuevaJustificacion,
+                        'precio_unitario': nuevoPrecioUnitario,
+                        'precio_total': nuevoPrecioTotal,
+                        csrfmiddlewaretoken: csrfToken
+                    },
+                    success: function (response) {
+                        if (response.success) {
+                            Swal.fire('Guardado', 'Los cambios se han guardado correctamente.', 'success');
+
+                            // Actualizar la fila con los nuevos valores
+                            fila.find("td:eq(0)").text(nuevoSuministroNombre);
+                            fila.find("td:eq(1)").text(nuevaCantidad);
+                            fila.find("td:eq(2)").text(parseFloat(nuevoPrecioUnitario).toFixed(2));
+                            fila.find("td:eq(3)").text(nuevoPrecioTotal);
+                            fila.find("td:eq(4)").text(nuevaJustificacion);
+
+                            // Restaurar el botón a "Editar"
+                            boton.removeClass('modo-guardar btn-success').addClass('btn-primary').html('<i class="fas fa-edit"></i>');
+
+                            // Limpiar inputs y select
+                            $('#id_detalle_requisicion').val('');
+                            $('#suministro').val('#');
+                            $('#cantidad').val('');
+                            $('#precio_unitario').val('');
+                            $('#justificacion').val('');
+
+                            // // Deshabilitar los campos después de guardar
+                            // deshabilitarCamposDetalle();
+
+                            // Actualizar el costo total
+                            actualizarCostoTotal();
+
+                        } else {
+                            Swal.fire('Error', response.error, 'error');
+                        }
+                    },
+                    error: function () {
+                        Swal.fire('Error', 'Ocurrió un error al actualizar.', 'error');
+                    }
+                });
+
+            } else {
+                // **Modo Edición: Habilitar inputs y cargar valores**
+                let nombre_suministro = fila.find("td:eq(0)").text().trim();
+                let cantidad = fila.find("td:eq(1)").text().trim();
+                let precio_unitario = fila.find("td:eq(2)").text().replace('$', '').trim();
+                let justificacion = fila.find("td:eq(4)").text().trim();
+
+                // Rellenar los inputs y selects existentes
+                $('#id_detalle_requisicion').val(detalle_id);
+                $('#suministro option').filter(function () {
+                    return $(this).text().trim() === nombre_suministro;
+                }).prop('selected', true);
+                $('#cantidad').val(cantidad);
+                $('#precio_unitario').val(precio_unitario);
+                $('#justificacion').val(justificacion);
+
+                // Cambiar el botón a "Guardar" y de color verde
+                boton.addClass('modo-guardar btn-success').removeClass('btn-primary').html('<i class="fas fa-save"></i>');
+
+            }
+        });
+
+        // Anular o reactivar el artículo en modo edición
+        $(document).on('click', '.anularDetalle', function () {
+            let fila = $(this).closest('tr');
+            let detalle_id = fila.data('id_detalle_requisicion');
+            let estado_actual = fila.data('estado'); // Obtener el estado actual del detalle
+
+            // Definir el mensaje y acción según el estado actual
+            var mensaje = estado_actual == 3
+                ? '¿Estás seguro de que quieres reactivar este detalle?'
+                : '¿Estás seguro de que quieres anular este detalle?';
+            var confirmButtonText = estado_actual == 3
+                ? 'Sí, reactivar'
+                : 'Sí, anular';
+            var action = estado_actual == 3
+                ? 1  // Reactivar (estado 1 para activado)
+                : 3;  // Anular (estado 3 para anulado)
+
+            // Mostrar confirmación antes de anular o reactivar
+            Swal.fire({
+                title: estado_actual == 3 ? 'Reactivar Detalle' : 'Anular Detalle',
+                text: mensaje,
+                icon: 'warning',
+                showCancelButton: true,
+                confirmButtonColor: '#d33',
+                cancelButtonColor: '#3085d6',
+                confirmButtonText: confirmButtonText,
+                cancelButtonText: 'Cancelar'
+            }).then((result) => {
+                if (result.isConfirmed) {
+                    // Realizar solicitud AJAX para actualizar el estado del detalle
+                    $.ajax({
+                        url: "{% url 'actualizar_estado_detalle_requisicion_data' %}", // URL para actualizar el estado del detalle
+                        type: 'POST',
+                        data: {
+                            id_detalle_requisicion: detalle_id,
+                            estado: action,  // Estado 1 para reactivar, 3 para anular
+                            csrfmiddlewaretoken: csrfToken
+                        },
+                        success: function (response) {
+                            if (response.success) {
+                                var mensajeExito = estado_actual == 3
+                                    ? 'El detalle ha sido reactivado.'
+                                    : 'El detalle ha sido anulado.';
+                                Swal.fire(estado_actual == 3 ? 'Reactivado!' : 'Anulado!', mensajeExito, 'success');
+                                // Actualizar la fila en la interfaz con el nuevo estado
+                                fila.data('estado', action); // Actualiza el estado en el data-atributo
+                                // Cambiar el texto o el color de la fila según el nuevo estado
+                                var estadoText = action == 3
+                                    ? '<span class="badge badge-pill custom-red">ANULADO</span>'
+                                    : '<span class="badge badge-pill bg-success">ACTIVO</span>';
+
+                                fila.find('.estado').html(estadoText); // Actualiza el estado visual en la fila
+                                // Mostrar u ocultar los botones según el estado
+                                if (action == 3) {
+                                    // Si está anulado (estado 3), solo mostramos el botón de anular
+                                    fila.find('.editarDetalle').hide(); // Ocultar botón de editar
+                                } else {
+                                    // Si está activado (estado 1), mostramos ambos botones
+                                    fila.find('.editarDetalle').show(); // Mostrar botón de editar
+                                }
+                                // Actualizar el costo total después de anular o reactivar
+                                actualizarCostoTotal();
+                                // Si es necesario, puedes recargar la tabla o hacer otras acciones
+                            } else {
+                                Swal.fire('Error', response.error, 'error');
+                            }
+                        },
+                        error: function () {
+                            Swal.fire('Error', 'Ocurrió un error al actualizar el estado del detalle.', 'error');
+                        }
+                    });
+                }
+            });
+        });
+
+        // Función para recalcular el costo total después de eliminar un detalle
+        function actualizarCostoTotal() {
+            let total = 0;
+            $('#tabla-articulos tr').each(function () {
+                // Sumar los valores de la columna "precio_total" (columna 4)
+                total += parseFloat($(this).find('td:eq(3)').text().replace(/,/g, '')) || 0;
+            });
+
+            // Actualizar el costo total en el DOM con formato de dólar
+            $('#costo-total').text(dollarUSLocale.format(total));
+
+            // Si no hay artículos, el costo total debe ser 0.00
+            if ($('#tabla-articulos tr').length === 0) {
+                $('#costo-total').text('0.00');
+            }
+        }
+
+        // Limpieza del modal al cerrarlo
+        $('#modalRequisicion').on('hidden.bs.modal', function () {
+            $('#formRequisicion')[0].reset();
+            $('#tabla-articulos').html('');
+            $('#costo-total').text('0.00');
+            // Habilitar todos los campos nuevamente al cerrar
+            $('#formRequisicion input, #formRequisicion select, #formRequisicion textarea').prop('disabled', false).prop('readonly', false);
+            $('#agregar-articulo').prop('disabled', false);
+            $('#precio_unitario').prop('disabled', true);
+            $('button[type="submit"]').show();
+            //$('#agregar-requisicion').show();
+        });
+
+        // ------------------------------------------------------------------------------------------------------------------------------- //
+
+        // AGREGAR LA REQUISICION
+        $('#formRequisicion').submit(function (e) {
+            e.preventDefault();
+
+            // Recoger valores de los campos del formulario
+            var PKUsuario = $('#nombre_completo').val();
+            var PKgrupo = $('#grupos').val();
+            var id_proveedor = $('#acreedor').val();
+            var fecha_pedido = $('#fecha_pedido').val();
+            var fecha_pago = $('#fecha_pago').val();
+            var costo_total = $('#costo-total').text();
+            var estado_requisicion = $('#estado_requisicion').val() || 1;
+            var estado = $('#estado').val() || 1;
+
+            // Formatear costo_total con comas (añadir coma en el número)
+            //costo_total = parseFloat(costo_total); // Convertir el valor a float para asegurarnos de que es un número
+            //costo_total = costo_total.toLocaleString(); // Formatear el número con comas
+
+            // Validación básica de campos
+            if (!PKUsuario || PKgrupo == '#' || id_proveedor == '#' || !fecha_pedido || !fecha_pago || !costo_total) {
+                Swal.fire("", "Debes llenar todos los campos obligatorios!", "warning");
+
+            } else {
+                // Enviar datos al servidor para crear la requisición
+                $.ajax({
+                    url: "{% url 'insertar_actualizar_requisicion_data' %}",
+                    type: "POST",
+                    data: {
+                        id_requisicion: requisicion_id,  // Enviar id_requisicion vacío para crear una nueva requisición
+                        PKUsuario: PKUsuario,
+                        PKgrupo: PKgrupo,
+                        id_proveedor: id_proveedor,
+                        fecha_pedido: fecha_pedido,
+                        fecha_pago: fecha_pago,
+                        costo_total: costo_total.replace(/,/g, ''), // Eliminar comas antes de enviar
+                        estado_requisicion: estado_requisicion,
+                        estado: estado,
+                        csrfmiddlewaretoken: csrfToken
+                    },
+                    success: function (data) {
+                        if (data.save == 1) {
+                            if (opcion == 1) {  // Si es una nueva creación
+                                if (data.existe == 0) {
+                                    $('#modalRequisicion').modal('hide');
+
+                                    toastMixin.fire({
+                                        animation: true,
+                                        title: 'Requisición Creada!'
+                                    });
+                                } else {
+                                    Swal.fire("", "warning");
+                                }
+                            } else {  // Si es una edición
+                                $('#modalRequisicion').modal('hide');
+
+                                toastMixin.fire({
+                                    animation: true,
+                                    title: 'Requisición Editada!'
+                                });
+                            }
+
+                            // Llamar a la función para insertar los detalles
+                            insertarDetallesRequisiscion(data.id_requisicion);
+
+                            // Recargar la tabla después de insertar los detalles
+                            Tabla_Requisiciones.ajax.reload(null, false);
+                        } else {
+                            Swal.fire("", "Error: " + data.error, "error");
+                        }
+                    },
+                    error: function (xhr, status, error) {
+                        Swal.fire("", "Ocurrió un error al guardar los datos. Código de error: " + xhr.status, "error");
+                    }
+                });
+            }
+        });
+
+        function insertarDetallesRequisiscion(id_requisicion) {
+            const detalles = [];
+
+            $('#tabla-articulos tr').each(function () {
+                // Obtener los datos de cada fila, incluyendo la justificación
+                const suministro = $(this).attr('data-id-suministro');
+                const cantidad = $(this).find('td:eq(1)').text();
+                const precio_unitario = $(this).find('td:eq(2)').text();
+                const justificacion = $(this).find('td:eq(4)').text();
+
+                //console.log(`Suministro: ${suministro}, Cantidad: ${cantidad}, Precio: ${precio_unitario}, Justificacion: ${justificacion}`);
+
+                // Validar que todos los datos están presentes
+                if (suministro && cantidad && precio_unitario && justificacion) {
+                    detalles.push({
+                        id_suministros: suministro,
+                        cantidad: parseFloat(cantidad.replace(/,/g, '')),  // Eliminar comas antes de convertir a float
+                        precio_unitario: parseFloat(precio_unitario.replace(/,/g, '')),  // Eliminar comas antes de convertir a float
+                        justificacion: justificacion.trim()
+                    });
+                }
+            });
+
+            // console.log("Detalles capturados:", detalles);
+
+            // Si no hay detalles en la tabla, verificar si la requisición ya tenía detalles antes
+        
+            if (detalles.length === 0) {
+                $.ajax({
+                    url: "{% url 'verificar_detalles_requisicion_data' %}",
+                    type: "GET",
+                    data: { id_requisicion: id_requisicion },
+                    success: function (data) {
+                        if (data.tiene_detalles) {
+                            console.log("La requisición ya tiene detalles, se permite la edición.");
+                        } else {
+                            Swal.fire("", "Debes agregar al menos un artículo a la requisición.", "warning");
+                        }
+                    },
+                    error: function (xhr, status, error) {
+                        Swal.fire("", "Error al verificar los detalles. Código: " + xhr.status, "error");
+                    }
+                });
+                return;
+            }
+
+            // Enviar los detalles al servidor
+            $.ajax({
+                url: "{% url 'insertar_actualizar_detalle_requisicion_data' %}",
+                type: "POST",
+                data: {
+                    id_requisicion: id_requisicion,
+                    detalles: JSON.stringify(detalles),
+                    csrfmiddlewaretoken: csrfToken
+                },
+                success: function (data) {
+                    if (data.save == 1) {
+                        toastMixin.fire({
+                            animation: true,
+                            title: '¡Detalles de la requisición guardados correctamente!'
+                        });
+                        // Recargar la tabla
+                        Tabla_Requisiciones.ajax.reload(null, false);
+                    } else {
+                        Swal.fire("", "Error: " + data.error, "error");
+                    }
+                },
+                error: function (xhr, status, error) {
+                    Swal.fire("", "Error al guardar los detalles. Código: " + xhr.status, "error");
+                }
+            });
+        }
+
+
+        // ------------------------------------------------------------------------------------------------------------------------------- //
+
+        // CAMBIAR EL ESTADO DE CADA REQUISICION
+        $(document).on('click', '.estadoR', function () {
+            $('#formRequisicion').trigger('reset');
+
+            // Obtener datos de la fila seleccionada
+            filaRequisicion = $(this).closest('tr');
+            id_requisicion = $(this).data('id');
+            estado_actual = $(this).data('estado'); // Obtener el estado actual del data-atributo
+
+            // Asegurarse de que id_requisicion esté presente
+            if (!id_requisicion) {
+                Swal.fire("", "⚠️ ID de requisición no proporcionado.", "warning");
+                return;
+            }
+
+            // Asegurarse de que estado_actual sea un número, o si es string, convertirlo a número
+            estado_actual = Number(estado_actual);  // Convertir a número para garantizar la comparación correcta
+            console.log("Estado Actual Convertido a Número:", estado_actual);  // Verificar el tipo de estado_actual
+
+            // Definir los mensajes de confirmación según el estado actual
+            let siguienteEstado = "";
+            let mensajeSiguienteEstado = "";
+
+            // Aquí estamos utilizando los números en lugar de los nombres de estado
+            switch (estado_actual) {
+                case 1: // Pendiente
+                    mensajeSiguienteEstado = "¿Estás seguro de cambiar el estado de Pendiente a En Proceso?";
+                    siguienteEstado = 2; // En Proceso
+                    break;
+                case 2: // En Proceso
+                    mensajeSiguienteEstado = "¿Estás seguro de cambiar el estado de En Proceso a Completada?";
+                    siguienteEstado = 3; // Completado
+                    break;
+                case 3: // Completado
+                    mensajeSiguienteEstado = "¿Estás seguro de cambiar el estado de Completada a Pendiente?";
+                    siguienteEstado = 1; // Pendiente
+                    break;
+                default:
+                    Swal.fire("", "Estado no reconocido.", "warning");
+                    return;
+            }
+
+            // Mostrar el mensaje de confirmación utilizando SweetAlert
+            Swal.fire({
+                title: "Estás Seguro de Cambiar el Estado?",
+                text: mensajeSiguienteEstado,
+                icon: "warning",
+                showCancelButton: true,
+                confirmButtonColor: '#3085d6',
+                cancelButtonColor: '#d33',
+                confirmButtonText: 'Confirmar!',
+                didOpen: () => {
+                    Swal.getConfirmButton().addEventListener('click', function () {
+                        this.disabled = true;
+                    });
+                }
+            }).then((result) => {
+                if (result.isConfirmed) {
+                    // Si el usuario confirma, realizar el cambio de estado
+                    $.ajax({
+                        url: "{% url 'actualizar_estado' %}",
+                        type: "POST",
+                        data: {
+                            id_requisicion: id_requisicion,
+                            estado: siguienteEstado,  // Se manda el siguiente estado como número
+                            csrfmiddlewaretoken: csrfToken
+                        },
+                        success: function (data) {
+                            console.log(data); // Verifica los datos de respuesta del servidor
+
+                            if (data.success) {  // Cambié data.save por data.success
+                                toastMixin.fire({
+                                    animation: true,
+                                    title: 'Estado de Requisición Editado!'
+                                });
+                                // Recargar la tabla de requisiciones después de actualizar el estado
+                                Tabla_Requisiciones.ajax.reload(null, false);
+                            } else {
+                                Swal.fire("", "Error: " + data.error, "error");
+                            }
+                        },
+                        error: function (xhr, status, error) {
+                            console.error("Error en la solicitud Ajax:", xhr, status, error); // Detalles del error
+                            Swal.fire("", "Error al cambiar el estado. Código: " + xhr.status, "error");
+                        }
+                    });
+                }
+            });
+        });
+
+
+        // ------------------------------------------------------------------------------------------------------------------------------- //
+
+        // CAMBIAR ESTADO DE LA REQUISICIÓN (DESHABILITAR O ACTIVAR)
+        $(document).on('click', '.anularRequisicion', function () {
+            var id_requisicion = $(this).data('id');
+            var estado_actual = $(this).data('estado');  // Este atributo 'data-estado' debe tener el estado actual de la requisición
+
+            // Definir mensaje y acción según el estado actual
+            var mensaje = estado_actual == 3
+                ? '¿Estás seguro de que quieres activar esta requisición?'
+                : '¿Estás seguro de que quieres deshabilitar esta requisición?';
+            var confirmButtonText = estado_actual == 3
+                ? 'Sí, activar'
+                : 'Sí, deshabilitar';
+            var action = estado_actual == 3
+                ? 1  // Activar
+                : 3;  // Deshabilitar
+
+            Swal.fire({
+                title: estado_actual == 3 ? 'Activar Requisición' : 'Deshabilitar Requisición',
+                text: mensaje,
+                icon: 'warning',
+                showCancelButton: true,
+                confirmButtonText: confirmButtonText,
+                cancelButtonText: 'Cancelar'
+            }).then((result) => {
+                if (result.isConfirmed) {
+                    $.ajax({
+                        url: "{% url 'actualizar_estado_requisicion' %}", // URL de tu vista
+                        type: "POST",
+                        data: {
+                            id_requisicion: id_requisicion,
+                            estado: action,  // El estado que corresponde según la acción (activar o deshabilitar)
+                            csrfmiddlewaretoken: csrfToken
+                        },
+                        success: function (data) {
+                            if (data.success) {
+                                var mensajeExito = estado_actual == 3
+                                    ? 'La requisición ha sido activada.'
+                                    : 'La requisición ha sido deshabilitada.';
+                                Swal.fire(estado_actual == 3 ? 'Activada!' : 'Deshabilitada!', mensajeExito, 'success');
+
+                                // Actualizar el estado de la requisición en la interfaz
+                                var row = $('tr[data-id="' + id_requisicion + '"]');
+                                row.find('.estado').html(
+                                    estado_actual == 3
+                                        ? '<span class="badge badge-pill bg-success">ACTIVO</span>'
+                                        : '<span class="badge badge-pill bg-danger">DESHABILITADO</span>'
+                                );
+
+                                // Recargar la tabla de requisiciones después de actualizar el estado
+                                Tabla_Requisiciones.ajax.reload(null, false);
+                            } else {
+                                Swal.fire('Error!', data.error || 'No se pudo actualizar el estado de la requisición.', 'error');
+                            }
+                        },
+                        error: function () {
+                            Swal.fire('Error!', 'Ocurrió un error al intentar cambiar el estado de la requisición.', 'error');
+                        }
+                    });
+                }
+            });
+        });
+
+        // ------------------------------------------------------------------------------------------------------------------------------- //
+
+        $('#estadoFiltro').change(function (e) {
+            e.preventDefault();
+
+
+            select_estado_requisicion = $("#estadoFiltro").val();
+            fillRequisicion();
+        });
+
+        // ------------------------------------------------------------------------------------------------------------------------------- //
+
+        // PARA VER LOS DETALLES DE LA REQUISICION
+        $(document).on('click', '.verDetalles', function () {
+            requisicion_id = $(this).data('id');
+            $('#formRequisicion')[0].reset();  // Resetea el formulario
+            $('#tabla-articulos').html('');  // Limpia la tabla de artículos
+            $('#costo-total').text('0.00');  // Reinicia el costo total
+
+            // Deshabilitar todos los campos en modo de vista
+            $('#formRequisicion input, #formRequisicion select, #formRequisicion textarea').prop('disabled', true).prop('readonly', true);
+
+            // Deshabilitar el botón "Guardar Requisición"
+            $('#agregar-articulo').prop('disabled', true);
+
+            // Ocultar el botón "Guardar Requisición"
+            $('button[type="submit"]').hide();
+
+            // Deshabilitar el input "precio unitario"
+            $('#precio_unitario').prop('disabled', true);
+
+            // Mostrar un mensaje de carga
+            Swal.fire({
+                title: 'Cargando detalles...',
+                didOpen: () => {
+                    Swal.showLoading();
+                },
+                allowOutsideClick: false
+            });
+
+            // Hacer la solicitud AJAX para obtener los detalles
+            $.ajax({
+                url: "{% url 'obtener_requisicion_y_detalle_data' %}",
+                type: "GET",
+                data: { 'id_requisicion': requisicion_id },
+                success: function (data) {
+                    Swal.close();
+                    console.log("Respuesta de la requisición:", data);
+                    if (data.requisicion) {
+                        const requisicion = data.requisicion;
+                        console.log("Datos de requisición:", requisicion);
+
+                        // Llenar los campos del formulario con los datos de la requisición obtenidos
+                        $('#id_requisicion').val(requisicion.id_requisicion || '');
+                        $('#nombre_completo').val(requisicion.PKUsuario || '').prop('disabled', true).change();
+
+                        id_grupo_seleccionado = requisicion.PKgrupo;
+                        $('#grupos').prop('disabled', true);
+
+                        $('#categoria').val(requisicion.id_categoria || '').prop('disabled', true).change();
+
+                        $('#acreedor').val(requisicion.id_proveedor || '').prop('disabled', true).change();
+
+                        $('#fecha_pedido').val(requisicion.fecha_pedido || '').prop('readonly', true);
+                        $('#fecha_pago').val(requisicion.fecha_pago || '').prop('readonly', true);
+                        $('#costo-total').text(parseFloat(requisicion.costo_total || 0).toFixed(2));
+                    }
+
+                    // Mostrar los detalles de los artículos en la tabla
+                    if (data.detalles && Array.isArray(data.detalles) && data.detalles.length > 0) {
+                        let tablaArticulos = '';
+                        let costoTotal = 0;
+                        data.detalles.forEach(function (articulo) {
+                            const cantidad = articulo.cantidad || 0;
+                            const precioUnitario = parseFloat(articulo.precio_unitario || 0);
+                            const precioTotal = cantidad * precioUnitario;
+
+                            tablaArticulos += `
+                        <tr>
+                            <td>${articulo.nombre_suministro || ''}</td>
+                            <td>${cantidad}</td>
+                            <td>${dollarUSLocale.format(precioUnitario)}</td>
+                            <td>${dollarUSLocale.format(precioTotal)}</td>
+                            <td>${articulo.justificacion || ''}</td>
+                        </tr>
+                    `;
+                            costoTotal += precioTotal;
+                        });
+
+                        $('#tabla-articulos').html(tablaArticulos);
+                        $('#costo-total').text(dollarUSLocale.format(costoTotal));  // Actualiza el costo total y lo formatea
+                    } else {
+                        Swal.fire("", "No se encontraron artículos para esta requisición.", "warning");
+                    }
+
+                    // Mostrar el modal con los detalles
+                    $('#modalRequisicionLabel').html('<strong>Ver Detalles de Requisición #' + requisicion_id + '</strong>');
+                    $('#modalRequisicion').modal('show');
+                },
+                error: function (xhr) {
+                    Swal.close();
+                    Swal.fire("", "Error al cargar los detalles. " + xhr.statusText, "error");
+                }
+            });
+        });
+
+        // ------------------------------------------------------------------------------------------------------------------------------- //
+        // PARA IMPRIMIR LA REQUISICION EN PDF
+        $(document).on('click', '.imprimirRequisicion', function () {
+            const requisicionId = $(this).data('id'); // Obtener el ID de la requisición
+            // Realizar una solicitud AJAX para obtener los detalles de la requisición
+            $.ajax({
+                url: "{% url 'obtener_requisicion_y_detalle_data' %}",
+                type: "GET",
+                data: { 'id_requisicion': requisicionId },
+                success: function (data) {
+                    if (data.requisicion) {
+                        const requisicion = data.requisicion;
+                        const detalles = data.detalles;
+                        // Crear un nuevo documento PDF
+                        const { jsPDF } = window.jspdf;
+                        const doc = new jsPDF();
+                        // Cargar el logo como Blob
+                        const logoUrl = '/static/app/controlsum/images/carbajal.png';
+                        fetch(logoUrl)
+                            .then(response => response.blob())
+                            .then(blob => {
+                                // Crear una URL para el Blob de la imagen
+                                const imageUrl = URL.createObjectURL(blob);
+                                // Calcular la posición X para el logo (derecha)
+                                const pageWidth = doc.internal.pageSize.width; // Ancho de la página
+                                const logoWidth = 70; // Ancho del logo
+                                const xPos = pageWidth - logoWidth - 10; // 10 unidades de margen desde la derecha
+                                // Añadir el logo al PDF a la derecha
+                                doc.addImage(imageUrl, 'PNG', xPos, 10, logoWidth, 30);
+                                // Cambiar la fuente a Arial para todo el documento
+                                doc.setFont("Arial", "normal");
+                                // Añadir título al PDF
+                                doc.setFont("Arial", "bold");
+                                doc.setFontSize(12);
+                                doc.text(`Solicitud de Requisición #${requisicionId}`, 20, 20);
+
+                                // Añadir los detalles de la requisición con negrita en los títulos
+                                doc.setFont("Arial", "bold");
+                                doc.setFontSize(10);
+                                doc.text("Solicitante:", 20, 30);
+                                doc.setFont("Arial", "normal");
+                                doc.text(requisicion.nombre_completo, 55, 30);
+
+                                doc.setFont("Arial", "bold");
+                                doc.setFontSize(10);
+                                doc.text("Grupo/Área:", 20, 40);
+                                doc.setFont("Arial", "normal");
+                                doc.text(requisicion.GrupoNombre, 55, 40);
+
+                                doc.setFont("Arial", "bold");
+                                doc.text("Proveedor:", 20, 50);
+                                doc.setFont("Arial", "normal");
+                                doc.text(requisicion.nombre_proveedor, 55, 50);
+
+                                doc.setFont("Arial", "bold");
+                                doc.text("Fecha de Pedido:", 20, 60);
+                                doc.setFont("Arial", "normal");
+                                doc.text(requisicion.fecha_pedido, 55, 60);
+
+                                doc.setFont("Arial", "bold");
+                                doc.text("Fecha de Pago:", 20, 70);
+                                doc.setFont("Arial", "normal");
+                                doc.text(requisicion.fecha_pago, 55, 70);
+
+                                doc.setFont("Arial", "bold");
+                                doc.text("Costo Total:", 20, 80);
+                                doc.setFont("Arial", "bold");
+                                doc.setFontSize(10);
+                                doc.text(dollarUSLocale.format(parseFloat(requisicion.costo_total || 0)), 55, 80);
+
+
+                                // Añadir una tabla de detalles de los suministros
+                                doc.autoTable({
+                                    startY: 90, // Ubicación de inicio de la tabla
+                                    head: [['Suministro', 'Cantidad', 'Precio Unitario', 'Precio Total']],
+                                    body: detalles.map(detalle => [
+                                        detalle.nombre_suministro,
+                                        detalle.cantidad,
+                                        dollarUSLocale.format(detalle.precio_unitario),
+                                        dollarUSLocale.format(detalle.cantidad * detalle.precio_unitario),
+                                        //detalle.justificacion
+                                    ]),
+                                    margin: { top: 10, left: 20, right: 20 },
+                                    styles: {
+                                        font: 'Arial',
+                                        fontSize: 10,
+                                        cellPadding: 5,
+                                        halign: 'center',
+                                    },
+                                });
+
+                                // // Posición para la firma y línea
+                                // const yLine = doc.autoTable.previous.finalY + 50; // Posición después de la tabla
+                                // const lineWidth = 50; // Largo de la línea (más corta)
+                                // const xPosLine = (pageWidth - lineWidth) / 2; // Centrado horizontal
+
+                                // // Dibuja una línea centrada
+                                // doc.line(xPosLine, yLine, xPosLine + lineWidth, yLine);
+
+                                // // Texto "Autorizado por" debajo de la línea
+                                // doc.setFont("Arial", "normal");
+                                // doc.setFontSize(10);
+                                // doc.text("Autorizado por", (pageWidth - doc.getStringUnitWidth("Autorizado por") * 1.5) / 2, yLine + 5); // Centrado debajo de la línea
+
+
+                                // Guardar el documento PDF con un nombre adecuado
+                                doc.save(`Solicitud_de_Requisicion_#${requisicionId}.pdf`);
+                            })
+                            .catch(error => {
+                                Swal.fire("Error", `No se pudo cargar el logo. Detalle del error: ${error}`, "error");
+                            });
+                    } else {
+                        Swal.fire("Advertencia", "No se encontraron detalles para esta requisición.", "warning");
+                    }
+                },
+                error: function (xhr) {
+                    Swal.fire("Error", `Hubo un problema al cargar los detalles de la requisición: ${xhr.statusText}`, "error");
+                }
+            });
+        });
+
+        // Limpieza del modal al cerrarlo
+        $('#modalRequisicion').on('hidden.bs.modal', function () {
+            $('#formRequisicion')[0].reset();
+            $('#tabla-articulos').html('');
+            $('#costo-total').text('0.00');
+            // Habilitar todos los campos nuevamente al cerrar
+            $('#formRequisicion input, #formRequisicion select, #formRequisicion textarea').prop('disabled', false).prop('readonly', false);
+            $('#agregar-articulo').prop('disabled', false).prop('readonly', false);
+            $('button[type="submit"]').prop('disabled', false).prop('readonly', false);
+            $('#precio_unitario').prop('disabled', true);
+
+        });
+
+        /* Manejo del botón Nueva Requisición para habilitar campos */
+        $('#btnNuevaRequisicion').on('click', function () {
+            $('#formRequisicion')[0].reset();
+            $('#tabla-articulos').html('');
+            $('#costo-total').text('0.00');
+
+            $('#formRequisicion input, #formRequisicion select, #formRequisicion textarea').prop('disabled', false).prop('readonly', false);
+            $('#agregar-articulo').prop('disabled', false).prop('readonly', false);
+            $('button[type="submit"]').prop('disabled', false).prop('readonly', false);
+            $('#precio_unitario').prop('disabled', true);
+
+            $('#modalRequisicion').modal('show');
+        });
+
+        // ------------------------------------------------------------------------------------------------------------------------------- //
+
+        // // Realizar la solicitud AJAX para obtener los nombres de los usuarios
+        $.ajax({
+            url: '{% url "obtener_nombres_usuarios_data" %}',  // URL de la vista Django
+            type: "GET",
+            dataType: 'json',
+            success: function (response) {
+                console.log("Usuarios:", response);
+
+                if (response.usuarios) {
+                    // Limpiar el select y agregar las opciones
+                    $('#nombre_completo').empty();
+                    $('#nombre_completo').append('<option value="#">Seleccione su nombre</option>');
+
+                    // Agregar cada nombre al select
+                    $.each(response.usuarios, function (index, usuario) {
+                        $('#nombre_completo').append('<option value="' + usuario.PKUsuario + '">' + usuario.Nombre + '</option>');
+                    });
+                } else {
+                    console.log("No se encontraron usuarios.");
+                    $('#nombre_completo').empty();
+                    $('#nombre_completo').append('<option value="#">No hay usuarios disponibles</option>');
+                }
+            },
+            error: function (xhr, status, error) {
+                console.error("Error al obtener los nombres de los usuarios: ", error);
+            }
+        });
+
+        // Realizar la solicitud AJAX para obtener los grupos del usuario
+        $('#nombre_completo').change(function () {
+            var usuario_id = $('#nombre_completo').val();
+            console.log("PKUsuario capturado:", usuario_id);
+
+            if (usuario_id && usuario_id !== "#" && usuario_id !== "") {  // Comprobación extra para asegurarse de que el valor sea válido
+                // Realizar la solicitud AJAX para obtener los grupos del usuario
+                $.ajax({
+                    url: '{% url "grupos_por_usuario_data" %}',  // URL en Django
+                    type: "POST",
+                    data: {
+                        'usuario_id': usuario_id,
+                        csrfmiddlewaretoken: csrfToken
+                    },
+                    dataType: 'json',
+                    success: function (response) {
+                        console.log("Grupos Obtenidos:", response);
+
+                        if (response.grupos && response.grupos.length > 0) {
+                            // Limpiamos el select de grupos
+                            $('#grupos').empty();
+                            $('#grupos').append('<option value="#">Seleccione el grupo:</option>');
+
+                            // Llenamos el select con los grupos obtenidos
+                            $.each(response.grupos, function (index, grupo) {
+                                $('#grupos').append('<option value="' + grupo.PKgrupo + '">' + grupo.GrupoNombre + '</option>');
+                            });
+                            if (id_grupo_seleccionado != null) {
+                                $('#grupos').val(id_grupo_seleccionado).change();
+                            }
+                        } else {
+                            $('#grupos').empty();
+                            $('#grupos').append('<option value="#">No hay grupos para este usuario</option>');
+                        }
+                    },
+                    error: function (xhr, status, error) {
+                        console.error("Error al obtener los grupos: ", error);
+                        Swal.fire("", "Ocurrió un error al obtener los grupos.", "error");
+                    }
+                });
+            } else {
+                console.log("No se ha seleccionado un usuario.");
+            }
+        });
+
+
+
+        //OBTIENE LOS SUMINISTROS DE LA TABLA suministros PARA EL SELECT 
+        // $.ajax({
+        //     url: '{% url "get_suministros_data" %}',  // URL de la vista Django
+        //     type: "POST",
+        //     data: {  // Aquí enviamos 'varEstado' con el valor 1
+        //         varEstado: 1,
+        //         csrfmiddlewaretoken: csrfToken
+        //     },
+        //     success: function (response) {
+        //         console.log("Suministro:", response);
+
+        //         if (response.data && response.data.length > 0) {  // Check if there is data
+        //             // Limpiar el select y agregar las opciones
+        //             $('#suministro').empty();
+        //             $('#suministro').append('<option value="#">Seleccione el suministro</option>');
+
+        //             // Agregar cada suministro al select
+        //             $.each(response.data, function (index, suministro) {
+        //                 $('#suministro').append('<option value="' + suministro.id_suministros + '">' + suministro.nombre + '</option>');
+        //             });
+        //         } else {
+        //             console.log("No se encontró el suministro.");
+        //             $('#suministro').empty();
+        //             $('#suministro').append('<option value="#">No hay suministro</option>');
+        //         }
+        //     },
+        //     error: function (xhr, status, error) {
+        //         console.error("Error al obtener los suministros: ", error);
+        //     }
+        // });
+
+        $.ajax({
+            url: '{% url "obtener_acreedores" %}',  // La URL de la vista en Django
+            type: 'GET',
+            dataType: 'json',
+            success: function (data) {
+                if (data.acreedores && data.acreedores.length > 0) {
+                    // Limpiar el select antes de llenarlo con los nuevos datos
+                    $('#acreedor').empty();
+                    $('#acreedor').append('<option value="#">Seleccione el acreedor:</option>');  // Opción por defecto
+
+                    // Iteramos sobre los acreedores y agregamos cada uno al select
+                    data.acreedores.forEach(function (acreedor) {
+                        $('#acreedor').append('<option value="' + acreedor.id_proveedor + '">' + acreedor.nombre_proveedor + '</option>');
+                    });
+                    if (id_acreedor_seleccionado != null) {
+                        $('#acreedor').val(id_acreedor_seleccionado).change();
+                    }
+                } else {
+                    // Si no hay acreedores, mostrar un mensaje
+                    $('#acreedor').append('<option value="#">No hay acreedores disponibles</option>');
+                }
+            },
+            error: function (xhr, status, error) {
+                console.error('Error al obtener los acreedores:', error);
+            }
+        });
+
+        // Obtener los suministros de acuerdo a la categoría seleccionada
+        $('#categoria').change(function () {
+            var categoria_id = $('#categoria').val();  // Obtén el ID de la categoría seleccionada
+            console.log("Categoria ID seleccionada:", categoria_id);  // Depuración
+
+            if (categoria_id && categoria_id !== "") {  // Verifica que el ID no sea inválido
+                // Realizar la solicitud AJAX para obtener los suministros de la categoría seleccionada
+                $.ajax({
+                    url: '{% url "obtener_suministros_por_categoria_data" %}',  // URL en Django para obtener suministros
+                    type: "POST",
+                    data: {
+                        'categoria_id': categoria_id,  // Enviar el ID de la categoría
+                        csrfmiddlewaretoken: csrfToken  // Asegúrate de enviar el token CSRF
+                    },
+                    dataType: 'json',
+                    success: function (response) {
+                        console.log("Suministros obtenidos:", response);
+                        if (response.suministros && response.suministros.length > 0) {
+                            // Limpiamos el select de suministros
+                            $('#suministro').empty();
+                            $('#suministro').append('<option value="">Seleccione el suministro:</option>');
+
+                            // Llenamos el select con los suministros obtenidos
+                            $.each(response.suministros, function (index, suministro) {
+                                $('#suministro').append('<option value="' + suministro.id_suministros + '">' + suministro.nombre + '</option>');
+                            });
+                            if (id_suministro_seleccionado != null) {
+                                $('#suministro').val(id_suministro_seleccionado).change();
+                            }
+
+                        } else {
+                            $('#suministro').empty();
+                            $('#suministro').append('<option value="">No hay suministros disponibles</option>');
+                        }
+                    },
+                    error: function (xhr, status, error) {
+                        console.error("Error al obtener los suministros: ", error);
+                        Swal.fire("", "Ocurrió un error al obtener los suministros.", "error");
+                    }
+                });
+            } else {
+                console.log("No se ha seleccionado una categoría válida.");
+            }
+        });
+
+        // Obtener el elemento select y el input de precio unitario
+        $('#suministro').change(function () {
+            var idSuministro = $('#suministro').val();  // Captura el valor seleccionado
+            console.log("ID Suministro capturado:", idSuministro);  // Depuración
+
+            if (idSuministro && idSuministro !== "") {  // Verifica que el valor no sea vacío o ""
+                // Realizar la solicitud AJAX para obtener el precio unitario del suministro
+                $.ajax({
+                    url: '{% url "obtener_precio_unitario_data" %}',  // URL de la vista Django
+                    data: {
+                        id_suministro: idSuministro,  // Enviar id_suministro
+                        csrfmiddlewaretoken: csrfToken  // Asegúrate de tener el token CSRF
+                    },
+                    type: "POST",
+                    dataType: 'json',
+                    success: function (response) {
+                        console.log("Respuesta del servidor:", response);
+                        if (response.precio_unitario) {
+                            // Completar el campo de texto con el precio unitario
+                            $('#precio_unitario').val(response.precio_unitario);
+                        } else {
+                            console.log("Error: No se encontró el precio unitario.");
+                            Swal.fire("", "No se encontró el precio unitario.", "error");
+                        }
+                    },
+                    error: function (xhr, status, error) {
+                        console.log("Error al obtener el precio unitario:", error);
+                        Swal.fire("", "Ocurrió un error al obtener el precio unitario.", "error");
+                    }
+                });
+            } else {
+                console.log("No se ha seleccionado un ID de suministro válido.");
+            }
+        });
+
+        // ----------------------------------------------------------------------------------------------------------------------- //
+    });
+
+</script>
+{% endblock %}

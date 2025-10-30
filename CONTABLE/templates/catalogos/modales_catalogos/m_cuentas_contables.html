@@ -1,0 +1,111 @@
+<div class="modal fade" id="modalCrearCuenta" tabindex="-1" role="dialog" aria-labelledby="modalCrearCuentaLabel"
+    aria-hidden="true" data-bs-keyboard="false" data-bs-backdrop="static">
+    <div class="modal-dialog modal-lg">
+        <div class="modal-content">
+            <div class="modal-header" style="background-color: #198754; color: white;">
+                <h5 class="modal-title text-white fw-bold" id="modalCrearCuentaLabel">Crear Cuenta Contable</h5>
+                <button type="button" class="close" data-bs-dismiss="modal" aria-label="Close"><span
+                        aria-hidden="true">&times;</span></button>
+            </div>
+
+            <form id="formCrearCuenta">
+
+                <div class="modal-body">
+
+                    <row class="row mb-3">
+                        <div class="col-md-12">
+                            <label for="">Empresa:</label>
+                            <select id="cuenta_empresa" class="form-select form-select-sm" name="cuenta_empresa">
+                                {% for e in empresasData %}
+                                <option value="{{ e.id }}">{{ e.nombre }}</option>
+                                {% endfor %}
+                            </select>
+                        </div>
+                    </row>
+
+                    <!-- Fila 1 -->
+                    <div class="row mb-3">
+                        <div class="col-md-6 d-flex align-items-center">
+                            <label for="cuentaBase" class="me-2">Cuenta Base:</label>
+                            <select class="form-select form-select-sm" id="cuentaBase" name="cuenta_base" required>
+                                <option value="" selected disabled>Seleccione la cuenta base</option>
+                                {% for tipo in cuentas_bases %}
+                                <option value="{{ tipo.0 }}">{{ tipo.1 }}</option>
+                                {% endfor %}
+                            </select>
+                        </div>
+                        <div class="col-md-6 d-flex align-items-center">
+                            <label for="tipoSaldo" class="me-2">Tipo Saldo:</label>
+                            <select class="form-select form-select-sm" id="tipoSaldo" name="tipo_Saldo" required>
+                                <option value="" selected disabled>Seleccione el tipo de saldo</option>
+                                {% for tipo in tipo_saldo %}
+                                <option value="{{ tipo.0 }}">{{ tipo.1 }}</option>
+                                {% endfor %}
+                            </select>
+                        </div>
+                    </div>
+
+                    <!-- Fila 2 -->
+                    <div class="row mb-3">
+                        <div class="col-md-6 d-flex align-items-center">
+                            <label for="cuentaPadre" class="me-2">Cuenta Padre:</label>
+                            <select class="form-select form-select-sm" id="cuentaPadre" name="cuenta_padre">
+                                <option value="" selected disabled>Seleccione Cta. padre</option>
+                            </select>
+                        </div>
+                        <div class="col-md-6 d-flex align-items-center">
+                            <label for="codigoCuenta" class="me-2">Código:</label>
+                            <input type="text" class="form-control form-control-sm" id="codigoCuenta" name="codigo"
+                                placeholder="Código generado automáticamente">
+                        </div>
+
+                    </div>
+
+                    <!-- Fila 4: Concepto -->
+                    <div class="row mb-3 d-flex align-items-end">
+                        <!-- Es Cuenta Padre -->
+                        <div class="col-md-3 d-flex align-items-center">
+                            <label class="form-check-label me-2">Es Cuenta Padre:</label>
+                            <input type="checkbox" class="form-check-input" id="isCuentaPadre"
+                                style="width: 20px; height: 20px;">
+                        </div>
+
+                        <!-- Concepto Cuenta -->
+                        <div class="col-md-9 d-flex align-items-center">
+                            <label for="nombreCuenta" class="me-2">Concepto Cuenta:</label>
+                            <input type="text" class="form-control form-control-sm flex-grow-1" id="nombreCuenta"
+                                name="nombre" placeholder="Ingrese el nombre" required>
+                        </div>
+                    </div>
+
+
+                    <!-- Fila 5: Descripción -->
+                    <div class="row mb-3">
+                        <div class="col-md-12">
+                            <label for="descripcionCuenta">Descripción de la cuenta:</label>
+                            <textarea class="form-control form-control-sm" id="descripcionCuenta"
+                                name="descripcion_Cuenta"></textarea>
+                        </div>
+                    </div>
+
+                    <!-- Fila 6: Tratamiento -->
+                    <div class="row mb-3">
+                        <div class="col-md-12">
+                            <label for="tratamientoCuenta">Tratamiento de la cuenta:</label>
+                            <textarea class="form-control form-control-sm" id="tratamientoCuenta"
+                                name="tratamientoCuenta"></textarea>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="modal-footer">
+                    <button type="submit" class="btn btn-success btn-sm">Guardar</button>
+                    <button type="button" class="btn btn-danger btn-sm" data-bs-dismiss="modal">Cerrar</button>
+                </div>
+
+            </form>
+
+
+        </div>
+    </div>
+</div>

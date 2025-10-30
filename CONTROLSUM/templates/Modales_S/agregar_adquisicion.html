@@ -1,0 +1,210 @@
+<div class="modal fade" id="modalAdquisicion" tabindex="-1" aria-labelledby="modalAdquisicionLabel" aria-hidden="true"
+    data-bs-keyboard="false" data-bs-backdrop="static">
+    <div class="modal-dialog modal-xl">
+        <div class="modal-content">
+            <div class="modal-header" style="background-color: #697a8a; color: white;">
+                <h5 class="modal-title" id="modalAdquisicionLabel">
+                    <i class="material-icons me-2">add_shopping_cart</i><strong>Agregar Adquisición</strong>
+                </h5>
+            </div>
+            <form id="formAdquisicion">
+                <div class="modal-body">
+                    <div class="container-fluid">
+                        <div class="row">
+                            <!-- Código a la izquierda -->
+                            <label for="id_requisicion" class="form-label"
+                                style="text-align: left;"><strong>Código:</strong></label>
+                            <input type="text" id="id_requisicion" name="id_requisicion" disabled
+                                style="text-align: center; width: 100px; font-size: 22px; font-weight: bold;">
+
+                            <!-- Requisición del Solicitante -->
+                            <div class="col-md-4">
+                                <div class="form-group mb-3">
+                                    <label for="solicitante" class="form-label"><strong>Requisición del
+                                            Solicitante:</strong></label>
+                                    <select id="solicitante" class="form-select" name="solicitante"
+                                        onchange="ObtenerDetallesRequisicion()">
+                                        <!-- <option value="#">Seleccionar Solicitud</option>
+                                        {% for r in requisiciones %}
+                                        <option value="{{ r.PKUsuario }}">{{ r.Nombre }}</option>
+                                        {% endfor %} -->
+                                    </select>
+                                </div>
+                            </div>
+
+                            <!-- Área/Departamento -->
+                            <div class="col-md-2">
+                                <div class="form-group mb-3">
+                                    <label for="grupos" class="form-label"><strong>Área/Departamento:</strong></label>
+                                    <input type="text" id="grupos" class="form-control" name="grupos" disabled>
+                                </div>
+                            </div>
+
+                            <!-- Proveedor Solicitado -->
+                            <div class="col-md-4">
+                                <div class="form-group mb-3">
+                                    <label for="proveedor" class="form-label"><strong>Proveedor
+                                            Solicitado:</strong></label>
+                                    <input type="text" id="proveedor" class="form-control" name="proveedor" disabled>
+                                </div>
+                            </div>
+                        </div>
+
+                        <div class="row">
+                            <div class="col-md-6">
+                                <div class="form-group mb-3">
+                                    <label for="fecha_adquisicion" class="form-label"><strong>Fecha de
+                                            Adquisición:</strong></label>
+                                    <input type="date" class="form-control" id="fecha_adquisicion">
+                                </div>
+                            </div>
+                            <div class="col-md-6">
+                                <div class="form-group mb-3">
+                                    <label for="metodo_pago" class="form-label"><strong>Método de Pago:</strong></label>
+                                    <select id="metodo_pago" class="form-select" name="metodo_pago">
+                                        <!-- <option value="#">Seleccionar Método</option>
+                                        {% for mp in metodos_pago %}
+                                        <option value="{{ mp.id_metodo_pago }}">{{ mp.metodo_pago }}</option>
+                                        {% endfor %} -->
+                                    </select>
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- Tabla de artículos -->
+                        <div class="col-md-12">
+                            <table class="table table-bordered table-hover">
+                                <thead class="table-dark">
+                                    <tr class="table-success">
+                                        <th>ID</th>
+                                        <th>Suministro</th>
+                                        <th>Cantidad</th>
+                                        <th>Precio Unitario</th>
+                                        <th>Precio Total</th>
+                                    </tr>
+                                </thead>
+                                <tbody id="tabla-articulos"></tbody>
+                            </table>
+                            <div class="d-flex justify-content-end mb-3">
+                                <h5><strong>Total de la Requisición:</strong> <span
+                                        id="costo-total"><strong>0.00</strong></span></h5>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                <div class="modal-footer">
+                    <button type="submit" class="btn btn-success"><strong>Guardar Adquisición</strong></button>
+                    <button type="button" class="btn btn-danger"
+                        data-bs-dismiss="modal"><strong>Cerrar</strong></button>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>
+
+
+<script>
+
+    var global_id_requisicion
+    function ObtenerDetallesRequisicion() {
+
+        // Formateadores locales para comas
+        const dollarUSLocale = Intl.NumberFormat("en-US", {
+            minimumFractionDigits: 2,
+            maximumFractionDigits: 2
+        });
+
+        const intergerLocale = Intl.NumberFormat("en-US", {
+            minimumFractionDigits: 0,
+            maximumFractionDigits: 0
+        });
+
+        // var solicitanteSelect = document.getElementById("solicitante");
+        // var selectedPKUsuario = solicitanteSelect.value; // Obtener el valor del usuario seleccionado
+
+        // Obtener el PKUsuario y el ID de la requisición de la opción seleccionada
+        var id_requisicion = $("#solicitante").find('option:selected').val(); // Captura el valor (PKUsuario)
+        global_id_requisicion = id_requisicion
+        var id_solicitante_seleccionado = $("#solicitante").find('option:selected').data('PKUsuario'); // Captura el data-id-requisicion
+        var nombre = $("#solicitante").find('option:selected').data('nombre'); // Captura el data-nombre
+
+        // Verificar que el valor no sea "#" (opción por defecto), es decir, que se haya seleccionado un usuario válido
+        if (id_solicitante_seleccionado !== "#") {
+
+            // Realizar la llamada AJAX para obtener los detalles de la requisición
+            $.ajax({
+                url: "{% url 'obtener_requisicion_detalles_usuario' %}",  // Ruta del endpoint que manejará la solicitud
+                type: 'GET',
+                data: {
+                    pk_usuario: 0,  // Enviar el ID del usuario como parámetro
+                    id_requisicion: id_requisicion  // Enviar la ID de la requisición correspondiente
+                },
+                success: function(response) {
+
+                    // Verificar si la respuesta es exitosa
+                    if (response.success && response.data) {
+                        // Actualizar los campos de grupo y proveedor
+                        $('#id_requisicion').val(id_requisicion || '');
+                        $('#grupos').val(response.data.grupo || '');  // Asignar nombre al input
+                        $('#grupos').data('id', response.data.grupo_id || '');  // Asignar ID del grupo
+                        $('#proveedor').val(response.data.proveedor || '');  // Asignar nombre al input
+                        $('#proveedor').data('id', response.data.id_proveedor || '');  // Asignar ID del proveedor
+
+                        // Verificar si existen detalles de requisición
+                        if (response.data.detalles && Array.isArray(response.data.detalles) && response.data.detalles.length > 0) {
+                            let tablaArticulos = '';
+                            let costoTotal = 0;
+
+                            // Iterar sobre los detalles y crear las filas de la tabla
+                            response.data.detalles.forEach(function(articulo) {
+                                const cantidad = articulo.cantidad || 0;  // Si no hay cantidad, es 0
+                                const precioUnitario = parseFloat(articulo.precio_unitario || 0); // Si no hay precio, es 0
+                                const precioTotal = cantidad * precioUnitario;
+
+                                tablaArticulos += `
+                                    <tr>
+                                        <td>${articulo.id_detalle_requisicion || ''}</td>
+                                        <td style="display: none">${articulo.id_suministros || ''}</td>
+                                        <td>${articulo.nombre_suministro || ''}</td>
+                                        <td>${cantidad}</td>
+                                        <td>${dollarUSLocale.format(precioUnitario)}</td>
+                                        <td>${dollarUSLocale.format(precioTotal)}</td>
+                                    </tr>
+                                `;
+                                costoTotal += precioTotal;
+                            });
+
+                            // Actualizar el contenido de la tabla y el costo total
+                            $('#tabla-articulos').html(tablaArticulos);
+                            $('#costo-total').text(dollarUSLocale.format(costoTotal));
+                        } else {
+                            Swal.fire("", "No se encontraron artículos para esta requisición.", "warning");
+                        }
+
+                    } else {
+                        alert('No se encontraron datos para este usuario.');
+                    }
+                },
+                error: function(xhr, status, error) {
+                    // Habilitar nuevamente el selector en caso de error
+                    $('#solicitante').prop('disabled', false);
+                    alert('Hubo un error al obtener los detalles: ' + error);
+                }
+            });
+        }
+    }
+
+    $('#modalAdquisicion').on('shown.bs.modal', function (e) {
+        if ($.fn.select2 && $('#solicitante').hasClass('select2-hidden-accesible')) {
+            $('#solicitante').select2('destroy');
+        }
+
+        $('#solicitante').select2({
+            placeholder: "Seleccione al solicitante",
+            with: "100%",
+            allowClear: true,
+            dropdownParent: $('#modalAdquisicion')
+        });
+    });
+
+</script>

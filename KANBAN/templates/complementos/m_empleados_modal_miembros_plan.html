@@ -1,0 +1,77 @@
+<div class="modal fade" id="assignUsersPlanModal" tabindex="-1" role="dialog"
+    aria-labelledby="assignUsersPlanModalLabel" aria-hidden="true">
+    <div class="modal-dialog modal-xl" role="document">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title text-uppercase" id="assignUsersPlanModalLabel">Miembros del Plan <span style="color: brown; font-weight: bold;">{{ plan.nombre_plan }}</span>
+                    <b></b>
+                </h5>
+                <button type="button" class="close" data-bs-dismiss="modal" aria-label="Close">
+                    <span aria-hidden="true">&times;</span>
+                </button>
+            </div>
+            <div class="modal-body">
+
+                <div class="row">
+                    <form id="miembrosPlanForm">
+
+                        <div class="row">
+                            <div class="col-lg-6">
+                                <div class="form-group">
+                                    <label class="col-form-label">Usuario:</label>
+                                    <select class="form-select form-select-sm chosen-select" id="plan_member"
+                                        name="plan_member" style="width: 100%">
+                                        <option selected value="0">Seleccione un Usuario</option>
+
+                                        {% for cer in usuarios %}
+                                        <option value="{{ cer.0 }}">{{ cer.1 }}</option>
+                                        {% endfor %}
+                                    </select>
+                                </div>
+                            </div>
+                            <div class="col-lg-6">
+                                <div class="form-group">
+                                    <label class="col-form-label">Rol:</label>
+                                    <select class="form-select form-select-sm chosen-select" id="plan_member_rol"
+                                        name="plan_member_rol" style="width: 100%">
+                                        <option selected value="0">Seleccione un Rol</option>
+                                        {% for cer in tipos_usuarios %}
+                                        <option value="{{ cer.0 }}">{{ cer.1 }}</option>
+                                        {% endfor %}
+
+                                    </select>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="modal-footer">
+                            <button type="submit" class="btn btn-success">Agregar</button>
+                            <button type="button" class="btn btn-danger" data-bs-dismiss="modal">Cancelar</button>
+                        </div>
+                    </form>
+                </div>
+                <div class="row">
+                    <span class="text-center"><b>Miembros Agregados</b></span>
+                </div>
+                <div class="row">
+                    <div class="table-responsive">
+                        <table id="membersPlanTable" class="table table-hover table-center table-bordered table-striped"
+                            style="width:100%">
+                            <thead class="thead-light">
+                                <tr>
+                                    <th class="text-center">#</th>
+                                    <th class="text-center">Miembro</th>
+                                    <th class="text-center">Rol</th>
+                                    <th class="text-center">Acciones</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+                <br>
+            </div>
+        </div>
+    </div>
+</div>
+

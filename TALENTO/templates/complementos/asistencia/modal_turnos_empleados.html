@@ -1,0 +1,79 @@
+<div class="modal fade" id="modalTurnosEmpleados" tabindex="-1" aria-labelledby="modalListadoTurnosLabel"
+    aria-hidden="true" data-bs-keyboard="false" data-bs-backdrop="static">
+    <div class="modal-dialog modal-fullscreen modal-dialog-centered"> <!-- Centrar el modal -->
+        <div class="modal-content">
+            <div class="modal-header" style="background-color: #304458; color: white;">
+                <h5 class="modal-title modalListadoTurnosLabel" id="modalListadoTurnosLabel">
+                    <i class="material-icons me-2 text-gray">list</i> Asociar Empleados al Turno
+                </h5>
+
+                <button type="button" class="close" data-bs-dismiss="modal" aria-label="Close"><span
+                        aria-hidden="true">&times;</span></button>
+
+
+            </div>
+            <div class="modal-body">
+                <div class="container-fluid">
+                    <div class="row">
+                      
+                        <div class="col-5">
+                            <div class="card shadow-sm border-primary">
+                                <div class="card-header bg-primary text-white text-center">
+                                    <h6 class="m-0">Empleados Disponibles</h6>
+                                </div>
+                                <div class="card-body p-2">
+                                    <select id="availableActions" class="form-select" multiple size="22" style="height: 400px; font-size: 14px;">
+                                    </select>
+                                </div>
+                            </div>
+                        </div>
+                        
+
+                        <input type="hidden" id="idDepartamentoTurnos">
+                        <input type="hidden" id="idTurnosEmpleados">
+                        <div class="col-2 d-flex flex-column align-items-center justify-content-center">
+                            
+                            <div class="col-2 d-flex flex-column align-items-center justify-content-center ">
+                                <!-- Mover Seleccionado a Asignados -->
+                                <button id="btnMoveToAssigned" class="btn btn-estilo-success mb-2">
+                                    <span class="material-icons">arrow_forward</span>
+                                </button>
+                                <!-- Mover Seleccionado a Disponibles -->
+                                <button id="btnMoveToAvailable" class="btn btn-estilo-danger mb-2">
+                                    <span class="material-icons">arrow_back</span>
+                                </button>
+                                <hr>
+                                <!-- Mover Todos a Asignados -->
+                                <button  id="btnMoveAllToAssigned" class="btn btn-estilo-primary mb-2">
+                                    <span class="material-icons">keyboard_double_arrow_right</span>
+                                </button>
+                        
+                            </div>
+                            
+                            
+                        </div>
+                        
+
+                   
+                        <div class="col-5">
+                            <div class="card shadow-sm border-success">
+                                <div class="card-header bg-success text-white text-center">
+                                    <h6 class="m-0">Empleados Asociados</h6>
+                                </div>
+                                <div class="card-body p-2">
+                                    <select id="assignedActions" class="form-select border-success" multiple size="22" 
+                                            style="height: 400px; font-size: 14px;">
+                                    </select>
+                                </div>
+                            </div>
+                        </div>
+
+                    </div>
+                </div>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-danger" data-bs-dismiss="modal">Cerrar</button>
+            </div>
+        </div>
+    </div>
+</div>

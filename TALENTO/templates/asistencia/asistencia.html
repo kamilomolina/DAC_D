@@ -1,0 +1,711 @@
+{% extends 'menu_asistencia.html' %}
+{% load static %}
+
+{% block title %}
+{% if parametro == 'new' %}
+CREAR PLANILLA
+{% else %}
+{{ id_empleado }} - MODULO ASISTENCIA
+{% endif %}
+{% endblock %}
+
+{% block body %}
+<style>
+    .dataTables_wrapper .dataTables_length,
+    .dataTables_wrapper .dt-buttons {
+        display: inline-block;
+        margin-right: 10px;
+
+    }
+
+    .dt-buttons {
+        margin-left: 10px;
+
+    }
+
+    .btn-group {
+        display: flex;
+        justify-content: center;
+        align-items: center;
+        height: 100%;
+    }
+
+    .checkboxIncidencia {
+        margin: 0;
+        width: 15px;
+        height: 15px;
+    }
+</style>
+<div class="card  p-2 crear-container">
+    <div class="col-md-12">
+        <div class="card">
+            <div class="card-body" style="background-color: #f4f6f9;">
+                <div class="d-flex justify-content-start ">
+                    <button class="btn btn-warning btn-sm d-flex align-items-center me-3" data-bs-toggle="modal"
+                        data-bs-target="#modalCrearAsistenciaManual"
+                        data-intro="Este botón crea una planilla. ¡Haz clic aquí!" data-step="1" style="height: 35px;">
+                        <i class="material-icons me-1">add</i> Crear Asistencia
+                    </button>
+
+                    <button class="btn btn-primary btn-sm  d-flex align-items-center" id="actualizarAsistencia"
+                        style="height: 35px;" data-intro="Este botón crea una planilla. ¡Haz clic aquí!" data-step="1">
+                        <i class="material-icons me-1">post_add</i> Actualizar Asistencia
+                    </button>
+                </div>
+                <div class="mb-3 d-flex justify-content-between align-items-center ">
+                    <h4 class="card-title text-primary">Asistencia de Empleados</h4>
+
+                    <div class="d-flex gap-3 align-items-end">
+                        <!-- Campo Desde -->
+                        <input type="hidden" id="periodoInicio" class="form-control form-control-sm pickedDate">
+                        <input type="hidden" id="periodoFinal" class="form-control form-control-sm pickedDate">
+
+                        <!-- Botón de acciones -->
+                        <div class="d-flex align-items-end " style="margin-bottom: 13px;">
+                            <div class="dropdown">
+                                <button type="button" class="btn btn-secondary  dropdown-toggle" id="accionesDropdown1"
+                                    data-bs-toggle="dropdown" aria-expanded="false">
+                                    <i class="fas fa-cog"></i> Acciones
+                                </button>
+                                <ul class="dropdown-menu" aria-labelledby="accionesDropdown1">
+                                    <li><a class="dropdown-item" id="asociar-incidencia" href="#">
+                                            <i class="fas fa-edit me-2"></i> Asociar Incidencia
+                                        </a>
+                                    </li>
+
+                                </ul>
+                            </div>
+                        </div>
+                    </div>
+
+
+                </div>
+
+
+                <div class="table-responsive">
+                    <table id="asistencia-table" class="table table-striped table-bordered table-top-border"
+                        style="width:100%">
+                        <thead>
+                            <tr>
+                                <th>#</th>
+                                <th>Nombre Empleado</th>
+                                <th>Fecha</th>
+                                <th>Día Semana</th>
+                                <th>Hora Entrada</th>
+                                <th>Hora Salida</th>
+                                <th>Hora Entrada Marcada</th>
+                                <th>Hora Salida Marcada</th>
+                                <th>Minutos Requeridos</th>
+                                <th>Tolerancia</th>
+                                <th>Minutos Trabajados</th>
+                                <th>Fecha Incidencia</th>
+                                <th>Tipo Incidencia</th>
+                                <th>Descripción Incidencia</th>
+                                <th>Tipo Día</th>
+                                <th>Estado General</th>
+                                <th>
+                                    <div style="display: flex; align-items: center; justify-content: center;">
+                                        <input type="checkbox" id="checkAllIncidencia"
+                                            style="margin-right: 5px; color: white">Acciones
+                                    </div>
+                                </th>
+                            </tr>
+                        </thead>
+                        <tbody>
+
+                        </tbody>
+                    </table>
+
+                </div>
+            </div>
+        </div>
+    </div>
+
+</div>
+{% include 'complementos/asistencia/modal_incidencias.html' %}
+{% include 'complementos/asistencia/modal_crear_asistencia_manual.html' %}
+
+
+
+{% endblock %}
+
+{% block scripts %}
+<script>
+    function setPeriodDates(startSelector, endSelector) {
+        const today = new Date();
+        const currentYear = today.getFullYear();
+        const currentMonth = today.getMonth();
+
+
+        const firstDayOfMonth = new Date(currentYear, currentMonth, 1);
+        const formattedFirstDay = firstDayOfMonth.toISOString().split('T')[0];
+
+
+        const formattedToday = today.toISOString().split('T')[0];
+
+
+        $(startSelector).val(formattedFirstDay);
+        $(endSelector).val(formattedToday); // Cambiado para usar la fecha actual formateada
+    }
+
+    // Llama a la función
+    setPeriodDates('#periodoInicio', '#periodoFinal');
+
+    $(document).ready(function () {
+        $('#id-usuario-biometrico').chosen({
+            width: '100%' // Asegúrate de que el ancho esté ajustado
+        });
+
+        $('#tipo-registro').chosen({
+            width: '100%' // Asegúrate de que el ancho esté ajustado
+        });
+
+
+        // Ajustar la altura dinámicamente después de inicializar Chosen
+        $('.chosen-container').css({
+            height: '37px'
+        });
+        $('.chosen-container .chosen-single').css({
+            height: '37px',
+            'line-height': '37px'
+        });
+
+        var csrfToken = "{{ csrf_token }}";
+
+        setPeriodDates('#periodoInicio', '#periodoFinal');
+        $(".chosen-select").chosen({
+            width: "100%"
+        });
+
+        $('#modalCrearAsistenciaManual').on('shown.bs.modal', function () {
+            const now = new Date();
+
+            // Ajustar la fecha y hora al formato local
+            const year = now.getFullYear();
+            const month = String(now.getMonth() + 1).padStart(2, '0'); // Meses empiezan en 0
+            const day = String(now.getDate()).padStart(2, '0');
+            const hours = String(now.getHours()).padStart(2, '0');
+            const minutes = String(now.getMinutes()).padStart(2, '0');
+
+            // Formato 'YYYY-MM-DDTHH:mm'
+            const formattedDateTime = `${year}-${month}-${day}T${hours}:${minutes}`;
+
+            // Asignar el valor al input
+            $('#datetime').val(formattedDateTime);
+        });
+        var toastMixin = Swal.mixin({
+            toast: true,
+            icon: 'success',
+            title: 'General Title',
+            animation: false,
+            position: 'top-right',
+            showConfirmButton: false,
+            timer: 2000,
+            timerProgressBar: true,
+            didOpen: (toast) => {
+                toast.addEventListener('mouseenter', Swal.stopTimer);
+                toast.addEventListener('mouseleave', Swal.resumeTimer);
+            }
+        });
+        $("#actualizarAsistencia").on("click", function (e) {
+            e.preventDefault(); // Evita la acción por defecto del botón
+
+            Swal.fire({
+                title: '¿Estás seguro?',
+                text: 'Esto actualizará la asistencia con los nuevos datos.',
+                icon: 'warning',
+                showCancelButton: true,
+                confirmButtonText: 'Sí, actualizar',
+                cancelButtonText: 'Cancelar',
+                customClass: {
+                    confirmButton: 'btn btn-success',
+                    cancelButton: 'btn btn-danger'
+                },
+                buttonsStyling: false
+            }).then((result) => {
+                if (result.isConfirmed) {
+                    // Mostrar el loader inicial
+                    Swal.fire({
+                        title: '',
+                        html: '<b>Actualizando Asistencia</b>',
+                        didOpen: () => {
+                            Swal.showLoading();
+                        },
+                        allowOutsideClick: false,
+                        showConfirmButton: false
+                    });
+
+                    // Enviar solicitud AJAX
+                    /*setTimeout(() => {
+                       Swal.fire({
+                           title: 'Éxito',
+                           html: `Asistencia actualizada correctamente.`,
+                           icon: 'success',
+                           confirmButtonText: 'Aceptar',
+                           customClass: {
+                               confirmButton: 'btn btn-primary'
+                           },
+                           buttonsStyling: false
+                       });
+                   }, 3000); */
+                    $.ajax({
+                        url: "{% url 'export_and_import_data' %}", // URL de tu vista Django
+                        type: "POST",
+                        headers: {
+                            "X-CSRFToken": $("input[name=csrfmiddlewaretoken]").val() // CSRF token
+                        },
+                        success: function (response) {
+                            Swal.fire({
+                                title: 'Éxito',
+                                html: `Asistencia actualizada correctamente.`,
+                                icon: 'success',
+                                confirmButtonText: 'Aceptar',
+                                customClass: {
+                                    confirmButton: 'btn btn-primary'
+                                },
+                                buttonsStyling: false
+                            });
+
+                        },
+                        error: function (xhr, status, error) {
+                            // Manejar errores y mostrar alerta
+                            const errorMessage = xhr.responseJSON?.error || "Ocurrió un error al procesar la solicitud.";
+                            Swal.fire({
+                                title: 'Error',
+                                text: errorMessage,
+                                icon: 'error',
+                                confirmButtonText: 'Aceptar',
+                                customClass: {
+                                    confirmButton: 'btn btn-danger'
+                                },
+                                buttonsStyling: false
+                            });
+                        }
+                    });
+                } else if (result.dismiss === Swal.DismissReason.cancel) {
+                    Swal.fire({
+                        title: 'Cancelado',
+                        text: 'La actualización fue cancelada.',
+                        icon: 'info',
+                        confirmButtonText: 'Aceptar',
+                        customClass: {
+                            confirmButton: 'btn btn-secondary'
+                        },
+                        buttonsStyling: false
+                    });
+                }
+            });
+        });
+
+        let tableAsistencia;
+
+        initializeTableAsistencia();
+        $(".pickedDate").change(function (e) {
+            e.preventDefault();
+            initializeTableAsistencia();
+        });
+
+        function initializeTableAsistencia() {
+
+            $("#asistencia-table").DataTable().clear().destroy();
+
+            tableAsistencia = $("#asistencia-table").DataTable({
+                scrollX: true,
+                scrollCollapse: true,
+                scrollY: '450px',
+                pageLength: 50,
+                dom: '<"top"lfB>rt<"bottom"ip>',
+                buttons: [
+                    {
+                        extend: 'excel',
+                        text: '<i class="fas fa-file-excel"></i>',
+                        titleAttr: 'Exportar a Excel',
+                        className: 'btn btn-success',
+                    },
+                    {
+                        extend: 'pdf',
+                        text: '<i class="fas fa-file-pdf"></i>',
+                        titleAttr: 'Exportar a PDF',
+                        className: 'btn btn-danger',
+                        orientation: 'landscape'
+                    },
+                    {
+                        extend: 'print',
+                        text: '<i class="fas fa-print"></i>',
+                        titleAttr: 'Imprimir',
+                        className: 'btn btn-primary',
+                    }
+                ],
+                lengthMenu: [[10, 25, 50, -1], [10, 25, 50, "Todos"]],
+                fixedColumns: {
+                    left: 3,
+                    right: 3
+                },
+                ajax: {
+                    url: "{% url 'mostrar_asistencia_marcados' %}",
+                    type: "POST",
+                    data: function (d) {
+                        d.date1 = $('#periodoInicio').val();
+                        d.date2 = $('#periodoFinal').val();
+                        d.csrfmiddlewaretoken = "{{ csrf_token }}";
+                    }
+                },
+                language: {
+                    url: "{% static 'app/th/json/es-ES.json' %}"
+                },
+                columns: [{
+                    data: "id_empleado"
+                },
+                {
+                    data: "nombre_completo",
+                    className: "text-wrap"
+                },
+                {
+                    data: "fecha"
+                },
+                {
+                    data: "dia_semana"
+                },
+                {
+                    data: "hora_inicio"
+                },
+                {
+                    data: "hora_fin"
+                },
+                {
+                    data: "entrada"
+                },
+                {
+                    data: "salida"
+                },
+
+                {
+                    data: "minutos_requeridos"
+                },
+                {
+                    data: "tolerancia_minutos"
+                },
+                {
+                    data: "minutos_trabajados"
+                },
+                {
+                    data: "fecha_incidencia"
+                },
+                {
+                    data: "tipo_incidencia"
+                },
+                {
+                    data: "descripcion_incidencia"
+                },
+                {
+                    data: "estado_dia",
+                    className: 'text-center',
+                    render: function (data, type, row) {
+                        var badge = "";
+                        if (data == "Horario Normal") {
+                            badge +=
+                                '<span class="badge badge-pill badge-success">' + data +
+                                "</span>";
+                        }
+                        else if (data == "Completado") {
+                            badge +=
+                                '<span class="badge badge-pill badge-success">' + data +
+                                "</span>";
+                        }
+                        else if (data == "Día Libre Especial") {
+                            badge += '<span class="badge badge-pill badge-warning">' + data + '</span>';
+                        }
+
+                        else if (data.includes("Incidencia:")) { // Verifica si el texto contiene "Incidencia:"
+                            const parts = data.split(" - "); // Divide el texto para separar el tipo y la descripción
+                            const tipoIncidencia = parts[0].replace("Incidencia: ", "").trim(); // Extrae el tipo de incidencia
+                            const descripcionIncidencia = parts[1] ? parts[1].trim() : ""; // Extrae la descripción si existe
+
+                            badge +=
+                                '<span class="badge badge-pill badge-danger">' +
+                                tipoIncidencia + // Muestra el tipo de incidencia
+                                '</span>' +
+                                '<small class="d-block text-muted">' + // Muestra la descripción en un texto pequeño
+                                descripcionIncidencia +
+                                '</small>';
+                        }
+
+                        else if (data == "Día Libre") {
+                            badge += '<span class="badge badge-pill badge-primary" style="background-color: #007bff; color: #fff;">' + data + '</span>';
+                        }
+                        return badge;
+                    },
+                },
+                {
+                    data: "estado_general",
+                    className: 'text-center',
+                    render: function (data, type, row) {
+                        var badge = "";
+                        if (data == "Incompleto") {
+                            badge +=
+                                '<span class="badge badge-pill badge-danger text-wrap">' +
+                                data +
+                                "</span>";
+                        } else if (data == "Completado") {
+                            badge +=
+                                '<span class="badge badge-pill badge-success text-wrap">' + data +
+                                "</span>";
+                        } else if (data == "Accion Personal Realizada") {
+                            badge +=
+                                '<span class="badge badge-pill badge-info text-wrap">' + data +
+                                " pero Incompleto</span>";
+
+                        }
+
+                        return badge;
+                    },
+                },
+                {
+
+                    data: null,
+                    className: 'text-center',
+                    orderable: false,
+                    render: function (data, type, row) {
+                        if (row.estado_general === "Completado" || row.estado_general === "Accion Personal Realizada") {
+                            return ""
+                        } else {
+                            return (
+                                "<div class='text-center'>" +
+                                "<div class='btn-group'>" +
+                                "<input class='form-check-input checkboxIncidencia' " +
+                                "type='checkbox' id='checkboxIncidencia' data-aos='fade-in' " +
+                                "title='Finalizar' alt='Incidencia' />" +
+                                "</div></div>"
+                            );
+                        }
+                    }
+
+
+                },
+                ],
+                order: [
+                    [1, "asc"],
+                    [2, "asc"],
+                ],
+                initComplete: function () {
+                    tableAsistencia.columns.adjust().draw();
+                    const table = $('#asistencia-table').DataTable();
+
+                    // Evento para el checkbox maestro
+                    $('#checkAllIncidencia').off('click').on('click', function () {
+                        let isChecked = $(this).is(':checked');
+                        // Marcar/desmarcar solo los checkboxes visibles en el search aplicado
+                        table.rows({ search: 'applied' }).nodes().to$().find('.checkboxIncidencia').prop('checked', isChecked);
+                    });
+
+                    // Sincronizar estado del checkbox maestro con los checkboxes visibles
+                    $('#asistencia-table').on('change', '.checkboxIncidencia', function () {
+                        let allChecked = table.rows({ search: 'applied' }).nodes().to$().find('.checkboxIncidencia:checked').length ===
+                            table.rows({ search: 'applied' }).nodes().to$().find('.checkboxIncidencia').length;
+                        $('#checkAllIncidencia').prop('checked', allChecked);
+                    });
+                }
+
+            });
+        }
+
+
+        function pushIncidencia(id_detalle_x_empleado, fecha) {
+            return {
+                id_detalle_x_empleado: id_detalle_x_empleado,
+                fecha: fecha
+            };
+        }
+
+        $(document).on('click', '#guardarIncidencia', function () {
+            var arrIncidencia = [];
+            const table = $('#asistencia-table').DataTable();
+
+            // Obtener los valores del modal
+            const idTipoIncidencia = $('#idTipoIncidencia').val(); // Tipo de incidencia
+            const descripcionIncidencia = $('#comentarioIncidencia').val(); // Descripción
+
+            // Verificar que se haya seleccionado un tipo de incidencia y se haya ingresado una descripción
+            if (!idTipoIncidencia || !descripcionIncidencia.trim()) {
+                Swal.fire("Error", "Por favor, selecciona un tipo de incidencia y escribe una descripción.", "warning");
+                return;
+            }
+
+            // Recorrer las filas de la tabla para encontrar las seleccionadas
+            table.rows().every(function () {
+                var data = this.node(); // Obtener el nodo de la fila
+                var checkbox = $(data).find('.checkboxIncidencia'); // Encontrar el checkbox en esa fila
+
+                if (checkbox.is(':checked')) {
+                    var idDetalle = $(data).find('td:eq(0)').text(); // Obtener el ID
+                    var fecha = $(data).find('td:eq(2)').text(); // Obtener la fecha
+                    arrIncidencia.push({
+                        id_detalle_x_empleado: idDetalle,
+                        fecha: fecha,
+                        descripcion: descripcionIncidencia, // Agregar la descripción
+                        id_tipo_incidencia: idTipoIncidencia // Agregar el tipo de incidencia
+                    });
+                }
+            });
+
+            // Validar si hay incidencias seleccionadas
+            if (arrIncidencia.length === 0) {
+                Swal.fire("Error", "Por favor, selecciona al menos una fila para asociar la incidencia.", "warning");
+                return;
+            }
+
+            Swal.fire({
+                title: '¿Estás seguro de agregar las incidencias?',
+                text: 'Esta acción asociará las incidencias seleccionadas.',
+                icon: 'warning',
+                showCancelButton: true,
+                confirmButtonColor: '#28A745',
+                cancelButtonColor: '#d33',
+                confirmButtonText: 'Sí, continuar',
+                cancelButtonText: 'Cancelar'
+            }).then((result) => {
+                if (result.isConfirmed) {
+                    Swal.fire({
+                        title: '',
+                        html: '',
+                        didOpen: () => {
+                            Swal.showLoading();
+                        },
+                        allowOutsideClick: false,
+                        showConfirmButton: false
+                    });
+
+                    // Enviar las incidencias al servidor
+                    $.ajax({
+                        url: "{% url 'insertar_incidencias_registradas' %}",
+                        type: 'POST',
+                        data: {
+                            arrIncidencia: JSON.stringify(arrIncidencia),
+                            csrfmiddlewaretoken: csrfToken
+                        },
+                        success: function (data) {
+                            Swal.close();
+                            if (data.save == 1) {
+                                table.ajax.reload(); // Recarga la tabla después de guardar
+                                toastMixin.fire({
+                                    title: 'Las incidencias se registraron exitosamente.',
+                                    icon: 'success'
+                                });
+                                $('#checkAllIncidencia').prop('checked', false);
+                                $('#modalIncidencias').modal('hide'); // Cierra el modal
+                            } else {
+                                Swal.fire("", "No se pudo registrar las incidencias. Inténtelo nuevamente.", "error");
+                                console.log(data.error);
+                            }
+                        },
+                        error: function (xhr, status, error) {
+                            Swal.close();
+                            Swal.fire("", "Ocurrió un error en el servidor. Inténtelo nuevamente.", "error");
+                            console.log(error);
+                        }
+                    });
+                }
+            });
+        });
+
+        $(document).ready(function () {
+            const table = $('#asistencia-table').DataTable();
+            let seleccionado = false; // Variable para verificar selección
+
+            // Evento para manejar el checkbox maestro (checkAllIncidencia)
+            $('#checkAllIncidencia').on('change', function () {
+                const isChecked = $(this).is(':checked');
+                // Marcar/desmarcar todos los checkboxes visibles
+                table.rows({ search: 'applied' }).nodes().to$().find('.checkboxIncidencia').prop('checked', isChecked);
+                actualizarEstadoSeleccion();
+            });
+
+            // Evento para manejar los checkboxes individuales
+            $(document).on('change', '.checkboxIncidencia', function () {
+                actualizarEstadoSeleccion();
+            });
+
+            // Evento para asociar incidencia
+            $(document).on('click', '#asociar-incidencia', function () {
+                if (!seleccionado) {
+                    Swal.fire("Error", "Por favor, selecciona al menos una fila para asociar la incidencia.", "warning");
+                    return;
+                }
+                $('#modalIncidencias').modal('show');
+            });
+
+            // Función para actualizar el estado de la variable seleccionado
+            function actualizarEstadoSeleccion() {
+                // Verificar si al menos un checkbox está seleccionado en el search aplicado
+                seleccionado = table.rows({ search: 'applied' }).nodes().to$().find('.checkboxIncidencia:checked').length > 0;
+
+                // Actualizar el estado del checkbox maestro basado en checkboxes visibles en el search aplicado
+                const allChecked = table.rows({ search: 'applied' }).nodes().to$().find('.checkboxIncidencia:checked').length ===
+                    table.rows({ search: 'applied' }).nodes().to$().find('.checkboxIncidencia').length;
+                $('#checkAllIncidencia').prop('checked', allChecked);
+            }
+        });
+
+
+
+        $('#formCrearAsistenciaManual').on('submit', function (e) {
+            e.preventDefault();
+
+            // Obtener valores del formulario
+            const IdUsuario = $('#id-usuario-biometrico').val();
+            const FechaHoraAcceso = $('#datetime').val();
+            const TipoAcceso = $('#tipo-registro').val();
+
+            // Validar que los campos no estén vacíos
+            if (!IdUsuario || !FechaHoraAcceso || !TipoAcceso) {
+                Swal.fire("", "Todos los campos son obligatorios. Por favor, complételos.", "warning");
+                return;
+            }
+
+            console.log(`Usuario: ${IdUsuario}, FechaHoraAcceso: ${FechaHoraAcceso}, TipoAcceso: ${TipoAcceso}`);
+
+            // Enviar datos por AJAX
+            $.ajax({
+                url: "{% url 'insertar_registro_incendincias_manual' %}", // URL definida en Django
+                type: 'POST',
+                data: {
+                    IdUsuario: IdUsuario,
+                    FechaHoraAcceso: FechaHoraAcceso,
+                    TipoAcceso: TipoAcceso,
+                    csrfmiddlewaretoken: csrfToken
+                },
+                success: function (data) {
+                    if (data.save == 1) {
+                        // Recargar tabla y cerrar modal
+                        tableAsistencia.ajax.reload();
+                        $('#modalCrearAsistenciaManual').modal('hide');
+                        $('#formCrearAsistenciaManual')[0].reset();
+
+                        // Actualizar select con Chosen
+                        $('#id-usuario-biometrico').val('').trigger('chosen:updated');
+
+                        // Mostrar notificación de éxito
+                        toastMixin.fire({
+                            title: 'El registro se creó exitosamente.',
+                            icon: 'success'
+                        });
+                    } else {
+                        // Mostrar alerta de advertencia
+                        Swal.fire("", data.error || "No se pudo registrar. Inténtelo nuevamente.", "warning");
+                        console.warn("Advertencia del servidor:", data.error);
+                    }
+                },
+                error: function (xhr, status, error) {
+                    // Manejar errores de AJAX
+                    console.error("Error en la solicitud AJAX:", error);
+                    Swal.fire("", "Ocurrió un error al procesar la solicitud. Inténtelo nuevamente.", "error");
+                }
+            });
+        });
+
+    });
+
+
+
+</script>
+{% endblock %}

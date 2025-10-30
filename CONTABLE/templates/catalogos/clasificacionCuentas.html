@@ -1,0 +1,291 @@
+{% extends 'componentes/menu_contable.html' %}
+{% load static %}
+
+{% block title %}
+CLASIFICACION TIPOS DE CUENTAS
+{% endblock %}
+
+
+{% block body %}
+
+<div class="row align-items-center">
+    <div class="col d-flex align-items-center">
+        <button id="toggle-sidebar" class="hamburger btnMenu me-3" title="Mostrar/Ocultar Menu">
+            <i class="fas fa-bars"></i>
+        </button>
+        <h3 class="page-title mb-0">CLASIFICACION TIPOS DE CUENTAS</h3>
+    </div>
+
+    <div class="col-auto text-end float-end ms-auto download-grp">
+        <button class="btn btn-sm btn-success" id="btnNuevo" title="Crear Nuevo"><i class="fas fa-plus me-2"></i>
+            Nuevo</button>
+    </div>
+</div>
+
+<hr>
+
+<div class="row">
+    <div class="table-responsive">
+        <table id="tableClasificacionCuentas"
+            class="table table-striped table-bordered mb-0 table-sm rounded-4 table-hover align-middle"
+            style="width: 100%;">
+            <thead class="table-gradient text-dark">
+                <tr>
+                    <th>#</th>
+                    <th>Nombre Clasificacion</th>
+                    <th>Descripcion</th>
+                    <th>Estado</th>
+                    <th>Acciones</th>
+                </tr>
+            </thead>
+
+            <tbody>
+
+            </tbody>
+        </table>
+    </div>
+</div>
+
+
+{% include 'catalogos/modales_catalogos/m_clasificacion_cuentas.html' %}
+
+{% endblock %}
+
+
+
+{% block scripts %}
+
+<script>
+    $(document).ready(function () {
+        var csrfToken = "{{ csrf_token }}";
+
+        var toastMixin = Swal.mixin({
+            toast: true,
+            icon: 'success',
+            title: 'General Title',
+            animation: false,
+            position: 'top-right',
+            showConfirmButton: false,
+            timer: 2000,
+            timerProgressBar: true,
+            didOpen: (toast) => {
+                toast.addEventListener('mouseenter', Swal.stopTimer);
+                toast.addEventListener('mouseleave', Swal.resumeTimer);
+            }
+        });
+
+        $('#catalogosMenu, #clasificacionCuentas_submenu').addClass('active');
+
+        var tableClasificacionCuentas, opcion, clasificacion_id;
+
+        tableClasificacionCuentas = $('#tableClasificacionCuentas').DataTable({
+            autoWidth: false,
+            scrollX: true,
+            scrollY: '350px',
+            scrollCollapse: true,
+            pageLength: 50,
+            dom: 'rftip',
+            language: {
+                url: "{% static 'app/th/json/es-ES.json' %}",
+            },
+            ajax: {
+                url: `{% url 'dataClasificacionCuentas' %}`,
+                type: "POST",
+                dataScr: 'data',
+                data: {
+                    opcion: 0,
+                    csrfmiddlewaretoken: csrfToken
+                },
+            },
+            colReorder: {
+                realtime: false,
+            },
+            buttons: [
+                {
+                    extend: 'excel',
+                    text: '<i class="fas fa-file-excel"></i>',
+                    titleAttr: 'Exportar a Excel',
+                    className: 'btn btn-success',
+                },
+                {
+                    extend: 'pdf',
+                    text: '<i class="fas fa-file-pdf"></i>',
+                    titleAttr: 'Exportar a PDF',
+                    className: 'btn btn-danger',
+                },
+                {
+                    extend: 'print',
+                    text: '<i class="fas fa-print"></i>',
+                    titleAttr: 'Imprimir',
+                    className: 'btn btn-primary',
+                    orientation: 'landscape'
+                }
+            ],
+            columns: [
+                {
+                    data: 'id_clasificacion_cuentas',
+                    width: '2%',
+                },
+                { data: 'clasificacion_cuentas' },
+                { data: 'descripcion' },
+                {
+                    data: 'estado',
+                    className: 'text-center',
+                    render: function (data, type, row) {
+                        var badge = "";
+                        if (data == 3) {
+                            badge +=
+                                '<span class="badge badge-pill bg-danger">DESHABILITADO</span>';
+                        } else {
+                            badge +=
+                                '<span class="badge badge-pill bg-success">ACTIVO</span>';
+                        }
+
+                        return badge;
+                    },
+                },
+                {
+                    data: null,
+                    width: '3%',
+                    title: "Acciones",
+                    render: function (data, type, row) {
+                        return `
+                            <div class="text-center">
+                                <div class="btn-group">
+                                    
+                                    <button class="btn btn-warning btn-sm editarClasificacion" data-id="${row.id_clasificacion_cuentas}">
+                                        <i class="fas fa-edit"></i>
+                                    </button> 
+                                    <button class="btn btn-danger btn-sm statusClasificacion" data-id="${row.id_clasificacion_cuentas}">
+                                        <i class="fas fa-sync-alt"></i>
+                                    </button> 
+                                
+                                </div>
+                            </div>
+                            `;
+                    }
+                }
+            ],
+            order: [[0, "asc"]],
+        });
+
+
+
+        $('#btnNuevo').click(function (e) {
+            e.preventDefault();
+
+            $('#formClasificacionCuentas').trigger('reset');
+            $('#modalClasificacionCuentasLabel').text('CREAR NUEVA CLASIFICACION');
+            $('#modalClasificacionCuentas').modal('show');
+
+            opcion = 1;
+            clasificacion_id = null;
+        });
+
+
+
+
+        $(document).on('click', '.editarClasificacion', function () {
+            $('#formClasificacionCuentas').trigger('reset');
+
+            opcion = 2;
+            filaClasificacion = $(this).closest('tr');
+            clasificacion_id = $(this).data('id');
+            clasificacion = filaClasificacion.find("td:eq(1)").text();
+            descripcion = filaClasificacion.find("td:eq(2)").text();
+
+            $('#clasificacion').val(clasificacion);
+            $('#descripcion').val(descripcion);
+
+            $('#modalClasificacionCuentasLabel').text('EDITAR CLASIFICACION ' + clasificacion);
+            $('#modalClasificacionCuentas').modal('show');
+        });
+
+        $(document).on('click', '.statusClasificacion', function () {
+            $('#formClasificacionCuentas').trigger('reset');
+
+            filaClasificacion = $(this).closest('tr');
+            clasificacion_id = $(this).data('id');
+
+            $.ajax({
+                url: "{% url 'update_status_clasificacion_cuentas' %}", 
+                type: "POST",
+                data: {
+                    clasificacion_id: clasificacion_id,
+                    csrfmiddlewaretoken: csrfToken
+                },
+                success: function (data) {
+                    if (data.save == 1) {
+                        toastMixin.fire({
+                            animation: true,
+                            title: 'Estado de Clasificacion Tipo de Cuenta Editado!'
+                        });
+                        tableClasificacionCuentas.ajax.reload(null, false);
+                    } else {
+                        Swal.fire("", "Error D: " + data.error, "error");
+                    }
+                }
+            });
+        });
+
+
+
+        $('#formClasificacionCuentas').submit(function (e) {
+            e.preventDefault();
+
+            clasificacion = $('#clasificacion').val();
+            descripcion = $('#descripcion').val();
+
+            if (!clasificacion || !descripcion) {
+                Swal.fire("", "Debes llenar todos los campos!", "warning");
+            } else {
+                $.ajax({
+                    url: "{% url 'insert_update_clasificacion_cuentas' %}", 
+                    type: "POST",
+                    data: {
+                        clasificacion_id: clasificacion_id,
+                        clasificacion: clasificacion,
+                        descripcion: descripcion,
+                        opcion: opcion,
+                        csrfmiddlewaretoken: csrfToken
+                    },
+                    success: function (data) {
+                        if (data.save == 1) {
+                            if (opcion == 1) {
+                                if (data.existe == 0) {
+                                    $('#modalClasificacionCuentas').modal('hide');
+
+                                    toastMixin.fire({
+                                        animation: true,
+                                        title: 'Clasificacion Tipo de Cuenta Creada!'
+                                    });
+                                } else {
+                                    Swal.fire("", "Ya existe una Clasificacion Tipo de Cuenta con este nombre!", "warning");
+                                }
+                            } else {
+                                $('#modalClasificacionCuentas').modal('hide');
+
+                                toastMixin.fire({
+                                    animation: true,
+                                    title: 'Clasificacion Tipo de Cuenta Editada!'
+                                });
+                            }
+
+                            tableClasificacionCuentas.ajax.reload(null, false);
+                        } else {
+                            Swal.fire("", "Error D: " + data.error, "error");
+                        }
+                    }
+                });
+            }
+
+        });
+
+
+
+
+
+        /*  */
+    });
+</script>
+{% endblock %}

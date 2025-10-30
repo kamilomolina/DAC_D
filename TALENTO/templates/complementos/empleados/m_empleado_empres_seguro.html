@@ -1,0 +1,35 @@
+<!-- Modal para crear un nuevo cargo -->
+<div class="modal fade" id="modalCrearEmpresaSeguro" tabindex="-1" role="dialog" aria-labelledby="exampleModalLabel" data-bs-keyboard="false" data-bs-backdrop="static"
+    aria-hidden="true">
+    <div class="modal-dialog modal-lg" role="document">
+        <div class="modal-content">
+            <div class="modal-header" style="background-color: #304458; color:white">
+                <h5 class="modal-title" id="exampleModalLabel"><i class="material-icons me-2 text-gray">security</i>
+
+                    Crear Nueva Empresa de Seguros</h5>
+                <button type="button" class="close" data-dismiss="modal" aria-label="Close">
+                    <span aria-hidden="true">&times;</span>
+                </button>
+            </div>
+            <div class="modal-body">
+                <form id="formCrearEmpresaSeguro" method="POST">
+                   
+                    <div class="mb-3">
+                        <label for="nombre-empresa-seguros">Nombre de la empresa: <span style="color: red;">*</span></label>
+                        <input type="text" class="form-control" id="nombre-empresa-seguros" name="nombre-empresa-seguros">
+                    </div>
+                    <div class="mb-3">
+                        <label for="descripcion-empresa-seguros">Descripción de la empresa:</label>
+                        <input type="text" class="form-control" id="descripcion-empresa-seguros" name="descripcion-empresa-seguros">
+                    </div>
+                    <div class="modal-footer">
+                        <button type="submit" class="btn btn-success animate__animated animate__pulse animate__slow animate__infinite">Guardar</button>
+                        <button type="button" class="btn btn-danger close" data-dismiss="modal">Cerrar</button>
+
+                    </div>
+                </form>
+
+            </div>
+        </div>
+    </div>
+</div>

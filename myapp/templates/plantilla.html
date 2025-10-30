@@ -1,0 +1,422 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <title>TELEFONOS</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1, shrink-to-fit=no">
+    <meta name="msapplication-TileColor" content="#da532c">
+    <meta name="theme-color" content="#ffffff">
+    <link rel="mask-icon" href="/safari-pinned-tab.svg" color="#5bbad5">
+    
+    <!-- Bootstrap CSS -->
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap@5.0.2/dist/css/bootstrap.min.css" crossorigin="anonymous">
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap@5.0.2/dist/css/bootstrap.min.css" crossorigin="anonymous">
+
+    <!-- Material Icons -->
+    <link href="https://fonts.googleapis.com/icon?family=Material+Icons" rel="stylesheet">
+
+    <!-- DataTables CSS -->
+    <link rel="stylesheet" href="https://cdn.datatables.net/1.10.24/css/jquery.dataTables.min.css">
+    <link rel="stylesheet" href="https://cdn.datatables.net/searchpanes/2.0.2/css/searchPanes.bootstrap5.min.css">
+    <link rel="stylesheet" href="https://cdn.datatables.net/select/1.4.0/css/select.bootstrap5.min.css">
+    <link rel="stylesheet" href="https://nightly.datatables.net/fixedcolumns/css/fixedColumns.dataTables.min.css">
+    <link rel="stylesheet" href="https://nightly.datatables.net/fixedheader/css/fixedHeader.dataTables.min.css">
+    <link href="https://fonts.googleapis.com/icon?family=Material+Icons" rel="stylesheet">
+
+
+    <!-- Estilos personalizados -->
+
+    {% block head %}
+
+    {% endblock %}
+
+</head>
+<style>
+    .navbar .nav-link {
+        color: white;
+    }
+    .navbar {
+        background-color: #1e2a38;
+    }
+    .navbar .material-icons {
+        color: white;
+    }
+
+    
+</style>
+<nav class="navbar navbar-expand-lg justify-content-around">
+
+        <div class="dropdown">
+            <a class="nav-link text-center" id="dashboardMenu" href="http://3.230.160.184:81/admin/dashboard"
+                data-bs-toggle="dropdown">
+                <i class="material-icons d-block">dashboard</i>
+                Dashboard
+            </a>
+            <!-- Dropdown menu items -->
+        </div>
+
+    {% if permisos.13041  or adminIt %}
+        <div class="dropdown">
+            <a class="nav-link  text-center" href="#" id="adminMenu" data-bs-toggle="dropdown">
+                <i class="material-icons d-block">account_balance</i>
+                Administración
+            </a>
+           
+            <div class="dropdown-menu" aria-labelledby="adminMenu">
+                {% if permisos.13027 or adminIt%}
+                    <div class="dropdown-divider"></div>
+                    <li><a class="dropdown-item text-wrap reportesText"><b>ANÁLISIS</b></a></li>
+                {% endif %}
+            
+                {% if permisos.13027 or adminIt %}
+                    <div class="dropdown-divider"></div>
+                    <a href="http://3.230.160.184:81/admin/reportes/administracion/cxp" class="dropdown-item white-icon-text">Reporte CxC</a>
+                {% endif %}
+            </div>
+        </div>
+    {% endif %}
+
+    {% if permisos.13042 or permisos.13016 or permisos.13025 or permisos.13019 or permisos.13008 or permisos.13064 or permisos.13047 or adminIt %}
+        <div class="dropdown">
+            <a class="nav-link text-center" href="#" id="comprasMenu" data-bs-toggle="dropdown">
+                <i class="material-icons d-block">shopping_cart</i>
+                Compras
+            </a>
+            <div class="dropdown-menu" aria-labelledby="comprasMenu">
+                {% if permisos.13019 or permisos.13008 or permisos.13064 or adminIt %}
+                    <div class="dropdown-divider"></div>
+                    <li><a href="#" class="dropdown-item text-wrap reportesText"><b>GESTIÓN</b></a></li>
+                    <div class="dropdown-divider"></div>
+                {% endif %}
+
+                {% if permisos.13019 or adminIt %}
+                    <a class="dropdown-item white-icon-text" href="http://3.230.160.184:81/admin/bandeos">Bandeos</a>
+                {% endif %}
+
+                {% if permisos.13064 or adminIt %}
+                    <a class="dropdown-item white-icon-text" href="http://3.230.160.184:81/admin/productos/existencias">Existencia Productos</a>
+                {% endif %}
+
+                {% if permisos.13008 or adminIt %}
+                    <a class="dropdown-item white-icon-text" href="http://3.230.160.184:81/admin/productos">Productos</a>
+                {% endif %}
+
+                {% if permisos.13016 or permisos.13025 or adminIt %}
+                    <div class="dropdown-divider"></div>
+                    <li><a href="#" class="dropdown-item text-wrap reportesText"><b>ANÁLISIS</b></a></li>
+                    <div class="dropdown-divider"></div>
+                {% endif %}
+
+                {% if permisos.13047 or adminIt %}
+                    <a class="dropdown-item white-icon-text" href="http://3.230.160.184:81/admin/reportes/compras/ordenesCompra">Análisis Compras</a>
+                {% endif %}
+
+                {% if permisos.13016 or adminIt %}
+                    <a class="dropdown-item white-icon-text" href="http://3.230.160.184:81/admin/reportes/compras/productosCompetencia">Análisis Precios Competencia</a>
+                {% endif %}
+
+                {% if permisos.13025 or adminIt %}
+                    <a class="dropdown-item white-icon-text" href="http://3.230.160.184:81/admin/reportes/compras/ranking/ventas/productos">Análisis Ranking de Ventas de Productos</a>
+                {% endif %}
+
+            </div>
+        </div>
+    {% endif %}
+
+    {% if permisos.13048 or permisos.13049 or permisos.13050 or permisos.13051 or permisos.13077 or adminIt %}
+    <div class="dropdown">
+        <a class="nav-link  text-center" href="#" id="vaicMenu" data-bs-toggle="dropdown">
+            <i class="material-icons d-block">currency_exchange</i>
+            Control de Gestión
+        </a>
+        <!-- Dropdown menu items -->
+        <div class="dropdown-menu" aria-labelledby="superMenu">
+
+            {% if permisos.13049 or permisos.13050 or permisos.13051 or permisos.13053 or permisos.13077 or adminIt %}
+                <div class="dropdown-divider"></div>
+                <li><a href="#" class="dropdown-item text-wrap reportesText"><b>GESTIÓN</b></a></li>
+                <div class="dropdown-divider"></div>
+            {% endif %}
+
+            {% if permisos.13049 or permisos.13050 or permisos.13051 or adminIt %}
+                <a class="dropdown-item white-icon-text" href="http://3.230.160.184:81/admin/vaic/centros">Centros</a>
+            {% endif %}
+
+            {% if permisos.13080 or adminIt %}
+                <a class="dropdown-item white-icon-text" href="http://3.230.160.184:81/admin/vaic/crear/solicitud/gasto">Crear Solicitud Gasto</a>
+            {% endif %}
+
+            {% if permisos.13077 or adminIt %}
+                <a class="dropdown-item white-icon-text" href"http://3.230.160.184:81/admin/vaic/creacion/cuentas">Cuentas Contables</a>
+            {% endif %}
+
+            {% if permisos.13053 or adminIt %}
+                <a class="dropdown-item white-icon-text" href="http://3.230.160.184:81/admin/vaic/ingresar/gastos/12/2023">Ingresar Gastos</a>
+            {% endif %}
+
+            {% if permisos.13056 or adminIt %}
+                <div class="dropdown-divider"></div>
+                <li><a href="#" class="dropdown-item text-wrap reportesText"><b>ANÁLISIS</b></a></li>
+                <div class="dropdown-divider"></div>
+            {% endif %}
+
+            {% if permisos.13059 or adminIt %}
+                <a class="dropdown-item white-icon-text" href="http://3.230.160.184:81/admin/vaic/reporte/presupuestos">Reporte Gastos</a>
+            {% endif %}
+
+            {% if permisos.13057 or adminIt %}
+                <a class="dropdown-item white-icon-text" href="http://3.230.160.184:81/admin/vaic/reporte/general">Reporte Proyecciones y Presupuestos</a>
+            {% endif %}
+
+            {% if permisos.13078 or adminIt %}
+                <a class="dropdown-item white-icon-text" href="http://3.230.160.184:81/admin/vaic/reporte/saldos/cuentas">Reporte Saldos Cuentas</a>
+            {% endif %}
+
+        </div>
+    </div>
+{% endif %}
+
+{% if permisos.13043 or permisos.13013 or adminIt %}
+    <div class="dropdown">
+        <a class="nav-link  text-center" href="#" id="distribucionMenu" data-bs-toggle="dropdown">
+            <i class="material-icons d-block">local_shipping</i>
+            Distribución
+        </a>
+        <!-- Dropdown menu items -->
+        <div class="dropdown-menu" aria-labelledby="distribucionMenu">
+
+            {% if permisos.13013 or adminIt %}
+                <div class="dropdown-divider"></div>
+                <li><a href="#" class="dropdown-item text-wrap reportesText"><b>ANÁLISIS</b></a></li>
+                <div class="dropdown-divider"></div>
+            {% endif %}
+
+            {% if permisos.13013 or adminIt %}
+                <a href="http://3.230.160.184:81/admin/reportes/distribucion/proyeccionApp" class="dropdown-item white-icon-text">Proyección Generada por APP de Ventas - Distribución</a>
+            {% endif %}
+
+        </div>
+    </div>
+{% endif %}
+
+    <div class="dropdown">
+        <a class="nav-link  text-center" href="#" id="gerenciaMenu" data-bs-toggle="dropdown">
+            <i class="material-icons d-block">business_center</i>
+            Gerencia
+        </a>
+        <!-- Dropdown menu items -->
+        <div class="dropdown-menu" aria-labelledby="gerenciaMenu">
+    
+                <div class="dropdown-divider"></div>
+                <li><a class="dropdown-item text-wrap reportesText"><b>ANÁLISIS</b></a></li>
+                <div class="dropdown-divider"></div>
+    
+            <a href="http://3.230.160.184:81/admin/gerencia/indicadores/12/2023" class="dropdown-item white-icon-text">Indicadores</a>
+    
+        </div>
+    </div>
+
+    <div class="dropdown">
+        <a class="nav-link text-center" href="#" id="superMenu" data-bs-toggle="dropdown">
+            <i class="material-icons d-block">storefront</i>
+            Supermercado
+        </a>
+        <!-- Dropdown menu items -->
+        <div class="dropdown-menu" aria-labelledby="superMenu">
+            <a href="http://http://3.230.160.184:81/admin/modulares" class="dropdown-item white-icon-text">Modulares</a>
+            <div class="dropdown-divider"></div>
+            <li><a href="#" class="dropdown-item text-wrap reportesText"><b>GESTIÓN</b></a></li>
+            <div class="dropdown-divider"></div>
+            <a href="http://http://3.230.160.184:81/admin/modulares/productos/localizacion"class="dropdown-item white-icon-text">Productos Localización</a>
+        </div>
+    </div>
+    
+    
+    <div class="dropcenter">
+        <a class="nav-link  text-center" href="#" id="ventasMenu" data-bs-toggle="dropdown">
+            <i class="material-icons d-block">sell</i>
+            Ventas
+        </a>
+        <!-- Dropdown menu items -->
+        <div class="dropdown-menu" aria-labelledby="superMenu">
+    
+            {% if permisos.13013 or adminIt %}
+                <div class="dropdown-divider"></div>
+                <li><a href="http://3.230.160.184:81/admin/autorizaciones/vendedor" class="dropdown-item text-wrap reportesText"><b>GESTIÓN</b></a></li>
+                <div class="dropdown-divider"></div>
+            {% endif %}
+
+            {% if permisos.13009 or adminIt %}
+                <a href="" class="dropdown-item white-icon-text">Autorizaciones</a>
+            {% endif %}
+
+            {% if permisos.13003 or adminIt %}
+                <a href="http://3.230.160.184:81/admin/clientes" class="dropdown-item white-icon-text">Clientes</a>
+            {% endif %}
+
+            {% if permisos.13066 or adminIt %}
+                <a href="http://3.230.160.184:81/admin/comisiones" class="dropdown-item white-icon-text">Comisiones</a>
+            {% endif %}
+
+            {% if permisos.13006 or adminIt %}
+                <a href="http://3.230.160.184:81/admin/rutas/visitas" class="dropdown-item white-icon-text">Programar Rutas</a>
+            {% endif %}
+
+            {% if permisos.13005 or adminIt %}
+                <a href="http://3.230.160.184:81/admin/rutas" class="dropdown-item white-icon-text">Rutas</a>
+            {% endif %}
+
+            {% if permisos.13023 or adminIt %}
+                <a href="http://3.230.160.184:81/admin/ventas/destiempo" class="dropdown-item white-icon-text">Ventas No Progra.</a>
+            {% endif %}
+
+            {% if permisos.13087 or adminIt %}
+                <a href="#" class="dropdown-item white-icon-text">Configuración Teléfono</a>
+            {% endif %}
+
+
+              <div class="dropdown-divider"></div>
+              <li><a href="#" class="dropdown-item text-wrap reportesText"><b>ANÁLISIS</b></a></li>
+              <div class="dropdown-divider"></div>
+         
+          
+        
+            {% if permisos.13002 or adminIt %}
+            <a href="http://3.230.160.184:81/admin/alcance" class="dropdown-item white-icon-text">Alcance</a>
+            {% endif %}
+
+            {% if permisos.13026 or adminIt %}
+            <a href="http://3.230.160.184:81/admin/reportes/ventas/ranking/clientes" class="dropdown-item white-icon-text">Análisis Ranking de Clientes</a>
+            {% endif %}
+
+            {% if permisos.13011 or adminIt %}
+            <a href="http://3.230.160.184:81/admin/reportes/ventas/autorizaciones" class="dropdown-item white-icon-text">Autorizaciones</a>
+            {% endif %}
+
+            {% if permisos.13040 or adminIt %}
+            <a href="http://3.230.160.184:81/admin/data/mercadeo" class="dropdown-item white-icon-text">Data Mercadeo</a>
+            {% endif %}
+
+            {% if permisos.13018 or adminIt %}
+            <a href="http://3.230.160.184:81/admin/reportes/ventas/reporteDevoluciones" class="dropdown-item white-icon-text">Devoluciones</a>
+            {% endif %}
+
+            {% if permisos.13015 or adminIt %}
+            <a href="http://3.230.160.184:81/admin/reportes/ventas/fillRatePedidos" class="dropdown-item white-icon-text">Fill Rate Pedidos</a>
+            {% endif %}
+
+            {% if permisos.13085 or adminIt %}
+            <a href="http://3.230.160.184:81/admin/reportes/productos/clientes/info" class="dropdown-item white-icon-text">Precios Productos por Cliente</a>
+            {% endif %}
+
+            {% if permisos.13012 or adminIt %}
+            <a href="http://3.230.160.184:81/admin/reportes/ventas/proyeccionApp" class="dropdown-item white-icon-text">Proyección Generada por APP de Ventas - Ventas</a>
+            {% endif %}
+
+            {% if permisos.13017 or adminIt %}
+            <a href="http://3.230.160.184:81/admin/reportes/ventas/rentabilidadProductos" class="dropdown-item white-icon-text">Rentabilidad por Productos</a>
+            {% endif %}
+
+            {% if permisos.13020 or adminIt %}
+            <a href="http://3.230.160.184:81/admin/reportes/ventas/ventaProductosVendedor" class="dropdown-item white-icon-text">Venta Productos por Vendedor</a>
+            {% endif %}
+
+            {% if permisos.13046 or adminIt %}
+            <a href="http://3.230.160.184:81/admin/reportes/ventas/general" class="dropdown-item white-icon-text">Ventas General</a>
+            {% endif %}
+        </div>
+    </div>
+        <div class="dropdown">
+            <a class="nav-link text-center" id="logoutMenu" data-bs-toggle="dropdown">
+                <i class="material-icons d-block">logout</i>Salir
+            </a>
+        </div>    
+    </nav> 
+   
+
+<body>
+    <div class="container-margin">
+        <div>
+            <h4 class="">
+                <a href="http://3.230.160.184:81/admin/dashboard" type="button" class="btn btn-info btnBack">
+                    <i class="material-icons">arrow_back</i>
+                </a>
+                <i class="material-icons nav__icon">{% block icon %}{% endblock %}</i>
+                {% block title %}{% endblock %}
+            </h4>
+            <div class="col-sm p-2 shadow-lg border m-2 rounded-4">
+                <div class="row p-2">
+                    <div class="row d-flex justify-content-end">
+                        <span><b>Filtros Rápidos</b></span>
+                    </div>
+                </div>
+                {% block content %}
+                {% endblock %}
+            </div>
+        </div>
+
+        
+    </div>
+    {% block scripts %}
+    {% endblock %}
+
+    
+    <footer class="text-center sticky-footer bg-white">
+        <p>Copyright © 2023. v 4.5 - RM</p>
+    </footer>
+<script>
+    
+    menuClass();
+
+    $(window).resize(function() {
+        menuClass();
+    });
+
+    function menuClass() {
+        if ($(window).width() < 960) {
+            $('.dropcenter').removeClass('dropstart');
+            $('.dropcenter').addClass('dropdown-content');
+        } else {
+            $('.dropcenter').addClass('dropstart');
+            $('.dropcenter').removeClass('dropdown-content');
+        }
+    }
+
+</script>
+
+    <!-- jQuery (necesario para Bootstrap y DataTables) -->
+<script src="https://code.jquery.com/jquery-3.5.1.js"></script>
+<!-- Popper.js (necesario para Bootstrap) -->
+<script src="https://cdn.jsdelivr.net/npm/@popperjs/core@2.9.2/dist/umd/popper.min.js" crossorigin="anonymous"></script>
+
+<!-- Bootstrap JS -->
+<script src="https://cdn.jsdelivr.net/npm/bootstrap@5.0.2/dist/js/bootstrap.min.js" crossorigin="anonymous"></script>
+<script src="https://cdn.jsdelivr.net/npm/bootstrap@5.0.2/dist/js/bootstrap.bundle.min.js" crossorigin="anonymous"></script>
+
+<!-- Font Awesome para iconos -->
+<script src="https://kit.fontawesome.com/e716b78aa6.js" crossorigin="anonymous"></script>
+
+<!-- SweetAlert para alertas bonitas -->
+<script src="https://unpkg.com/sweetalert/dist/sweetalert.min.js"></script>
+
+<!-- DataTables y sus plugins -->
+<script src="https://cdn.datatables.net/1.10.24/js/jquery.dataTables.min.js"></script>
+<script src="https://cdn.datatables.net/searchpanes/2.0.2/js/dataTables.searchPanes.min.js"></script>
+<script src="https://cdn.datatables.net/select/1.4.0/js/dataTables.select.min.js"></script>
+<script src="https://cdn.datatables.net/searchpanes/2.0.2/js/searchPanes.bootstrap5.min.js"></script>
+<script src="https://nightly.datatables.net/fixedcolumns/js/dataTables.fixedColumns.min.js"></script>
+<script src="https://nightly.datatables.net/fixedheader/js/dataTables.fixedHeader.min.js"></script>
+
+<!-- Otros plugins y scripts -->
+<script src="https://cdnjs.cloudflare.com/ajax/libs/FileSaver.js/2.0.5/FileSaver.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.17.0/xlsx.full.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/TableExport/5.2.0/js/tableexport.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/chosen/1.8.7/chosen.jquery.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/autonumeric@4.6.0/dist/autoNumeric.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/jquery.inputmask/5.0.6/jquery.inputmask.min.js"></script>
+
+    
+</body>
+
+</html>

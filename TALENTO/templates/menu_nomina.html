@@ -1,0 +1,260 @@
+{% load static %}
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.0.2/dist/css/bootstrap.min.css" rel="stylesheet"
+        integrity="sha384-EVSTQN3/azprG1Anm3QDgpJLIm9Nao0Yz1ztcQTwFspd3yD65VohhpuuCOmLASjC" crossorigin="anonymous">
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/select2/4.0.13/css/select2.min.css" rel="stylesheet" />
+    <link rel="icon" type="image/png" sizes="32x32" href="{% static 'app/cws/images/favicon-32x32.png' %}">
+    <link rel="icon" type="image/png" sizes="16x16" href="{% static 'app/cws/images/favicon-16x16.png' %}">
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/toastr.js/latest/toastr.min.css" rel="stylesheet">
+    <link href="https://cdn.datatables.net/1.13.7/css/jquery.dataTables.min.css" rel="stylesheet">
+    <link href="https://cdn.datatables.net/buttons/2.4.2/css/buttons.dataTables.min.css" rel="stylesheet">
+    <link href="https://cdn.datatables.net/fixedcolumns/4.3.0/css/fixedColumns.dataTables.min.css" rel="stylesheet">
+    <link href="https://cdn.datatables.net/fixedheader/3.4.0/css/fixedHeader.dataTables.min.css" rel="stylesheet">
+    <link href="https://cdn.datatables.net/searchpanes/2.2.0/css/searchPanes.dataTables.min.css" rel="stylesheet">
+    <link href="https://cdn.datatables.net/select/1.7.0/css/select.dataTables.min.css" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/icon?family=Material+Icons" rel="stylesheet">
+    <!-- Bootstrap Select CSS compatible con Bootstrap 5 -->
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap-select@1.14.0-beta3/dist/css/bootstrap-select.min.css"
+        rel="stylesheet">
+    <link rel="stylesheet" href="{% static 'app/css/TH_CSS.css' %}">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/chosen/1.8.7/chosen.min.css">
+
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/shepherd.js/dist/css/shepherd.css">
+
+    <title>{% block title %}{% endblock %}</title>
+</head>
+
+<body>
+    <nav class="navbar navbar-expand-lg navbar-reduced-height">
+        <div class="container-fluid d-flex align-items-center justify-content-between">
+            <a class="navbar-brand d-flex align-items-center" href="javascript:void(0);" onclick="handleIconClick()">
+                <span class="material-icons p-2 icon-large">groups</span>
+                <span id="navText">Nomina</span>
+
+            </a>
+            <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarNavDropdown"
+                aria-controls="navbarNavDropdown" aria-expanded="false" aria-label="Toggle navigation">
+                <span class="navbar-toggler-icon"></span>
+            </button>
+
+            <div class="collapse navbar-collapse" id="navbarNavDropdown">
+                <ul class="navbar-nav me-auto align-items-center"> <!-- Aquí añadí align-items-center -->
+                    <li class="nav-item">
+                        <a class="nav-link" href="{% url 'vista_principal_modulos' %}">
+                            Inicio
+                        </a>
+                    </li>
+
+                    <li class="nav-item dropdown">
+                        <a class="nav-link dropdown-toggle" href="#" id="navbarGestion" role="button"
+                            data-bs-toggle="dropdown" aria-expanded="false">
+                            Planilla
+                        </a>
+                        <ul class="dropdown-menu" aria-labelledby="navbarGestion">
+                            <li><a class="dropdown-item" id="verplanilla" href="{% url 'nueva_planilla' %}">Planillas</a>
+                            </li>
+                        </ul>
+
+                    </li>
+                    <li class="nav-item dropdown">
+                        <a class="nav-link dropdown-toggle" href="#" id="navbarGestion" role="button"
+                            data-bs-toggle="dropdown" aria-expanded="false">
+                            Configuración
+                        </a>
+                        <ul class="dropdown-menu" aria-labelledby="navbarGestion">
+                            <li><a class="dropdown-item" id="verplanilla" href="{% url 'nueva_deduccion' %}">Crear Tipo
+                                    Deducción</a>
+                            </li>
+                            <li><a class="dropdown-item" id="verplanilla" href="{% url 'nueva_bonificacion' %}">Crear
+                                    Tipo Bonificación</a>
+                            </li>
+                            <li><a class="dropdown-item" id="verplanilla" href="{% url 'nueva_comision' %}">Crear
+                                Tipo Comisión</a>
+                        </li>
+                        </ul>
+
+                    </li>
+                    <li class="nav-item dropdown">
+                        <a class="nav-link dropdown-toggle" href="#" id="navbarGestion" role="button"
+                            data-bs-toggle="dropdown" aria-expanded="false">
+                            Reportes
+                        </a>
+                        <ul class="dropdown-menu" aria-labelledby="navbarGestion">
+                            <li><a class="dropdown-item" id="verplanilla" href="{% url 'reportes' %}">Reportes Deducciones</a>
+                            </li>
+                        </li>
+                        </ul>
+
+                    </li>
+                    
+                </ul>
+
+                <ul class="navbar-nav ms-auto">
+                    <li class="nav-item dropdown">
+                        <a href="#" class="dropdown-toggle nav-link d-flex align-items-center"
+                            data-bs-toggle="dropdown">
+                            <div class="user-img me-2">
+                                <img class="rounded-circle" src="{% static 'app/ticketit/images/avatar-01.png' %}"
+                                    width="31" alt="Avatar">
+                            </div>
+                            <div class="user-info">
+                                <h6 class="mb-0 ">{{ fullName }}</h6>
+                            </div>
+                        </a>
+                        <div class="dropdown-menu custom-dropdown-width">
+                            <div class="user-header text-center p-3">
+                                <div class="avatar avatar-lg">
+                                    <img src="{% static 'app/ticketit/images/avatar-01.png' %}"
+                                        class="avatar-img rounded-circle" width="60">
+                                </div>
+                                <div class="user-text mt-2">
+                                    <h5 class="mb-0">{{ fullName }}</h5>
+                                </div>
+                            </div>
+                            <div class="dropdown-item-container p-2">
+                                <a class="dropdown-item logout-item" href="{% url 'logoutRequest' %}">
+                                    <strong>Salir</strong>
+                                </a>
+                            </div>
+
+                        </div>
+                    </li>
+                </ul>
+            </div>
+
+        </div>
+
+
+    </nav>
+
+    <div class="modal fade" id="accessModal" tabindex="-1" role="dialog" aria-labelledby="accessModalLabel"
+        aria-hidden="true">
+        <div class="modal-dialog" role="document">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h5 class="modal-title" id="accessModalLabel">ACCESO NO AUTORIZADO</h5>
+                    <button type="button" class="close" data-dismiss="modal" aria-label="Close">
+                        <span aria-hidden="true">&times;</span>
+                    </button>
+                </div>
+                <div class="modal-body">
+
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cerrar</button>
+                </div>
+            </div>
+        </div>
+    </div>
+    <!-- Formulario oculto para el token CSRF -->
+    <input type="hidden" name="csrfmiddlewaretoken" value="{{ csrf_token }}">
+
+
+    {% block body %}
+    {% endblock %}
+
+    <!-- Scripts al final del body para mejorar la carga de la página -->
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/jquery/3.6.0/jquery.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/select2/4.0.13/js/select2.full.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/@popperjs/core@2.9.2/dist/umd/popper.min.js"
+        integrity="sha384-IQsoLXl5PILFhosVNubq5LC7Qb9DXgDA9i+tQ8Zj3iwWAwPtgFTxbJ8NT4GN1R8p"
+        crossorigin="anonymous"></script>
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.0.2/dist/js/bootstrap.min.js"></script>
+    <script src="https://cdn.datatables.net/1.13.7/js/jquery.dataTables.min.js"></script>
+    <script src="https://cdn.datatables.net/buttons/2.4.2/js/dataTables.buttons.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/jszip/3.10.1/jszip.min.js"></script>
+    <script src="https://cdn.datatables.net/buttons/2.4.2/js/buttons.html5.min.js"></script>
+    <script src="https://cdn.datatables.net/buttons/2.4.2/js/buttons.print.min.js"></script>
+    <script src="https://cdn.datatables.net/fixedcolumns/4.3.0/js/dataTables.fixedColumns.min.js"></script>
+    <script src="https://cdn.datatables.net/fixedheader/3.4.0/js/dataTables.fixedHeader.min.js"></script>
+    <script src="https://cdn.datatables.net/searchpanes/2.2.0/js/dataTables.searchPanes.min.js"></script>
+    <script src="https://cdn.datatables.net/select/1.7.0/js/dataTables.select.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/FileSaver.js/2.0.5/FileSaver.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.17.0/xlsx.full.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/toastr.js/latest/toastr.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/jquery.inputmask/5.0.6/jquery.inputmask.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/autonumeric@4.6.0/dist/autoNumeric.min.js"></script>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/5.15.3/css/all.min.css">
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap-select@1.14.0-beta3/dist/js/bootstrap-select.min.js"></script>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/animate.css/4.1.1/animate.min.css" />
+    <script src="https://cdn.jsdelivr.net/npm/canvas-confetti@1.5.1/dist/confetti.browser.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/chosen/1.8.7/chosen.jquery.min.js"></script>
+
+
+    <!-- JavaScript de Shepherd -->
+    <script src="https://cdn.jsdelivr.net/npm/shepherd.js/dist/js/shepherd.min.js"></script>
+
+
+    <script>
+
+
+
+        var csrfToken = "{{ csrf_token }}";
+        function handleIconClick() {
+            const currentPath = window.location.pathname;
+            const pathStack = JSON.parse(sessionStorage.getItem("pathStack")) || [];
+
+            if (currentPath.startsWith("/CWS/modulos/talento/humano/nomina/") &&
+                !currentPath.startsWith("/CWS/modulos/talento/humano/nomina/deducciones") &&
+                !currentPath.startsWith("/CWS/modulos/talento/humano/nomina/bonificaciones")) {
+                window.location.href = "{% url 'vista_principal_modulos' %}";
+            } else if (pathStack.length > 1) {
+                
+                window.history.back();;
+            } else {
+                window.history.back();
+            }
+
+            // Agregar la ruta actual al stack
+            if (!pathStack.includes(currentPath)) {
+                pathStack.push(currentPath);
+                sessionStorage.setItem("pathStack", JSON.stringify(pathStack));
+            }
+        }
+
+
+        function checkSession() {
+            // Realizar una petición GET a la ruta /check-session de Django
+            fetch("{% url 'check_session' %}")
+                .then(response => {
+                    if (!response.ok) {
+                        throw new Error('Error en la respuesta del servidor.');
+                    }
+                    return response.json();
+                })
+                .then(data => {
+                    if (data.status == 'expired') {
+                        Swal.fire({
+                            title: "¡TU SESIÓN HA EXPIRADO!",
+                            text: "INGRESA NUEVAMENTE",
+                            icon: "warning",
+                            confirmButtonColor: '#3085d6',
+                            confirmButtonText: 'OK'
+                        }).then(() => {
+                            window.location.href = "{% url 'logoutRequest' %}";
+                        });
+                    }
+                })
+                .catch(error => {
+                    console.error('Error al verificar la sesión:', error);
+                });
+        }
+
+        // Ejecuta checkSession cada minuto
+        setInterval(checkSession, 1 * 60 * 1000);
+
+
+
+    </script>
+
+
+    {% block scripts %}{% endblock %}
+</body>
+
+</html>

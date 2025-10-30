@@ -1,0 +1,232 @@
+<div class="modal fade" id="modalDevolucion" tabindex="-1" aria-labelledby="modalDevolucionLabel" aria-hidden="true"
+    data-bs-keyboard="false" data-bs-backdrop="static">
+    <div class="modal-dialog modal-xl">
+        <div class="modal-content">
+            <div class="modal-header" style="background-color: #697a8a; color: white;">
+                <h5 class="modal-title" id="modalDevolucionLabel">
+                    <i class="material-icons me-2">add_shopping_cart</i><strong>Agregar Devolución</strong>
+                </h5>
+            </div>
+            <form id="formDevolucion">
+                <div class="modal-body">
+                    <div class="container-fluid">
+                        <div class="row">
+                            <!-- Código y Proveedor en una sola línea -->
+                            <div class="col-md-6">
+                                <label for="id_adquisicion" class="form-label"><strong>Código:</strong></label>
+                                <input type="text" id="id_adquisicion" name="id_adquisicion" disabled
+                                    class="form-control"
+                                    style="text-align: center; font-size: 22px; font-weight: bold; width: 100px;">
+                            </div>
+
+                            <div class="col-md-6">
+                                <label for="Proveedor" class="form-label"><strong>Proveedor</strong></label>
+                                <input type="text" id="Proveedor" class="form-control" name="Proveedor" disabled>
+                            </div>
+                        </div>
+
+                        <div class="row">
+                            <!-- Columna Izquierda: Suministro, Cantidad Devuelta y Precio Unitario -->
+                            <div class="col-md-6">
+
+                                <div class="md-3">
+                                    <label for="id_detalle_requisicion" class="form-label"><strong>ID Detalle
+                                            Requisición:</strong></label>
+                                    <input type="text" id="id_detalle_requisicion" name="id_detalle_requisicion"
+                                        disabled class="form-control"
+                                        style="text-align: center; font-size: 20px; font-weight: bold;">
+                                </div>
+
+                                <!-- Suministro-->
+                                <div class="mb-3">
+                                    <!-- Campo oculto para almacenar el ID del suministro -->
+                                    <input type="hidden" id="id_suministro" name="id_suministro">
+                                    <label for="suministro" class="form-label"><strong>Suministro</strong></label>
+                                    <input type="text" id="suministro" class="form-control" name="suministro" disabled>
+
+                                </div>
+
+                                <!-- Cantidad Devuelta -->
+                                <div class="mb-3">
+                                    <label for="cantidad_devuelta" class="form-label"><strong>Cantidad
+                                            a Devolver</strong></label>
+                                    <input type="number" id="cantidad_devuelta" class="form-control"
+                                        name="cantidad_devuelta" min="1" oninput="validarCantidad()">
+                                </div>
+
+                                <!-- Precio Unitario -->
+                                <div class="mb-3">
+                                    <label for="precio_unitario" class="form-label"><strong>Precio
+                                            Unitario</strong></label>
+                                    <input type="number" id="precio_unitario" class="form-control"
+                                        name="precio_unitario" disabled>
+                                </div>
+                            </div>
+
+                            <!-- Columna Derecha: Fecha de Devolución y Motivo de Devolución -->
+                            <div class="col-md-6">
+                                <!-- Fecha de Devolución -->
+                                <div class="mb-3">
+                                    <label for="fecha_devolucion" class="form-label"><strong>Fecha de
+                                            Devolución:</strong></label>
+                                    <input type="date" class="form-control" id="fecha_devolucion">
+                                </div>
+
+                                <!-- Motivo de Devolución -->
+                                <div class="mb-3">
+                                    <label for="motivo" class="form-label"><strong>Motivo:</strong></label>
+                                    <select id="motivo" class="form-select" name="motivo">
+                                        <!-- <option value="#">Seleccione el motivo:</option>
+                                        {% for dev in devolucion %}
+                                        <option value="{{ dev.id_motivo_devolucion }}">{{ dev.nombre_motivo }}</option>
+                                        {% endfor %} -->
+                                    </select>
+                                </div>
+
+                                <!-- Descripción de la Devolución -->
+                                <div class="mb-3">
+                                    <label for="descripcion" class="form-label"><strong>Descripción de la
+                                            Devolución:</strong></label>
+                                    <textarea class="form-control" id="descripcion" name="descripcion"
+                                        rows="3"></textarea>
+                                </div>
+                            </div>
+                            <!-- Botón para Calcular 
+                            <div class="d-flex justify-content-end mb-3">
+                                <button type="button" class="btn btn-success" id="calcular-total">Calcular
+                                    Total</button>
+                            </div>-->
+                        </div>
+                        <!-- Tabla de artículos -->
+                        <div class="row mb-3">
+                            <div class="col-md-12">
+                                <h5><strong>Detalle:</strong></h5>
+                                <table class="table table-bordered table-hover">
+                                    <thead class="table-dark">
+                                        <tr class="table-success">
+                                            <th>Adquisicion No.</th>
+                                            <th>Detalle Requisición No.</th>
+                                            <th>Suministro</th>
+                                            <th>Cantidad Devuelta</th>
+                                            <th>Precio Unitario</th>
+                                            <th>Precio Total</th>
+                                        </tr>
+                                    </thead>
+                                    <tbody id="tabla-devolucion">
+
+                                    </tbody>
+                                </table>
+                            </div>
+                            <div class="d-flex justify-content-end mb-3">
+                                <h5><strong>Total de Devolución:</strong> <span
+                                        id="total_devolucion"><strong>0.00</strong></span></h5>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="modal-footer">
+                    <button type="button" id="guardarDevolucion" class="btn btn-outline-success"><strong>Guardar
+                            Devolución</strong></button>
+                    <button type="button" class="btn btn-outline-danger"
+                        data-bs-dismiss="modal"><strong>Cerrar</strong></button>
+                </div>
+            </form>
+
+        </div>
+    </div>
+</div>
+
+<script>
+    function validarCantidad() {
+        const cantidadInput = document.getElementById("cantidad_devuelta");
+        // Elimina cualquier caracter no numérico
+        cantidadInput.value = cantidadInput.value.replace(/[^0-9]/g, '');
+    }
+
+    document.addEventListener("DOMContentLoaded", function () {
+        const tabla = document.getElementById("tabla-devolucion");
+        const costoTotalSpan = document.getElementById("total_devolucion");
+
+        // Formateadores locales para comas
+        const dollarUSLocale = Intl.NumberFormat("en-US", {
+            minimumFractionDigits: 2,
+            maximumFractionDigits: 2
+        });
+
+        const intergerLocale = Intl.NumberFormat("en-US", {
+            minimumFractionDigits: 0,
+            maximumFractionDigits: 0
+        });
+
+        // Evento para actualizar el artículo cuando cambie la cantidad
+        const cantidadInput = document.getElementById("cantidad_devuelta");
+
+        // Función para calcular y agregar la fila cuando cambie la cantidad
+        function calcularYAgregarFila() {
+            // Obtener los valores de los campos
+            const IDAdquisicion = document.getElementById("id_adquisicion").value;
+            const IDDetalleRequisicion = document.getElementById("id_detalle_requisicion").value;
+            const suministro = document.getElementById("suministro").value;
+            const cantidadDevuelta = parseFloat(cantidadInput.value) || 0;
+            const precioUnitario = parseFloat(document.getElementById("precio_unitario").value) || 0;
+            const total = cantidadDevuelta * precioUnitario;
+
+            // Verificar que los datos estén completos
+            if (suministro && cantidadDevuelta > 0 && precioUnitario > 0) {
+                // Si la fila ya existe, actualizamos el total de esa fila
+                const filaExistente = tabla.querySelector(`tr[data-id-adquisicion='${IDAdquisicion}']`);
+                if (filaExistente) {
+                    const celdas = filaExistente.getElementsByTagName("td");
+                    celdas[3].innerText = intergerLocale.format(cantidadDevuelta);  // Actualizamos cantidad
+                    celdas[5].innerText = dollarUSLocale.format(total);             // Actualizamos el total
+
+                    // Actualizar el total de la devolución
+                    actualizarCostoTotal();
+                } else {
+                    // Si no existe la fila, la agregamos
+                    const row = tabla.insertRow();
+                    row.setAttribute('data-id-adquisicion', IDAdquisicion); // Guardar ID de adquisición
+
+                    // Insertar las celdas en la fila
+                    row.insertCell(0).innerText = IDAdquisicion;
+                    row.insertCell(1).innerText = IDDetalleRequisicion;
+                    row.insertCell(2).innerText = suministro;     // Suministro
+                    row.insertCell(3).innerText = intergerLocale.format(cantidadDevuelta);  // Formato cantidad
+                    row.insertCell(4).innerText = dollarUSLocale.format(precioUnitario);    // Formato precio
+                    row.insertCell(5).innerText = dollarUSLocale.format(total);             // Formato total
+
+                    // Actualizar el total de la devolución
+                    actualizarCostoTotal();
+                }
+            } else {
+                alert('Por favor, complete todos los campos correctamente.');
+            }
+        }
+
+        // Función para actualizar el costo total
+        function actualizarCostoTotal() {
+            let costoTotal = 0;
+            const filas = tabla.getElementsByTagName("tr");
+
+            for (let i = 0; i < filas.length; i++) {
+                const celdas = filas[i].getElementsByTagName("td");
+                if (celdas.length > 4) {  // Asegurarnos de que la fila tiene suficientes celdas
+                    const total = parseFloat(celdas[5].innerText.replace(/[^0-9.-]+/g, ""));  // Extraer número, eliminar cualquier símbolo
+                    if (!isNaN(total)) {
+                        costoTotal += total;
+                    }
+                }
+            }
+
+            // Actualizar el valor en la interfaz
+            costoTotalSpan.innerHTML = `<strong>${dollarUSLocale.format(costoTotal)}</strong>`;
+        }
+
+        // Agregar evento `input` para actualizar automáticamente el total cuando se cambie la cantidad
+        cantidadInput.addEventListener("input", calcularYAgregarFila);
+    });
+
+
+
+</script>

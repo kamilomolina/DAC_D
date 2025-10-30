@@ -1,0 +1,44 @@
+<div class="modal fade" id="modalProveedorC" tabindex="-1" aria-labelledby="modalProveedorCLabel" aria-hidden="true"
+    data-bs-keyboard="false" data-bs-backdrop="static">
+    <div class="modal-dialog modal-lg">
+        <div class="modal-content">
+            <div class="modal-header" style="background-color: #697a8a; color: white;">
+                <h5 class="modal-title modalSuministroLabel" id="modalProveedorCLabel">
+                    <i class="material-icons me-2 text-gray">AGREGAR PROVEEDOR POR CATEGORIA</i>
+                </h5>
+                <!--<button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal" aria-label="Close"></button> -->
+            </div>
+
+            <form id="formProveedorC">
+                <div class="modal-body">
+                    <div class="container-fluid">
+                        <!-- Categoria del Suministro -->
+                        <div class="row">
+                            <div class="col-md-6">
+                                <div class="form-group mb-3">
+                                    <label for="categoria">Categoria:</label>
+                                    <select id="categoria" class="form-select w-200" name="categoria">
+                                        <option value="#">Seleccione la categoria:</option>
+                                        {% for cat in categorias %}
+                                        <option value="{{ cat.id_categoria }}">{{ cat.nombre_categoria }}</option>
+                                        {% endfor %}
+                                    </select>
+                                </div>
+                            </div>
+
+                            <!-- Proveedor -->
+                            <div class="col-md-6">
+                                <div class="form-group mb-3">
+                                    <label for="proveedor">Proveedor:</label>
+                                    <select id="proveedor" class="form-select w-200" name="proveedor">
+                                        <option value="#">Seleccione el proveedor:</option>
+                                        {% for pc in proveedores %}
+                                        <option value="{{ pc.id_proveedor }}">{{ pc.nombre_proveedor }}</option>
+                                        {% endfor %}
+                                    </select>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+

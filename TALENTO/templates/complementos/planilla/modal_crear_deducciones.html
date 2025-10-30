@@ -1,0 +1,78 @@
+<div class="modal fade" id="modalCrearDeducciones" tabindex="-1" role="dialog" aria-labelledby="exampleModalLabel"
+data-bs-keyboard="false" data-bs-backdrop="static" aria-hidden="true">
+<div class="modal-dialog modal-lg" role="document">
+    <div class="modal-content">
+        <div class="modal-header" style="background-color: #304458; color:white">
+            <h5 class="modal-title" id="exampleModalLabel">Crear tipo de deducción </h5>
+            <button type="button" class="close-tipo-deduccion" data-bs-dismiss="modal" aria-label="Close">
+                <span aria-hidden="true">&times;</span>
+            </button>
+        </div>
+        <div class="modal-body">
+            <form id="formCrearTipoDeduccion" method="POST">
+                {% csrf_token %}
+                <div class="row g-3">
+                    <!-- Campo oculto para id_deduccion -->
+                    <input type="hidden" id="id-deduccion" name="id_deduccion">
+                    <!-- Select con opción de crear categoría -->
+                    <div class="col-md-6">
+                        <label for="id-categoria" class="form-label">
+                            <span style="color: red;">*</span> Categoría:
+                        </label>
+                        <select class="form-control chosen-select" id="id-categoria" name="id_categoria" style="height: calc(2.25rem + 2px);">
+                        </select>
+                    </div>
+                    
+
+                    <!-- Descripción -->
+                    <div class="col-md-6">
+                        <label for="descripcion-deduccion" class="form-label">Descripción:</label>
+                        <input type="text" class="form-control" id="descripcion-deduccion"
+                            name="descripcion_deduccion" placeholder="Ingrese una descripción">
+                    </div>
+
+                    <!-- Forma -->
+                    <div class="col-md-6">
+                        <label for="forma-deduccion" class="form-label"><span style="color: red;">*</span>
+                            Forma:</label>
+                        <input type="text" class="form-control" id="forma-deduccion" name="forma_deduccion"
+                            placeholder="Ingrese la forma" value="EXCEL">
+                    </div>
+
+                    <!-- Tipo -->
+                    <div class="col-md-6">
+                        <label for="tipo-deduccion" class="form-label"><span style="color: red;">*</span>
+                            Tipo:</label>
+                        <select class="form-control chosen-select" id="tipo-deduccion" name="tipo_deduccion">
+                        </select>
+                    </div>
+
+                    <!-- Automatización -->
+                    <div class="col-md-6 ">
+                        <label for="automatizacion-deduccion" class="form-label me-2"><span
+                                style="color: red;">*</span> Automatización:</label>
+
+                        <select class="form-control chosen-select" id="automatizacion-deduccion"
+                            name="automatizacion_deduccion">
+                            <option value="1">Si</option>
+                            <option value="0">No</option>
+
+                        </select>
+                    </div>
+                </div>
+
+                <input type="hidden" name="csrfmiddlewaretoken" value="{{ csrf_token }}">
+
+                <div class="modal-footer mt-3">
+                    <button type="submit" id="guardar-editar-btn"
+                        class="btn btn-success animate__animated animate__pulse animate__slow animate__infinite">Guardar</button>
+                    <button type="button" class="btn btn-danger close-tipo-deduccion"
+                        data-bs-dismiss="modal">Cerrar</button>
+                </div>
+            </form>
+
+
+        </div>
+    </div>
+</div>
+</div>

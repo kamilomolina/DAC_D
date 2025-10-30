@@ -1,0 +1,70 @@
+   <!-- Modal para crear un nuevo cargo -->
+   <div class="modal fade" id="modalCrearBonificaciones" tabindex="-1" role="dialog"
+   aria-labelledby="exampleModalLabel" data-bs-keyboard="false" data-bs-backdrop="static" aria-hidden="true">
+   <div class="modal-dialog modal-lg" role="document">
+       <div class="modal-content">
+           <div class="modal-header" style="background-color: #304458; color:white">
+               <h5 class="modal-title" id="exampleModalLabelBonificacion">Crear tipo de Bonificaciones</h5>
+               <button type="button" class="close-tipo-bonificaciones" data-bs-dismiss="modal" aria-label="Close">
+                   <span aria-hidden="true">&times;</span>
+               </button>
+           </div>
+           <div class="modal-body">
+               <form id="formCrearTipoBonificaciones">
+                   {% csrf_token %}
+                   <div class="row">
+                       <!-- Campo oculto para id_bonificacion -->
+                       <input type="hidden" id="id-bonificacion" name="id_bonificacion">
+
+                       <!-- Categoría -->
+                       <div class="col-md-6 mb-3">
+                           <label for="bonificacion-nombre"><span style="color: red;">*</span> Categoría:</label>
+                           <select class="form-control chosen-select" id="bonificacion-nombre" name="bonificacion_nombre">
+                           </select>
+                       </div>
+
+                       <!-- Descripción -->
+                       <div class="col-md-6 mb-3">
+                           <label for="descripcion-bonificacion">Descripción:</label>
+                           <input type="text" class="form-control" id="descripcion-bonificaciones" placeholder="Descripción Bonificación"
+                               name="descripcion_bonificaciones">
+                       </div>
+
+                       <!-- Forma -->
+                       <div class="col-md-6 mb-3">
+                           <label for="forma-bonificacion"><span style="color: red;">*</span> Forma:</label>
+                           <input type="text" class="form-control" id="forma-bonificacion" value="EXCEL"
+                               name="forma_bonificacion">
+                       </div>
+
+                       <!-- Automatización -->
+                       <div class="col-md-6 mb-3">
+                           <label for="automatizacion-bonificacion"><span style="color: red;">*</span>
+                               Automatización:</label>
+
+                           <select class="form-control " id="automatizacion-bonificacion"
+                               name="automatizacion_bonificacion">
+                               <option value="1">Si</option>
+                               <option value="0">No</option>
+
+                           </select>
+
+
+                       </div>
+                   </div>
+
+                   <input type="hidden" name="csrfmiddlewaretoken" value="{{ csrf_token }}">
+
+                   <div class="modal-footer">
+                       <button type="submit" id="guardar-editar-bonificaciones"
+                           class="btn btn-success animate__animated animate__pulse animate__slow animate__infinite">Guardar</button>
+                       <button type="button" class="btn btn-danger close-tipo-bonificaciones"
+                           data-bs-dismiss="modal">Cerrar</button>
+                   </div>
+               </form>
+
+
+           </div>
+       </div>
+   </div>
+</div>

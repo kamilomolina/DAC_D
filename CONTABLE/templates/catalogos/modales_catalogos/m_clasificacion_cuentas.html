@@ -1,0 +1,45 @@
+<div class="modal fade" id="modalClasificacionCuentas" tabindex="-1" aria-labelledby="modalClasificacionCuentasLabel"
+    aria-hidden="true" data-bs-keyboard="false" data-bs-backdrop="static">
+    <div class="modal-dialog modal-lg">
+        <div class="modal-content">
+            <div class="modal-header" style="background-color: #304458; color: white;">
+                <h5 class="modal-title modalClasificacionCuentasLabel" id="modalClasificacionCuentasLabel">
+                    <i class="material-icons me-2 text-gray">list</i>
+                </h5>
+
+                <button type="button" class="close" data-bs-dismiss="modal" aria-label="Close"><span
+                        aria-hidden="true">&times;</span></button>
+
+            </div>
+
+            <form id="formClasificacionCuentas">
+                <div class="modal-body">
+
+                    <div class="row">
+                        <div class="form-group">
+                            <label for="clasificacion">Nombre Clasificacion:</label>
+                            <input type="text" class="form-control form-control-sm" id="clasificacion"
+                                name="clasificacion">
+                        </div>
+                    </div>
+
+                    <div class="row">
+                        <div class="form-group">
+                            <label for="descripcion">Descripcion:</label>
+                            <textarea class="form-control form-control-sm" name="descripcion"
+                                id="descripcion"></textarea>
+                        </div>
+                    </div>
+
+                </div>
+
+                <div class="modal-footer">
+                    <button type="submit" class="btn btn-success btn-sm">Guardar</button>
+                    <button type="button" class="btn btn-danger btn-sm" data-bs-dismiss="modal">Cerrar</button>
+                </div>
+
+            </form>
+
+        </div>
+    </div>
+</div>

@@ -1,0 +1,51 @@
+<div class="modal fade" id="modalCurriculum" tabindex="-1" role="dialog" aria-labelledby="exampleModalLabel" aria-hidden="true">
+    <div class="modal-dialog modal-lg modal-custom-width" role="document">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title" id="exampleModalLabel">
+                    <i class="material-icons me-2 text-gray">school</i> Curriculum
+                </h5>
+                <button type="button" class="close" data-dismiss="modal" aria-label="Close">
+                    <span aria-hidden="true">&times;</span>
+                </button>
+            </div>
+            <div class="modal-body">
+                <div class="row mb-2 align-items-center">
+                    <div class="col-md-6 d-flex align-items-center">
+                        <label for="titulo-curriculum" class="form-label">Título:</label>
+                        <input type="text" id="titulo-curriculum" class="form-control input-underline">
+                    </div>
+                    <div class="col-md-6 d-flex align-items-center">
+                        <label for="tipo-curriculum" class="form-label">Tipo de Curriculum:</label>
+                        <select id="tipo-curriculum" class="form-control input-underline select2">
+                            <option value="">Selecciona un tipo de curriculum</option>
+                            <option value="1">Secundaria</option>
+                            <option value="2">Escuela</option>
+                            <option value="3">Universidad</option>
+                        </select>
+                    </div>
+                </div>
+                <div class="row mb-2 align-items-center">
+                    <div class="col-md-6 d-flex align-items-center">
+                        <label for="fecha-inicio-curriculum" class="form-label">Fecha de Inicio:</label>
+                        <input type="date" id="fecha-inicio-curriculum" class="form-control input-underline">
+                    </div>
+                    <div class="col-md-6 d-flex align-items-center">
+                        <label for="fecha-fin-curriculum" class="form-label">Fecha de Final:</label>
+                        <input type="date" id="fecha-fin-curriculum" class="form-control input-underline">
+                    </div>
+                </div>
+                <div class="row mb-2">
+                    <div class="col-md-12">
+                        <label for="descripcion-curriculum" class="form-label">Descripción:</label>
+                        <textarea id="descripcion-curriculum" class="form-control input-underline" rows="3"></textarea>
+                    </div>
+                </div>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-primary" onclick="agregarCurriculum()">Guardar</button>
+                <button type="button" class="btn btn-secondary" data-dismiss="modal">Cerrar</button>
+            </div>
+        </div>
+    </div>
+</div>

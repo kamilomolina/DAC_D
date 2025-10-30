@@ -1,0 +1,107 @@
+2024-06-17T11:33:12,874 Using pip 24.0 from C:\Users\DESARROLLO2-DC.CARBAJAL\Desktop\env\env\lib\site-packages\pip (python 3.10)
+2024-06-17T11:33:12,874 Non-user install because user site-packages disabled
+2024-06-17T11:33:12,952 Created temporary directory: C:\Users\DESARROLLO2-DC.CARBAJAL\AppData\Local\Temp\pip-build-tracker-mhxzkwnn
+2024-06-17T11:33:12,952 Initialized build tracking at C:\Users\DESARROLLO2-DC.CARBAJAL\AppData\Local\Temp\pip-build-tracker-mhxzkwnn
+2024-06-17T11:33:12,952 Created build tracker: C:\Users\DESARROLLO2-DC.CARBAJAL\AppData\Local\Temp\pip-build-tracker-mhxzkwnn
+2024-06-17T11:33:12,952 Entered build tracker: C:\Users\DESARROLLO2-DC.CARBAJAL\AppData\Local\Temp\pip-build-tracker-mhxzkwnn
+2024-06-17T11:33:12,952 Created temporary directory: C:\Users\DESARROLLO2-DC.CARBAJAL\AppData\Local\Temp\pip-install-ilckwlhm
+2024-06-17T11:33:12,952 Created temporary directory: C:\Users\DESARROLLO2-DC.CARBAJAL\AppData\Local\Temp\pip-ephem-wheel-cache-5om6932j
+2024-06-17T11:33:12,990 1 location(s) to search for versions of somepackage:
+2024-06-17T11:33:12,990 * https://pypi.org/simple/somepackage/
+2024-06-17T11:33:12,990 Fetching project page and analyzing links: https://pypi.org/simple/somepackage/
+2024-06-17T11:33:12,990 Getting page https://pypi.org/simple/somepackage/
+2024-06-17T11:33:12,990 Found index url https://pypi.org/simple/
+2024-06-17T11:33:16,305 Fetched page https://pypi.org/simple/somepackage/ as application/vnd.pypi.simple.v1+json
+2024-06-17T11:33:16,305   Found link https://files.pythonhosted.org/packages/81/f6/cdc617199548a495fd034a4128bb33b35857d2ddb97ddf25c4f29302569e/somepackage-1.2.3.tar.gz (from https://pypi.org/simple/somepackage/), version: 1.2.3
+2024-06-17T11:33:16,305 Skipping link: not a file: https://pypi.org/simple/somepackage/
+2024-06-17T11:33:16,305 Given no hashes to check 1 links for project 'somepackage': discarding no candidates
+2024-06-17T11:33:16,305 Collecting somepackage
+2024-06-17T11:33:16,305   Created temporary directory: C:\Users\DESARROLLO2-DC.CARBAJAL\AppData\Local\Temp\pip-unpack-ei50ec1t
+2024-06-17T11:33:24,275   Downloading somepackage-1.2.3.tar.gz (8.6 kB)
+2024-06-17T11:33:24,312   Added somepackage from https://files.pythonhosted.org/packages/81/f6/cdc617199548a495fd034a4128bb33b35857d2ddb97ddf25c4f29302569e/somepackage-1.2.3.tar.gz to build tracker 'C:\\Users\\DESARROLLO2-DC.CARBAJAL\\AppData\\Local\\Temp\\pip-build-tracker-mhxzkwnn'
+2024-06-17T11:33:24,312   Running setup.py (path:C:\Users\DESARROLLO2-DC.CARBAJAL\AppData\Local\Temp\pip-install-ilckwlhm\somepackage_468eb68dc6d84da3bcc317d8287c710a\setup.py) egg_info for package somepackage
+2024-06-17T11:33:24,312   Created temporary directory: C:\Users\DESARROLLO2-DC.CARBAJAL\AppData\Local\Temp\pip-pip-egg-info-d2d_cae6
+2024-06-17T11:33:24,312   Running command python setup.py egg_info
+2024-06-17T11:33:24,773   running egg_info
+2024-06-17T11:33:24,773   creating C:\Users\DESARROLLO2-DC.CARBAJAL\AppData\Local\Temp\pip-pip-egg-info-d2d_cae6\somepackage.egg-info
+2024-06-17T11:33:24,773   writing C:\Users\DESARROLLO2-DC.CARBAJAL\AppData\Local\Temp\pip-pip-egg-info-d2d_cae6\somepackage.egg-info\PKG-INFO
+2024-06-17T11:33:24,773   writing dependency_links to C:\Users\DESARROLLO2-DC.CARBAJAL\AppData\Local\Temp\pip-pip-egg-info-d2d_cae6\somepackage.egg-info\dependency_links.txt
+2024-06-17T11:33:24,788   writing top-level names to C:\Users\DESARROLLO2-DC.CARBAJAL\AppData\Local\Temp\pip-pip-egg-info-d2d_cae6\somepackage.egg-info\top_level.txt
+2024-06-17T11:33:24,788   writing manifest file 'C:\Users\DESARROLLO2-DC.CARBAJAL\AppData\Local\Temp\pip-pip-egg-info-d2d_cae6\somepackage.egg-info\SOURCES.txt'
+2024-06-17T11:33:24,814   reading manifest file 'C:\Users\DESARROLLO2-DC.CARBAJAL\AppData\Local\Temp\pip-pip-egg-info-d2d_cae6\somepackage.egg-info\SOURCES.txt'
+2024-06-17T11:33:24,814   reading manifest template 'MANIFEST.in'
+2024-06-17T11:33:24,814   adding license file 'LICENSE'
+2024-06-17T11:33:24,814   writing manifest file 'C:\Users\DESARROLLO2-DC.CARBAJAL\AppData\Local\Temp\pip-pip-egg-info-d2d_cae6\somepackage.egg-info\SOURCES.txt'
+2024-06-17T11:33:24,845   Source in c:\users\desarrollo2-dc.carbajal\appdata\local\temp\pip-install-ilckwlhm\somepackage_468eb68dc6d84da3bcc317d8287c710a has version 1.2.3, which satisfies requirement somepackage from https://files.pythonhosted.org/packages/81/f6/cdc617199548a495fd034a4128bb33b35857d2ddb97ddf25c4f29302569e/somepackage-1.2.3.tar.gz
+2024-06-17T11:33:24,845   Removed somepackage from https://files.pythonhosted.org/packages/81/f6/cdc617199548a495fd034a4128bb33b35857d2ddb97ddf25c4f29302569e/somepackage-1.2.3.tar.gz from build tracker 'C:\\Users\\DESARROLLO2-DC.CARBAJAL\\AppData\\Local\\Temp\\pip-build-tracker-mhxzkwnn'
+2024-06-17T11:33:24,845 Created temporary directory: C:\Users\DESARROLLO2-DC.CARBAJAL\AppData\Local\Temp\pip-unpack-oyoj4l0t
+2024-06-17T11:33:24,845 Building wheels for collected packages: somepackage
+2024-06-17T11:33:24,845   Created temporary directory: C:\Users\DESARROLLO2-DC.CARBAJAL\AppData\Local\Temp\pip-wheel-kt060r3x
+2024-06-17T11:33:24,845   Destination directory: C:\Users\DESARROLLO2-DC.CARBAJAL\AppData\Local\Temp\pip-wheel-kt060r3x
+2024-06-17T11:33:24,845   Running command python setup.py bdist_wheel
+2024-06-17T11:33:25,224   running bdist_wheel
+2024-06-17T11:33:25,293   running build
+2024-06-17T11:33:25,293   running build_py
+2024-06-17T11:33:25,293   creating build
+2024-06-17T11:33:25,293   creating build\lib
+2024-06-17T11:33:25,293   creating build\lib\somepackage
+2024-06-17T11:33:25,293   copying somepackage\module1.py -> build\lib\somepackage
+2024-06-17T11:33:25,293   copying somepackage\module2.py -> build\lib\somepackage
+2024-06-17T11:33:25,293   copying somepackage\version.py -> build\lib\somepackage
+2024-06-17T11:33:25,293   copying somepackage\__init__.py -> build\lib\somepackage
+2024-06-17T11:33:25,309   running egg_info
+2024-06-17T11:33:25,309   writing somepackage.egg-info\PKG-INFO
+2024-06-17T11:33:25,309   writing dependency_links to somepackage.egg-info\dependency_links.txt
+2024-06-17T11:33:25,309   writing top-level names to somepackage.egg-info\top_level.txt
+2024-06-17T11:33:25,324   reading manifest file 'somepackage.egg-info\SOURCES.txt'
+2024-06-17T11:33:25,324   reading manifest template 'MANIFEST.in'
+2024-06-17T11:33:25,324   adding license file 'LICENSE'
+2024-06-17T11:33:25,324   writing manifest file 'somepackage.egg-info\SOURCES.txt'
+2024-06-17T11:33:25,347   C:\Users\DESARROLLO2-DC.CARBAJAL\Desktop\env\env\lib\site-packages\setuptools\_distutils\cmd.py:66: SetuptoolsDeprecationWarning: setup.py install is deprecated.
+2024-06-17T11:33:25,347   !!
+
+2024-06-17T11:33:25,347           ********************************************************************************
+2024-06-17T11:33:25,347           Please avoid running ``setup.py`` directly.
+2024-06-17T11:33:25,347           Instead, use pypa/build, pypa/installer or other
+2024-06-17T11:33:25,347           standards-based tools.
+
+2024-06-17T11:33:25,347           See https://blog.ganssle.io/articles/2021/10/setup-py-deprecated.html for details.
+2024-06-17T11:33:25,347           ********************************************************************************
+
+2024-06-17T11:33:25,347   !!
+2024-06-17T11:33:25,347     self.initialize_options()
+2024-06-17T11:33:25,362   installing to build\bdist.win-amd64\wheel
+2024-06-17T11:33:25,362   running install
+2024-06-17T11:33:25,362   running install_lib
+2024-06-17T11:33:25,378   creating build\bdist.win-amd64
+2024-06-17T11:33:25,378   creating build\bdist.win-amd64\wheel
+2024-06-17T11:33:25,378   creating build\bdist.win-amd64\wheel\somepackage
+2024-06-17T11:33:25,378   copying build\lib\somepackage\module1.py -> build\bdist.win-amd64\wheel\.\somepackage
+2024-06-17T11:33:25,378   copying build\lib\somepackage\module2.py -> build\bdist.win-amd64\wheel\.\somepackage
+2024-06-17T11:33:25,378   copying build\lib\somepackage\version.py -> build\bdist.win-amd64\wheel\.\somepackage
+2024-06-17T11:33:25,378   copying build\lib\somepackage\__init__.py -> build\bdist.win-amd64\wheel\.\somepackage
+2024-06-17T11:33:25,378   running install_egg_info
+2024-06-17T11:33:25,394   Copying somepackage.egg-info to build\bdist.win-amd64\wheel\.\somepackage-1.2.3-py3.10.egg-info
+2024-06-17T11:33:25,394   running install_scripts
+2024-06-17T11:33:25,409   creating build\bdist.win-amd64\wheel\somepackage-1.2.3.dist-info\WHEEL
+2024-06-17T11:33:25,409   creating 'C:\Users\DESARROLLO2-DC.CARBAJAL\AppData\Local\Temp\pip-wheel-kt060r3x\somepackage-1.2.3-py3-none-any.whl' and adding 'build\bdist.win-amd64\wheel' to it
+2024-06-17T11:33:25,409   adding 'somepackage/__init__.py'
+2024-06-17T11:33:25,409   adding 'somepackage/module1.py'
+2024-06-17T11:33:25,409   adding 'somepackage/module2.py'
+2024-06-17T11:33:25,409   adding 'somepackage/version.py'
+2024-06-17T11:33:25,409   adding 'somepackage-1.2.3.dist-info/LICENSE'
+2024-06-17T11:33:25,409   adding 'somepackage-1.2.3.dist-info/METADATA'
+2024-06-17T11:33:25,409   adding 'somepackage-1.2.3.dist-info/WHEEL'
+2024-06-17T11:33:25,409   adding 'somepackage-1.2.3.dist-info/top_level.txt'
+2024-06-17T11:33:25,409   adding 'somepackage-1.2.3.dist-info/RECORD'
+2024-06-17T11:33:25,409   removing build\bdist.win-amd64\wheel
+2024-06-17T11:33:25,446   Created wheel for somepackage: filename=somepackage-1.2.3-py3-none-any.whl size=9305 sha256=fdd9379907400461b0f09434910ce423cdfc6b052a63a29e2865eae0430e5a42
+2024-06-17T11:33:25,446   Stored in directory: c:\users\desarrollo2-dc.carbajal\appdata\local\pip\cache\wheels\2c\9e\c0\914c82167ec8a532e4d2a9eebdcd43845c58de9e830c27597c
+2024-06-17T11:33:25,446 Successfully built somepackage
+2024-06-17T11:33:25,948 Installing collected packages: somepackage
+
+2024-06-17T11:33:26,010 Successfully installed somepackage-1.2.3
+2024-06-17T11:33:26,010 Remote version of pip: 24.0
+2024-06-17T11:33:26,010 Local version of pip:  24.0
+2024-06-17T11:33:26,010 Was pip installed by pip? True
+2024-06-17T11:33:26,026 Removed build tracker: 'C:\\Users\\DESARROLLO2-DC.CARBAJAL\\AppData\\Local\\Temp\\pip-build-tracker-mhxzkwnn'

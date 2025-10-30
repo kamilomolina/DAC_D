@@ -1,0 +1,904 @@
+{% extends 'menu_asistencia.html' %}
+{% load static %}
+
+{% block title %}
+Configurar Turnos Departamentos
+{% endblock %}
+
+{% block body %}
+<style>
+
+</style>
+
+<body>
+
+    <div class="card  p-2 crear-container">
+        <div class="col-md-12">
+            <div class="card">
+                <div class="card-body" style="background-color: #f4f6f9;">
+                    <div class="mb-3 d-flex justify-content-between align-items-center ">
+                        <h4 class="card-title text-primary">Configurar Turnos de los Departamentos</h4>
+                    </div>
+                    <div class="table-responsive">
+                        <table id="departamentos-table" class="table table-striped table-bordered table-top-border"
+                            style="width:100%">
+                            <thead>
+                                <tr>
+                                    <th>#</th>
+                                    <th>Nombre Departamento</th>
+                                    <th>Acciones</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+
+                            </tbody>
+
+                        </table>
+
+                    </div>
+                </div>
+            </div>
+        </div>
+
+    </div>
+
+    {% include 'complementos/asistencia/modal_mostrar_turno.html' %}
+    {% include 'complementos/asistencia/modal_crear_turno.html' %}
+    {% include 'complementos/asistencia/modal_turnos_empleados.html' %}
+    {% include 'complementos/asistencia/modal_config_horarios.html' %}
+
+</body>
+{% endblock %}
+
+{% block scripts %}
+<script>
+    $(document).ready(function () {
+        var csrfToken = "{{ csrf_token }}";
+
+        var toastMixin = Swal.mixin({
+            toast: true,
+            icon: 'success',
+            title: 'General Title',
+            animation: false,
+            position: 'top-right',
+            showConfirmButton: false,
+            timer: 2000,
+            timerProgressBar: true,
+            didOpen: (toast) => {
+                toast.addEventListener('mouseenter', Swal.stopTimer);
+                toast.addEventListener('mouseleave', Swal.resumeTimer);
+            }
+        });
+
+        var tableDepartamentos, id_departamento = 0, departamentoName = '', tableTurnos, opcion, turno_id = null, tablaHorarios;
+
+        tableDepartamentos = $('#departamentos-table').DataTable({
+            autoWidth: false,
+            scrollX: true,
+            scrollY: '350px',
+            scrollCollapse: true,
+            pageLength: 50,
+            dom: 'Bfrtip',
+            language: {
+                url: "{% static 'app/th/json/es-ES.json' %}",
+            },
+            ajax: {
+                url: '{% url "mostrar_departamentos_empresa" %}',
+                type: 'GET',
+                dataSrc: function (json) {
+                    console.log('Respuesta completa del servidor:', json); // Muestra todo el JSON recibido
+                    if (json.status === 'success') {
+                        console.log('Datos de departamentos:', json.departamentos); // Muestra específicamente el array de departamentos
+                        return json.departamentos;
+                    } else {
+                        console.error('Error al cargar los datos:', json.error);
+                        return [];
+                    }
+                }
+
+            },
+            colReorder: {
+                realtime: false,
+            },
+            buttons: [
+                {
+                    extend: 'excel',
+                    text: '<i class="fas fa-file-excel"></i>',
+                    titleAttr: 'Exportar a Excel',
+                    className: 'btn btn-success',
+                },
+                {
+                    extend: 'pdf',
+                    text: '<i class="fas fa-file-pdf"></i>',
+                    titleAttr: 'Exportar a PDF',
+                    className: 'btn btn-danger',
+                },
+                {
+                    extend: 'print',
+                    text: '<i class="fas fa-print"></i>',
+                    titleAttr: 'Imprimir',
+                    className: 'btn btn-primary',
+                    orientation: 'landscape'
+                }
+            ],
+            columns: [
+                {
+                    data: 'PKgrupo',
+                    width: '2%',
+                },
+                { data: 'Nombre' },
+                {
+                    data: null,
+                    width: '3%',
+                    title: "Acciones",
+                    render: function (data, type, row) {
+                        return `
+                                 <div class="text-center">
+                                    <div class="btn-group">
+                                    
+                                        <button class="btn btn-warning text-black btn-sm mostrarDetalle" data-id="${row.PKgrupo}">
+                                            <i class="fas fa-clock"></i>
+                                        </button> 
+                                    
+                                    </div>
+                                </div>
+                                `;
+                    }
+                }
+            ],
+            order: [[1, "asc"]],
+        });
+
+
+
+
+        $(document).on('click', '.mostrarDetalle', function (e) {
+            e.preventDefault();
+
+            var fila = $(this).closest('tr');
+            id_departamento = $(this).data('id');
+            departamentoName = fila.find("td:eq(1)").text(); // Obtén el ID del departamento
+
+            initializeTableTurnos(id_departamento);
+
+            $('#idDepartamentoTurnos').val(id_departamento); // Asigna el ID al input oculto
+            $('.modalListadoTurnosLabel').html('<i class="material-icons me-2 text-gray">list</i> Turnos de: ' + departamentoName);
+            $('#modalListadoTurnos').modal('show'); // Muestra el modal
+
+            $('#modalListadoTurnos').on('shown.bs.modal', function () {
+                tableTurnos.columns.adjust().draw();
+            });
+        });
+
+        $('#limpieza-turnos').click(function (e) {
+            e.preventDefault();
+
+            innitFormTurnos();
+        });
+
+
+        function initializeTableTurnos(id_departamento) {
+            $("#turnos-table").DataTable().clear().destroy();
+
+            tableTurnos = $('#turnos-table').DataTable({
+                autoWidth: false,
+                scrollX: true,
+                scrollY: '350px',
+                scrollCollapse: true,
+                pageLength: 50,
+                dom: 'Bfrtip',
+                fixedColumns: {
+                    left: 2,
+                    right: 1
+                },
+                initComplete: function () {
+                    tableTurnos.columns.adjust().draw();
+                },
+                language: {
+                    url: "{% static 'app/th/json/es-ES.json' %}",
+                },
+                ajax: {
+                    beforeSend: function (xhr, type) {
+                        if (!type.crossDomain) {
+                            xhr.setRequestHeader(
+                                'X-CSRF-Token',
+                                $(
+                                    'meta[name="csrf-token"]'
+                                ).attr('content'));
+                        }
+                    },
+                    url: `{% url 'mostrar_turnos' %}`,
+                    type: "POST",
+                    dataScr: 'data',
+                    data: {
+                        id_departamento: id_departamento,
+                        csrfmiddlewaretoken: csrfToken
+                    },
+                },
+                buttons: [
+                    {
+                        extend: 'excel',
+                        text: '<i class="fas fa-file-excel"></i>',
+                        titleAttr: 'Exportar a Excel',
+                        className: 'btn btn-success',
+                    },
+                    {
+                        extend: 'pdf',
+                        text: '<i class="fas fa-file-pdf"></i>',
+                        titleAttr: 'Exportar a PDF',
+                        className: 'btn btn-danger',
+                    },
+                    {
+                        extend: 'print',
+                        text: '<i class="fas fa-print"></i>',
+                        titleAttr: 'Imprimir',
+                        className: 'btn btn-primary',
+                        orientation: 'landscape'
+                    }
+                ],
+                columns: [
+                    { data: 'id_turno' },
+                    { data: 'nombre_turno' },
+                    { data: 'tolerancia_minutos' },
+                    { data: 'nombre_dia' },
+                    {
+                        data: 'no_requiere_marcacion',
+                        className: 'text-center',
+                        render: function (data, type, row) {
+                            var badge = "";
+                            if (data == 1) {
+                                badge +=
+                                    '<span class="badge badge-pill badge-success">NO Requiere Marcacion</span>';
+                            } else {
+                                badge +=
+                                    '<span class="badge badge-pill badge-warning">Requiere Marcacion</span>';
+                            }
+
+                            return badge;
+                        },
+                    },
+                    {
+                        data: 'estado',
+                        className: 'text-center',
+                        render: function (data, type, row) {
+                            var badge = "";
+                            if (data != 3) {
+                                badge +=
+                                    '<span class="badge badge-pill badge-success">Activo</span>';
+                            } else if (data == 3) {
+                                badge +=
+                                    '<span class="badge badge-pill badge-danger">Deshabilitado</span>';
+                            }
+
+                            return badge;
+                        },
+                    },
+                    {
+                        data: null,
+                        width: '3%',
+                        title: "Acciones",
+                        render: function (data, type, row) {
+                            return `
+                            <div class="text-center">
+                                <div class="btn-group">
+                                    
+                                    <button class="btn btn-warning text-black btn-sm configurarHorarios" data-id="${row.id_turno}">
+                                        <i class="fas fa-clock"></i>
+                                    </button> 
+                                    <button class="btn btn-success btn-sm asociar-empleado" data-id="${row.id_turno}">
+                                        <i class="fas fa-user-plus"></i>
+                                    </button>
+                                    <button class="btn btn-warning btn-sm editar-turno" data-id="${row.id_turno}">
+                                        <i class="fas fa-edit"></i>
+                                    </button> 
+                                    <button class="btn btn-danger btn-sm eliminar-turno" data-id="${row.id_turno}">
+                                        <i class="fas fa-sync-alt"></i>
+                                    </button> 
+                                
+                                </div>
+                            </div>
+                            `;
+                        }
+                    }
+                ],
+                order: [[1, "asc"]],
+            });
+        }
+
+
+
+        function innitFormTurnos() {
+            $('#formCrearTurnos').trigger('reset');
+            opcion = 1;
+            turno_id = null;
+            $('#require_marcacion').val(0).change();
+            $('#hora_entrada, #hora_salida, #tolerancia_minutos, #dia_libre_turno').prop('disabled', false);
+        }
+
+        $('#require_marcacion').change(function (e) {
+            e.preventDefault();
+
+            if ($(this).val() == 0) {
+                $('#hora-entrada, #hora-salida, #tolerancia-minutos, #dia-libre-turno').prop('disabled', false);
+                $('#hora-entrada, #hora-salida, #tolerancia-minutos, #dia-libre-turno').prop('required', true);
+            } else {
+                $('#hora-entrada, #hora-salida, #tolerancia-minutos, #dia-libre-turno').prop('disabled', true);
+                $('#hora-entrada, #hora-salida, #tolerancia-minutos, #dia-libre-turno').prop('required', false);
+                $('#hora-entrada, #hora-salida, #tolerancia-minutos').val('');
+            }
+
+        });
+
+
+        $(document).on('click', '.editar-turno', function () {
+            $('#formCrearTurnos').trigger('reset');
+
+            var fila = $(this).closest('tr');
+
+            turno_id = fila.find("td:eq(0)").text();
+            turnoName = fila.find("td:eq(1)").text();
+
+            tolerancia = fila.find("td:eq(2)").text();
+            requiereMarcar = fila.find("td:eq(4)").text();
+
+            $('#nombre-turnos').val(turnoName);
+            $('#tolerancia-minutos').val(tolerancia);
+
+            if (requiereMarcar.trim() == 'Requiere Marcacion') {
+                $('#require_marcacion').val(0).change();
+            } else {
+                $('#require_marcacion').val(1).change();
+            }
+
+            opcion = 2;
+            $('#modalCrearTurnos').modal('show');
+        });
+
+
+
+        $(document).on('click', '.eliminar-turno', function () {
+            var fila = $(this).closest('tr');
+
+            turno_id = fila.find("td:eq(0)").text();
+            turnoName = fila.find("td:eq(1)").text();
+            turno_estado = fila.find("td:eq(5)").text();
+
+            if (turno_estado.trim() == 'Activo') {
+                estadoQuestionText = `Estas seguro de Deshabilitar este turno: ${turnoName}?`;
+                estadoSuccessText = 'Deshabilitado!';
+                estadoNewValue = 3;
+            } else {
+                estadoQuestionText = `Estas seguro de Habilitar este turno: ${turnoName}?`;
+                estadoSuccessText = 'Habilitado!';
+                estadoNewValue = 2;
+            }
+
+            Swal.fire({
+                title: estadoQuestionText,
+                text: "",
+                icon: "warning",
+                showCancelButton: true,
+                confirmButtonText: "Cancelar",
+                cancelButtonText: "Confirmar",
+                reverseButtons: true,
+                customClass: {
+                    confirmButton: 'btn btn-success ms-3',
+                    cancelButton: 'btn btn-danger '
+                },
+                buttonsStyling: false
+            }).then((result) => {
+                if (result.isConfirmed) {
+                    //
+                } else {
+                    $.ajax({
+                        url: "{% url 'update_status_turno' %}",
+                        type: 'POST',
+                        data: {
+                            turno_id: turno_id,
+                            estado: estadoNewValue,
+                            csrfmiddlewaretoken: csrfToken
+                        },
+                        success: function (data) {
+                            if (data.save == 1) {
+                                Swal.fire("", estadoSuccessText, "success");
+
+                                tableTurnos.ajax.reload(null, false);
+                            } else {
+                                Swal.fire("", "Error!", "error");
+                                console.log(data.error);
+                            }
+                        }
+                    });
+                }
+            });
+        });
+
+
+
+        $('#formCrearTurnos').on('submit', function (e) {
+            e.preventDefault();
+
+            nombreTurnos = $('#nombre-turnos').val();
+            horaEntrada = $('#hora-entrada').val() || 0;
+            horaSalida = $('#hora-salida').val() || 0;
+            toleranciaMinutos = $('#tolerancia-minutos').val() || 0;
+            diaLibre = 0;
+
+            require_marcacion = $('#require_marcacion').val();
+
+            // Enviar datos por AJAX
+            $.ajax({
+                url: "{% url 'insert_update_turno' %}",
+                type: 'POST',
+                data: {
+                    turno_id: turno_id,
+                    nombre_turnos: nombreTurnos,
+                    hora_entrada: horaEntrada,
+                    hora_salida: horaSalida,
+                    tolerancia_minutos: toleranciaMinutos,
+                    dia_libre_turno: diaLibre,
+                    require_marcacion: require_marcacion,
+                    id_departamento: id_departamento,
+                    opcion: opcion,
+                    csrfmiddlewaretoken: csrfToken
+                },
+                success: function (data) {
+                    if (data.save == 1) {
+                        if (data.existe == 0) {
+                            if (opcion == 1) {
+                                Swal.fire("", "Turno Creado", "success");
+                            } else {
+                                Swal.fire("", "Turno Editado", "success");
+                            }
+
+                            $('#modalCrearTurnos').modal('hide');
+                        } else {
+                            Swal.fire("", "Ya existe este Turno!", "warning");
+                        }
+
+                        tableTurnos.ajax.reload(null, false);
+                    } else {
+                        Swal.fire("", "Error!", "error");
+                        console.log(data.error);
+                    }
+                }
+            });
+
+        });
+
+        $(document).on('click', '.asociar-empleado', function (e) {
+            e.preventDefault();
+            var turnoRow = $(this).closest('tr');
+            id_turno = turnoRow.find("td:eq(0)").text();
+            turnoName = turnoRow.find("td:eq(1)").text();
+
+            $('#availableActions').empty();
+            $('#assignedActions').empty();
+
+
+            cargarEmpleadosTurnos(id_turno);
+            cargarEmpleados();
+
+            $('.modalListadoTurnosLabel').html('<i class="material-icons me-2 text-gray">list</i> Asociar Empleados al Turno: ' + turnoName);
+
+            $('#idTurnosEmpleados').val(id_turno);
+            $('#modalTurnosEmpleados').modal('show');
+
+        });
+
+        function cargarEmpleados() {
+            $.ajax({
+                url: '{% url "obtener_empleado_departamento" %}', // Asegúrate de que esta URL esté correctamente configurada
+                type: 'GET',
+                data: { id_departamento: id_departamento },
+                dataType: 'json',
+                success: function (response) {
+                    const $select = $('#availableActions');
+                    $select.empty();
+
+                    if (response.empleados && response.empleados.length > 0) {
+                        response.empleados.forEach(empleado => {
+                            $select.append(
+                                $('<option></option>')
+                                    .val(empleado.id_empleado)
+                                    .text(empleado.nombre_completo)
+                            );
+                        });
+                    } else {
+
+                    }
+                },
+                error: function (xhr, status, error) {
+                    console.error('Error al cargar los empleados:', xhr.responseText);
+                }
+            });
+
+        }
+
+        function cargarEmpleadosTurnos(id_turno) {
+            Swal.fire({
+                title: '',
+                html: '<b>Cargando Datos</b>',
+                didOpen: () => {
+                    Swal.showLoading();
+                },
+                allowOutsideClick: false,
+                showConfirmButton: false
+            });
+
+            $.ajax({
+                url: '{% url "mostrar_turnos_empleados" %}', // Asegúrate de que esta URL esté correctamente configurada
+                type: 'GET',
+                data: { id_turno: id_turno },
+                dataType: 'json',
+                success: function (response) {
+                    Swal.close();
+                    const $select = $('#assignedActions'); // Contenedor de empleados asociados
+                    $select.empty();
+
+                    if (response.turnos_empleados && response.turnos_empleados.length > 0) {
+                        response.turnos_empleados.forEach(empleado => {
+                            $select.append(
+                                $('<option></option>')
+                                    .val(empleado.id_empleado)
+                                    .text(empleado.nombre_empleado)
+                            );
+                        });
+                    } else {
+
+                    }
+                },
+                error: function (xhr, status, error) {
+                    console.error('Error al cargar los empleados asociados:', xhr.responseText);
+                }
+            });
+        }
+
+
+
+        // Función para mover opciones seleccionadas de "Disponibles" a "Asignados" y actualizar estado a 1 (activar)
+        document.getElementById("btnMoveToAssigned").addEventListener("click", function () {
+            selectedOptions = document.querySelectorAll("#availableActions option:checked"); // Opciones seleccionadas
+            id_turno = document.getElementById("idTurnosEmpleados").value; // Obtener el ID del turno desde el campo oculto
+
+            if (selectedOptions.length === 0) {
+                Swal.fire("", "Por favor, selecciona al menos un empleado para mover.", "warning");
+                return;
+            }
+
+
+            /* Swal.fire({
+                title: '',
+                html: '<b>Cargando Datos</b>',
+                didOpen: () => {
+                    Swal.showLoading();
+                },
+                allowOutsideClick: false,
+                showConfirmButton: false
+            }); */
+
+            selectedOptions.forEach(option => {
+                id_empleado = option.value; // Obtener el ID del empleado
+
+                // Llamada AJAX para actualizar el estado a 3 (desactivar) y asignar el turno
+                $.ajax({
+                    url: "{% url 'actualizar_empleado_departamento' %}",
+                    type: "POST",
+                    data: {
+                        id_empleado: id_empleado,
+                        opcion: 1,
+                        id_turno: id_turno,
+                        csrfmiddlewaretoken: "{{ csrf_token }}"
+                    },
+                    success: function (data) {
+                        if (data.save == 1) {
+                            Swal.close();
+                            // Mover la opción al contenedor de asignados
+                            document.getElementById("assignedActions").appendChild(option);
+                        } else {
+                            console.error(`Error al desactivar al empleado ${id_empleado}: ${data.error}`);
+                        }
+                    }
+                });
+            });
+        });
+
+        // Función para mover opciones seleccionadas de "Asignados" a "Disponibles" y actualizar estado a 3 (activar)
+        document.getElementById("btnMoveToAvailable").addEventListener("click", function () {
+            selectedOptions = document.querySelectorAll("#assignedActions option:checked"); // Opciones seleccionadas
+            id_turno = document.getElementById("idTurnosEmpleados").value; // Obtener el ID del turno 
+            if (selectedOptions.length === 0) {
+                Swal.fire("", "Por favor, selecciona al menos un empleado para mover.", "warning");
+                return;
+            }
+
+            /* Swal.fire({
+                title: '',
+                html: '<b>Cargando Datos</b>',
+                didOpen: () => {
+                    Swal.showLoading();
+                },
+                allowOutsideClick: false,
+                showConfirmButton: false
+            }); */
+
+            selectedOptions.forEach(option => {
+                id_empleado = option.value; // Obtener el ID del empleado
+
+                // Llamada AJAX para actualizar el estado a 1 (activar)
+                $.ajax({
+                    url: "{% url 'actualizar_empleado_departamento' %}",
+                    type: "POST",
+                    data: {
+                        id_empleado: id_empleado,
+                        opcion: 3,
+                        id_turno: id_turno,
+                        csrfmiddlewaretoken: "{{ csrf_token }}"
+                    },
+                    success: function (data) {
+                        if (data.save == 1) {
+                            Swal.close();
+                            // Mover la opción al contenedor de disponibles
+                            document.getElementById("availableActions").appendChild(option);
+                        } else {
+                            console.error(`Error al activar al empleado ${id_empleado}: ${data.error}`);
+                        }
+                    }
+                });
+            });
+
+        });
+
+        // Función para mover todas las opciones de "Disponibles" a "Asignados" y actualizar estado a 3 (desactivar)
+        document.getElementById("btnMoveAllToAssigned").addEventListener("click", function () {
+            availableOptions = Array.from(document.querySelectorAll("#availableActions option")); // Captura todas las opciones como un array
+            id_turno = document.getElementById("idTurnosEmpleados").value; // Obtener el ID del turno 
+
+            if (availableOptions.length === 0) {
+                Swal.fire("", "No hay empleados disponibles para mover.", "warning");
+                return;
+            }
+
+            if (!id_turno) {
+                Swal.fire("", "No se ha seleccionado un turno válido.", "warning");
+                return;
+            }
+
+            Swal.fire({
+                title: '',
+                html: '<b></b>',
+                didOpen: () => {
+                    Swal.showLoading();
+                },
+                allowOutsideClick: false,
+                showConfirmButton: false
+            });
+
+            // Crear promesas con map y esperar con Promise.all
+            Promise.all(availableOptions.map(option => {
+                id_empleado = option.value; // Obtener el ID del empleado
+
+                return $.ajax({
+                    url: "{% url 'actualizar_empleado_departamento' %}",
+                    type: "POST",
+                    data: {
+                        id_empleado: id_empleado,
+                        opcion: 1,
+                        id_turno: id_turno, // ID del turno
+                        csrfmiddlewaretoken: "{{ csrf_token }}"
+                    }
+                }).done(data => {
+                    if (data.save == 1) {
+                        // Mover la opción al contenedor de asignados
+                        document.getElementById("assignedActions").appendChild(option);
+                    } else {
+                        console.error(`Error al desactivar al empleado ${id_empleado}: ${data.error}`);
+                    }
+                }).fail(error => {
+                    console.error(`Error al procesar al empleado ${id_empleado}: ${error}`);
+                });
+            })).then(() => {
+                Swal.close(); // Cerrar Swal cuando todas las solicitudes finalicen
+            }).catch(error => {
+                console.error('Error en una o más solicitudes:', error);
+                Swal.fire({
+                    icon: 'error',
+                    title: 'Error',
+                    text: 'Hubo un problema al procesar las solicitudes.'
+                });
+            });
+
+        });
+
+
+        $(document).on('click', '.configurarHorarios', function () {
+            $('#formCrearTurnos').trigger('reset');
+
+            var fila = $(this).closest('tr');
+
+            turno_id = fila.find("td:eq(0)").text();
+            turnoName = fila.find("td:eq(1)").text();
+            requiereMarcar = fila.find("td:eq(4)").text();
+
+            if (requiereMarcar.trim() == 'Requiere Marcacion') {
+                getHorariosTurnos(turno_id);
+
+                $('#modalConfigHorariosLabel').html('<i class="material-icons me-2 text-gray">list</i> Configurar Horarios del Turno: ' + turnoName);
+                $('#modalConfigHorarios').modal('show');
+
+                $('#modalConfigHorarios').on('shown.bs.modal', function () {
+                    tablaHorarios.columns.adjust().draw();
+                });
+            } else {
+                Swal.fire("", "Este Turno NO Necesita Configurar Horarios!", "warning");
+            }
+        });
+
+
+        function getHorariosTurnos(id_turno) {
+            $("#tablaHorarios").DataTable().clear().destroy();
+
+            tablaHorarios = $('#tablaHorarios').DataTable({
+                scrollX: true,
+                scrollY: '350px',
+                scrollCollapse: true,
+                pageLength: 50,
+                dom: 'Bfrtip',
+                initComplete: function () {
+                    tablaHorarios.columns.adjust().draw();
+                },
+                language: {
+                    url: "{% static 'app/th/json/es-ES.json' %}",
+                },
+                ajax: {
+                    beforeSend: function (xhr, type) {
+                        if (!type.crossDomain) {
+                            xhr.setRequestHeader(
+                                'X-CSRF-Token',
+                                $(
+                                    'meta[name="csrf-token"]'
+                                ).attr('content'));
+                        }
+                    },
+                    url: `{% url 'get_horarios_x_turno' %}`,
+                    type: "POST",
+                    dataScr: 'data',
+                    data: {
+                        id_turno: id_turno,
+                        csrfmiddlewaretoken: csrfToken
+                    },
+                },
+                buttons: [
+                    {
+                        extend: 'excel',
+                        text: '<i class="fas fa-file-excel"></i>',
+                        titleAttr: 'Exportar a Excel',
+                        className: 'btn btn-success',
+                    },
+                    {
+                        extend: 'pdf',
+                        text: '<i class="fas fa-file-pdf"></i>',
+                        titleAttr: 'Exportar a PDF',
+                        className: 'btn btn-danger',
+                    },
+                    {
+                        extend: 'print',
+                        text: '<i class="fas fa-print"></i>',
+                        titleAttr: 'Imprimir',
+                        className: 'btn btn-primary',
+                        orientation: 'landscape'
+                    }
+                ],
+                columns: [
+                    { data: 'id_horario' },
+                    { data: 'dia_semana' },
+                    {
+                        data: null,
+                        render: function (data, type, row) {
+                            var checked = row.dia_libre == 1 ? 'checked' : '';
+
+                            return `<div class="d-flex justify-content-center align-items-center"><input type="checkbox" class="libre-checkbox mx-2" style="width:20px; height:20px;" data-id="${row.id_horario}" ${checked}></div>`;
+                        },
+                    },
+                    {
+                        data: 'hora_entrada',
+                        render: function (data, type, row) {
+                            var disabled = row.dia_libre == 1 ? 'disabled' : '';
+
+                            return `<input ${disabled} type="time" class="form-control form-control-sm horaEntrada" data-id="${row.id_horario}" value="${data}">`;
+                        }
+                    },
+                    {
+                        data: 'hora_salida',
+                        render: function (data, type, row) {
+                            var disabled = row.dia_libre == 1 ? 'disabled' : '';
+
+                            return `<input ${disabled} type="time" class="form-control form-control-sm horaSalida" data-id="${row.id_horario}" value="${data}">`;
+                        }
+                    }
+                ]
+            });
+        }
+
+        $(document).on('click', '.libre-checkbox', function () {
+            id_horario = $(this).data('id');
+            dia_libre = $(this).is(':checked') ? 1 : 0;
+
+            $.ajax({
+                url: "{% url 'update_dia_libre_horarios' %}", // Cambia esto a tu endpoint Django
+                type: "POST",
+                data: {
+                    id_horario: id_horario,
+                    dia_libre: dia_libre,
+                    csrfmiddlewaretoken: "{{ csrf_token }}"
+                },
+                success: function (data) {
+                    if (data.save == 1) {
+                        if (dia_libre == 1) {
+                            toastMixin.fire({
+                                animation: true,
+                                title: 'Dia Libre Marcado!'
+                            });
+                        } else {
+                            toastMixin.fire({
+                                animation: true,
+                                title: 'Dia Libre Desmarcado!'
+                            });
+                        }
+                        tablaHorarios.ajax.reload(null, false);
+                        tableTurnos.ajax.reload(null, false);
+                    } else {
+                        Swal.fire({
+                            icon: 'error',
+                            title: 'Error',
+                            text: 'No se pudo actualizar el horario'
+                        });
+                    }
+                }
+            });
+        });
+
+        $(document).on('blur', '.horaEntrada, .horaSalida', function () {
+            var fila = $(this).closest('tr'); // Obtener la fila
+            var id_horario = fila.find('.horaEntrada, .horaSalida').data('id'); // ID del horario
+            var hora_entrada = fila.find('.horaEntrada').val(); // Nueva hora de entrada
+            var hora_salida = fila.find('.horaSalida').val(); // Nueva hora de salida
+
+            $.ajax({
+                url: "{% url 'update_horas_x_dia_x_horario' %}", // Cambia esto a tu endpoint Django
+                type: "POST",
+                data: {
+                    id_horario: id_horario,
+                    hora_entrada: hora_entrada,
+                    hora_salida: hora_salida,
+                    csrfmiddlewaretoken: "{{ csrf_token }}"
+                },
+                success: function (data) {
+                    if (data.save == 1) {
+                        toastMixin.fire({
+                            animation: true,
+                            title: 'Horario Editado!'
+                        });
+                    } else {
+                        Swal.fire({
+                            icon: 'error',
+                            title: 'Error',
+                            text: 'No se pudo actualizar el horario'
+                        });
+                    }
+                }
+            });
+        });
+
+
+
+
+
+
+
+
+    });
+
+
+</script>
+{% endblock %}

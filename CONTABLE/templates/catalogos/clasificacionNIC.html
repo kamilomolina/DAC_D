@@ -1,0 +1,410 @@
+{% extends 'componentes/menu_contable.html' %}
+{% load static %}
+
+{% block title %}
+CLASIFICACION DE CUENTAS NIC
+{% endblock %}
+
+
+{% block body %}
+
+<div class="row align-items-center">
+    <div class="col d-flex align-items-center">
+        <button id="toggle-sidebar" class="hamburger btnMenu me-3" title="Mostrar/Ocultar Menu">
+            <i class="fas fa-bars"></i>
+        </button>
+        <h3 class="page-title mb-0">CLASIFICACION DE CUENTAS NIC</h3>
+    </div>
+
+    <div class="col-auto text-end float-end ms-auto download-grp">
+        <button class="btn btn-sm btn-success" id="btnNuevo" title="Crear Nuevo"><i class="fas fa-plus me-2"></i>
+            Nuevo</button>
+    </div>
+</div>
+
+<hr>
+
+<div class="row">
+
+    <div class="col-lg-4">
+        <label for="">Empresa:</label>
+        <select id="selectEmpresa" class="form-select form-select-sm" name="selectEmpresa">
+            {% for e in empresasData %}
+            <option value="{{ e.id }}">{{ e.nombre }}</option>
+            {% endfor %}
+        </select>
+    </div>
+
+    <div class="col-lg-4">
+        <label for="">Tipos NIC:</label>
+        <select id="selectTiposNIC" class="form-select form-select-sm" name="selectTiposNIC">
+            {% for t_nic in tiposNICData %}
+            <option value="{{ t_nic.PkNic }}">{{ t_nic.Nic }}
+            </option>
+            {% endfor %}
+        </select>
+    </div>
+
+    <div class="col-lg-4">
+        <label for="">Cuentas NIC:</label>
+        <select id="selectCuentasNIC" class="form-select form-select-sm" name="selectCuentasNIC">
+        </select>
+    </div>
+
+</div>
+
+<br>
+
+<div class="row">
+
+    <div class="col-lg-6">
+        <h5 class="text-center mt-4">Cuentas Disponibles</h5>
+        <div class="table-responsive">
+            <table id="cuentasDisponiblesTable"
+                class="table table-striped table-bordered mb-0 table-sm rounded-4 table-hover align-middle"
+                style="width: 100%;">
+                <thead>
+                    <tr>
+                        <th>Código Cuenta</th>
+                        <th>Concepto Cuenta</th>
+                        <th>Acción</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    <!-- Contenido dinámico -->
+                </tbody>
+            </table>
+        </div>
+    </div>
+
+    <div class="col-lg-6">
+        <h5 class="text-center">Cuentas Asociadas</h5>
+        <div class="table-responsive">
+            <table id="cuentasAsociadasTable"
+                class="table table-striped table-bordered mb-0 table-sm rounded-4 table-hover align-middle"
+                style="width: 100%;">
+                <thead>
+                    <tr>
+                        <th>Código Cuenta</th>
+                        <th>Concepto</th>
+                    </tr>
+                </thead>
+                <tbody id="associated-accounts-table">
+                    <!-- Contenido dinámico -->
+                </tbody>
+            </table>
+        </div>
+    </div>
+
+</div>
+
+{% endblock %}
+
+
+
+{% block scripts %}
+
+<script>
+    $(document).ready(function () {
+        var csrfToken = "{{ csrf_token }}";
+        var cuentasDisponiblesTable, cuentasAsociadasTable;
+
+        var selectedNIC = 1;
+
+        var toastMixin = Swal.mixin({
+            toast: true,
+            icon: 'success',
+            title: 'General Title',
+            animation: false,
+            position: 'top-right',
+            showConfirmButton: false,
+            timer: 2000,
+            timerProgressBar: true,
+            didOpen: (toast) => {
+                toast.addEventListener('mouseenter', Swal.stopTimer);
+                toast.addEventListener('mouseleave', Swal.resumeTimer);
+            }
+        });
+
+        $('#catalogosMenu, #clasificacionCuentasNIC_submenu').addClass('active');
+
+        function fillCuentasNIC(selectedNIC) {
+            $.ajax({
+                url: "{% url 'dataCuentasNIC' %}",
+                type: "POST",
+                data: {
+                    tipoNIC: selectedNIC,
+                    opcion: 1,
+                    csrfmiddlewaretoken: csrfToken
+                },
+                success: function (response) {
+                    // Limpia el select antes de agregar nuevas opciones
+                    $('#selectCuentasNIC').empty();
+
+                    // Verifica si la respuesta tiene datos
+                    if (response.data && response.data.length > 0) {
+                        // Itera sobre los datos y añade las opciones al select
+                        response.data.forEach(function (item) {
+                            $('#selectCuentasNIC').append(
+                                `<option value="${item.PkDetalleNic}" data-padre="${item.FkCuentaBase}">${item.Concepto}</option>`
+                            );
+                        });
+
+                        $('#selectCuentasNIC').val($('#selectCuentasNIC option:first').val()).change();
+                    } else {
+                        $('#selectCuentasNIC').append($('<option>', {
+                            value: "#",
+                            text: "No hay datos disponibles"
+                        }));
+                    }
+                }
+            });
+        }
+
+
+        function fillCuentasDisponiblesAsociadas() {
+            empresa = $('#selectEmpresa').val();
+            tipoNIC = $('#selectTiposNIC').val();
+
+            selectedPadre = $('#selectCuentasNIC').find(':selected');
+            cuenta_nic = selectedPadre.val();
+            padre = selectedPadre.data('padre');
+
+            $("#cuentasDisponiblesTable").DataTable().clear().destroy();
+
+            cuentasDisponiblesTable = $("#cuentasDisponiblesTable").DataTable({
+                autoWidth: false,
+                scrollX: true,
+                scrollY: '350px',
+                scrollCollapse: true,
+                pageLength: 50,
+                dom: 'rftip',
+                language: {
+                    url: "{% static 'app/th/json/es-ES.json' %}",
+                },
+                ajax: {
+                    url: `{% url 'dataCuentasDisponiblesNIC' %}`,
+                    type: "POST",
+                    dataScr: 'data',
+                    data: {
+                        empresa: empresa,
+                        tipoNIC: tipoNIC,
+                        padre: padre,
+                        csrfmiddlewaretoken: csrfToken
+                    },
+                },
+                colReorder: {
+                    realtime: false,
+                },
+                buttons: [
+                    {
+                        extend: 'excel',
+                        text: '<i class="fas fa-file-excel"></i>',
+                        titleAttr: 'Excel',
+                        className: 'btn btn-success',
+                    },
+                    {
+                        extend: 'pdf',
+                        text: '<i class="fas fa-file-pdf"></i>',
+                        titleAttr: 'PDF',
+                        className: 'btn btn-danger',
+                    },
+                    {
+                        extend: 'print',
+                        text: '<i class="fas fa-print"></i>',
+                        titleAttr: 'Imprimir',
+                        className: 'btn btn-null',
+                        orientation: 'landscape'
+                    }
+                ],
+                columns: [
+                    {
+                        data: 'codigo'
+                    },
+                    {
+                        data: 'nombre',
+                        className: 'averages'
+                    },
+                    {
+                        data: null,
+                        width: '3%',
+                        title: "Acciones",
+                        render: function (data, type, row) {
+                            return `
+                            <div class="text-center">
+                                <div class="btn-group">
+                                    
+                                    <button class="btn btn-info btn-sm addCuenta" id="add" data-id="${row.id_cuenta}" data-codigo="${row.codigo}">
+                                        <i class="fas fa-plus"></i>
+                                    </button>
+
+                                </div>
+                            </div>
+                            `;
+                        }
+                    }
+                ],
+            });
+
+            $("#cuentasAsociadasTable").DataTable().clear().destroy();
+
+            cuentasAsociadasTable = $("#cuentasAsociadasTable").DataTable({
+                autoWidth: false,
+                scrollX: true,
+                scrollY: '350px',
+                scrollCollapse: true,
+                pageLength: 50,
+                dom: 'rftip',
+                language: {
+                    url: "{% static 'app/th/json/es-ES.json' %}",
+                },
+                ajax: {
+                    url: `{% url 'dataCuentasAsociadasNIC' %}`,
+                    type: "POST",
+                    dataScr: 'data',
+                    data: {
+                        empresa: empresa,
+                        tipoNIC: cuenta_nic,
+                        padre: padre,
+                        csrfmiddlewaretoken: csrfToken
+                    },
+                },
+                colReorder: {
+                    realtime: false,
+                },
+                buttons: [
+                    {
+                        extend: 'excel',
+                        text: '<i class="fas fa-file-excel"></i>',
+                        titleAttr: 'Excel',
+                        className: 'btn btn-success',
+                    },
+                    {
+                        extend: 'pdf',
+                        text: '<i class="fas fa-file-pdf"></i>',
+                        titleAttr: 'PDF',
+                        className: 'btn btn-danger',
+                    },
+                    {
+                        extend: 'print',
+                        text: '<i class="fas fa-print"></i>',
+                        titleAttr: 'Imprimir',
+                        className: 'btn btn-null',
+                        orientation: 'landscape'
+                    }
+                ],
+                columns: [
+                    {
+                        data: 'codigo'
+                    },
+                    {
+                        data: 'nombre',
+                        className: 'averages'
+                    },
+                    {
+                        data: null,
+                        width: '3%',
+                        title: "Acciones",
+                        render: function (data, type, row) {
+                            return `
+                            <div class="text-center">
+                                <div class="btn-group">
+                                    
+                                    <button class="btn btn-danger btn-sm removeCuenta" id="remove" data-id="${row.id_cuenta}" data-codigo="${row.codigo}">
+                                        <i class="fas fa-minus"></i>
+                                    </button>
+
+                                </div>
+                            </div>
+                            `;
+                        }
+                    }
+                ],
+            });
+        }
+
+
+        $('#selectTiposNIC').change(function (e) {
+            e.preventDefault();
+
+            selectedNIC = $(this).val();
+
+            fillCuentasNIC(selectedNIC);
+        });
+
+        $('#selectTiposNIC').val(selectedNIC).change();
+
+        $('#selectEmpresa, #selectTiposNIC, #selectCuentasNIC').change(function (e) {
+            e.preventDefault();
+
+            fillCuentasDisponiblesAsociadas();
+        });
+
+
+
+        $(document).on('click', '.addCuenta, .removeCuenta', function () {
+            
+            btnID = this.id;
+
+            if (btnID == "add") {
+                message = "Cuenta Agregada!"
+                opcion = 1;
+            } else {
+                message = "Cuenta Eliminada!"
+                opcion = 3;
+            }
+            
+            selectedPadre = $('#selectCuentasNIC').find(':selected');
+            cuenta_nic = selectedPadre.val();
+            
+            id_cuenta = $(this).data('id');
+            codigo = $(this).data('codigo');
+            
+            empresa = $('#selectEmpresa').val();
+
+            $.ajax({
+                url: "{% url 'insert_remove_cuenta_x_nic' %}", 
+                type: "POST",
+                data: {
+                    cuenta_nic: cuenta_nic,
+                    id_cuenta: id_cuenta,
+                    codigo: codigo,
+                    empresa: empresa,
+                    opcion: opcion,
+                    csrfmiddlewaretoken: csrfToken
+                },
+                success: function (data) {
+                    if (data.save == 1) {
+                        toastMixin.fire({
+                            animation: true,
+                            title: message
+                        });
+                        cuentasDisponiblesTable.ajax.reload(null, false);
+                        cuentasAsociadasTable.ajax.reload(null, false);
+                    } else {
+                        Swal.fire("", "Error D: " + data.error, "error");
+                    }
+                }
+            });
+
+        });
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+        /*  */
+    });
+</script>
+{% endblock %}

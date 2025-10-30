@@ -1,0 +1,37 @@
+<!-- Modal para añadir equipo -->
+<div class="modal fade" id="modalEquipo" tabindex="-1" role="dialog" aria-labelledby="modalEquipoLabel" data-bs-keyboard="false" data-bs-backdrop="static"
+    aria-hidden="true">
+    <div class="modal-dialog modal-lg" role="document">
+        <div class="modal-content"> <!-- Aquí se agrega el padding -->
+            <form id="formCrearEquipo">
+                <div class="modal-header" style="background-color: #304458; color:white">
+                    <h5 class="modal-title" id="modalEquipoLabel">
+                        <i class="material-icons me-2 text-gray">computer</i> Añadir Equipo 
+                    </h5>
+                    
+                    
+                    <button type="button" class="close" data-dismiss="modal" aria-label="Close">
+                        <span aria-hidden="true">&times;</span>
+                    </button>
+                </div>
+                <div class="col-md-12 d-flex align-items-center mt-3 p-3">
+                    <label for="descripcion-nombre_equipos" class="form-label label-width">Nombre Equipo:</label>
+                    <select id="descripcion-nombre_equipos" name="descripcion-nombre_equipos" style="width: 100%;"
+                        class="form-control input-underline select2" placeholder="Nivel certificado">
+                        <option value="">Seleccione una opción</option>
+                        <option value="new-descripcion-nombre_equipos">Crear un nuevo equipo</option>
+                        {% for cer in equipos %}
+                        <option value="{{ cer.0 }}">{{ cer.1 }}</option>
+                        {% endfor %}
+                    </select>
+                </div>
+
+                <div class="modal-footer">
+                    <button type="submit" class="btn btn-success animate__animated animate__pulse animate__slow animate__infinite">Guardar</button>
+                    <button type="button" class="btn btn-danger close" data-dismiss="modal">Cerrar</button>
+                </div>
+            </form>
+
+        </div>
+    </div>
+</div>

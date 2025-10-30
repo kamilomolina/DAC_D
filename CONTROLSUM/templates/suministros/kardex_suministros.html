@@ -1,0 +1,322 @@
+
+{% extends 'menu_control_suministros.html' %}
+{% load static %}
+
+{% block title %}
+GESTIONAR OTROS
+{% endblock %}
+
+
+{% block body %}
+
+<div class="row align-items-center">
+    <div class="col d-flex align-items-center">
+        <!-- <button id="toggle-sidebar" class="hamburger btnMenu me-3" title="Mostrar/Ocultar Menu">
+            <i class="fas fa-bars"></i>
+        </button> -->
+        <h3 class="page-title mb-0">
+            <i class="fas fa-history"></i> <strong>HISTORIAL DE MOVIMIENTOS(KARDEX)</strong>
+        </h3>
+    </div>
+
+</div>
+
+<hr>
+
+<br>
+
+<div class="row">
+    <div class="col-md-4 mb-3">
+        <div class="bg-white shadow rounded-4 p-3">
+            <h5 class="text-center"><strong>Filtrar</strong></h5>
+
+            <!-- Filtro por Categoría -->
+            <div class="mb-3">
+                <label for="categoria" class="form-label"><strong>Filtrar por Categoría</strong></label>
+                <select id="categoria" class="form-select" name="categoria">
+                    <option value="">Seleccione la Categoría</option>
+                    {% for cat in categorias %}
+                    <option value="{{ cat.id_categoria }}">{{ cat.nombre_categoria }}</option>
+                    {% endfor %}
+                </select>
+            </div>
+
+            <!-- Filtro por Suministro -->
+            <div class="mb-3">
+                <label for="suministro" class="form-label"><strong>Filtrar por Suministro</strong></label>
+                <select id="suministro" class="form-select" aria-label="Seleccionar Suministro">
+                    <option value="">Seleccione el Suministro</option>
+                    <!-- Las opciones del select se cargarán con AJAX -->
+                </select>
+            </div>
+            <!-- Filtro por Fecha -->
+            <div class="row mb-3">
+                <div class="col">
+                    <label for="fecha_desde" class="form-label"><strong>Desde</strong></label>
+                    <input type="date" id="fecha_desde" name="fecha_desde" class="form-control">
+                </div>
+                <div class="col">
+                    <label for="fecha_hasta" class="form-label"><strong>Hasta</strong></label>
+                    <input type="date" id="fecha_hasta" name="fecha_hasta" class="form-control">
+                </div>
+            </div>
+
+            <div class="d-grid gap-2 mt-3">
+                <!-- Botón para cargar los datos -->
+                <button id="cargarDatos" class="btn btn-dark">
+                    <i class="fas fa-sync"></i> Cargar Datos
+                </button>
+                <button id="limpiarFiltros" class="btn btn-secondary">
+                    <i class="fas fa-eraser"></i> Limpiar Filtros
+                </button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Div a la derecha (la tabla) -->
+    <div class="col-md-8">
+        <div class="table-responsive bg-white shadow rounded-4 p-3">
+            <table id="Tabla_Kardex"
+                class="table table-hover table-bordered table-striped table-sm align-middle mb-0 rounded-4"
+                style="width: 100%; border-collapse: collapse; border-radius: 10px; box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);">
+                <thead class="text-white text-center rounded-4" style="background-color: #697a8a; text-align: justify;">
+                    <tr>
+                        <th class="text-center">Fecha</th>
+                        <th class="text-center">Descripción</th>
+                        <th class="text-center">Entrada</th>
+                        <th class="text-center">Salida</th>
+                        <th class="text-center">Stock Anterior</th>
+                        <th class="text-center">Stock Actual</th>
+                        <th class="text-center">Precio Unitario</th>
+                        <th class="text-center">Total</th>
+                    </tr>
+                </thead>
+
+                <tbody>
+
+                </tbody>
+            </table>
+        </div>
+    </div>
+</div>
+
+{% endblock %}
+
+{% block scripts %}
+
+<script>
+    $(document).ready(function () {
+        var csrfToken = "{{ csrf_token }}";
+        var Tabla_Kardex;
+
+        const today = new Date();
+        const firstDay = new Date(today.getFullYear(), today.getMonth(), 1);
+
+        const formatDate = (date) => {
+            const year = date.getFullYear();
+            const month = String(date.getMonth() + 1).padStart(2, '0');
+            const day = String(date.getDate()).padStart(2, '0');
+            return `${year}-${month}-${day}`;
+        };
+
+        $('#fecha_desde').val(formatDate(firstDay));
+        $('#fecha_hasta').val(formatDate(today));
+
+        // Cargar la tabla solo cuando el usuario presione el botón "Cargar Datos"
+        $('#cargarDatos').click(function () {
+            var id_categoria = $('#categoria').val();
+            var id_suministro = $('#suministro').val();
+            var fecha_desde = $('#fecha_desde').val();
+            var fecha_hasta = $('#fecha_hasta').val();
+
+            fillKardex(id_categoria, id_suministro, fecha_desde, fecha_hasta);
+        });
+
+        function fillKardex(id_categoria = null, id_suministro = null) {
+            // Obtener los valores de fecha desde y hasta
+            const fecha_desde = document.getElementById('fecha_desde')?.value || null;
+            const fecha_hasta = document.getElementById('fecha_hasta')?.value || null;
+
+            // Mostrar Swal de carga
+            Swal.fire({
+                title: 'Cargando datos...',
+                text: 'Por favor espera',
+                allowOutsideClick: false,
+                allowEscapeKey: false,
+                didOpen: () => {
+                    Swal.showLoading();
+                }
+            });
+
+            // Destruir cualquier instancia previa de la tabla
+            if ($.fn.dataTable.isDataTable('#Tabla_Kardex')) {
+                $('#Tabla_Kardex').DataTable().clear().destroy();
+            }
+
+            // Inicializar la tabla con los datos
+            Tabla_Kardex = $("#Tabla_Kardex").DataTable({
+                autoWidth: false,
+                scrollX: true,
+                scrollY: '350px',
+                scrollCollapse: true,
+                pageLength: 10,
+                dom: 'Brftip',
+                language: {
+                    url: "{% static 'app/th/json/es-ES.json' %}",
+                },
+                ajax: {
+                    url: `{% url 'historial_suministros_data' %}`,
+                    type: "POST",
+                    dataSrc: 'data',
+                    data: {
+                        csrfmiddlewaretoken: csrfToken,
+                        id_categoria: id_categoria,  // Filtro por categoría
+                        id_suministro: id_suministro,  // Filtro por suministro
+                        fecha_desde: fecha_desde,  // Filtro por fecha desde
+                        fecha_hasta: fecha_hasta   // Filtro por fecha hasta
+                    },
+                    complete: function () {
+                        // Cierra Swal al completar la carga
+                        Swal.close();
+                    },
+                    error: function (xhr, status, error) {
+                        console.error("Error al cargar los datos:", error);
+                        Swal.fire("", "Ocurrió un error al obtener los datos.", "error");
+                    }
+                },
+                colReorder: {
+                    realtime: false,
+                },
+                buttons: [
+                    {
+                        extend: 'excel',
+                        text: '<i class="fas fa-file-excel"></i>',
+                        titleAttr: 'Exportar a Excel',
+                        className: 'btn btn-success',
+                    },
+                    {
+                        extend: 'pdf',
+                        text: '<i class="fas fa-file-pdf"></i>',
+                        titleAttr: 'Exportar a PDF',
+                        className: 'btn btn-danger',
+                    },
+                    {
+                        extend: 'print',
+                        text: '<i class="fas fa-print"></i>',
+                        titleAttr: 'Imprimir',
+                        className: 'btn btn-null',
+                        orientation: 'landscape'
+                    }
+                ],
+                columns: [
+                    {
+                        data: 'fecha_movimiento'
+                    },
+                    {
+                        data: 'detalle_movimiento'
+                    },
+                    {
+                        data: 'entrada'
+                    },
+                    {
+                        data: 'salida'
+                    },
+                    {
+                        data: 'stock_anterior',
+                        className: 'formattAverages'
+                    },
+                    {
+                        data: 'stock_actual',
+                        className: 'formattAverages'
+                    },
+                    {
+                        data: 'precio_unitario',
+                        className: 'formattMoney',
+                        render: $.fn.dataTable.render.number(',', '.', 2)
+                    },
+                    {
+                        data: 'costo_total',
+                        className: 'formattMoney',
+                        render: $.fn.dataTable.render.number(',', '.', 2)
+                    },
+                ],
+            });
+        }
+
+        // Cargar suministros al seleccionar una categoría
+        $('#categoria').change(function () {
+            var categoria_id = $(this).val();
+            if (categoria_id) {
+                $.ajax({
+                    url: '{% url "obtener_suministros_por_categoria_data" %}',
+                    type: "POST",
+                    data: {
+                        'categoria_id': categoria_id,
+                        csrfmiddlewaretoken: csrfToken
+                    },
+                    dataType: 'json',
+                    success: function (response) {
+                        $('#suministro').empty();
+                        if (response.suministros && response.suministros.length > 0) {
+                            $('#suministro').append('<option value="">Seleccione el Suministro</option>');
+                            $.each(response.suministros, function (index, suministro) {
+                                $('#suministro').append('<option value="' + suministro.id_suministros + '">' + suministro.nombre + '</option>');
+                            });
+                        } else {
+                            $('#suministro').append('<option value="">No hay suministros disponibles</option>');
+                        }
+                    },
+                    error: function (xhr, status, error) {
+                        console.error("Error al obtener los suministros: ", error);
+                        Swal.fire("", "Ocurrió un error al obtener los suministros.", "error");
+                    }
+                });
+            } else {
+                $('#suministro').empty();
+                $('#suministro').append('<option value="">Seleccione el Suministro</option>');
+            }
+        });
+
+        // // Cuando cambian la categoría, el suministro o las fechas, recarga la tabla con los filtros aplicados
+        // $('#categoria, #suministro, #fecha_desde, #fecha_hasta').change(function () {
+        //     var id_categoria = $('#categoria').val();
+        //     var id_suministro = $('#suministro').val();
+        //     var fecha_desde = $('#fecha_desde').val();
+        //     var fecha_hasta = $('#fecha_hasta').val();
+
+        //     fillKardex(id_categoria, id_suministro, fecha_desde, fecha_hasta); // Llama a la función de recarga pasando los filtros
+        // });
+
+        $('#limpiarFiltros').click(function () {
+            $('#categoria').val('').trigger('change');
+            $('#suministro').empty().append('<option value="">Seleccione el Suministro</option>');
+
+            // Restaurar fechas predeterminadas
+            const today = new Date();
+            const firstDay = new Date(today.getFullYear(), today.getMonth(), 1);
+
+            const formatDate = (date) => {
+                const year = date.getFullYear();
+                const month = String(date.getMonth() + 1).padStart(2, '0');
+                const day = String(date.getDate()).padStart(2, '0');
+                return `${year}-${month}-${day}`;
+            };
+
+            $('#fecha_desde').val(formatDate(firstDay));
+            $('#fecha_hasta').val(formatDate(today));
+
+            // Vaciar la tabla al limpiar filtros
+            // if ($.fn.dataTable.isDataTable('#Tabla_Kardex')) {
+            //     $('#Tabla_Kardex').DataTable().clear().draw(); // limpia los datos
+            // }
+
+            // Destruir cualquier instancia previa de la tabla
+            if ($.fn.dataTable.isDataTable('#Tabla_Kardex')) {
+                $('#Tabla_Kardex').DataTable().clear().destroy();
+            }
+        });
+
+    });
+</script>
+
+{% endblock %}

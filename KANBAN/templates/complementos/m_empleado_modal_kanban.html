@@ -1,0 +1,78 @@
+<div class="modal fade" id="modalKanban" tabindex="-1" role="dialog" aria-labelledby="exampleModalLabel"
+            aria-hidden="true">
+            <div class="modal-dialog modal-lg" role="document">
+                <div class="modal-content">
+                    <div class="modal-header" style="background-color: #566157; color:white">
+                        <h5 class="modal-title" id="exampleModalLabel" style="color: white;">
+                            <i class="material-icons me-2 text-gray">event_note</i>GESTION DE PLANES
+                        </h5>
+
+                        <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                    </div>
+                    <div class="modal-body">
+                        <form id="formCrearKanba">
+                            <div class="user-text">
+                                <input id="creado-por" name="creado_por" type="text" value="{{ userName }}">
+                                <input id="user-id" name="user_id" type="text" value="{{ user_id }}">
+                            </div>
+                            <div class="row mb-2 align-items-center">
+                                <div class="col-md-4 ">
+                                    <label for="plan" class="form-label">Plan:</label>
+                                    <input type="text" id="plan" name="plan"
+                                        class="form-control input-underline">
+                                </div>
+                                <div class="col-md-4">
+                                    <label for="tipo-plan" class="form-label">Seleccione un Tipo:</label>
+                                    <select id="tipo-plan" name="tipo_plan" style="width: 100%;" class="form-control input-underline select2">
+                                        <option value="">Seleccione una opción</option>
+                                        {% for tipo in tipo_planes %}
+                                            <option value="{{ tipo.0 }}">{{ tipo.1 }}</option>  <!-- Verifica que tipo.0 es el ID y tipo.1 es el nombre -->
+                                        {% endfor %}
+                                    </select>
+                                    
+                                </div>
+                                <div class="col-md-4 ">
+                                    <label for="area" class="form-label">Seleccione un Área:</label>
+                                    <select id="area" name="area" style="width: 100%;"
+                                        class="form-control input-underline select2">
+                                        <option value=""></option>
+                                        {% for cer in grupos %}
+                                        <option value="{{ cer.0 }}">{{ cer.1 }}</option>
+                                        {% endfor %}
+                                    </select>
+                                </div>
+                            </div>
+
+                            <div class="row mb-2 align-items-center">
+                                <div class="col-md-6 ">
+                                    <label for="fecha-inicio" class="form-label">Fecha de Inicio:</label>
+                                    <input type="date" id="fecha-inicio" name="fecha_inicio"
+                                        class="form-control input-underline">
+                                </div>
+                                <div class="col-md-6 ">
+                                    <label for="fecha-fin" class="form-label">Fecha de Final:</label>
+                                    <input type="date" id="fecha-fin" name="fecha_final"
+                                        class="form-control input-underline">
+                                </div>
+                            </div>
+
+                            <div class="row mb-2 align-items-center">
+                                <div class="col-md-12">
+                                    <label for="descripcion" class="form-label">Descripción:</label>
+                                    <textarea id="descripcion" name="descripcion"
+                                        class="form-control input-underline" rows="3"></textarea>
+                                </div>
+                            </div>
+
+                            <input type="hidden" name="csrfmiddlewaretoken" value="{{ csrf_token }}">
+                            <div class="modal-footer">
+                                <button type="submit" class="btn btn-success">Guardar</button>
+                                <button type="button" class="btn btn-danger" data-bs-dismiss="modal">Cerrar</button>
+                            </div>
+                        </form>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        

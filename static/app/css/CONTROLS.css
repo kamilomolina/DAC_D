@@ -1,0 +1,577 @@
+:root {
+    --navbar-color: #000000;
+    --main-color: linear-gradient(to right, #ad6852, #e4bf1a, #7c2f2f);
+    --body-color: #f4f5f7;
+
+    --table1-color: #a4d5d7;
+    --table2-color: #e9bfa7;
+    --table3-color: #d1c1e2;
+    --table4-color: #f7cc92;
+    --table5-color: #aedff2;
+
+    --background-color: #1e3822;
+
+    --black-color: #151111;
+    --hover-color: #7c2f2f;
+    --link-navbar: #f4f5f7;
+}
+
+*,
+*::before,
+*::after {
+    padding: 0;
+    margin: 0;
+    box-sizing: border-box;
+}
+
+body {
+    margin: 0 0 55px 0;
+    font-family: roboto, sans-serif;
+    font-size: 15px;
+    background-color: var(--body-color);
+}
+
+h1,
+h2,
+h3,
+h4,
+h5,
+h6 {
+    font-family: roboto, sans-serif;
+    margin-top: 0;
+    color: var(--white);
+}
+
+a:hover,
+a:active,
+a:focus {
+    outline: none;
+    text-decoration: none;
+}
+
+input,
+button,
+a {
+    transition: all 0.4s ease;
+    -moz-transition: all 0.4s ease;
+    -o-transition: all 0.4s ease;
+    -ms-transition: all 0.4s ease;
+    -webkit-transition: all 0.4s ease;
+}
+
+
+/* Page Wrapper */
+.page-wrapper {
+    flex-grow: 1;
+    padding: 20px;
+    transition: margin-left 0.3s ease;
+}
+
+/*
+.page-wrapper .hamburger {
+background: linear-gradient(to right, #1a970f, #46c92c, #1e9712);
+border: none;
+color: #fff;
+font-size: 20px;
+cursor: pointer;
+margin-bottom: 20px;
+padding: 10px 15px;
+border-radius: 4px;
+transition: transform 0.3s ease, box-shadow 0.3s ease;
+}
+
+.page-wrapper .hamburger:hover {
+transform: scale(1.1);
+box-shadow: 0 4px 10px rgba(0, 0, 0, 0.2);
+}*/
+
+
+/* Estilo para el sidebar */
+#menuDiv {
+    position: fixed;
+    left: 0;
+    top: 0;
+    height: 100%;
+    background-color: #000000;
+    color: white;
+    width: 60px;
+    /* Ancho inicial solo con iconos visibles */
+    transition: width 0.3s ease;
+    /* Transición suave al expandir */
+    padding-top: 20px;
+    z-index: 9999;
+    overflow-x: hidden;
+    /* No dejar que los iconos y texto se desborden */
+    padding-left: 10px;
+    /* Asegura que haya espacio para los iconos */
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    /* Centrar los iconos en el sidebar */
+}
+
+/* Al pasar el mouse sobre el sidebar */
+#menuDiv:hover {
+    width: 300px;
+    /* Expande el sidebar para mostrar los iconos y el texto */
+}
+
+/* Estilo para los enlaces dentro del sidebar */
+#menuDiv .nav-link {
+    color: white;
+    display: block;
+    padding: 10px;
+    text-align: center;
+    font-size: 16px;
+    /* Tamaño de texto de los enlaces */
+    transition: all 0.3s ease;
+    white-space: nowrap;
+    /* Evitar que el texto se desborde */
+    position: relative;
+    margin-left: -60px;
+    /* Mover los iconos hacia la izquierda */
+}
+
+/* Estilo de los iconos */
+#menuDiv .nav-link i {
+    font-size: 38px;
+    /* Tamaño más grande de los iconos */
+    transition: transform 0.3s ease;
+    /* Transición para el tamaño de los iconos */
+    display: block;
+    /* Asegura que los iconos estén encima del texto */
+    margin-bottom: 10px;
+    /* Espacio entre icono y texto */
+}
+
+/* Efecto al pasar el mouse sobre el icono */
+#menuDiv .nav-link:hover i {
+    transform: scale(1.5);
+    /* Agranda el icono */
+    color: #ffffff;
+    /* Cambia el color a un tono amarillo claro */
+}
+
+/* Texto de los submenús, inicialmente oculto */
+.submenu-text {
+    opacity: 0;
+    visibility: hidden;
+    transform: translateX(-10px);
+    /* Desplazamiento a la izquierda */
+    transition: all 0.3s ease;
+    /* Transición suave para el texto */
+}
+
+/* Al pasar el mouse sobre el sidebar, se hace visible el texto */
+#menuDiv:hover .submenu-text {
+    opacity: 1;
+    visibility: visible;
+    transform: translateX(10px);
+    /* El texto se desliza hacia la derecha */
+}
+
+/* Submenús */
+.dropdown-menu {
+    display: none;
+    opacity: 0;
+    transition: opacity 0.3s ease;
+    padding: 0;
+    position: relative;
+    left: -30px;
+    /* Mueve los submenús para alinearlos con el texto y los iconos */
+
+}
+
+.dropdown:hover .dropdown-menu {
+    display: block;
+    opacity: 1;
+}
+
+/* Ajuste para el contenido del body */
+body {
+    margin-left: 50px;
+    /* Ajustado para cuando el sidebar está cerrado */
+    transition: margin-left 0.3s ease;
+}
+
+/* Cuando el sidebar se expande, el contenido se desplaza a la derecha */
+#menuDiv:hover~body {
+    margin-left: 200px;
+    /* Ajuste cuando el sidebar se expande */
+}
+
+/* #menuDiv .d-flex a {
+    margin-left: auto; /* Mueve todo el contenido (icono y texto) hacia la derecha 
+} */
+
+#menuDiv .d-flex a .material-icons {
+    margin-left: 45px;
+    /* Esto también empuja el icono hacia la derecha */
+}
+
+/* Estilo adicional para que se vea el contenido 
+.page-wrapper {
+    margin-left: 0;
+    transition: margin-left 0.3s ease;
+}*/
+
+/* Cuando el menú está visible, mueve el contenido hacia la derecha 
+.page-wrapper.menu-open {
+    margin-left: 250px;
+}*/
+
+.table th,
+.table td {
+    vertical-align: middle;
+    text-align: center;
+}
+
+/* Establecer un layout automático para la tabla */
+#Tabla_Suministros {
+    table-layout: auto; /* Auto ajusta las celdas según el contenido */
+    width: 100%; /* Asegúrate de que la tabla ocupe todo el ancho disponible */
+}
+
+/* Evitar que las celdas se desborden */
+#Tabla_Suministros th, #Tabla_Suministros td {
+    word-wrap: break-word; /* Permite que el contenido largo se divida en varias líneas */
+    white-space: normal; /* Asegura que el texto largo se divida si es necesario */
+}
+
+/* Ajuste opcional: Si el texto sigue siendo demasiado largo, considera ajustar el tamaño de las fuentes */
+#Tabla_Suministros td {
+    font-size: 15px; /* Puedes reducir el tamaño de la fuente si es necesario */
+}
+
+/* Asegúrate de que la tabla no se desborde con un padding adecuado */
+.table-responsive {
+    overflow-x: hidden; /* Evitar scroll horizontal */
+    padding: 0;
+}
+
+
+/* Hacer los campos de los formularios más grandes y legibles */
+#formRequisicion .form-select,
+#formRequisicion .form-control {
+    font-size: 1rem;
+    /* Aumentar tamaño de la fuente para mejor legibilidad */
+    padding: 0.75rem;
+    /* Aumentar el padding */
+}
+
+/* Modificar el tamaño de los botones */
+#formRequisicion button {
+    font-size: 0.875rem;
+    /* Hacer los botones un poco más pequeños */
+    padding: 0.5rem 1rem;
+    /* Ajustar el padding de los botones */
+}
+
+/* Ajustar el tamaño de la tabla y las celdas */
+.table th,
+.table td {
+    padding: 0.75rem;
+    /* Aumentar el padding dentro de la tabla para mejor legibilidad */
+    font-size: 1rem;
+    /* Aumentar el tamaño de la fuente de las celdas */
+}
+
+/* Ajustar el espacio entre los elementos del formulario */
+.modal-body .row {
+    margin-bottom: 20px;
+    /* Espacio entre las filas del formulario */
+}
+
+/* Ajustar la posición de los elementos dentro del formulario */
+.d-flex {
+    gap: 15px;
+    /* Espacio entre los elementos del formulario */
+}
+
+/* Estilo para las tablas de artículos */
+#tabla-articulos td,
+#tabla-articulos th {
+    text-align: center;
+    /* Centrar texto en la tabla */
+}
+
+.modal-fullscreen .modal-dialog {
+    width: 100vw;
+    height: 100vh;
+    margin: 0;
+    padding: 0;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    z-index: 1050;
+    /* Asegura que el modal esté por encima de otros elementos */
+}
+
+.modal-fullscreen .modal-content {
+    width: 90%;
+    /* max-width: 100%;  Para evitar que el modal se agrande demasiado en pantallas grandes */
+    height: 98%;
+    /* Ajusta la altura del modal para que no ocupe toda la altura de la pantalla */
+    border-radius: 15px;
+    margin: 0;
+    /* Eliminar márgenes, ya que el centrado se gestiona con flexbox */
+    margin-left: 120px;
+    margin-top: 15px;
+    margin-bottom: 15px;
+    overflow: hidden;
+    /* Evita que el contenido interno se desborde */
+}
+
+/* Añadir fondo semitransparente para el fondo del modal */
+.modal-backdrop {
+    background-color: rgba(0, 0, 0, 0.5);
+    z-index: 1040;
+    /* Asegura que el fondo esté por debajo del modal */
+}
+
+.bg-danger {
+    background-color: #f6dc86 !important;
+}
+
+.text-danger {
+    color: #dc3545 !important;
+}
+
+/* ------------------------------------------------------------------------------------------------------------ */
+/* Estilo para la tarjeta con bordes redondeados, fondo oscuro y texto blanco */
+.card {
+    border-radius: 15px;
+    /* Bordes redondeados */
+    background-color: #34495e;
+    /* Fondo oscuro */
+    color: white;
+    /* Texto blanco */
+    box-shadow: 0 4px 8px rgba(0, 0, 0, 0.689);
+    /* Sombra para dar profundidad */
+}
+
+.card-body {
+    padding: 20px;
+    /* Espaciado interno */
+}
+
+/* Icono dentro de la tarjeta */
+.card-title i {
+    color: white;
+    /* Icono blanco */
+    margin-right: 10px;
+}
+
+/* Estilo para el texto totalSuministros */
+#totalSuministros {
+    font-size: 36px;
+    font-weight: bold;
+    text-align: right;
+    margin-top: 10px;
+    animation: slideIn 1s ease-in-out;
+    gap: 10px;
+}
+
+/* Estilo para el texto totalCosto */
+#totalCosto {
+    font-size: 36px;
+    font-weight: bold;
+    text-align: right;
+    margin-top: 10px;
+    animation: slideIn 1s ease-in-out;
+    gap: 10px;
+}
+
+/* Animación para que el texto de totalSuministros aparezca de manera dinámica */
+@keyframes slideIn {
+    0% {
+        opacity: 0;
+        transform: translateY(20px);
+    }
+
+    100% {
+        opacity: 1;
+        transform: translateY(0);
+    }
+}
+
+/* Si deseas darle un toque especial al icono también */
+.card-title i:hover {
+    transform: scale(1.1);
+    /* Escala al pasar el ratón */
+    transition: transform 0.3s ease-in-out;
+}
+
+/* Estilo adicional para el gráfico */
+canvas {
+    border-radius: 10px;
+    box-shadow: 0 4px 8px rgba(0, 0, 0, 0.689);
+}
+
+/* Estilo para el gráfico al pasar el cursor */
+.chart-container:hover {
+    transform: scale(1.05);
+    transition: transform 0.3s ease-in-out;
+}
+
+/* Estilo para el contenedor totalCategorias */
+#totalCategorias {
+    display: flex;
+    flex-wrap: wrap; /* Permite que los elementos sigan en una fila, pero pasen a otra si no caben */
+    align-items: center;
+    gap: 10px; /* Espaciado entre cards */
+    height: auto; /* Evita altura excesiva */
+    overflow-x: auto; /* Permite desplazamiento horizontal si hay demasiados cards */
+    white-space: nowrap; /* Evita que los cards se acomoden en varias líneas */
+    background-color: transparent !important; /* Asegura que no tenga color */
+}
+
+/* Estilo para los cards dentro de totalCategorias */
+#totalCategorias .card {
+    display: inline-block; /* Se comportan como elementos en línea */
+    width: 300px; /* Tamaño del card */
+    height: 100px; /* Ajustar altura */
+    background-color: #ffffff;
+    color: #34495e;
+    border-radius: 15px;
+    box-shadow: 0 4px 8px rgba(0, 0, 0, 0.689);
+    transition: transform 0.3s ease;
+    flex-shrink: 0; /* Evita que los cards se reduzcan en tamaños pequeños */
+}
+
+#totalCategorias .card:hover {
+    transform: scale(1.05); /* Efecto al pasar el mouse por encima */
+}
+
+/* Si deseas que los iconos dentro del card también sean pequeños */
+#totalCategorias .card-title i {
+    font-size: 24px; /* Tamaño del icono reducido */
+    margin-right: 10px; /* Espacio entre el icono y el texto */
+    color: #34495e;
+}
+
+#gráficasContainerTop {
+    display: flex;
+    justify-content: space-between;
+    gap: 20px;
+}
+
+#gráficasContainerTop canvas {
+    flex: 1;
+    margin-top: 12px;
+    max-width: 50%;
+    /* Tamaño pequeño, ocupando el 30% del contenedor */
+    height: 200px;
+    /* Tamaño pequeño para la altura */
+}
+
+/* Estilos generales para las notificaciones */
+#notificationList {
+    display: none;
+    position: absolute;
+    top: 50px;
+    right: 20px;
+    background-color: #fff;
+    border: 1px solid #ddd;
+    width: 300px;
+    padding: 15px;
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+    z-index: 9999;
+    border-radius: 8px;
+    font-family: 'Verdana', 'Geneva', sans-serif;
+    transition: all 0.3s ease;
+}
+
+#notificationList h5 {
+    margin-bottom: 15px;
+    font-size: 16px;
+    font-weight: bold;
+    color: #34495e;
+}
+
+#notifications {
+    list-style: none;
+    padding: 0;
+    margin: 0;
+    max-height: 250px;
+    overflow-y: auto;
+}
+
+#notifications li {
+    background-color: #f9f9f9;
+    border: 1px solid #ddd;
+    padding: 10px;
+    margin-bottom: 10px;
+    border-radius: 5px;
+    font-size: 14px;
+    color: #34495e;
+    transition: background-color 0.3s ease;
+}
+
+#notifications li:hover {
+    background-color: #f0f0f0;
+    cursor: pointer;
+}
+
+#notifications li a {
+    text-decoration: none;
+    color: #007bff;
+}
+
+#notifications li a:hover {
+    text-decoration: underline;
+}
+
+@keyframes shake {
+    0% { transform: rotate(0deg); }
+    20% { transform: rotate(-15deg); }
+    40% { transform: rotate(15deg); }
+    60% { transform: rotate(-10deg); }
+    80% { transform: rotate(10deg); }
+    100% { transform: rotate(0deg); }
+}
+
+.shake {
+    animation: shake 0.5s ease-in-out infinite;
+}
+
+/* ------------------------------------------------------------------------------------------------------------ */
+
+/* PORCENTAJES, CANTIDADES */
+.formattAverages {
+    text-align: center !important;
+}
+
+/* FORMATO DE PISTO */
+.formattMoney {
+    text-align: right !important;
+}
+
+/* ------------------------------------------------------------------------------------------------------------ */
+
+.custom-red {
+    background-color: #ff0000; /* Rojo personalizado */
+    color: #fff; /* Color de texto blanco */
+}
+
+/* ------------------------------------------------------------------------------------------------------------ */
+
+/* CSS PARA EL SELECT nombre_completo
+
+/* Aumentar la altura del select */
+#nombre_completo {
+    height: 50px; /* Puedes ajustar este valor según lo que necesites */
+    font-size: 16px; /* Cambiar el tamaño del texto */
+}
+
+/* Estilos de Select2 */
+.select2-container--default .select2-selection--single {
+    height: 40px !important; /* Asegúrate de que Select2 también tenga la misma altura */
+    font-size: 16px !important; /* Asegurar que el tamaño de texto también se refleje en Select2 */
+}
+
+.select2-container--default .select2-selection__rendered {
+    line-height: 40px !important; /* Alinear el texto verticalmente */
+}
+
+/* ------------------------------------------------------------------------------------------------------------ */

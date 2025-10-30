@@ -1,0 +1,39 @@
+<!-- Modal o contenedor para mostrar los detalles de la adquisición -->
+<div class="modal fade" id="modalDetalles" tabindex="-1" aria-labelledby="modalDetallesLabel" aria-hidden="true">
+    <div class="modal-dialog modal-xl">
+        <div class="modal-content">
+            <div class="modal-header" style="background-color: #697a8a; color: white;">
+                <h5 class="modal-title" id="modalDetallesLabel">
+                    <i class="material-icons me-2"></i><strong></strong>
+                </h5>
+                <!-- <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button> -->
+            </div>
+            <div class="modal-body" id="detallesAdquisicion">
+                <div class="col-md-12">
+                    <table class="table table-bordered table-hover">
+                        <thead class="table-dark">
+                            <tr class="table-success">
+                                <th>ID</th>
+                                <th>Detalle Requisición No.</th>
+                                <th>Suministro</th>
+                                <th>Cantidad</th>
+                                <th>Precio Unitario</th>
+                                <th>Precio Total</th>
+                                <th>Estado</th>
+                                <th>Acciones</th>
+                            </tr>
+                        </thead>
+                        <tbody id="tabla-detalles"></tbody>
+                    </table>
+                    <div class="d-flex justify-content-end mb-3">
+                        <h5><strong>Total de la Adquisición: </strong><span id="total-detalle"><strong>0.00</strong></span></h5>
+                    </div>
+                </div>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-outline-danger"
+                    data-bs-dismiss="modal"><strong>Cerrar</strong></button>
+            </div>
+        </div>
+    </div>
+</div>

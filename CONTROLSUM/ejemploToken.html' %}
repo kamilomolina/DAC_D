@@ -1,0 +1,1391 @@
+{% extends 'menu_nomina.html' %}
+{% load static %}
+
+{% block title %}
+{% if parametro == 'new' %}
+CREAR PLANILLA
+{% else %}
+{{ id_empleado }} - EDITAR PLANILLA
+{% endif %}
+{% endblock %}
+
+{% block body %}
+
+<style>
+    .is-invalid {
+        border-color: #e3342f !important;
+    }
+
+    /* .is-valid {
+    border-color: #38c172 !important;
+}
+ */
+    .invalid-feedback {
+        display: block;
+        font-size: 0.875em;
+        color: #e3342f;
+        margin-top: 0.25rem;
+    }
+</style>
+
+<body>
+
+    <div class="card  p-2 crear-container">
+        <div class="d-flex justify-content-start m-3">
+            <button id="crearPlanilla"
+                class="btn btn-warning btn-sm  d-flex align-items-center animate__animated animate__pulse animate__infinite"
+                data-bs-toggle="modal" data-bs-target="#modalCrearPlanilla"
+                data-intro="Este botón crea una planilla. ¡Haz clic aquí!" data-step="1">
+                <i class="material-icons me-1">post_add</i> Crear Planilla
+            </button>
+        </div>
+        <div class="col-md-12">
+            <div class="card">
+                <div class="card-body" style="background-color: #f4f6f9;">
+                    <div class="mb-3 d-flex justify-content-between align-items-center ">
+                        <h4 class="card-title text-primary">Planillas
+                            Creadas</h4>
+                        <div class="d-flex gap-2 align-items-end">
+                            <div>
+                                <label for="periodoInicio" class="form-label mb-0">Desde</label>
+                                <input type="date" id="periodoInicio" class="form-control form-control-sm" value>
+                            </div>
+                            <div>
+                                <label for="periodoFinal" class="form-label mb-0">Hasta</label>
+                                <input type="date" id="periodoFinal" class="form-control form-control-sm" value>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="table-responsive">
+                        <table id="planillas-table" class="table table-striped table-bordered table-top-border"
+                            style="width:100%">
+                            <thead>
+                                <tr>
+
+                                    <th id="clickedTH">#</th>
+                                    <th>Nombre Planilla</th>
+                                    <th>Tipo de Planilla</th>
+                                    <th>Empresa</th>
+                                    <th class="text-wrap"><b>Cant. Empleados</b></th>
+                                    <th>Periodo Desde</th>
+                                    <th>Periodo Hasta</th>
+                                    <th>Fecha Inicio</th>
+                                    <th>Fecha Final</th>
+                                    <th>Fecha Aplicar</th>
+                                    <th>Fecha Creado</th>
+                                    <th>Creado Por</th>
+                                    <th>Fecha Modificado</th>
+                                    <th>Modificado Por</th>
+                                    <th>Estado</th>
+                                    <th>Acciones</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+
+    {% include 'complementos/planilla/modal_crear_planilla.html' %}
+    {% include 'complementos/planilla/modal_aplicar_planilla.html' %}
+
+</body>
+{% endblock %}
+
+{% block scripts %}
+<script>
+
+    function setMonthRange(startSelector, endSelector) {
+        const today = new Date();
+
+        // Primer día del mes actual
+        const firstDayOfMonth = new Date(today.getFullYear(), today.getMonth(), 1);
+        const formattedFirstDay = firstDayOfMonth.toISOString().split('T')[0];
+        $(startSelector).val(formattedFirstDay);
+
+        // Último día del mes actual
+        const lastDayOfMonth = new Date(today.getFullYear(), today.getMonth() + 1, 0);
+        const formattedLastDay = lastDayOfMonth.toISOString().split('T')[0];
+        $(endSelector).val(formattedLastDay);
+    }
+
+
+    document.addEventListener('DOMContentLoaded', function () {
+        const formCrearPlanilla = document.getElementById('formCrearPlanilla');
+
+        document.querySelector('button[data-bs-target="#modalCrearPlanilla"]').addEventListener('click', function () {
+            if (formCrearPlanilla) {
+                // Restablece el formulario
+                formCrearPlanilla.reset();
+            }
+
+            const tipoPlanillas = document.getElementById('tipo-planillas');
+            if (tipoPlanillas) {
+                tipoPlanillas.value = '';
+                $('#tipo-planillas').trigger('change');
+            }
+
+            const empresaPlanillas = document.getElementById('empresa-planillas');
+            if (empresaPlanillas) {
+                empresaPlanillas.value = '';
+                $('#empresa-planillas').trigger('change');
+            }
+
+            // Cambiar el texto del botón de guardar a 'Guardar'
+            $('button[type="submit"]').text('Guardar');
+
+            // Cambiar el título del modal a 'Crear Nueva Planilla'
+            $('#modalCrearPlanillaLabel').text('Crear Nueva Planilla');
+            $('#fecha_aplicar').prop('readonly', false);
+            $('#editarFechaAplicar').hide();
+
+
+
+
+        });
+    });
+
+
+    $(document).ready(function () {
+        var tablePlanillas;
+        var csrfToken = "{{ csrf_token }}";
+
+        $.ajaxSetup({
+            headers: {
+                'API-Token': '2e078366ee3366544e4132ebb24eb2948270bbce69aa8ff22a30a2422cc12a7e'
+            }
+        });
+
+        $('#crearPlanilla').click(function (e) {
+            e.preventDefault();
+
+            $('#formCrearPlanilla').trigger('reset');
+            idPlanilla = null;
+            $('#id-planilla').val(idPlanilla);
+        });
+
+        var toastMixin = Swal.mixin({
+            toast: true,
+            icon: 'success',
+            title: 'General Title',
+            animation: false,
+            position: 'top-right',
+            showConfirmButton: false,
+            timer: 2000,
+            timerProgressBar: true,
+            didOpen: (toast) => {
+                toast.addEventListener('mouseenter', Swal.stopTimer);
+                toast.addEventListener('mouseleave', Swal.resumeTimer);
+            }
+        });
+
+        function showLoadingScreen(text = '') {
+            Swal.fire({
+                title: '',
+                html: `<b>${text}</b>`,
+                didOpen: () => {
+                    Swal.showLoading();
+                },
+                allowOutsideClick: false,
+                showConfirmButton: false
+            });
+        }
+
+
+        $('#modalCrearPlanilla').on('shown.bs.modal', function () {
+            // Simular una fecha en febrero (e.g., 17 de febrero de 2024)
+            const today = new Date(); // Cambia a cualquier fecha de febrero que desees probar
+
+            // Formato para el nombre de la planilla
+            const nombrePlanilla = `${today.getDate().toString().padStart(2, '0')}/${(today.getMonth() + 1).toString().padStart(2, '0')}/${today.getFullYear()}`;
+            console.log('Fecha del día (simulada): ' + nombrePlanilla);
+
+            // Establece el valor en el campo 'nombre-planilla'
+            $('#nombre-planilla').val(nombrePlanilla);
+
+            // Función para calcular y asignar el período
+            function calcularPeriodo() {
+                const tipoPlanilla = $('#tipo-planillas').val(); // Obtener el valor seleccionado
+                const diaActual = today.getDate();
+                const mes = today.getMonth() + 1; // Mes actual (0-indexed en JS)
+                const anio = today.getFullYear();
+                const mesConCero = mes < 10 ? '0' + mes : mes; // Formatear el mes con dos dígitos
+
+                if (tipoPlanilla === "1") { // Planilla quincenal
+                    if (diaActual < 16) {
+                        // Período del 1 al 15
+                        $('#fecha-desde').val(`${anio}-${mesConCero}-01`);
+                        $('#fecha-hasta').val(`${anio}-${mesConCero}-15`);
+                        //$('#fecha_aplicar').val(`${anio}-${mesConCero}-15`);
+                    } else {
+                        // Período del 16 al último día del mes
+                        const ultimoDiaMes = new Date(anio, mes, 0).getDate(); // Último día del mes (28 o 29 en febrero)
+                        $('#fecha-desde').val(`${anio}-${mesConCero}-16`);
+                        $('#fecha-hasta').val(`${anio}-${mesConCero}-${ultimoDiaMes}`);
+                    }
+                } else if (tipoPlanilla === "2") { // Planilla mensual
+                    // Período del 1 al último día del mes
+                    const ultimoDiaMes = new Date(anio, mes, 0).getDate(); // Último día del mes (28 o 29 en febrero)
+                    $('#fecha-desde').val(`${anio}-${mesConCero}-01`);
+                    $('#fecha-hasta').val(`${anio}-${mesConCero}-${ultimoDiaMes}`);
+                    //$('#fecha_aplicar').val(`${anio}-${mesConCero}-${ultimoDiaMes}`);
+                } else {
+                    // Limpiar fechas si no se selecciona un tipo válido
+                    $('#fecha-desde').val('');
+                    $('#fecha-hasta').val('');
+                    //$('#fecha_aplicar').val('');
+                }
+
+                // Opcional: log para depuración
+                console.log(`Tipo de planilla: ${tipoPlanilla}`);
+                console.log(`Período cargado: ${$('#fecha-desde').val()} a ${$('#fecha-hasta').val()}`);
+            }
+
+            // Escuchar cambios en el select de tipo de planilla
+            $('#tipo-planillas').on('change', calcularPeriodo);
+
+            // Forzar el cálculo del período al abrir el modal
+            calcularPeriodo();
+        });
+
+
+        setMonthRange('#periodoInicio', '#periodoFinal');
+
+        // Cerrar y limpiar el modal al hacer clic en el botón
+        $('.close-planilla').on('click', function () {
+            $('#modalCrearPlanilla').modal('hide');
+            document.getElementById('formCrearPlanilla').reset();
+
+            // Restablecer select2
+            $('#tipo-planillas').val(null).trigger('change');
+            $('#empresa-planillas').val(null).trigger('change');
+            $('#formCrearPlanilla').on('input change', '.is-invalid', function () {
+                $(this).removeClass('is-invalid').next('.invalid-feedback').remove();
+            });
+        });
+
+
+
+        function initializeTablePlanillas() {
+            $('#planillas-table').DataTable().clear().destroy();
+
+            // Inicializar la tabla de planillas
+            tablePlanillas = $('#planillas-table').DataTable({
+                autoWidth: false,
+                scrollX: true,  // Habilitar scroll horizontal
+                scrollY: '60vh',  // Habilitar scroll vertical con una altura específica
+                scrollCollapse: true,  // Permitir colapso si hay pocas filas
+                pageLength: 50,
+                dom: 'Bfrtip',
+                initComplete: function () {
+                    Swal.close();
+                    tablePlanillas.columns.adjust().draw();
+                    setTimeout(() => {
+                        $('#clickedTH').trigger('click');
+                    }, 500);
+                },
+                language: {
+                    url: "{% static 'app/th/json/es-ES.json' %}",
+                }, ajax: {
+                    url: "{% url 'obtener_planillas' %}",  // URL de la vista Django
+                    type: "GET",
+                    data: function (d) {
+                        // Agregar parámetros de filtro de fecha
+                        d.fecha_inicio = $('#periodoInicio').val();
+                        d.fecha_final = $('#periodoFinal').val();
+                    },
+                    dataScr: 'data',
+                },
+                colReorder: {
+                    realtime: false,
+                },
+                buttons: [
+                    {
+                        extend: 'excel',
+                        text: '<i class="fas fa-file-excel"></i>',
+                        titleAttr: 'Exportar a Excel',
+                        className: 'btn btn-success',
+                    },
+                    {
+                        extend: 'pdf',
+                        text: '<i class="fas fa-file-pdf"></i>',
+                        titleAttr: 'Exportar a PDF',
+                        className: 'btn btn-danger',
+                    },
+                    {
+                        extend: 'print',
+                        text: '<i class="fas fa-print"></i>',
+                        titleAttr: 'Imprimir',
+                        className: 'btn btn-primary',
+                        orientation: 'landscape'
+                    }
+                ],
+                columns: [
+                    { data: "id_planilla" },
+                    { data: "nombre_planilla" },
+                    { data: "descripcion_cargo" },
+                    {
+                        data: "nombre_empresa",
+                        className: 'text-wrap'
+                    },
+                    {
+                        data: "empleados_planilla",
+                        className: 'text-center',
+                        render: $.fn.dataTable.render.number(',', '.', 0)
+                    },
+                    { data: "periodo_desde" },
+                    { data: "periodo_hasta" },
+                    { data: "fecha_inicio" },
+                    { data: "fecha_final" },
+                    { data: "fecha_por_aplicar" },
+                    {
+                        data: "fecha_creacion",
+                        className: 'text-wrap'
+                    },
+                    { data: "creado_por" },
+                    {
+                        data: "fecha_modificacion",
+                        className: 'text-wrap'
+                    },
+                    { data: "modificado_por" },
+                    {
+                        data: "estado",
+                        render: function (data) {
+                            let bgColorClass = '';
+                            if (data === 'Creada') {
+                                bgColorClass = 'bg-success text-white';
+                            } else if (data === 'En proceso') {
+                                bgColorClass = 'bg-primary text-white';
+                            } else if (data === 'Aplicada') {
+                                bgColorClass = 'bg-warning text-dark';
+                            }
+                            return `<span class="badge ${bgColorClass}">${data}</span>`;
+                        }
+                    },
+                    {
+                        data: null,
+                        render: function (data, type, row) {
+                            let viewButton = `
+                            <a href="{% url 'gestion_planilla' %}?id_planilla=${row.id_planilla}" 
+                            class="btn btn-info btn-sm btn-view-planilla" 
+                            title="Ver Detalle" 
+                            style="min-width: 40px; max-width: 40px;">
+                                <i class="fas fa-plus-circle"></i>
+                            </a>`;
+
+                            let editButton = `
+                            <button class="btn btn-warning btn-sm btn-edit-planilla" 
+                                    data-id="${row.id_planilla}" 
+                                    title="Editar" 
+                                    style="min-width: 40px; max-width: 40px;">
+                                <i class="fas fa-edit"></i>
+                            </button>`;
+
+                            let applyButton = `
+                            <button class="btn btn-success btn-sm btn-aplicar-planilla" 
+                                    data-id="${row.id_planilla}" data-estado="${row.estado}"
+                                    title="Aplicar" 
+                                    style="min-width: 40px; max-width: 40px;">
+                                <i class="fas fa-check-circle"></i>
+                            </button>`;
+
+
+                            let desApplyButton = `
+                            <button class="btn btn-danger btn-sm btn-desaplicar-planilla" 
+                                    data-id="${row.id_planilla}" 
+                                    title="Desaplicar" 
+                                    style="min-width: 40px; max-width: 40px;">
+                                <i class="fas fa-undo"></i>
+                            </button>`;
+
+                            let deleteButton = `
+                            <button class="btn btn-danger btn-sm btn-delete-planilla" 
+                                    data-id="${row.id_planilla}" 
+                                    title="Eliminar" 
+                                    style="min-width: 40px; max-width: 40px;">
+                                <i class="fas fa-trash"></i>
+                            </button>`;
+
+                            if (row.estado !== 'Aplicada') {
+                                return `
+                                <div class="btn-group">
+                                    ${viewButton}
+                                    ${editButton}
+                                    ${applyButton}
+                                    ${row.estado !== 'En proceso' ? deleteButton : ''}
+                                </div>`;
+                            } else {
+                                return `
+                                <div class="btn-group">
+                                    ${viewButton}
+                                    ${desApplyButton}
+                                </div>`;
+                            }
+                        },
+                        width: '5%'
+                    }
+
+                ],
+                order: [[0, "asc"]],
+                fixedColumns: {
+                    left: 0,
+                    right: 2
+                },
+                initComplete: function () {
+                    tablePlanillas.columns.adjust().draw();
+                    setTimeout(() => {
+                        $('#clickedTH').trigger('click');
+                    }, 500);
+                }
+            });
+
+            // Recargar la tabla al cambiar las fechas
+            $('#periodoInicio, #periodoFinal').on('change', function () {
+                tablePlanillas.ajax.reload();
+            });
+        }
+
+
+        // Inicializar la tabla de planillas al cargar la página
+        initializeTablePlanillas();
+
+        // Eliminar el color rojo cuando el usuario comienza a escribir
+        $('#formCrearPlanilla').on('input change', '.is-invalid', function () {
+            $(this).removeClass('is-invalid').next('.invalid-feedback').remove();
+        });
+
+
+
+        $('#formCrearPlanilla').on('submit', function (e) {
+            e.preventDefault();
+
+            // Obtener valores del formulario
+            let idPlanilla = $('#id-planilla').val();
+            let nombrePlanilla = $('#nombre-planilla').val();
+            let tipoPlanilla = $('#tipo-planillas').val();
+            let empresaPlanilla = $('#empresa-planillas').val();
+            let periodoDesde = $('#fecha-desde').val();
+            let periodoHasta = $('#fecha-hasta').val();
+            let fecha_aplicar = $('#fecha_aplicar').val();
+
+            // Validar campos obligatorios
+            let campos = [
+                { campo: '#nombre-planilla', valor: nombrePlanilla, mensaje: 'El nombre de la planilla es obligatorio.' },
+                { campo: '#tipo-planillas', valor: tipoPlanilla, mensaje: 'Debe seleccionar un tipo de planilla.' },
+                { campo: '#empresa-planillas', valor: empresaPlanilla, mensaje: 'Debe seleccionar una empresa.' },
+                { campo: '#fecha-desde', valor: periodoDesde, mensaje: 'La fecha de inicio es obligatoria.' },
+                { campo: '#fecha-hasta', valor: periodoHasta, mensaje: 'La fecha de fin es obligatoria.' },
+                { campo: '#fecha_aplicar', valor: periodoHasta, mensaje: 'La fecha de aplicar planilla es obligatoria.' },
+            ];
+
+            let campoInvalido = null;
+
+            // Eliminar mensajes de error previos
+            $('.invalid-feedback').remove();
+            campos.forEach(item => {
+                const $campo = $(item.campo);
+                if (!item.valor) {
+                    $campo.addClass('is-invalid');
+                    if (!campoInvalido) campoInvalido = item.campo;
+
+                    // Agregar mensaje de error debajo del campo
+                    $campo.after(`<div class="invalid-feedback">${item.mensaje}</div>`);
+                } else {
+                    /* $campo.removeClass('is-invalid').addClass('is-valid'); */
+                }
+            });
+
+            if (campoInvalido) {
+                $(campoInvalido).focus();
+                return;
+            }
+
+            // Enviar datos por AJAX
+            $.ajax({
+                url: "{% url 'insertar_planilla' %}",
+                type: 'POST',
+                data: {
+                    id_planilla: idPlanilla,
+                    nombre_planilla: nombrePlanilla,
+                    tipo_planillas: tipoPlanilla,
+                    empresa_planillas: empresaPlanilla,
+                    periodo_desde: periodoDesde,
+                    periodo_hasta: periodoHasta,
+                    fecha_aplicar: fecha_aplicar,
+                    creado_por: '{{ userName }}',
+                    csrfmiddlewaretoken: csrfToken
+                },
+                success: function (data) {
+                    if (data.status === 'success') {
+                        Swal.fire({
+                            icon: 'success',
+                            title: '¡Planilla guardada!',
+                            html: `La planilla <b>${nombrePlanilla}</b> ha sido ${idPlanilla ? 'actualizada' : 'creada'} con éxito.`,
+                        }).then(() => {
+                            $('#modalCrearPlanilla').modal('hide');
+                            tablePlanillas.ajax.reload();
+                            $('#formCrearPlanilla')[0].reset();
+                            $('.select2').val('').trigger('change');
+                            $('#id-planilla').val('');
+                        });
+                    } else {
+                        Swal.fire({
+                            icon: 'error',
+                            title: 'Error',
+                            text: data.message || 'No se pudo guardar la planilla.',
+                        });
+                    }
+                },
+                error: function (xhr) {
+                    let errorMessage = 'Hubo un problema al realizar la solicitud.';
+                    if (xhr.responseJSON && xhr.responseJSON.message) {
+                        errorMessage = xhr.responseJSON.message;
+                    }
+                    Swal.fire({
+                        icon: 'warning',
+                        title: '',
+                        text: errorMessage,
+                    });
+                }
+            });
+        });
+
+
+
+
+
+
+
+        // Evento para el botón de eliminar planilla
+        $(document).on('click', '.btn-delete-planilla', function () {
+            var idPlanilla = $(this).data('id');
+
+            // Confirmación antes de eliminar
+            Swal.fire({
+                title: '¿Estás seguro?',
+                text: "Esta acción cambiará el estado de la planilla a 'Eliminada'.",
+                icon: 'warning',
+                showCancelButton: true,
+                confirmButtonColor: '#28A745',
+                cancelButtonColor: '#d33',
+                confirmButtonText: 'Sí, eliminar',
+                cancelButtonText: 'Cancelar'
+            }).then((result) => {
+                if (result.isConfirmed) {
+                    // Llamada AJAX para eliminar la planilla
+                    $.ajax({
+                        url: "{% url 'eliminar_planilla' %}",  // Ajustar la URL según tu ruta en Django
+                        type: 'POST',
+                        data: {
+                            id_planilla: idPlanilla,
+                            csrfmiddlewaretoken: csrfToken
+                        },
+                        success: function (response) {
+                            if (response.status === 'success') {
+                                Swal.fire({
+                                    icon: 'success',
+                                    title: 'Eliminado',
+                                    text: 'La planilla ha sido eliminada correctamente.',
+                                    confirmButtonText: 'OK'
+                                });
+                                // Recargar la tabla de planillas
+                                tablePlanillas.ajax.reload();
+                            } else {
+                                Swal.fire({
+                                    icon: 'error',
+                                    title: 'Error',
+                                    text: response.message || 'Hubo un problema al eliminar la planilla.',
+                                    confirmButtonText: 'OK'
+                                });
+                            }
+                        },
+                        error: function (xhr) {
+                            Swal.fire({
+                                icon: 'error',
+                                title: 'Error',
+                                text: 'Hubo un problema al realizar la solicitud.',
+                                confirmButtonText: 'OK'
+                            });
+                        }
+                    });
+                }
+            });
+        });
+
+
+
+        // Editar planilla en el modal
+        $(document).on('click', '.btn-edit-planilla', function (e) {
+            e.preventDefault();  // Evita la recarga de la página
+
+            var planillaRow = $(this).closest('tr');  // Obtiene la fila más cercana
+            var rowData = tablePlanillas.row(planillaRow).data();  // Obtiene los datos de la fila desde DataTables
+
+            // Cargar los datos en el modal usando los valores de rowData
+            $('#id-planilla').val(rowData.id_planilla);  // ID de la planilla
+            $('#nombre-planilla').val(rowData.nombre_planilla);  // Nombre de la planilla
+            $('#tipo-planillas').val(rowData.id_tipo_planilla).trigger('change');  // Tipo de planilla
+            $('#empresa-planillas').val(rowData.id_empresa).trigger('change');  // Empresa
+            $('#fecha-desde').val(rowData.periodo_desde);  // Fecha de inicio del periodo
+            $('#fecha-hasta').val(rowData.periodo_hasta);  // Fecha de fin del periodo
+            $('#fecha_aplicar').val(rowData.fecha_por_aplicar);  // Fecha de fin del periodo
+            $('#fecha_aplicar').prop('readonly', true);
+
+            $('#editarFechaAplicar').show();
+
+            // Cambiar el texto del botón de guardar a 'Editar'
+            $('button[type="submit"]').text('Editar');
+
+            // Cambiar el título del modal a 'Editar Planilla'
+            $('#modalCrearPlanillaLabel').text('Editar Planilla');
+
+            // Abrir el modal
+            $('#modalCrearPlanilla').modal('show');
+
+        });
+
+        var fechaNuevaAplicarPlanilla;
+
+
+        $('#editarFechaAplicar').click(function (e) {
+            e.preventDefault();
+
+
+            tokenFechaPlanilla();
+        });
+
+
+
+        function fillTablesAplicarPlanillas(id_planilla) {
+            showLoadingScreen();
+
+            $('#tablePlanillaEmpleados').DataTable().clear().destroy();
+
+            // Inicializar la tabla de planillas
+            tablePlanillaEmpleados = $('#tablePlanillaEmpleados').DataTable({
+                autoWidth: false,
+                scrollX: true,  // Habilitar scroll horizontal
+                scrollY: '300px',  // Habilitar scroll vertical con una altura específica
+                scrollCollapse: true,  // Permitir colapso si hay pocas filas
+                pageLength: 50,
+                dom: 'Bfrtip',
+                fixedColumns: {
+                    left: 3,
+                    right: 1
+                },
+                initComplete: function () {
+                    Swal.close();
+                    tablePlanillaEmpleados.columns.adjust().draw();
+                },
+                drawCallback: function (settings) {
+                    let dollarUSLocale = Intl.NumberFormat("en-US", {
+                        minimumFractionDigits: 2,
+                        maximumFractionDigits: 2
+                    });
+
+                    let intergerLocale = Intl.NumberFormat("en-US", {
+                        minimumFractionDigits: 0,
+                        maximumFractionDigits: 0
+                    });
+
+                    var api = this.api();
+
+
+                    [8, 10, 11, 12, 13, 14, 15, 16].forEach(function (
+                        colIndex) {
+                        var total = api
+                            .column(colIndex, {
+                                search: 'applied'
+                            })
+                            .data()
+                            .reduce(function (a, b) {
+                                return Number(a) + Number(b);
+                            }, 0);
+
+
+                        var columnFooter = $(api.column(colIndex).footer());
+                        columnFooter.html(dollarUSLocale.format(total));
+                        columnFooter.css('text-align', 'right');
+                    });
+
+
+                },
+                language: {
+                    url: "{% static 'app/th/json/es-ES.json' %}",
+                },
+                ajax: {
+                    beforeSend: function (xhr, type) {
+                        if (!type.crossDomain) {
+                            xhr.setRequestHeader(
+                                'X-CSRF-Token',
+                                $(
+                                    'meta[name="csrf-token"]'
+                                ).attr('content'));
+                        }
+                    },
+                    url: `{% url 'obtener_detalles_planilla_v2' %}`,
+                    type: "POST",
+                    dataScr: 'data',
+                    data: {
+                        id_planilla: id_planilla,
+                        modo_agrupacion: 'AGRUPADO',
+                        csrfmiddlewaretoken: csrfToken
+                    },
+                    cache: false,
+                },
+                colReorder: {
+                    realtime: false
+                },
+                buttons: [
+                    {
+                        extend: 'excel',
+                        text: '<i class="fas fa-file-excel"></i>',
+                        titleAttr: 'Exportar a Excel',
+                        className: 'btn btn-success btn-sm',
+                    },
+                    {
+                        extend: 'pdf',
+                        text: '<i class="fas fa-file-pdf"></i>',
+                        titleAttr: 'Exportar a PDF',
+                        className: 'btn btn-danger btn-sm',
+                    },
+                    {
+                        extend: 'print',
+                        text: '<i class="fas fa-print"></i>',
+                        titleAttr: 'Imprimir',
+                        className: 'btn btn-primary btn-sm',
+                        orientation: 'landscape'
+                    }
+                ],
+                columns: [
+
+                    { data: "id_empleado" },
+                    {
+                        data: "identidad"
+                    },
+                    {
+                        data: "nombre_completo",
+                        className: 'text-wrap'
+                    },
+                    {
+                        data: "periodo",
+                        className: 'text-wrap'
+                    },
+                    {
+                        data: "fecha_hora_creado",
+                        className: 'text-wrap'
+                    },
+                    { data: "creado_por" },
+                    {
+                        data: "fecha_hora_modificado",
+                        className: 'text-wrap'
+                    },
+                    { data: "modificado_por" },
+
+                    {
+                        data: "salario_base",
+                        className: 'text-right',
+                        render: $.fn.dataTable.render.number(',', '.', 2)
+                    },
+                    /* {
+                        data: null,
+                        render: function (data, type, row) {
+                            var checked = row.aplica_salario_completo == 1 ? 'checked' : '';
+
+                            return `<div class="d-flex justify-content-center align-items-center"><input type="checkbox" class="aplica-salario-completo-checkbox mx-2" style="width:20px; height:20px;" data-id-empleado="${row.id_empleado}" ${checked}></div>`;
+                        },
+                    }, */
+                    {
+                        data: "dias_trabajados",
+                        className: 'text-center'
+                    },
+                    {
+                        data: "salario_esperado_bruto",
+                        className: 'text-right',
+                        render: $.fn.dataTable.render.number(',', '.', 2)
+                    },
+                    {
+                        data: "total_deducciones",
+                        className: 'text-right',
+                        render: $.fn.dataTable.render.number(',', '.', 2)
+                    },
+                    {
+                        data: "saldo_negativo_anterior",
+                        className: 'text-right',
+                        render: $.fn.dataTable.render.number(',', '.', 2)
+                    },
+                    {
+                        data: "salario_bruto_v2",
+                        className: 'text-right',
+                        render: $.fn.dataTable.render.number(',', '.', 2)
+                    },
+                    {
+                        data: "total_bonificaciones",
+                        className: 'text-right',
+                        render: $.fn.dataTable.render.number(',', '.', 2)
+                    },
+                    {
+                        data: "total_comisiones",
+                        className: 'text-right',
+                        render: $.fn.dataTable.render.number(',', '.', 2)
+                    },
+                    {
+                        data: "total_pagar",
+                        className: 'text-right',
+                        render: $.fn.dataTable.render.number(',', '.', 2)
+                    },
+                ],
+                order: [[2, "asc"]],
+            });
+
+        }
+
+
+        $('#modalAplicarPlanilla').on('shown.bs.modal', function () {
+            tablePlanillaEmpleados.columns.adjust().draw();
+        });
+
+
+
+        $(document).on('click', '.btn-desaplicar-planilla', function () {
+            var planillaRow = $(this).closest('tr');  // Obtiene la fila más cercana
+            var rowData = tablePlanillas.row(planillaRow).data();  // Obtiene los datos de la fila desde DataTables
+
+            $('#id-planilla').val(rowData.id_planilla);  // ID de la planilla
+            $('#nombre-planilla').val(rowData.nombre_planilla);  // Nombre de la planilla
+            $('#tipo-planillas').val(rowData.id_tipo_planilla).trigger('change');  // Tipo de planilla
+            $('#empresa-planillas').val(rowData.id_empresa).trigger('change');  // Empresa
+            $('#fecha-desde').val(rowData.periodo_desde);  // Fecha de inicio del periodo
+            $('#fecha-hasta').val(rowData.periodo_hasta);  // Fecha de fin del periodo
+            $('#fecha_aplicar').val(rowData.fecha_por_aplicar);  // Fecha de fin del periodo
+
+            // PASAR VALOR, SI VA A HABILITAR PASA EL 1, SI VA A DESHABILITAR PASA EL 3
+            tokenAplicarDesaplicarPlanilla(1 o 3);
+        });
+
+
+        $(document).on('click', '.btn-aplicar-planilla', function () {
+            estado = $(this).data('estado').trim();
+
+            if (estado == 'Creada') {
+                Swal.fire("", "NO HAY DATOS EN LA PLANILLA, NO PUEDES APLICARLA", "warning");
+            } else {
+                var planillaRow = $(this).closest('tr');  // Obtiene la fila más cercana
+                var rowData = tablePlanillas.row(planillaRow).data();  // Obtiene los datos de la fila desde DataTables
+
+                $('#id-planilla').val(rowData.id_planilla);  // ID de la planilla
+                $('#nombre-planilla').val(rowData.nombre_planilla);  // Nombre de la planilla
+                $('#tipo-planillas').val(rowData.id_tipo_planilla).trigger('change');  // Tipo de planilla
+                $('#empresa-planillas').val(rowData.id_empresa).trigger('change');  // Empresa
+                $('#fecha-desde').val(rowData.periodo_desde);  // Fecha de inicio del periodo
+                $('#fecha-hasta').val(rowData.periodo_hasta);  // Fecha de fin del periodo
+                $('#fecha_aplicar').val(rowData.fecha_por_aplicar);  // Fecha de fin del periodo
+
+                fillTablesAplicarPlanillas(rowData.id_planilla);
+
+                $('#modalAplicarPlanilla').modal('show');
+            }
+
+
+        });
+
+
+        function tokenFechaPlanilla() {
+            id_planilla = $('#id-planilla').val();
+            nombre_planilla = $('#nombre-planilla').val();
+            tipo_planilla = $('#tipo-planillas option:selected').text();
+            empresa = $('#empresa-planillas').val();
+            fecha_aplicar = $('#fecha_aplicar').val();
+
+            let assignedDetalle;
+
+            sucursal = 2;
+            num_documento = nombre_planilla;
+            id_tipo_token = 13;
+            id_modulo = 19;
+            usuario = '{{ userName }}';
+            tabla = 'th_planillas';
+
+            assignedDetalle = [
+                {
+                    mov_original: id_planilla,
+                    documento: nombre_planilla,
+                    cantidad: 1,
+                    descripcion: `Se quiere realizar el cambio de fecha a aplicar planilla.`,
+                    valor: fecha_aplicar,
+                    observacion: ``
+                }
+            ];
+
+
+            $.ajax({
+                url: "http://3.230.160.184:81/API/token/validar/solicitud", // Cambia esto a tu endpoint Django
+                type: "POST",
+                data: {
+                    sucursal: sucursal,
+                    num_documento: num_documento,
+                    id_tipo_token: id_tipo_token,
+                    id_modulo: id_modulo,
+                    usuario: usuario,
+                    tabla: tabla,
+                    assignedDetalle: JSON.stringify(assignedDetalle),
+                    csrfmiddlewaretoken: "{{ csrf_token }}"
+                },
+                success: function (data) {
+                    if (data.save == 1) {
+                        Swal.close();
+
+                        console.log(`${data.existe} Estado: ${data.estado}`);
+
+                        if (data.estado == 'NO EXISTE' || data.estado == 'CANCELADO' || data.estado == 'RECHAZADO' || data.estado == 'APLICADO') {
+                            console.log('Crear Solicitud');
+
+                            Swal.fire({
+                                title: 'Cambiar Fecha para Aplicar Planilla',
+                                html: `<input type="date" id="fechaNuevaAplicarPlanilla" class="swal2-input" required>`,
+                                icon: 'warning',
+                                showCancelButton: true,
+                                confirmButtonText: 'Marcar',
+                                cancelButtonText: 'Cancelar',
+                                //reverseButtons: true,
+                                preConfirm: () => {
+                                    fechaNuevaAplicarPlanilla = Swal.getPopup().querySelector(
+                                        '#fechaNuevaAplicarPlanilla').value;
+                                    if (!fechaNuevaAplicarPlanilla) {
+                                        Swal.showValidationMessage(
+                                            'Por favor selecciona la Fecha Nueva');
+                                        return false; // Prevents the modal from closing
+                                    }
+                                    return fechaNuevaAplicarPlanilla; // Passes the selected date and time to the 'then' callback
+                                }
+                            }).then((result) => {
+                                if (result.isConfirmed) {
+
+                                    $.ajax({
+                                        url: "{% url 'set_new_fecha_aplicar_planilla' %}",
+                                        type: "POST",
+                                        dataScr: 'data',
+                                        data: {
+                                            id_planilla: id_planilla,
+                                            fechaNuevaAplicarPlanilla: $('#fechaNuevaAplicarPlanilla').val(),
+                                            csrfmiddlewaretoken: csrfToken
+                                        },
+                                        success: function (data) {
+                                            if (data.save == 1) {
+                                                assignedDetalle = [
+                                                    {
+                                                        mov_original: id_planilla,
+                                                        documento: nombre_planilla,
+                                                        cantidad: 1,
+                                                        descripcion: `Se quiere realizar el cambio de fecha a aplicar planilla.`,
+                                                        valor: fechaNuevaAplicarPlanilla,
+                                                        observacion: `Fecha Anterior: ${fecha_aplicar}. Fecha Nueva: ${fechaNuevaAplicarPlanilla}`
+                                                    }
+                                                ];
+
+                                                tokenGenerarSolicitud(sucursal, num_documento, id_tipo_token, id_modulo, usuario, tabla, assignedDetalle);
+
+                                                $('#modalCrearPlanilla').modal('hide');
+                                            } else {
+                                                console.log("Error: " + data.error);
+                                            }
+                                        },
+                                        error: function (xhr, status, error) {
+                                            console.error("Error en el servidor:", error);
+                                        }
+                                    });
+                                }
+                            });
+                        }
+                        else if (data.estado == 'SOLICITADO') {
+                            console.log('Ver msj cancelar o dejar ahi!');
+
+                            Swal.fire({
+                                title: "Ya Existe una Solicitud de Token Pendiente!",
+                                text: "¿Deseas Esperar que sea Gestionada o Cancelar la Solicitud Previa?",
+                                icon: "warning",
+                                showCancelButton: true,
+                                confirmButtonText: "No Realizar Ninguna Accion",
+                                cancelButtonText: "Cancelar Solicitud Anterior",
+                                reverseButtons: true
+                            }).then((result) => {
+                                if (result.isConfirmed) {
+                                    console.log('No se cancela el token, sigue en lista de espera!');
+                                } else {
+                                    tokenCancelarSolicitud(sucursal, num_documento, id_tipo_token, id_modulo, usuario, tabla, 'El usuario decidio cancelar esta solicitud!');
+                                }
+                            });
+
+                        }
+                        else {
+                            console.log('proceder a cambiar estado');
+
+                            cambiarFechaAplicarPlanillaTokenAutorizado(id_planilla, num_documento, id_tipo_token, id_modulo, usuario);
+                        }
+                    } else {
+                        Swal.fire({
+                            icon: 'error',
+                            title: 'Error',
+                            text: 'Error!' + data.error
+                        });
+                    }
+                }
+
+            });
+        }
+
+
+        function cambiarFechaAplicarPlanillaTokenAutorizado(id_planilla, num_documento, id_tipo_token, id_modulo, usuario) {
+            showLoadingScreen('Token Autorizado: Cambiando Fecha de Aplicar Planilla!');
+
+            // Enviar los datos al backend como JSON puro
+            $.ajax({
+                url: "{% url 'aplicar_nueva_fecha_por_aplicar_planilla' %}",
+                type: "POST",
+                dataScr: 'data',
+                data: {
+                    id_planilla: id_planilla,
+                    csrfmiddlewaretoken: csrfToken
+                },
+                success: function (data) {
+                    if (data.save == 1) {
+                        tokenMarcarComoUtilizado(num_documento, id_tipo_token, id_modulo, usuario);
+                        Swal.close();
+                        $('#modalCrearPlanilla').modal('hide');
+                        Swal.fire("", "Fecha por Aplicar Planilla Editada!", "success");
+                        tablePlanillas.ajax.reload(null, false);
+                    } else {
+                        console.log("Error: " + data.error);
+                    }
+                },
+                error: function (xhr, status, error) {
+                    console.error("Error en el servidor:", error);
+                }
+            });
+        }
+
+
+        function tokenAplicarDesaplicarPlanilla(status) {
+            id_planilla = $('#id-planilla').val();
+            nombre_planilla = $('#nombre-planilla').val();
+            tipo_planilla = $('#tipo-planillas option:selected').text();
+            empresa = $('#empresa-planillas').val();
+            fecha_aplicar = $('#fecha_aplicar').val();
+            totalPagar = $('#totalPagar').text();
+
+            // REEMPLAZAR
+            sucursal = 2;
+            num_documento = nombre_planilla; // ID SUMINISTRO
+            id_tipo_token = status; // 16
+            id_modulo = 19; // MODULO 21
+            usuario = '{{ userName }}';
+            tabla = 'th_planillas'; // NOMBRE TABLA
+
+            let assignedDetalle = '';
+
+            // PUEDE PONER 3 PARA ELIMINAR Y 1 PARA HABILITAR</input>
+            if (status == 1) {
+
+                assignedDetalle = [
+                    {
+                        mov_original: id_planilla,  // ID SUMINISTRO
+                        documento: nombre_planilla, // NOMBRE SUMINISTRO
+                        cantidad: 1, // MISMO VALOR
+                        descripcion: `Se quiere habilitar la planilla de nombre ${nombre_planilla} por un total a pagar de L. ${totalPagar}.`,
+                        valor: 'habilitar',
+                        observacion: `Estado Anterior: En Proceso. Estado Nuevo: Aplicada` // DESHABILITADO, NUEVO: HABILITADO
+                    }
+                ];
+            } else {
+
+                assignedDetalle = [
+                    {
+                        mov_original: id_planilla,
+                        documento: nombre_planilla,
+                        cantidad: 1,
+                        descripcion: `Se quiere desaplicar la planilla de nombre ${nombre_planilla}.`,
+                        valor: 'Desaplicar',
+                        observacion: `Estado Anterior: Aplicada. Estado Nuevo: En Proceso`
+                    }
+                ];
+            }
+
+
+
+            $.ajax({
+                url: "http://3.230.160.184:81/API/token/validar/solicitud",
+                type: "POST",
+                data: {
+                    sucursal: sucursal,
+                    num_documento: num_documento,
+                    id_tipo_token: id_tipo_token,
+                    id_modulo: id_modulo,
+                    usuario: usuario,
+                    tabla: tabla,
+                    assignedDetalle: JSON.stringify(assignedDetalle),
+                    csrfmiddlewaretoken: "{{ csrf_token }}"
+                },
+                success: function (data) {
+                    if (data.save == 1) {
+                        Swal.close();
+
+
+                        if (data.estado == 'NO EXISTE' || data.estado == 'CANCELADO' || data.estado == 'RECHAZADO' || data.estado == 'APLICADO') {
+                            console.log('Crear Solicitud');
+
+                            tokenGenerarSolicitud(sucursal, num_documento, id_tipo_token, id_modulo, usuario, tabla, assignedDetalle);
+                        }
+                        else if (data.estado == 'SOLICITADO') {
+                            console.log('Ver msj cancelar o dejar ahi!');
+
+                            Swal.fire({
+                                title: "Ya Existe una Solicitud de Token Pendiente!",
+                                text: "¿Deseas Esperar que sea Gestionada o Cancelar la Solicitud Previa?",
+                                icon: "warning",
+                                showCancelButton: true,
+                                confirmButtonText: "No Realizar Ninguna Accion",
+                                cancelButtonText: "Cancelar Solicitud Anterior",
+                                reverseButtons: true
+                            }).then((result) => {
+                                if (result.isConfirmed) {
+                                    console.log('No se cancela el token, sigue en lista de espera!');
+                                } else {
+                                    tokenCancelarSolicitud(sucursal, num_documento, id_tipo_token, id_modulo, usuario, tabla, 'El usuario decidio cancelar esta solicitud!');
+                                }
+                            });
+
+                        }
+                        else {
+                            console.log('proceder a cambiar estado');
+                            // ACA NOMBREAR LA FUNCION 
+                            aplicarDesaplicarPlanillaTokenAutorizado(id_planilla, num_documento, id_tipo_token, id_modulo, usuario, status);
+                        }
+                    } else {
+                        Swal.fire({
+                            icon: 'error',
+                            title: 'Error',
+                            text: 'Error!' + data.error
+                        });
+                    }
+                }
+
+            });
+        }
+
+
+        function tokenMarcarComoUtilizado(num_documento, id_tipo_token, id_modulo, usuario) {
+            $.ajax({
+                url: "http://3.230.160.184:81/API/token/v2/verify", // Cambia esto a tu endpoint Django
+                type: "POST",
+                data: {
+                    num_documento: num_documento,
+                    id_tipo_token: id_tipo_token,
+                    id_modulo: id_modulo,
+                    usuario: usuario,
+                    csrfmiddlewaretoken: "{{ csrf_token }}"
+                },
+                success: function (data) {
+                    if (data.save == 1) {
+                        console.log('Token Aplicado!');
+                    } else {
+                        Swal.fire({
+                            icon: 'error',
+                            title: 'Error',
+                            text: 'Error!' + data.error
+                        });
+                    }
+                }
+            });
+        }
+
+        function tokenGenerarSolicitud(sucursal, num_documento, id_tipo_token, id_modulo, usuario, tabla, assignedDetalle) {
+            $.ajax({
+                url: "http://3.230.160.184:81/API/token/generar/solicitud", // Cambia esto a tu endpoint Django
+                type: "POST",
+                data: {
+                    sucursal: sucursal,
+                    num_documento: num_documento,
+                    id_tipo_token: id_tipo_token,
+                    id_modulo: id_modulo,
+                    usuario: usuario,
+                    tabla: tabla,
+                    assignedDetalle: JSON.stringify(assignedDetalle),
+                    csrfmiddlewaretoken: "{{ csrf_token }}"
+                },
+                success: function (data) {
+                    if (data.save == 1) {
+                        Swal.fire("", "Solicitud de Token Enviada!", "success");
+                    } else {
+                        Swal.fire({
+                            icon: 'error',
+                            title: 'Error',
+                            text: 'Error!' + data.error
+                        });
+                    }
+                }
+
+            });
+        }
+
+        function tokenCancelarSolicitud(sucursal, num_documento, id_tipo_token, id_modulo, usuario, tabla, comentario) {
+            $.ajax({
+                url: "http://3.230.160.184:81/API/token/cancelar/solicitud", // Cambia esto a tu endpoint Django
+                type: "POST",
+                data: {
+                    sucursal: sucursal,
+                    num_documento: num_documento,
+                    id_tipo_token: id_tipo_token,
+                    id_modulo: id_modulo,
+                    usuario: usuario,
+                    tabla: tabla,
+                    comentario: comentario,
+                    csrfmiddlewaretoken: "{{ csrf_token }}"
+                },
+                success: function (data) {
+                    if (data.save == 1) {
+                        Swal.fire("", "Solicitud de Token Cancelada!", "success");
+                    } else {
+                        Swal.fire({
+                            icon: 'error',
+                            title: 'Error',
+                            text: 'Error!' + data.error
+                        });
+                    }
+                }
+
+            });
+        }
+
+
+
+        $('#btnAplicarPlanilla').click(function (e) {
+            e.preventDefault();
+
+            showLoadingScreen();
+
+            id_planilla = $('#id-planilla').val();
+
+            $.ajax({
+                url: "{% url 'validar_fecha_aplicar_planilla' %}",
+                type: 'POST',
+                data: {
+                    id_planilla: id_planilla,
+                    csrfmiddlewaretoken: csrfToken
+                },
+                success: function (data) {
+                    if (data.save == 1) {
+                        Swal.close();
+
+                        if (data.aplica == 0 && data.pendientes == 0) {
+                            Swal.fire("", "NO PUEDES APLICAR ESTA PLANILLA EN ESTA FECHA Y LAS ACCIONES DE PERSONAL ESTAN AL DIA!", "warning");
+                        }
+                        else if (data.aplica == 0 && data.pendientes != 0) {
+                            Swal.fire("", `NO PUEDES APLICAR ESTA PLANILLA EN ESTA FECHA Y HAY ${data.pendientes} ACCIONES DE PERSONAL PENDIENTES!`, "warning");
+                        }
+                        else if (data.aplica != 0 && data.pendientes != 0) {
+                            Swal.fire("", `FECHA POR APLICAR DISPONIBLE PERO HAY ${data.pendientes} ACCIONES DE PERSONAL PENDIENTES!`, "warning");
+                        }
+                        else if (data.aplica != 0 && data.pendientes == 0) {
+                            tokenAplicarDesaplicarPlanilla(12);
+                        }
+
+                    } else {
+                        Swal.fire("", "Error!", "error");
+                        console.log(data.error);
+                    }
+                }
+            });
+
+        });
+
+
+
+        function aplicarDesaplicarPlanillaTokenAutorizado(id_planilla, num_documento, id_tipo_token, id_modulo, usuario, status) {
+            // RECIBE EL VALOR DEL NUEVO ESTADO
+            showLoadingScreen('Token Autorizado: Cambio de Estado del Suministro!');
+
+            // Enviar los datos al backend como JSON puro
+            // REEMPLAZAR POR LA DE CAMBIO DE ESTADO
+
+            $.ajax({
+                url: "{% url 'registrar_saldos_empleados_planillas' %}",
+                type: "POST",
+                contentType: "application/json",  // JSON puro
+                data: JSON.stringify({
+                    id_planilla: id_planilla,
+                    data: payload,
+                    csrfmiddlewaretoken: csrfToken
+                }),
+                success: function (data) {
+                    if (data.save == 1) {
+                        tokenMarcarComoUtilizado(num_documento, id_tipo_token, id_modulo, usuario); // METER ESTA DENTRO DEL SUCCESS Y SEGUIR EL LFUJO NORMAL
+                        Swal.close();
+                        $('#modalAplicarPlanilla').modal('hide');
+                        Swal.fire("", "Planilla Aplicada!", "success");
+                        tablePlanillas.ajax.reload(null, false);
+                    } else {
+                        console.log("Error: " + data.error);
+                    }
+                },
+                error: function (xhr, status, error) {
+                    console.error("Error en el servidor:", error);
+                }
+            });
+
+        }
+
+
+
+        $(document).on('click', '.aplica-salario-completo-checkbox', function () {
+            id_empleado = $(this).data('id-empleado');
+            id_planilla = $('#id-planilla').val();
+            aplica_salario = $(this).is(':checked') ? 1 : 0;
+
+
+            $.ajax({
+                url: "{% url 'aplica_salario_completo' %}", // Cambia esto a tu endpoint Django
+                type: "POST",
+                data: {
+                    id_empleado: id_empleado,
+                    id_planilla: id_planilla,
+                    aplica_salario: aplica_salario,
+                    csrfmiddlewaretoken: "{{ csrf_token }}"
+                },
+                success: function (data) {
+                    if (data.save == 1) {
+                        if (aplica_salario == 1) {
+                            toastMixin.fire({
+                                animation: true,
+                                title: 'Aplica Salario Completo Marcado!'
+                            });
+                        } else {
+                            toastMixin.fire({
+                                animation: true,
+                                title: 'Aplica Salario Completo Desmarcado!'
+                            });
+                        }
+                        tablePlanillaEmpleados.ajax.reload(null, false);
+                    } else {
+                        Swal.fire({
+                            icon: 'error',
+                            title: 'Error',
+                            text: 'No se Puede Aplicar el Salario Completo!'
+                        });
+                    }
+                }
+            });
+        });
+
+
+
+
+
+    });
+
+</script>
+{% endblock %}

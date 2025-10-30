@@ -1,0 +1,277 @@
+
+<div class="modal fade" id="modalRequisicion" tabindex="-1" aria-labelledby="modalRequisicionLabel" aria-hidden="true"
+    data-bs-keyboard="false" data-bs-backdrop="static">
+    <div class="modal-dialog modal-fullscreen">
+        <div class="modal-content">
+            <div class="modal-header" style="background-color: #697a8a; color: white;">
+                <h5 class="modal-title modalRequisicionLabel" id="modalRequisicionLabel">
+                    <i class="material-icons me-2">AGREGAR REQUISICION</i>
+                </h5>
+            </div>
+            <form id="formRequisicion">
+                <input type="hidden" id="id_requisicion" name="id_requisicion" value="">
+
+                <div class="modal-body">
+                    <div class="container-fluid">
+                        <div class="row">
+                            <!-- Datos Generales -->
+                            <div class="col-md-3">
+                                <div class="form-group mb-3">
+                                    <label for="nombre_completo">Nombre del Solicitante:</label>
+                                    <select id="nombre_completo" class="form-select" name="nombre_completo">
+                                        <option value="#"></option>
+                                        {% for us in usuarios %}
+                                        <option value="{{ us.PKUsuario }}">{{ us.Nombre }}</option>
+                                        {% endfor %}
+                                    </select>
+                                </div>
+                            </div>
+                            <div class="col-md-3">
+                                <div class="form-group mb-3">
+                                    <label for="grupos">Grupos a los que pertenece:</label>
+                                    <select id="grupos" class="form-select" name="grupos">
+                                        <option value="#">Seleccione el grupo:</option>
+                                    </select>
+                                </div>
+                            </div>
+                            <div class="col-md-3">
+                                <div class="form-group mb-3">
+                                    <label for="acreedor">Acreedor:</label>
+                                    <select id="acreedor" class="form-select" name="acreedor">
+                                        <option value="#">Seleccione el acreedor:</option>
+                                    </select>
+                                </div>
+                            </div>
+                            <div class="col-md-2">
+                                <div class="form-group mb-3">
+                                    <label for="fecha_pedido">Fecha del Pedido:</label>
+                                    <input type="date" class="form-control" id="fecha_pedido" required>
+                                </div>
+                            </div>
+                            <div class="col-md-2">
+                                <div class="form-group mb-3">
+                                    <label for="fecha_pago">Fecha de Pago:</label>
+                                    <input type="date" class="form-control" id="fecha_pago" required>
+                                </div>
+                            </div>
+                        </div>
+
+                        <hr>
+
+                        <!-- Sección de Artículos -->
+                        <div class="row">
+                            <!-- Formulario de artículos (izquierda) -->
+                            <div class="col-md-6">
+                                <div class="d-flex justify-content-center mb-3">
+                                    <h5><strong>Agrega los suministros</strong></h5>
+                                </div>
+
+                                <div class="row">
+                                    <div class="col-md-6">
+                                        <div class="form-group mb-3">
+                                            <label for="categoria">Categoría:</label>
+                                            <select id="categoria" class="form-select" name="categoria">
+                                                <option value="#">Seleccione la categoría:</option>
+                                                {% for cat in categorias %}
+                                                <option value="{{ cat.id_categoria }}">{{ cat.nombre_categoria }}
+                                                </option>
+                                                {% endfor %}
+                                            </select>
+                                        </div>
+                                    </div>
+
+                                    <div class="col-md-6">
+                                        <div class="form-group mb-3">
+                                            <label for="suministro">Suministro:</label>
+                                            <select id="suministro" class="form-select" name="suministro">
+                                                <option value="#">Seleccione el suministro:</option>
+                                                <!-- Las opciones se llenarán dinámicamente -->
+                                            </select>
+                                        </div>
+                                    </div>
+                                </div>
+
+                                <div class="row mb-3">
+                                    <div class="col-md-6">
+                                        <div class="form-group">
+                                            <label for="precio_unitario">Precio Unitario:</label>
+                                            <input type="number" class="form-control" id="precio_unitario"
+                                                name="precio_unitario" placeholder="Precio Unitario" disabled>
+                                        </div>
+                                    </div>
+                                    <div class="col-md-6">
+                                        <div class="form-group">
+                                            <label for="cantidad">Cantidad:</label>
+                                            <input type="number" class="form-control" id="cantidad" name="cantidad"
+                                                placeholder="Cantidad" min="1" oninput="validarCantidad()">
+                                        </div>
+                                    </div>
+                                </div>
+                                <div class="form-group mb-3">
+                                    <label for="justificacion">Justificación:</label>
+                                    <textarea class="form-control form-control-sm" id="justificacion"
+                                        name="justificacion"></textarea>
+                                </div>
+                                <button type="button" class="btn btn-outline-success w-100"
+                                    id="agregar-articulo"><strong>Agregar Artículo</strong></button>
+                            </div>
+
+                            <!-- Tabla de artículos (derecha) -->
+                            <div class="col-md-6">
+                                <div class="d-flex justify-content-between mb-3">
+                                    <h5><strong>Total de la Requisición: </strong><span
+                                            id="costo-total"><strong>0.00</strong></span></h5>
+                                </div>
+                                <table class="table table-bordered table-hover">
+                                    <thead class="table-dark">
+                                        <tr class="table-success">
+                                            <th>Suministro solicitado</th>
+                                            <th>Cantidad solicitada</th>
+                                            <th>Precio Unitario</th>
+                                            <th>Precio Total</th>
+                                            <th>Justificación</th>
+                                            <th>Estado</th>
+                                            <th>Acciones</th>
+                                        </tr>
+                                    </thead>
+                                    <tbody id="tabla-articulos"></tbody>
+                                </table>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                <div class="modal-footer">
+                    <button type="submit" class="btn btn-outline-success"><strong>Guardar Requisición</strong></button>
+                    <button type="button" class="btn btn-outline-danger"
+                        data-bs-dismiss="modal"><strong>Cerrar</strong></button>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>
+
+<script>
+
+    // PARA PODER AGREGAR LOS ARTICULOS/SUMINISTROS A LA TABLA
+    document.addEventListener("DOMContentLoaded", function () {
+        const tabla = document.getElementById("tabla-articulos");
+        const costoTotalSpan = document.getElementById("costo-total");
+        const agregarArticuloBtn = document.getElementById("agregar-articulo");
+
+        // Formateadores locales para comas
+        const dollarUSLocale = Intl.NumberFormat("en-US", {
+            minimumFractionDigits: 2,
+            maximumFractionDigits: 2
+        });
+
+        const intergerLocale = Intl.NumberFormat("en-US", {
+            minimumFractionDigits: 0,
+            maximumFractionDigits: 0
+        });
+
+        // Evento para agregar el artículo
+        agregarArticuloBtn.addEventListener("click", function () {
+            const suministroSelect = document.getElementById("suministro");
+            const selectedOption = suministroSelect.options[suministroSelect.selectedIndex];
+            const idSuministro = selectedOption.value;  //  ID del suministro
+            const nombreSuministro = selectedOption.text; // Nombre visible
+            const cantidad = parseFloat(document.getElementById("cantidad").value) || 0;
+            const precio = parseFloat(document.getElementById("precio_unitario").value) || 0;
+            const justificacion = document.getElementById("justificacion").value.trim();
+            const total = cantidad * precio;
+
+            // Verificar que los datos estén completos
+            if (idSuministro !== "#" && cantidad > 0 && precio >= 0 && justificacion !== "") {
+                // Agregar una nueva fila a la tabla con el ID como atributo
+                const row = tabla.insertRow();
+                row.setAttribute('data-id-suministro', idSuministro);  // 🏷️ Guardar ID
+
+                // Insertar las celdas en la fila con el formato adecuado
+                row.insertCell(0).innerText = nombreSuministro;
+                row.insertCell(1).innerText = intergerLocale.format(cantidad);  // Formato sin decimales para cantidad
+                row.insertCell(2).innerText = dollarUSLocale.format(precio);    // Formato con comas para precio
+                row.insertCell(3).innerText = dollarUSLocale.format(total);     // Formato con comas para total
+                row.insertCell(4).innerText = justificacion;
+
+                // Nueva celda para mostrar el estado
+                const estadoCell = row.insertCell(5);
+                const estadoText = '<span class="badge badge-pill bg-success">ACTIVO</span>';
+                estadoCell.innerHTML = estadoText;  // Establecer estado como activo por defecto
+
+                // Botón para eliminar artículo
+                const btnEliminar = document.createElement("button");
+                btnEliminar.className = "btn btn-danger btn-sm";
+                // Crear el elemento <i> con el icono de basurero
+                const iconoBasura = document.createElement("i");
+                iconoBasura.className = "fas fa-trash";  // Clase Font Awesome para el icono de basurero
+                btnEliminar.appendChild(iconoBasura);  // Agregar el icono al botón
+                btnEliminar.addEventListener("click", function () {
+                    row.remove();
+                    actualizarCostoTotal();
+                });
+                row.insertCell(6).appendChild(btnEliminar);
+
+                // Actualizar costo total
+                actualizarCostoTotal();
+
+                // Limpiar los campos
+                suministroSelect.value = "#";
+                document.getElementById("cantidad").value = "";
+                document.getElementById("precio_unitario").value = "";
+                document.getElementById("justificacion").value = "";
+            } else {
+                alert('⚠️ Por favor, complete todos los campos correctamente.');
+            }
+
+        });
+
+        // Función para actualizar el costo total
+        function actualizarCostoTotal() {
+            let total = 0;
+            [...tabla.rows].forEach(row => {
+                total += parseFloat(row.cells[3].innerText.replace(/,/g, '')) || 0; // Eliminar las comas antes de sumar
+            });
+
+            // Formatear el costo total con comas
+            costoTotalSpan.innerText = dollarUSLocale.format(total);
+        }
+    });
+
+    function validarCantidad() {
+        const cantidadInput = document.getElementById("cantidad");
+        // Elimina cualquier caracter no numérico
+        cantidadInput.value = cantidadInput.value.replace(/[^0-9]/g, '');
+    }
+
+    // ----------------------------------------------------------------------------------------- //
+    // SELECT PARA PODER BUSCAR Y ELEGIR EL NOMBRE DEL SOLICITANTE
+
+    $('#modalRequisicion').on('shown.bs.modal', function (e) {
+        if ($.fn.select2 && $('#nombre_completo').hasClass('select2-hidden-accesible')) {
+            $('#nombre_completo').select2('destroy');
+        }
+
+        $('#nombre_completo').select2({
+            placeholder: "Seleccione su nombre",
+            with: "100%",
+            allowClear: true,
+            dropdownParent: $('#modalRequisicion')
+        });
+    });
+
+    // ----------------------------------------------------------------------------------------- //
+    // SELECT PARA PODER BUSCAR Y ELEGIR EL ACREEDOR
+    $('#modalRequisicion').on('shown.bs.modal', function (e) {
+        if ($.fn.select2 && $('#acreedor').hasClass('select2-hidden-accesible')) {
+            $('#acreedor').select2('destroy');
+        }
+
+        $('#acreedor').select2({
+            placeholder: "Seleccione",
+            with: "100%",
+            allowClear: true,
+            dropdownParent: $('#modalRequisicion')
+        });
+    });
+
+</script>

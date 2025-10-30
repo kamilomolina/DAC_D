@@ -1,0 +1,141 @@
+{% extends 'componentes/menu_contable.html' %}
+{% load static %}
+
+{% block title %}
+ENTREGAR PERIODOS
+{% endblock %}
+
+
+{% block body %}
+
+<div class="row align-items-center">
+    <div class="col d-flex align-items-center">
+        <button id="toggle-sidebar" class="hamburger btnMenu me-3" title="Mostrar/Ocultar Menu">
+            <i class="fas fa-bars"></i>
+        </button>
+        <h3 class="page-title mb-0">LIBRO MAYOR</h3>
+    </div>
+</div>
+
+<hr>
+
+<div class="row d-flex align-items-end">
+
+    <div class="col-lg-2">
+        <div class="form-group">
+            <label for="">Empresa:</label>
+            <select id="empresaPartida" class="form-select form-select-sm" name="empresaPartida">
+                {% for e in empresasData %}
+                <option value="{{ e.id }}">{{ e.nombre }}</option>
+                {% endfor %}
+            </select>
+        </div>
+    </div>
+
+
+    <input type="hidden" id="mesInicioVal" value="{{ MesInicial }}">
+    <input type="hidden" id="mesFinalVal" value="{{ MesFinal }}">
+
+    <div class="col-lg-2">
+        <div class="form-group">
+            <label>Mes Inicio:</label>
+            <input type="text" id="mesInicio" class="form-control form-control-sm" value="{{ mesInicial_Text }}"
+                readonly>
+        </div>
+    </div>
+
+    <div class="col">
+        <div class="form-group">
+            <label>Año Inicio:</label>
+            <input type="number" id="anioInicio" class="form-control form-control-sm" value="{{ AnioInicial }}"
+                readonly>
+        </div>
+    </div>
+
+    <div class="col">
+        <div class="form-group">
+            <label>Mes Finaliza:</label>
+            <input type="text" id="mesFinaliza" class="form-control form-control-sm" value="{{ mesFinal_Text }}"
+                readonly>
+        </div>
+    </div>
+
+    <div class="col">
+        <div class="form-group">
+            <label>Año Finaliza:</label>
+            <input type="number" id="anioFinaliza" class="form-control form-control-sm" value="{{ AnioFinal }}"
+                readonly>
+        </div>
+    </div>
+
+    <div class="col">
+        <div class="form-group">
+            <label>Fecha Partida:</label>
+            <input type="date" id="fechaPartida" class="form-control form-control-sm" value="{{ fechaPartida }}"
+                readonly>
+        </div>
+    </div>
+
+    <div class="col">
+        <button type="button" class="btn btn-success btn-sm" id="btnAutorizar">Autorizar</button>
+    </div>
+
+
+</div>
+
+
+{% endblock %}
+
+
+
+{% block scripts %}
+
+<script>
+    $(document).ready(function () {
+        var csrfToken = "{{ csrf_token }}";
+        var empresa_id = "{{ empresa }}";
+
+        $('#empresaPartida').val(empresa_id).change();
+
+        var toastMixin = Swal.mixin({
+            toast: true,
+            icon: 'success',
+            title: 'General Title',
+            animation: false,
+            position: 'top-right',
+            showConfirmButton: false,
+            timer: 2000,
+            timerProgressBar: true,
+            didOpen: (toast) => {
+                toast.addEventListener('mouseenter', Swal.stopTimer);
+                toast.addEventListener('mouseleave', Swal.resumeTimer);
+            }
+        });
+
+        let dollarUSLocale = Intl.NumberFormat("en-US", {
+            minimumFractionDigits: 2,
+            maximumFractionDigits: 2
+        });
+
+        let intergerLocale = Intl.NumberFormat("en-US", {
+            minimumFractionDigits: 0,
+            maximumFractionDigits: 0
+        });
+
+        /* MENU ID Y SUBMENU ID */
+        $('#contabilidadMenu, #entregarPeriodos_submenu').addClass('active');
+
+
+
+        $('#btnAutorizar').click(function (e) { 
+            e.preventDefault();
+            
+            
+        });
+
+
+
+        /*  */
+    });
+</script>
+{% endblock %}

@@ -1,0 +1,44 @@
+<!-- Modal para crear un nuevo cargo -->
+<div class="modal fade" id="modalCrearBeneficioLaboralEmpleado" tabindex="-1" role="dialog" data-bs-keyboard="false" data-bs-backdrop="static"
+    aria-labelledby="exampleModalLabel" aria-hidden="true">
+    <div class="modal-dialog modal-lg" role="document">
+        <div class="modal-content ">
+            <div class="modal-header" style="background-color: #304458; color:white">
+                <h5 class="modal-title" id="exampleModalLabel">Crear Nuevo Beneficio Laboral </h5>
+                <button type="button" class="close limpiar" data-dismiss="modal" aria-label="Close">
+                    <span aria-hidden="true">&times;</span>
+                </button>
+            </div>
+            <div class="modal-body">
+                <form id="formCrearBeneficioLaboralEmpleado">
+                    <input id="id-laborales" name="id_laborales" type="hidden" value="">
+                    <div class="user-text">
+                        <input id="creado_por" name="creado_por" type="hidden" value="{{ userName }}">
+                    </div>
+                    <div class="mb-3">
+                        <label for="nuevo-beneficios-laborales">Nombre del Beneficio Laboral: <span style="color: red;">*</span></label>
+                        <select id="nuevo-beneficios-laborales" name="nuevo_beneficios_laborales" style="width: 100%;"
+                            class="form-control input-underline select2" placeholder="Nivel certificado">
+                            <option value="">Seleccione una opción</option>
+                            <option value="new-beneficios-laborales">Crear nuevo beneficio laboral</option>
+                            {% for cer in laborales %}
+                            <option value="{{ cer.0 }}">{{ cer.1 }}</option>
+                            {% endfor %}
+                        </select>
+                    </div>
+
+                    <div class="mb-3">
+                        <label for="valor-beeneficio-laboral">Valor del Beneficio Laboral: <span style="color: red;">*</span></label>
+                        <input type="number" step="0.01" class="form-control" id="valor-beneficio-laboral" name="valor_beneficio">
+
+                    </div>
+                    <div class="modal-footer">
+                        <button type="submit"
+                            class="btn btn-success animate__animated animate__pulse animate__slow animate__infinite" id="btnGuardarBeneficioLaboral">Guardar</button>
+                        <button type="button" class="btn btn-danger close limpiar" data-dismiss="modal">Cerrar</button>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+</div>

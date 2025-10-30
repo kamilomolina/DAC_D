@@ -1,0 +1,59 @@
+<div class="modal fade" id="modalListadoDiaLibre" tabindex="-1" aria-labelledby="modalListadoTurnosLabel"
+    aria-hidden="true" data-bs-keyboard="false" data-bs-backdrop="static">
+    <div class="modal-dialog modal-fullscreen modal-dialog-centered"> <!-- Centrar el modal -->
+        <div class="modal-content">
+            <div class="modal-header" style="background-color: #304458; color: white;">
+                <h5 class="modal-title modalListadoTurnosLabel" id="modalListadoTurnosLabel">
+                    <i class="material-icons me-2 text-gray">list</i> Turnos
+                </h5>
+
+                <button type="button" class="close" data-bs-dismiss="modal" aria-label="Close"><span
+                        aria-hidden="true">&times;</span></button>
+
+            </div>
+
+            <div class="modal-body" style="background-color: #f4f6f9;">
+                <div class="d-flex justify-content-between mb-3">
+      
+                    <div class="form-group col-6 pe-2">
+                        <label for="fechaTurno" class="form-label "><span style="color: red;">*</span> Fecha del Turno:</label>
+                        <input type="date" id="fechaTurno" class="form-control" >
+                    </div>
+         
+                    <div class="form-group col-6 ps-2">
+                        <label for="comentarioTurno" class="form-label ">Descripción:</label>
+                        <input id="comentarioTurno" class="form-control" placeholder="Escribe una Descripción..."
+                            >
+                    </div>
+                </div>
+
+                <div class="table-responsive">
+                    <table id="todos-turnos-table" class="table table-striped table-bordered table-top-border"
+                        style="width:100%">
+                        <thead>
+                            <tr>
+                                <th class="text-center">#</th>
+                                <th class="text-center">Turno</th>
+                                <th class="text-center">Codigo Departamento</th>
+                                <th class="text-center">Departamento</th>
+                                <th>
+                                    <div style="display: flex; align-items: center; justify-content: center;">
+                                        <input type="checkbox" id="checkAllTurnos"
+                                            style="margin-right: 5px; color: white">Acciones
+                                    </div>
+                                </th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+
+            <div class="modal-footer">
+                <button type="button" class="btn btn-success btn-sm" id="guardarDiaLibres">Guardar</button>
+                <button type="button" class="btn btn-danger btn-sm" data-bs-dismiss="modal">Cerrar</button>
+            </div>
+        </div>
+    </div>
+</div>

@@ -1,0 +1,336 @@
+{% extends 'menu_asistencia.html' %}
+{% load static %}
+
+{% block title %}
+{% if parametro == 'new' %}
+CREAR PLANILLA
+{% else %}
+{{ id_empleado }} - Incidencias
+{% endif %}
+{% endblock %}
+
+{% block body %}
+<style>
+    .dataTables_wrapper .dataTables_length,
+    .dataTables_wrapper .dt-buttons {
+        display: inline-block;
+        margin-right: 10px;
+
+    }
+
+    .dt-buttons {
+        margin-left: 10px;
+
+    }
+
+    .btn-group {
+        display: flex;
+        justify-content: center;
+        align-items: center;
+        height: 100%;
+    }
+
+    .checkboxIncidencia {
+        margin: 0;
+        width: 15px;
+        height: 15px;
+    }
+</style>
+<div class="card  p-2 crear-container">
+    <div class="col-md-12">
+        <div class="card">
+            <div class="card-body" style="background-color: #f4f6f9;">
+
+                <div class="mb-3 d-flex justify-content-between align-items-center ">
+                    <h4 class="card-title text-primary">Incidencias</h4>
+                    <div class="d-flex align-items-end " style="margin-bottom: 13px;">
+                        <button type="button" id="limpieza-id-incidenccia"
+                            class="btn btn-add-adicional animate__animated animate__pulse animate__slow animate__infinite"
+                            style="background-color: #f5c542; color: #ffffff;" data-bs-toggle="modal"
+                            data-bs-target="#modalCrearIncidencias">
+                            <i class="material-icons">add</i> </button>
+                    </div>
+                </div>
+                <div class="table-responsive">
+                    <table id="incidencias-table" class="table table-striped table-bordered table-top-border"
+                        style="width:100%">
+                        <thead>
+                            <tr>
+                                <th>#</th>
+                                <th>Incidencia</th>
+                                <th>Descripción</th>
+                                <th>Justificado</th>
+                                <th>Acciones</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                        </tbody>
+                    </table>
+
+                </div>
+            </div>
+        </div>
+    </div>
+
+</div>
+{% include 'complementos/asistencia/modal_crear_tipo_incidencias.html' %}
+
+
+
+{% endblock %}
+
+{% block scripts %}
+<script>
+    var tableIncidencias;
+    $(document).ready(function () {
+     $('#limpieza-id-incidenccia').on('click', function () {
+            $('#formCrearTipoincidencia').trigger('reset');
+            $('#incidenciaId').val('');
+        });
+
+        var incidenciaId, opcion;
+
+        function initializeTableIncidencias() {
+            // Destruir instancia previa de DataTable si existe
+            $("#incidencias-table").DataTable().clear().destroy();
+
+            // Inicializar nueva instancia de DataTable
+            tableIncidencias = $("#incidencias-table").DataTable({
+                scrollX: true,
+                scrollCollapse: true,
+                scrollY: '450px',
+                pageLength: 50,
+                dom: '<"top"lfB>rt<"bottom"ip>',
+                buttons: [
+                    {
+                        extend: 'excel',
+                        text: '<i class="fas fa-file-excel"></i>',
+                        titleAttr: 'Exportar a Excel',
+                        className: 'btn btn-success',
+                    },
+                    {
+                        extend: 'pdf',
+                        text: '<i class="fas fa-file-pdf"></i>',
+                        titleAttr: 'Exportar a PDF',
+                        className: 'btn btn-danger',
+                        orientation: 'landscape'
+                    },
+                    {
+                        extend: 'print',
+                        text: '<i class="fas fa-print"></i>',
+                        titleAttr: 'Imprimir',
+                        className: 'btn btn-primary',
+                    }
+                ],
+                lengthMenu: [[10, 25, 50, -1], [10, 25, 50, "Todos"]],
+                fixedColumns: {
+                    left: 0,
+                    right: 3
+                },
+                ajax: {
+                    url: "{% url 'mostrar_todas_incidencias' %}",
+                    type: "POST",
+                    data: function (d) {
+                        d.date1 = $('#periodoInicio').val(); // Valores de las fechas
+                        d.date2 = $('#periodoFinal').val();
+                        d.csrfmiddlewaretoken = "{{ csrf_token }}"; 
+                    },
+                    dataSrc: function (json) {
+                        // Validar respuesta para evitar errores
+                        if (json.error) {
+                            Swal.fire({
+                                icon: 'error',
+                                title: 'Error al cargar datos',
+                                text: json.error,
+                            });
+                            return [];
+                        }
+                        return json.turnos || []; // Asegurar que el atributo coincida con la respuesta
+                    }
+                },
+                language: {
+                    url: "{% static 'app/th/json/es-ES.json' %}"
+                },
+                columns: [
+                    { data: "id_tipo_incidencia" },
+                    { data: "tipo_incidencia", className: "text-wrap" },
+                    { data: "descripcion" },
+                    {
+                        data: "justificado",
+                        className: 'text-center',
+                        render: function (data, type, row) {
+                            var badge = "";
+                            if (data == "Justificado") {
+                                badge +=
+                                    '<span class="badge badge-pill badge-success">' + data +
+                                    "</span>";
+                            }
+                            else if (data == "No Justificado") {
+                                badge +=
+                                    '<span class="badge badge-pill badge-danger">' + data +
+                                    "</span>";
+                            }
+
+                            return badge;
+                        },
+                    },
+                    {
+                        data: null,
+                        width: '5%',
+                        className: 'text-center',
+                        orderable: false,
+                        render: function (data, type, row) {
+                            return `
+                            <div class="btn-group">
+                                <button class="btn btn-warning btn-sm btn-edit-tip-incidencia" data-id="${row.id_tipo_incidencia}">
+                                    <i class="fas fa-edit"></i>
+                                </button> 
+                                <button class="btn btn-danger btn-sm btn-delete-tip-incidencia" data-id="${row.id_tipo_incidencia}">
+                                    <i class="fas fa-trash-alt"></i>
+                                </button>
+                            </div> 
+                              `;
+
+                        }
+                    },
+                ],
+                order: [[2, "DESC"]], // Ordenar por descripción
+                initComplete: function () {
+                    console.log("Tabla de incidencias inicializada");
+                }
+            });
+        }
+
+        initializeTableIncidencias();
+        $('#formCrearTipoincidencia').on('submit', function (e) {
+            e.preventDefault(); // Prevenir recarga de la página
+
+            // Capturar valores de los inputs
+            incidenciaId = $('#incidenciaId').val();
+            const tipoIncidencia = $('#nombreIncidencia').val().trim();
+            const descripcion = $('#descripcionIncidencia').val().trim();
+            const justificado = $('#incidenciaJustificada').val();
+            const estado = 1; // Por defecto activo
+            opcion = incidenciaId ? 2 : 1;
+            console.log(opcion);
+            // Validar campos obligatorios
+            if (!tipoIncidencia) {
+                Swal.fire("", "El nombre de la incidencia es obligatorio.", "warning");
+                return;
+            }
+
+            // Enviar datos por AJAX
+            $.ajax({
+                url: "{% url 'insert_update_tipo_incidencia' %}",
+                type: 'POST',
+                data: {
+                    incidencia_id: incidenciaId,
+                    tipo_incidencia: tipoIncidencia,
+                    descripcion: descripcion,
+                    justificado: justificado,
+                    opcion: opcion,
+                    csrfmiddlewaretoken: "{{ csrf_token }}"
+                },
+                success: function (data) {
+                    if (data.save == 1) {
+                        if (data.existe == 0) {
+                            Swal.fire("", opcion === 1 ? "Incidencia Creada" : "Incidencia Actualizada", "success");
+                            $('#modalCrearIncidencias').modal('hide');
+                            $('#formCrearTipoincidencia').trigger('reset');
+
+                        } else {
+                            Swal.fire("", "Ya existe una incidencia con este nombre.", "warning");
+                        }
+
+
+                        tableIncidencias.ajax.reload(null, false);
+                    } else {
+                        Swal.fire("", "Ocurrió un error.", "error");
+                        console.error(data.error);
+                    }
+                },
+                error: function (xhr, status, error) {
+                    Swal.fire("", "Error en el servidor.", "error");
+                    console.error(error);
+                }
+            });
+        });
+
+        $(document).on('click', '.btn-edit-tip-incidencia', function () {
+            $('#formCrearTipoincidencia').trigger('reset');
+
+            var fila = $(this).closest('tr');
+
+            // Validar y capturar valores de las columnas
+            var incidenciaId = fila.find("td:eq(0)").text().trim() || null;
+            var incidenciaName = fila.find("td:eq(1)").text().trim() || "";
+            var descripcion = fila.find("td:eq(2)").text().trim() || "";
+            var justificado = fila.find("td:eq(3)").text().trim() || "";
+
+            if (incidenciaId) {
+                // Asignar valores a los campos del formulario
+                $('#incidenciaId').val(incidenciaId);
+                $('#nombreIncidencia').val(incidenciaName);
+                $('#descripcionIncidencia').val(descripcion);
+                $('#incidenciaJustificada').val(justificado === "Justificado" ? 1 : 0).trigger('change');
+                opcion = 2; // Cambiar la operación a "Actualizar"
+
+                // Mostrar el modal
+                $('#modalCrearIncidencias').modal('show');
+            } else {
+                console.error("No se pudo recuperar la información de la fila seleccionada.");
+                Swal.fire("", "Error al cargar los datos de la incidencia.", "error");
+            }
+        });
+
+
+        $(document).on('click', '.btn-delete-tip-incidencia', function () {
+            var fila = $(this).closest('tr');
+            incidenciaName = fila.find("td:eq(1)").text();
+            incidencia_id = fila.find("td:eq(0)").text();
+            estadoQuestionText = `Estas seguro de Deshabilitar esta incidencia: ${incidenciaName}?`;
+            estadoSuccessText = 'Deshabilitado!';
+
+            Swal.fire({
+                title: estadoQuestionText,
+                text: "",
+                icon: "warning",
+                showCancelButton: true,
+                confirmButtonText: "Cancelar",
+                cancelButtonText: "Confirmar",
+                reverseButtons: true,
+                customClass: {
+                    confirmButton: 'btn btn-success ms-3',
+                    cancelButton: 'btn btn-danger '
+                },
+                buttonsStyling: false
+            }).then((result) => {
+                if (result.isConfirmed) {
+                    //
+                } else {
+                    $.ajax({
+                        url: "{% url 'update_status_incidencia' %}",
+                        type: 'POST',
+                        data: {
+                            incidencia_id: incidencia_id,
+                            csrfmiddlewaretoken: "{{ csrf_token }}"
+                        },
+                        success: function (data) {
+                            if (data.save == 1) {
+                                Swal.fire("", estadoSuccessText, "success");
+
+                                tableIncidencias.ajax.reload(null, false);
+
+                            } else {
+                                Swal.fire("", "Error!", "error");
+                                console.log(data.error);
+                            }
+                        }
+                    });
+                }
+            });
+        });
+
+    });
+</script>
+{% endblock %}

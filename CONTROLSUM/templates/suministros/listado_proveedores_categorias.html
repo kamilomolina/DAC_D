@@ -1,0 +1,401 @@
+{% extends 'menu_control_suministros.html' %}
+{% load static %}
+
+{% block title %}
+GESTIONAR OTROS
+{% endblock %}
+
+
+{% block body %}
+
+<div class="row align-items-center">
+    <div class="col d-flex align-items-center">
+        <button id="toggle-sidebar" class="hamburger btnMenu me-3" title="Mostrar/Ocultar Menu">
+            <i class="fas fa-bars"></i>
+        </button>
+        <h3 class="page-title mb-0">
+            <i class="fas fa-box"></i> <strong>LISTADO DE ACREEDOR POR CATEGORIA</strong>
+        </h3>
+    </div>
+
+    <div class="col-auto text-end float-end ms-auto download-grp">
+        <button class="btn btn-sm btn-success" style="background-color: #697a8a; text-align: justify;" id="btnNuevo"
+            title="Crear Nuevo"><i class="fas fa-plus me-2"></i>
+            <strong>Nuevo Acreedor</strong></button>
+    </div>
+</div>
+
+<hr>
+
+<br>
+
+<div class="row mb-3">
+    <div class="col-auto">
+        <label for="estadoFiltro" class="form-label"><strong>Filtrar por Estado</strong></label>
+        <select id="estadoFiltro" class="form-select" aria-label="Filtrar por Estado">
+            <option value="0">Todo el listado</option>
+            <option value="1">Listado de Acreedor por Categorias Activos</option>
+            <option value="3">Listado de Acreedor por Categorias Deshabilitados</option>
+        </select>
+    </div>
+</div>
+
+<div class="row">
+    <div class="table-responsive bg-white shadow rounded-4 p-3">
+        <table id="Tabla_Proveedor_Categoria"
+            class="table table-hover table-bordered table-striped table-sm align-middle mb-0 rounded-4"
+            style="width: 100%; border-collapse: collapse; border-radius: 10px; box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);">
+            <thead class="text-white text-center rounded-4" style="background-color: #697a8a; text-align: justify;">
+                <tr>
+                    <th class="text-center">No.</th>
+                    <th class="text-center">Categoria</th>
+                    <th class="text-center">Acreedor</th>
+                    <th class="text-center">Estado</th>
+                    <th class="text-center">Acciones</th>
+                </tr>
+            </thead>
+
+            <tbody>
+
+            </tbody>
+        </table>
+    </div>
+</div>
+
+{% include 'Modales_S/agregar_proveedor_categoria.html' %}
+
+{% endblock %}
+
+
+{% block scripts %}
+
+<script>
+    $(document).ready(function () {
+        var csrfToken = "{{ csrf_token }}";
+        var cambiar_estado_actual = 0;
+        // var opcion = "{{ prueba }}";
+
+
+        var toastMixin = Swal.mixin({
+            toast: true,
+            icon: 'success',
+            title: 'General Title',
+            animation: false,
+            position: 'top-right',
+            showConfirmButton: false,
+            timer: 2000,
+            timerProgressBar: true,
+            didOpen: (toast) => {
+                toast.addEventListener('mouseenter', Swal.stopTimer);
+                toast.addEventListener('mouseleave', Swal.resumeTimer);
+            }
+        });
+
+        $('#menu_gestion_otros, #listar_proveedor_categoria_submenu').addClass('active');
+
+        select_estado_proveedor_categorias = 0;
+
+        fillProveedorC()
+
+        function fillProveedorC() {
+
+            $("#Tabla_Proveedor_Categoria").DataTable().clear().destroy();
+
+            Tabla_Proveedor_Categoria = $("#Tabla_Proveedor_Categoria").DataTable({
+                autoWidth: false,
+                scrollX: true,
+                scrollY: '350px',
+                scrollCollapse: true,
+                pageLength: 30,
+                dom: 'Brftip',
+                language: {
+                    url: "{% static 'app/th/json/es-ES.json' %}",
+                },
+                ajax: {
+                    url: `{% url 'get_proveedor_categoria_data' %}`,
+                    type: "POST",
+                    dataScr: 'data',
+                    data: {
+                        varEstado: select_estado_proveedor_categorias,
+                        csrfmiddlewaretoken: csrfToken
+                    },
+                },
+                colReorder: {
+                    realtime: false,
+                },
+                buttons: [
+                    {
+                        extend: 'excel',
+                        text: '<i class="fas fa-file-excel"></i>',
+                        titleAttr: 'Excel',
+                        className: 'btn btn-success',
+                    },
+                    {
+                        extend: 'pdf',
+                        text: '<i class="fas fa-file-pdf"></i>',
+                        titleAttr: 'PDF',
+                        className: 'btn btn-danger',
+                    },
+                    {
+                        extend: 'print',
+                        text: '<i class="fas fa-print"></i>',
+                        titleAttr: 'Imprimir',
+                        className: 'btn btn-null',
+                        orientation: 'landscape'
+                    }
+                ],
+                columns: [
+                    {
+                        data: 'id_categorias_proveedores'
+                    },
+                    {
+                        data: 'nombre_categoria',
+                    },
+                    {
+                        data: 'nombre_proveedor'
+                    },
+                    {
+                        data: 'estado',
+                        className: 'text-center',
+                        render: function (data, type, row) {
+                            var badge = "";
+                            if (data == 3) {
+                                badge +=
+                                    '<span class="badge badge-pill custom-red">DESHABILITADO</span>';
+                            } else {
+                                badge +=
+                                    '<span class="badge badge-pill bg-success">ACTIVO</span>';
+                            }
+
+                            return badge;
+                        },
+                    },
+                    {
+                        data: null,
+                        width: '3%',
+                        title: "Acciones",
+                        render: function (data, type, row) {
+                            if (row.estado == 3) {
+                                return `
+                            <div class="text-center">
+                                <div class="btn-group">
+                                    <button class="btn btn-danger btn-sm anularProveedoresC rounded-pill shadow-sm" title="Cambiar Estado" data-id="${row.id_categorias_proveedores}" data-estado="${row.estado}">
+                                        <i class="fas fa-sync-alt"></i>
+                                    </button>                                
+                                </div>
+                            </div>
+                            `;
+                            }
+                            return `
+                            <div class="text-center">
+                                <div class="btn-group">
+                                    
+                                    <button class="btn btn-warning btn-sm editarProveedoresC rounded-pill shadow-sm" data-id="${row.id_categorias_proveedores}" data-categoria="${row.id_categoria}" data-proveedor="${row.id_proveedor}" data-estado="${row.estado}">
+                                        <i class="fas fa-edit"></i>
+                                    </button>
+                                    <button class="btn btn-danger btn-sm anularProveedoresC rounded-pill shadow-sm" title="Cambiar Estado" data-id="${row.id_categorias_proveedores}" data-estado="${row.estado}">
+                                        <i class="fas fa-sync-alt"></i>
+                                    </button>                                
+                                </div>
+                            </div>
+                            `;
+                        }
+                    }
+                ],
+            });
+        }
+
+
+        // Agregar nuevo proveedores-categorias 
+        $('#btnNuevo').click(function (e) {
+            e.preventDefault();
+
+            $('#formProveedorC').trigger('reset');
+            $('#modalProveedorCLabel').text('Crear Nuevo Proveedor por Categoría');
+            $('#modalProveedorC').modal('show');
+
+            // Establecer valores por defecto para el nuevo suministro
+            opcion = 1;
+            id_categorias_proveedores = null;
+        });
+
+        // Editar proveedor por categoría
+        $(document).on('click', '.editarProveedoresC', function () {
+            $('#formProveedorC').trigger('reset'); // Limpiar el formulario antes de asignar nuevos valores
+
+            // Establecer la opción de editar y obtener la fila seleccionada
+            opcion = 2;
+            filaProveedorC = $(this).closest('tr');
+            // Obtener valores de la fila seleccionada
+            id_categorias_proveedores = $(this).data('id');
+            id_proveedor = $(this).data('proveedor');
+            id_categoria = $(this).data('categoria');
+
+            // Asignar los valores a los campos del formulario
+            $('#categoria').val(id_categoria).change();
+            $('#proveedor').val(id_proveedor).change();
+
+            // Actualizar el estado del almacén a "Editado" (suponiendo que el estado es 2 para editar)
+            cambiar_estado_actual = 2;
+
+            $.ajax({
+                url: "{% url 'actualizar_estado_proveedor_categoria' %}",  // URL para actualizar el estado a 'Editado'
+                type: "POST",
+                data: {
+                    id_categorias_proveedores: id_categorias_proveedores,
+                    estado: cambiar_estado_actual,  // Estado Editado
+                    csrfmiddlewaretoken: csrfToken
+                },
+                success: function (response) {
+                    // Aquí puedes manejar la respuesta, como mostrar un mensaje de éxito
+                    console.log("Estado actualizado correctamente");
+                },
+                error: function (xhr, status, error) {
+                    // Aquí puedes manejar errores, como mostrar un mensaje de error
+                    console.error("Hubo un problema al actualizar el estado:", error);
+                }
+            });
+
+            // Mostrar el modal con el título adecuado
+            $('#modalProveedorCLabel').text('Editar Proveedor por Categoría #' + id_categorias_proveedores);
+            $('#modalProveedorC').modal('show');
+        });
+
+
+        // AGREGAR NUEVO PROVEEDOR POR CATEGORIA
+        $('#formProveedorC').submit(function (e) {
+            e.preventDefault();
+
+            // Recoger valores de los campos del formulario
+            var id_categoria = $('#categoria').val();
+            var id_proveedor = $('#proveedor').val();
+
+            // Validación básica de campos
+            if (id_categoria == '#' || id_proveedor == '#') {
+                Swal.fire("", "Debes llenar todos los campos!", "warning");
+            } else {
+                // Enviar datos al servidor
+                $.ajax({
+                    url: "{% url 'insertar_actualizar_proveedor_categoria' %}",
+                    type: "POST",
+                    data: {
+                        id_categorias_proveedores: id_categorias_proveedores,
+                        id_categoria: id_categoria,
+                        id_proveedor: id_proveedor,
+
+                        csrfmiddlewaretoken: csrfToken
+                    },
+                    success: function (data) {
+                        // Verificar si el dato fue guardado correctamente
+                        if (data.save == 1) {
+                            if (opcion == 1) {  // Si es una nueva creación
+                                if (data.existe == 0) {
+                                    $('#modalProveedorC').modal('hide');
+
+                                    toastMixin.fire({
+                                        animation: true,
+                                        title: 'Proveedor por Categoria Creado!'
+                                    });
+                                } else {
+                                    Swal.fire("", "Ya existe un suministro con este nombre!", "warning");
+                                }
+                            } else {  // Si es una edición
+                                $('#modalProveedorC').modal('hide');
+
+                                toastMixin.fire({
+                                    animation: true,
+                                    title: 'Proveedor por Categoria Editado!'
+                                });
+                            }
+
+                            // Recargar la tabla
+                            Tabla_Proveedor_Categoria.ajax.reload(null, false);
+                        } else {
+                            Swal.fire("", "Error D: " + data.error, "error");
+                        }
+                    },
+                    error: function () {
+                        Swal.fire("", "Ocurrió un error al guardar los datos.", "error");
+                    }
+                });
+            }
+        });
+
+        // ------------------------------------------------------------------------------------------------------------------------------- //
+
+        $('#estadoFiltro').change(function (e) {
+            e.preventDefault();
+
+
+            select_estado_proveedor_categorias = $("#estadoFiltro").val();
+            fillProveedorC();
+        });
+
+        // ------------------------------------------------------------------------------------------------------------------------------- //
+
+        // CAMBIAR ESTADO DEL PROVEEDOR POR CATEGORIA (DESHABILITAR O ACTIVAR)
+        $(document).on('click', '.anularProveedoresC', function () {
+            var id_categorias_proveedores = $(this).data('id');
+            var estado_actual = $(this).data('estado');  // Este atributo 'data-estado' debe tener el estado actual de la requisición
+
+            // Definir mensaje y acción según el estado actual
+            var mensaje = estado_actual == 3
+                ? '¿Estás seguro de que quieres activar este proveedor?'
+                : '¿Estás seguro de que quieres deshabilitar este proveedor?';
+            var confirmButtonText = estado_actual == 3
+                ? 'Sí, activar'
+                : 'Sí, deshabilitar';
+            var action = estado_actual == 3
+                ? 1  // Activar
+                : 3;  // Deshabilitar
+
+            Swal.fire({
+                title: estado_actual == 3 ? 'Activar Proveedor' : 'Deshabilitar Proveedor',
+                text: mensaje,
+                icon: 'warning',
+                showCancelButton: true,
+                confirmButtonText: confirmButtonText,
+                cancelButtonText: 'Cancelar'
+            }).then((result) => {
+                if (result.isConfirmed) {
+                    $.ajax({
+                        url: "{% url 'actualizar_estado_proveedor_categoria' %}", // URL de tu vista
+                        type: "POST",
+                        data: {
+                            id_categorias_proveedores: id_categorias_proveedores,
+                            estado: action,  // El estado que corresponde según la acción (activar o deshabilitar)
+                            csrfmiddlewaretoken: csrfToken
+                        },
+                        success: function (data) {
+                            if (data.success) {
+                                var mensajeExito = estado_actual == 3
+                                    ? 'El proveedor por categoria ha sido activada.'
+                                    : 'El proveedor por categoria ha sido deshabilitada.';
+                                Swal.fire(estado_actual == 3 ? 'Activada!' : 'Deshabilitada!', mensajeExito, 'success');
+
+                                // Actualizar el estado de la requisición en la interfaz
+                                var row = $('tr[data-id="' + id_categorias_proveedores + '"]');
+                                row.find('.estado').html(
+                                    estado_actual == 3
+                                        ? '<span class="badge badge-pill bg-success">ACTIVO</span>'
+                                        : '<span class="badge badge-pill bg-danger">DESHABILITADO</span>'
+                                );
+
+                                // Recargar la tabla de requisiciones después de actualizar el estado
+                                Tabla_Proveedor_Categoria.ajax.reload(null, false);
+                            } else {
+                                Swal.fire('Error!', data.error || 'No se pudo actualizar el estado del proveedor por categoria.', 'error');
+                            }
+                        },
+                        error: function () {
+                            Swal.fire('Error!', 'Ocurrió un error al intentar cambiar el estado del proveedor por categoria.', 'error');
+                        }
+                    });
+                }
+            });
+        });
+
+        /*  */
+    });
+</script>
+{% endblock %}

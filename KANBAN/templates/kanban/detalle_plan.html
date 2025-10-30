@@ -1,0 +1,1091 @@
+{% extends 'kanban/menu.html' %}
+{% load static %}
+
+{% block title %}
+
+Mis Kanban
+
+{% endblock %}
+
+{% block content %}
+
+<div class="page-wrapper content container-fluid ">
+    <div class="row justify-content-center">
+        <div class="col-lg-12">
+            <div class="card card-table comman-shadow shadow-lg " style="background-color: #f5f5f5;">
+                <div class="card-body m-3" style="background-color: #f5f5f5;">
+
+                    <form id="formDetallePlan" method="POST">
+
+                        {% csrf_token %}
+                        <div class="user-text">
+                            <input id="creado-por" name="creado_por" type="text" value="{{ userName }}">
+                            <input id="user-id" name="user_id" type="text" value="{{ user_id }}">
+                        </div>
+                        <div class="row align-items-center">
+                            <div class="col">
+                                <div class="col">
+                                    <input type="text" id="plan_id" name="plan_id" value="{{ plan.id}}">
+
+                                    <h3 class="page-title">{{ plan.nombre_plan }}</h3>
+                                    <p>{{ plan.descripcion_plan }}</p>
+                                </div>
+                            </div>
+
+                            <div class="col-auto text-end float-end ms-auto download-grp">
+                                <div class="form-group d-inline-block ms-2">
+                                    <select class="form-select form-select-sm" id="estado_plan" name="estado_plan">
+
+                                    </select>
+                                </div>
+
+
+                                <!-- Otros botones ya existentes -->
+                                <button href="#" type="button" class="btn btn-sm btn-primary" id="btnColumna"
+                                    data-bs-toggle="modal" data-bs-target="#modalColumnas" title="Agregar Columna">
+                                    Agregar Columna
+                                </button>
+
+                                <button type="button" class="btn btn-sm btn-warning" id="assignUsersPlanBtn"
+                                    title="Miembros del Plan" data-bs-toggle="modal"
+                                    data-bs-target="#assignUsersPlanModal">
+                                    <i class="fas fa-user"></i>
+                                </button>
+
+                                <button type="button" class="btn btn-sm btn-info" id="infoPlanBtn"
+                                    data-plan-id="{{ plan.id }}" title="Informacion del Plan">
+                                    <i class="fas fa-info text-white"></i>
+                                </button>
+
+                                <button type="button" class="btn btn-sm btn-danger" id="graphPlanBtn"
+                                    data-plan-id="{{ plan.id }}" title="Graficos del Plan">
+                                    <i class="fas fa-chart-line text-white"></i>
+                                </button>
+                                <button type="button" class="btn btn-sm btn-success" id="porcPlanBtn"
+                                    title="Porcentajes del Plan">
+                                    <i class="fas fa-percent text-white"></i>
+                                </button>
+                            </div>
+                        </div>
+                        <hr>
+
+
+                        <div class="kanban-container m-3">
+                            <div class="d-flex flex-row flex-nowrap overflow-auto" id="columns-container">
+
+                            </div>
+                        </div>
+                    </form>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+{% include 'complementos/m_empleado_modal_kanban.html' %}
+{% include 'complementos/m_empleado_modal_comentario.html' %}
+{% include 'complementos/m_empleado_modal_grafico.html' %}
+{% include 'complementos/m_empleado_modal_informacion.html' %}
+{% include 'complementos/m_empleados_modal_miembros_plan.html' %}
+{% include 'complementos/m_empleado_modal_columna.html' %}
+{% include 'complementos/m_empleado_modal_tareas.html' %}
+
+{% endblock %}
+
+{% block scripts %}
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/chosen/1.8.7/chosen.min.css">
+<script type="text/javascript" src="https://code.highcharts.com/stock/highstock.js"></script>
+<script src="https://code.highcharts.com/modules/exporting.js"></script>
+<script src="https://code.highcharts.com/modules/export-data.js"></script>
+<script src="https://code.highcharts.com/modules/accessibility.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/jquery/3.6.0/jquery.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/chosen/1.8.7/chosen.jquery.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/select2/4.0.13/js/select2.full.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
+<script src="https://cdn.jsdelivr.net/npm/sortablejs@1.14.0/Sortable.min.js"></script>
+
+<script>
+    $(document).ready(function () {
+
+        $(".chosen-select").chosen({
+            width: "100%"
+        });
+
+
+
+        $('#estado_plan').change(function (e) {
+            e.preventDefault();
+            let estado_plan = $(this).val();
+            let plan_id = $('#plan_id').val(); // El ID del plan actual
+
+            console.log("Estado plan:", estado_plan);  // Verificar si el valor es correcto
+            console.log("Plan ID:", plan_id);  // Verificar si el ID del plan es correcto
+
+            if (estado_plan == 5) { // Verificar si es el estado de "completo"
+                $.ajax({
+                    url: "{% url 'validar_plan_completo' %}",
+                    method: 'POST',
+                    data: {
+                        plan_id: plan_id,
+                        'csrfmiddlewaretoken': '{{ csrf_token }}'
+                    },
+                    success: function (data) {
+                        console.log("Respuesta del servidor:", data);  // Verificar la respuesta del servidor
+                        if (data.save == 1) {
+                            console.log('El plan está completo');
+                            // Aquí podrías cambiar el estado del plan a completo
+                        } else {
+                            console.log('No puedes completar el plan, faltan tareas o hay pendientes');
+                            alert(data.message);
+                        }
+                    },
+                    error: function (xhr, status, error) {
+                        console.log('Error: ' + error);
+                    }
+                });
+            } else if (estado_plan == 4) { // Verificar si es el estado de "pausa" o "en revisión"
+                $('#commentModal').modal('show'); // Mostrar el modal
+                // Puedes cambiar el título del modal si lo necesitas
+                $('#commentModalLabel').text("Comentario para pausa o revisión");
+                $('#modalComentarioHeader').css({
+                    'background-color': 'orange',
+                    'color': 'black',
+                });
+            }
+        });
+
+        $('')
+
+        $('#graphPlanBtn').click(function (e) {
+            e.preventDefault();
+
+            console.log("Botón de gráfico clicado");
+
+            var plan_id = $(this).data('plan-id');  // Obtener el valor del plan_id del atributo data del botón
+            console.log("ID del plan obtenido:", plan_id);
+
+            $.ajax({
+                url: "{% url 'get_plant_metrics_percentages' %}",  // URL de la vista Django que devolverá los datos
+                method: 'POST',  // Usar el método POST
+                data: {
+                    plan_id: plan_id,  // Enviar el plan_id
+                    'csrfmiddlewaretoken': '{{ csrf_token }}'  // Incluir el token CSRF para la seguridad
+                },
+                success: function (data) {
+                    console.log("Datos recibidos del servidor:", data);
+
+                    // Mostrar el modal primero
+                    $('#graphModal').modal('show');
+                    console.log("Modal mostrado");
+
+                    // Esperar a que el modal esté completamente visible para renderizar los gráficos
+                    $('#graphModal').on('shown.bs.modal', function () {
+                        console.log("Modal completamente visible, renderizando gráficos");
+                        renderCompletionChart(data.completion_percentage);
+                        renderTimeChart(data.time_progress_percentage);
+                    });
+                },
+                error: function (error) {
+                    console.log('Error en la solicitud AJAX:', error);
+                }
+            });
+        });
+
+        // Función para renderizar el gráfico de porcentaje de tareas completadas
+        function renderCompletionChart(percentage) {
+            console.log("Renderizando gráfico de tareas completadas con porcentaje:", percentage);
+            Highcharts.chart('completionChartContainer', {
+                chart: {
+                    type: 'pie'
+                },
+                title: {
+                    text: 'Porcentaje de Tareas Completadas'
+                },
+                series: [{
+                    name: 'Completado',
+                    colorByPoint: true,
+                    data: [{
+                        name: 'Completado',
+                        y: parseFloat(percentage),
+                        color: '#4CAF50'
+                    }, {
+                        name: 'Incompleto',
+                        y: 100 - parseFloat(percentage),
+                        color: '#FFC107'
+                    }]
+                }]
+            });
+        }
+
+        // Función para renderizar el gráfico de porcentaje de tiempo transcurrido
+        function renderTimeChart(percentage) {
+            console.log("Renderizando gráfico de tiempo transcurrido con porcentaje:", percentage);
+            Highcharts.chart('timeChartContainer', {
+                chart: {
+                    type: 'bar'
+                },
+                title: {
+                    text: 'Porcentaje de Tiempo Transcurrido'
+                },
+                xAxis: {
+                    categories: ['Tarea', 'Plan']
+                },
+                yAxis: {
+                    max: 100,
+                    title: {
+                        text: 'Porcentaje'
+                    }
+                },
+                series: [{
+                    name: 'Tiempo',
+                    data: [percentage],
+                    color: '#FF5733'
+                }]
+            });
+        }
+
+
+        $('#porcPlanBtn').click(function (e) {
+            e.preventDefault();
+            console.log("Botón porcPlanBtn clicado");
+            $('#graphModal').modal('show');
+        });
+
+
+
+
+        $('#infoPlanBtn').on('click', function () {
+            $('#gestionPlanesModal').modal('show');  // Abre el modal
+        });
+
+
+
+        $(document).ready(function () {
+            $('#infoPlanBtn').on('click', function () {
+                var plan_id = $(this).data('plan-id'); // Asegúrate de que el botón tiene el atributo data-plan-id
+                console.log(plan_id);
+                // Solicitud AJAX para obtener los datos del plan
+                $.ajax({
+                    type: 'GET',
+                    url: `/CWS/modulos/kanban/planes/${plan_id}/`,
+                    success: function (response) {
+                        if (response.status === 'success') {
+                            var plan = response.data;
+
+                            // Rellena el formulario del modal con los datos del plan
+                            $('#nombre_plan').val(plan.nombre_plan);
+                            $('#descripcion_plan').val(plan.descripcion_plan);
+                            $('#tipo_plan').val(plan.id_tipo_plan);
+                            $('#area_plan').val(plan.id_area);
+                            $('#fecha_inicio').val(plan.fecha_inicio);
+                            $('#fecha_final').val(plan.fecha_final);
+                            $('#comentario_pausa').val(plan.comentario_pausa);
+                            $('#comentario_final').val(plan.comentario_final);
+
+                            // Muestra el modal
+                            $('#gestionPlanesModal').modal('show');
+                        } else {
+                            alert('Error al cargar los datos del plan: ' + response.message);
+                        }
+                    },
+                    error: function (xhr, status, error) {
+                        alert('Ocurrió un error al obtener los datos del plan.');
+                    }
+                });
+            });
+        });
+
+
+        var planID = $('#plan_id').val();
+
+        function cargarEstados() {
+            $.ajax({
+                type: 'GET',
+                url: '/CWS/modulos/kanban/obtener_estados_plan/' + planID + '/',
+                success: function (response) {
+                    if (response.status === 'success') {
+                        var estados = response.estados;
+
+
+                        var selectHtml = '';
+                        estados.forEach(function (estado) {
+                            selectHtml += `<option value="${estado.id_estado}" ${estado.es_seleccionado ? 'selected' : ''}>${estado.nombre_estado}</option>`;
+                        });
+
+
+                        $('#estado_plan').html(selectHtml);
+                    } else {
+                        alert(response.message);
+                    }
+                },
+                error: function (xhr, status, error) {
+                    alert('Error al cargar los estados del plan.');
+                }
+            });
+        }
+
+
+        cargarEstados();
+        $('#formDetallePlan select').on('change', function () {
+            var nuevoEstado = $(this).val();
+            var planID = $('#plan_id').val();
+            var userName = $('#creado-por').val();
+
+
+            if (nuevoEstado) {
+                $.ajax({
+                    type: 'POST',
+                    url: "{% url 'actualizar_estado_plan' %}",
+                    data: {
+                        'id_plan': planID,
+                        'nuevo_estado': nuevoEstado,
+                        'user_name': userName,
+                        'csrfmiddlewaretoken': $('#formDetallePlan input[name="csrfmiddlewaretoken"]').val()
+                    },
+                    success: function (response) {
+                        if (response.status === 'success') {
+
+                        } else {
+                            alert('Error al actualizar el estado: ' + response.message);
+                        }
+                    },
+                    error: function (xhr, status, error) {
+                        alert('Ocurrió un error al procesar la solicitud');
+                    }
+                });
+            }
+        });
+
+        $(document).ready(function () {
+            // Evento de envío del formulario
+            $('#miembrosPlanForm').on('submit', function (event) {
+                event.preventDefault();  // Evita que el formulario se envíe de forma tradicional
+
+                // Obtiene los valores del formulario
+                var plan_id = "{{ plan.id }}";  // El ID del plan debe estar en el contexto
+                var usuario_id = $('#plan_member').val();  // ID del usuario
+                var rol_id = $('#plan_member_rol').val();  // ID del rol
+                var creado_por = "{{ userName }}";  // Usuario actual que está creando la asignación
+
+                // Validación básica
+                if (usuario_id === "0" || rol_id === "0") {
+                    alert("Por favor, selecciona un usuario y un rol.");
+                    return;
+                }
+
+                // Realiza la solicitud AJAX para insertar el usuario en el plan
+                $.ajax({
+                    type: 'POST',
+                    url: "{% url 'agregar_usuario_a_plan' %}",
+                    data: {
+                        'plan_id': plan_id,
+                        'usuario_id': usuario_id,
+                        'rol_id': rol_id,
+                        'creado_por': creado_por,
+                        'csrfmiddlewaretoken': '{{ csrf_token }}'
+                    },
+                    success: function (response) {
+                        if (response.status === 'success') {
+                            alert(response.message);
+                            $('#assignUsersPlanModal').modal('hide');
+                            recargarMiembrosPlan();
+                        } else if (response.status === 'warning') {
+                            alert(response.message);
+                        } else {
+                            alert('Error: ' + response.message);
+                        }
+                    },
+                    error: function (xhr, status, error) {
+                        alert('Ocurrió un error al intentar agregar el usuario al plan.');
+                    }
+                });
+            });
+
+            // Función para recargar la tabla de miembros del plan
+            function recargarMiembrosPlan() {
+                var plan_id = "{{ plan.id }}";  // Obtener el ID del plan actual
+
+                // Solicitud AJAX para obtener los miembros del plan
+                $.ajax({
+                    type: 'GET',
+                    url: "{% url 'obtener_miembros_plan' plan.id %}",  // URL para obtener los miembros del plan
+                    success: function (response) {
+                        if (response.status === 'success') {
+                            // Limpiar el contenido anterior de la tabla
+                            $('#membersPlanTable tbody').empty();
+
+                            // Recorrer los datos devueltos y agregarlos a la tabla
+                            $.each(response.data, function (index, miembro) {
+                                var row = `
+                            <tr>
+                                <td class="text-center">${index + 1}</td>
+                                <td class="text-center">${miembro.nombre_completo}</td>
+                                <td class="text-center">${miembro.nombre_tipo_usuario}</td>
+                                <td class="text-center">
+                                    <button class="btn btn-danger btn-sm" onclick="eliminarMiembro(${miembro.id_usuario})">
+                                    <i class="fas fa-trash-alt text-white"></i>
+                                    </button>
+                                </td>
+                            </tr>`;
+                                $('#membersPlanTable tbody').append(row);
+                            });
+                        } else {
+                            alert('Error al cargar los miembros del plan.');
+                        }
+                    },
+                    error: function (xhr, status, error) {
+                        alert('Ocurrió un error al obtener los miembros del plan.');
+                    }
+                });
+            }
+
+            // Llama a la función para cargar los miembros del plan al cargar la página
+            recargarMiembrosPlan();
+
+            // Función opcional para eliminar un miembro del plan (para agregar funcionalidad de eliminación)
+            function eliminarMiembro(id_usuario) {
+                if (confirm('¿Estás seguro de que deseas eliminar este miembro del plan?')) {
+                    // Realiza una solicitud AJAX para eliminar el miembro del plan
+                }
+            }
+        });
+
+        $('#formCrearColumnas').on('submit', function (e) {
+            e.preventDefault();
+
+            var formData = {
+                'id_columna': $('#id_columna').val(),
+                'columna': $('#columna').val(),
+                'id_plan': $('#plan_id').val(),
+                'creado_por': "{{userName}}",
+                'csrfmiddlewaretoken': '{{ csrf_token }}'
+            };
+
+            $.ajax({
+                type: 'POST',
+                url: "{% url 'crear_actualizar_columnas' %}",
+                data: formData,
+                success: function (response) {
+                    if (response.status === 'success') {
+
+                        // Recargar las columnas
+                        cargarColumnas();
+
+                        // Cerrar el modal
+                        $('#modalColumnas').modal('hide');
+
+                        // Limpiar el formulario
+                        $('#formCrearColumnas').trigger('reset'); // Limpia todos los campos del formulario
+                        $('#id_columna').val(0); // Restablece el id_columna a 0 para futuras creaciones
+
+                    } else {
+                        alert(response.message);
+                    }
+                },
+                error: function (xhr, status, error) {
+                    alert('Error al guardar la columna.');
+                }
+            });
+        });
+
+        function cargarColumnas() {
+            var planID = $('#plan_id').val();
+
+            $.ajax({
+                type: 'GET',
+                url: "{% url 'obtener_columnas_plan' %}",
+                data: {
+                    'id_plan': planID
+                },
+                success: function (response) {
+                    if (response.status === 'success') {
+                        var columnasHtml = '';
+
+                        // Renderizar las columnas
+                        response.data.forEach(function (columna) {
+                            columnasHtml += `
+                    <div class="card m-2" style="width: 370px; background-color: #FDFDFD; padding: 8px;">
+                        <div class="card-header" style="background-color: #FDFDFD; padding: 5px;">
+                            <div class="d-flex justify-content-between align-items-center">
+                                <span class="nombre-columna" style="font-weight: bold; font-size: 0.9rem;">${columna.nombre_columna}</span>
+                                <div>
+                                    <i class="fas fa-edit text-warning me-2 editColumna" style="cursor: pointer; font-size: 0.85rem;" data-id="${columna.id_columna}" data-name="${columna.nombre_columna}"></i>
+                                    <i class="fas fa-trash-alt text-danger deleteColumna" style="cursor: pointer; font-size: 0.85rem;" data-id="${columna.id_columna}"></i>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="card-body" style="padding: 5px;">
+                            <input type="text" class="form-control form-control-sm nombreTareaInput" data-id="${columna.id_columna}" placeholder="Escriba un Nombre de Tarea * (Enter para guardar)" style="font-size: 0.85rem;">
+                            <div class="listaTareas mt-2" id="listaTareas_${columna.id_columna}" data-column="${columna.id_columna}">
+                                <!-- Aquí se agregarán las tareas de esta columna -->
+                            </div>
+                        </div>
+                    </div>
+                    `;
+                        });
+
+                        // Insertar las columnas en el contenedor
+                        $('#columns-container').html(columnasHtml);
+
+                        // Inicializar funcionalidad para eliminar columnas
+                        $('.deleteColumna').on('click', function () {
+                            var columnaID = $(this).data('id');
+
+                            // Usamos SweetAlert2 para confirmar la eliminación
+                            Swal.fire({
+                                title: '¿Estás seguro?',
+                                text: "¡No podrás revertir esta acción!",
+                                icon: 'warning',
+                                showCancelButton: true,
+                                confirmButtonColor: '#3085d6',
+                                cancelButtonColor: '#d33',
+                                confirmButtonText: 'Sí, eliminarlo!',
+                                cancelButtonText: 'Cancelar'
+                            }).then((result) => {
+                                if (result.isConfirmed) {
+                                    $.ajax({
+                                        type: 'POST',
+                                        url: "{% url 'eliminar_columna' %}",
+                                        data: {
+                                            'id_columna': columnaID,
+                                            'eliminado_por': '{{ userName }}',
+                                            'csrfmiddlewaretoken': '{{ csrf_token }}'
+                                        },
+                                        success: function (response) {
+                                            if (response.status === 'success') {
+                                                cargarColumnas(); // Recargar las columnas
+                                                Swal.fire(
+                                                    'Eliminado!',
+                                                    'La columna ha sido eliminada.',
+                                                    'success'
+                                                );
+                                            } else {
+                                                Swal.fire(
+                                                    'Error!',
+                                                    'Error al eliminar la columna: ' + response.message,
+                                                    'error'
+                                                );
+                                            }
+                                        },
+                                        error: function () {
+                                            Swal.fire(
+                                                'Error!',
+                                                'Hubo un problema al eliminar la columna.',
+                                                'error'
+                                            );
+                                        }
+                                    });
+                                }
+                            });
+                        });
+
+                        // Ahora cargar las tareas después de renderizar las columnas
+                        response.data.forEach(function (columna) {
+                            cargarTareasPorColumna(columna.id_columna);
+                        });
+
+                        // Inicializar la funcionalidad de arrastrar y soltar con Sortable.js
+                        initializeSortable();
+
+                        // Evento para agregar tareas cuando se presiona Enter en el input
+                        $('.nombreTareaInput').on('keypress', function (e) {
+                            if (e.which === 13) {
+                                var nombreTarea = $(this).val();
+                                var idColumna = $(this).data('id');
+
+                                if (nombreTarea.trim() !== '') {
+                                    $.ajax({
+                                        type: 'POST',
+                                        url: "{% url 'crear_tarea' %}",
+                                        data: {
+                                            'id_columna': idColumna,
+                                            'nombre_tarea': nombreTarea,
+                                            'creado_por': '{{ userName }}',
+                                            'csrfmiddlewaretoken': '{{ csrf_token }}'
+                                        },
+                                        success: function (response) {
+                                            if (response.status === 'success') {
+                                                var nuevaTareaHtml = `
+                                            <div class="card mb-1" style="border-radius: 0.2rem; padding: 5px;" data-id="${response.id_tarea}">
+                                                <div class="d-flex justify-content-between align-items-center">
+                                                    <span class="nombre-tarea" style="font-size: 0.85rem;">${response.nombre_tarea}</span>
+                                                    <div>
+                                                        <i class="fas fa-trash-alt text-danger deleteTarea" style="cursor: pointer; font-size: 0.75rem;"></i>
+                                                    </div>
+                                                </div>
+                                            </div>
+                                        `;
+                                                $('#listaTareas_' + idColumna).append(nuevaTareaHtml);
+                                                $(this).val('');  // Limpiar el input después de crear la tarea
+
+                                                // Agregar el evento de eliminar tarea
+                                                $('.deleteTarea').last().on('click', function () {
+                                                    $(this).closest('.card').remove();
+                                                });
+                                            } else {
+                                                alert('Error: ' + response.message);
+                                            }
+                                        },
+                                        error: function () {
+                                            alert('Error al intentar crear la tarea.');
+                                        }
+                                    });
+                                } else {
+                                    alert('Por favor, escriba un nombre de tarea.');
+                                }
+                            }
+                        });
+
+                        // Evento para editar la columna
+                        $('.editColumna').on('click', function () {
+                            var columnaID = $(this).data('id');
+                            var columnaName = $(this).data('name');
+
+                            $('#columna').val(columnaName);
+                            $('#id_columna').val(columnaID);
+                            $('#modalColumnas').modal('show');
+                        });
+                    } else {
+                        alert(response.message);
+                    }
+                },
+                error: function (xhr, status, error) {
+                    alert('Error al obtener las columnas.');
+                }
+            });
+        }
+
+        function initializeSortable() {
+            $('.listaTareas').each(function () {
+                const columnId = $(this).data('column');
+
+                Sortable.create(this, {
+                    group: 'tasks', // Permitir que las tareas se muevan entre columnas
+                    animation: 150,
+                    onEnd: function (evt) {
+                        const taskId = $(evt.item).data('id');
+                        const newColumnId = $(evt.to).data('column');
+                        updateTaskColumn(taskId, newColumnId); // Actualiza la columna de la tarea
+                    }
+                });
+            });
+        }
+
+        function updateTaskColumn(taskId, newColumnId) {
+            $.ajax({
+                type: 'POST',
+                url: "{% url 'actualizar_tarea_columna' %}", // Ruta para actualizar la columna de una tarea
+                data: {
+                    'id_tarea': taskId,
+                    'nueva_columna': newColumnId,
+                    'creado_por': "{{userName}}",
+                    'csrfmiddlewaretoken': '{{ csrf_token }}'
+                },
+                success: function (response) {
+                    if (response.status !== 'success') {
+                        alert('Error al mover la tarea: ' + response.message);
+                    }
+                },
+                error: function () {
+                    alert('Error al actualizar la columna de la tarea.');
+                }
+            });
+        }
+
+        function cargarTareasPorColumna(idColumna) {
+            var urlTareas = "{% url 'obtener_tareas_por_columna' 0 %}".replace('0', idColumna);  // Reemplazar el '0' por el id_columna real
+
+            console.log("Cargando tareas para la columna: " + idColumna);  // Depuración
+
+            $.ajax({
+                type: 'GET',
+                url: urlTareas,  // La URL generada dinámicamente para obtener las tareas
+                success: function (response) {
+                    if (response.status === 'success') {
+                        var tareasHtml = '';
+                        $('#nombre_tarea').val(response.tareas[0].nombre_tarea);
+                        $('#id_tarea_hidden').val(response.tareas[0].id_tarea);
+                        console.log("Tareas recibidas para la columna " + idColumna, response.tareas);
+
+                        if (response.tareas.length === 0) {
+                            console.log("No hay tareas para la columna: " + idColumna);
+                        }
+
+                        response.tareas.forEach(function (tarea) {
+                            tareasHtml += `
+                        <div class="card mb-1 tarea-card" style="padding: 5px;" data-id="${tarea.id_tarea}">
+                            <div class="card-body" style="padding: 4px;">
+                                <div class="d-flex justify-content-between align-items-center">
+                                    <span class="nombre-tarea" style="font-size: 0.85rem;">${tarea.nombre_tarea}</span>
+                                    <div>
+                                        <i class="fas fa-trash-alt text-danger deleteTarea" style="cursor: pointer; font-size: 0.75rem;" data-id="${tarea.id_tarea}"></i>
+                                    </div>
+                                </div>
+                                <small style="font-size: 0.75rem;">
+                                   ${tarea.icono || ''} ${tarea.nombre_estado_tarea || ''} 
+                                </small>
+                            </div>
+                        </div>
+                    `;
+                        });
+
+                        // Insertar las tareas en el contenedor correspondiente debajo de las columnas
+                        $('#listaTareas_' + idColumna).html(tareasHtml);
+
+                        // Agregar el evento para abrir el modal cuando se haga clic en una tarea
+                        $('.tarea-card').on('click', function () {
+                            var idTarea = $(this).data('id');
+                            cargarDetallesTarea(idTarea);
+                        });
+
+                        // Agregar el evento de eliminación de tarea
+                        $('.deleteTarea').on('click', function (e) {
+                            e.stopPropagation(); // Para evitar que el evento de click en la tarjeta también se dispare
+                            var idTarea = $(this).data('id');
+                            eliminarTarea(idTarea, idColumna); // Llamamos a la función de eliminación
+                        });
+                    } else {
+                        alert('Error al cargar las tareas: ' + response.message);
+                    }
+                },
+                error: function (xhr, status, error) {
+                    alert('Error al cargar las tareas.');
+                }
+            });
+        }
+
+        function eliminarTarea(idTarea, idColumna) {
+            // Confirmar eliminación
+            Swal.fire({
+                title: '¿Estás seguro?',
+                text: "Esta acción no se puede deshacer.",
+                icon: 'warning',
+                showCancelButton: true,
+                confirmButtonColor: '#3085d6',
+                cancelButtonColor: '#d33',
+                confirmButtonText: 'Sí, eliminarla',
+                cancelButtonText: 'Cancelar'
+            }).then((result) => {
+                if (result.isConfirmed) {
+                    $.ajax({
+                        type: 'POST',
+                        url: "{% url 'eliminar_tarea' %}",  // Asegúrate de tener esta URL configurada en Django
+                        data: {
+                            'id_tarea': idTarea,
+                            'eliminado_por': '{{ userName }}',  // Suponiendo que el nombre del usuario está disponible
+                            'csrfmiddlewaretoken': '{{ csrf_token }}'
+                        },
+                        success: function (response) {
+                            if (response.status === 'success') {
+                                // Eliminar la tarjeta de la tarea directamente del DOM
+                                $(`.tarea-card[data-id="${idTarea}"]`).remove();
+
+                                Swal.fire(
+                                    'Eliminada!',
+                                    'La tarea ha sido eliminada.',
+                                    'success'
+                                );
+                            } else {
+                                Swal.fire(
+                                    'Error!',
+                                    'Error al eliminar la tarea: ' + response.message,
+                                    'error'
+                                );
+                            }
+                        },
+                        error: function () {
+                            Swal.fire(
+                                'Error!',
+                                'Hubo un problema al eliminar la tarea.',
+                                'error'
+                            );
+                        }
+                    });
+                }
+            });
+        }
+
+
+        $(document).on('click', '.tarea-card', function () {
+            var idTarea = $(this).data('id');
+
+            $.ajax({
+                type: 'GET',
+                url: "{% url 'ver_detalle_tarea' %}",
+                data: {
+                    'id_tarea': idTarea
+                },
+                success: function (response) {
+                    if (response.status === 'success') {
+                        var detalleTarea = response.detalle_tarea;
+
+                        // Llenar el modal con los datos de la tarea
+                        $('#id_tarea_hidden').val(detalleTarea.id_tarea);
+                        $('#nombre_tarea').val(detalleTarea.nombre_tarea);
+                        if (detalleTarea.id_estado_tarea) {
+                            console.log('Estado de la tarea:', detalleTarea.id_estado_tarea);  // Verificar el valor
+                            // Actualizar el select con el valor recibido
+                            $('#estado_tarea').val(detalleTarea.id_estado_tarea);
+
+                            // Si no se actualiza, fuerza una selección manual
+                            if ($('#estado_tarea').val() != detalleTarea.id_estado_tarea) {
+                                $('#estado_tarea option').each(function () {
+                                    if ($(this).val() == detalleTarea.id_estado_tarea) {
+                                        $(this).prop('selected', true);
+                                    }
+                                });
+                            }
+
+                            $('#estado_tarea').trigger('change');  // Para asegurarte que los eventos relacionados con el cambio se disparen
+                        } else {
+                            console.log("Campo id_estado_tarea no encontrado en la respuesta");
+                        }
+
+
+                        if (detalleTarea.prioridad_tarea) {
+                            $('#prioridad_tarea').val(detalleTarea.prioridad_tarea).trigger('change');
+                        } else {
+                            console.log("Campo prioridad_tarea no encontrado en la respuesta");
+                        }
+
+                        if (detalleTarea.fecha_inicio) {
+                            $('#fecha_inicio_tarea').val(detalleTarea.fecha_inicio);
+                        } else {
+                            console.log("Campo fecha_inicio no encontrado en la respuesta");
+                        }
+
+                        if (detalleTarea.fecha_final) {
+                            $('#fecha_final_tarea').val(detalleTarea.fecha_final);
+                        } else {
+                            console.log("Campo fecha_final no encontrado en la respuesta");
+                        }
+
+                        if (detalleTarea.descripcion_tarea) {
+                            $('#descripcion_tarea').val(detalleTarea.descripcion_tarea);
+                        } else {
+                            console.log("Campo descripcion_tarea no encontrado en la respuesta");
+                        }
+
+                        if (detalleTarea.modificado_por) {
+                            $('#modificado_tarea').html(`modificado por <span style="color: brown; font-weight: bold;">${detalleTarea.modificado_por}</span>`);
+                        } else {
+                            console.log("Campo modificado_por no encontrado en la respuesta");
+                        }
+
+                        // Abrir el modal
+                        $('#editTaskModal').modal('show');
+                    } else {
+                        alert('Error al obtener los detalles de la tarea: ' + response.message);
+                    }
+                },
+                error: function () {
+                    alert('Error al realizar la solicitud para obtener los detalles de la tarea.');
+                }
+            });
+        });
+
+
+        function cargarDetallesTarea(idTarea) {
+            $('#editTaskModal').modal('show');
+        }
+
+        cargarColumnas();
+
+
+        $('#editTaskForm input, #editTaskForm select, #editTaskForm textarea').on('input change', function () {
+            var tareaID = $('#id_tarea_hidden').val();
+            var estadoTarea = $('#estado_tarea').val();
+            var PrioridadTarea = $('#prioridad_tarea').val();
+            var FechaInicioTarea = $('#fecha_inicio_tarea').val();
+            var FechaFinalTarea = $('#fecha_final_tarea').val();
+            var DescripcionTarea = $('#descripcion_tarea').val();
+            var NombreTarea = $('#nombre_tarea').val();  // Añade el valor de nombre_tarea aquí
+
+            $.ajax({
+                type: 'POST',
+                url: "{% url 'knb_tasks_update' %}",
+                data: {
+                    'tarea_id': tareaID,
+                    'estado_tarea': estadoTarea,
+                    'prioridad_tarea': PrioridadTarea,
+                    'fecha_inicio_tarea': FechaInicioTarea,
+                    'fecha_final_tarea': FechaFinalTarea,
+                    'descripcion_tarea': DescripcionTarea,
+                    'nombre_tarea': NombreTarea,  // Incluye el nombre_tarea en los datos enviados
+                    'creado_por': "{{ userName}}",
+                    'csrfmiddlewaretoken': '{{ csrf_token }}'
+                },
+                success: function (response) {
+                    if (response.status === 'success') {
+                        console.log(' actualizado correctamente');
+                    } else {
+                        alert('Error al actualizar tarea' + response.message);
+                    }
+                },
+                error: function (xhr, status, error) {
+                    alert('Ocurrió un error al actualizar ');
+                }
+            });
+
+        });
+
+
+        // Obtener el ID de la tarea
+        let tarea_id = $('#id_tarea_hidden').val();
+
+        // Función para cargar los detalles de la lista de comprobación cuando se carga la página
+        function cargarDetallesTarea() {
+            $.ajax({
+                type: 'GET',
+                url: '{% url "obtener_detalles_tarea" %}',  // URL de la vista Django para obtener los detalles
+                data: {
+                    'tarea_id': tarea_id
+                },
+                success: function (response) {
+                    if (response.status === 'success') {
+                        // Limpiar el contenedor de la lista de comprobación
+                        $('#checklist-container').empty();
+
+                        // Renderizar cada detalle en la lista de comprobación
+                        response.detalles.forEach(function (detalle) {
+                            let newItem = `
+                <li class="list-group-item d-flex justify-content-between align-items-center checklist-item">
+                    <div>
+                        <input type="checkbox" class="checklist-checkbox" data-id="${detalle.id_detalle_tarea}" ${detalle.completado ? 'checked' : ''}>
+                        <span class="checklist-item-text">${detalle.detalle}</span>
+                    </div>
+                    <div>
+                        <i class="fas fa-trash-alt text-danger delete-checklist-item" data-id="${detalle.id_detalle_tarea}" style="cursor:pointer;"></i>
+                    </div>
+                </li>`;
+
+                            $('#checklist-container').append(newItem);
+                        });
+
+                        // Añadir el evento de click a cada checkbox
+                        $('.checklist-checkbox').on('change', function () {
+                            let idDetalle = $(this).data('id');
+                            let completado = $(this).is(':checked') ? 1 : 0;
+
+                            // Llamar a la función para actualizar el estado de completado
+                            actualizarEstadoCompletado(idDetalle, completado);
+                        });
+
+                        // Actualizar el estado del progreso de la lista de comprobación
+                        updateChecklistStatus();
+                    } else {
+                        console.log("Error al cargar los detalles: " + response.message);
+                    }
+                },
+                error: function (xhr, status, error) {
+                    console.log("Ocurrió un error al obtener los detalles de la tarea.");
+                }
+            });
+        }
+
+        // Función para actualizar el estado de completado de una tarea
+        function actualizarEstadoCompletado(idDetalle, completado) {
+            $.ajax({
+                type: 'POST',
+                url: '{% url "update_task_completed" %}',  // URL de la vista Django para actualizar el estado de completado
+                data: {
+                    'id_detalle_tarea': idDetalle,
+                    'completado': completado,
+                    'userName': "{{ userName }}",  // Nombre del usuario actual
+                    'csrfmiddlewaretoken': '{{ csrf_token }}'  // Token CSRF
+                },
+                success: function (response) {
+                    if (response.save === 1) {
+                        console.log('Estado de completado actualizado correctamente.');
+                        updateChecklistStatus();  // Actualizar el progreso
+                    } else {
+                        console.log('Error al actualizar el estado de completado: ' + response.error);
+                    }
+                },
+                error: function (xhr, status, error) {
+                    console.log('Error al intentar actualizar el estado de completado.');
+                }
+            });
+        }
+
+        // Cargar los detalles de la tarea al cargar la página
+        cargarDetallesTarea();
+
+        // Función para actualizar el progreso de la lista de comprobación
+        function updateChecklistStatus() {
+            let totalItems = $('#checklist-container .checklist-item').length;
+            let completedItems = $('#checklist-container .checklist-checkbox:checked').length;
+
+            let progress = totalItems > 0 ? (completedItems / totalItems) * 100 : 0;
+
+            $('#checklist-status').text(`${completedItems} / ${totalItems}`);
+            $('#checklist-progress').css('width', `${progress}%`);
+            $('#checklist-progress').attr('aria-valuenow', progress);
+        }
+
+        $('#formComentario').on('submit', function (e) {
+            e.preventDefault();
+
+            let comentario = $('#comentario_estado').val();
+            let tarea_id = $('#id_tarea_hidden').val();  // ID de la tarea en el formulario
+            let comentario_id = $('#id_comentario').val() || 0;  // Si es 0, se está creando uno nuevo
+            let user_name = "{{ userName }}";  // Usuario actual
+            let opcion = comentario_id == 0 ? 1 : 2;  // 1 para crear, 2 para actualizar
+
+            $.ajax({
+                type: 'POST',
+                url: '{% url "create_update_comentario" %}',  // URL de la vista Django
+                data: {
+                    'id_comentario': comentario_id,
+                    'id_tarea': tarea_id,
+                    'comentario': comentario,
+                    'user_name': user_name,
+                    'opcion': opcion,
+                    'csrfmiddlewaretoken': '{{ csrf_token }}'  // Token CSRF
+                },
+                success: function (response) {
+                    if (response.save === 1) {
+                        Swal.fire({
+                            title: 'Guardado',
+                            text: 'Comentario guardado correctamente',
+                            icon: 'success',
+                            confirmButtonText: 'Aceptar',
+                            timer: 2000
+                        }).then(() => {
+                            // Cierra el modal una vez que se guarda el comentario
+                            $('#commentModal').modal('hide');
+
+                            // Actualizar la interfaz si es necesario
+                            // Por ejemplo, podrías recargar la lista de comentarios aquí
+                        });
+                    } else {
+                        Swal.fire({
+                            title: 'Error',
+                            text: response.error,
+                            icon: 'error',
+                            confirmButtonText: 'Aceptar'
+                        });
+                    }
+                },
+                error: function (xhr, status, error) {
+                    Swal.fire({
+                        title: 'Error',
+                        text: 'Ocurrió un error al guardar el comentario.',
+                        icon: 'error',
+                        confirmButtonText: 'Aceptar'
+                    });
+                }
+            });
+        });
+
+
+    });
+
+
+
+
+</script>
+
+
+
+{% endblock %}

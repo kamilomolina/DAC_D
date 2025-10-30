@@ -1,0 +1,68 @@
+<!-- Modal para añadir/editar seguro -->
+<div class="modal fade" id="nuevoSeguroModal" tabindex="-1" aria-labelledby="nuevoSeguroModalLabel" aria-hidden="true" data-bs-keyboard="false" data-bs-backdrop="static">
+    <div class="modal-dialog modal-lg">
+        <div class="modal-content">
+            <div class="modal-header" style="background-color: #304458; color:white">
+                <h5 class="modal-title" id="nuevoSeguroModalLabel"><i
+                        class="material-icons me-2 text-gray">verified_user</i> Añadir/Editar Seguro</h5>
+                <button type="button" class="close" data-dismiss="modal" aria-label="Close">
+                    <span aria-hidden="true">&times;</span>
+                </button>
+            </div>
+            <div class="modal-body">
+                <form id="form-seguro">
+                   
+                    <!-- Campo oculto para id_seguro, si existe -->
+                    <input id="id-seguro" name="id_seguro" type="text" value="">
+                    <input id="id-empresas" name="id_empresas" type="text" value="">
+                    <input id="id-polizas" name="id_polizas" type="text" value="">
+            
+                    <div class="form-group">
+                        <label for="nombre-seguro" class="col-form-label">Empresa de Seguro: <span style="color: red;">*</span></label>
+                        <select id="nombre-seguro" name="nombre_seguro" style="width: 100%;" class="form-control input-underline select2">
+                            <option value="">Seleccione una opción</option>
+                            <option value="new-nombre-seguro">Crear empresa de seguro</option>
+                            {% for cer in empresa_seguros %}
+                            <option value="{{ cer.0 }}">{{ cer.1 }}</option>
+                            {% endfor %}
+                        </select>
+                    </div>
+            
+                    <div class="form-group">
+                        <label for="poliza" class="col-form-label">Póliza: <span style="color: red;">*</span></label>
+                        <select id="poliza" name="poliza" style="width: 100%;" class="form-control input-underline select2">
+                            <option value="">Seleccione una opción</option>
+                            <option value="new-poliza">Crear una nueva póliza de seguros</option>
+                            {% for cer in poliza %}
+                            <option value="{{ cer.0 }}">{{ cer.1 }}</option>
+                            {% endfor %}
+                        </select>
+                    </div>
+            
+                    <div class="form-group">
+                        <label for="valor_mensual" class="col-form-label">Valor mensual: <span style="color: red;">*</span></label>
+                        <input type="number" step="0.01" class="form-control" id="valor_mensual" name="valor_mensual">
+                    </div>
+            
+                    <div class="row mb-3 mt-2 align-items-center">
+                        <div class="col-md-6 d-flex align-items-center">
+                            <label for="fecha-inicio-seguro" class="form-label">Fecha de Inicio: <span style="color: red;">*</span></label>
+                            <input type="date" id="fecha-inicio-seguro" name="fecha_inicio" class="form-control input-underline">
+                        </div>
+                        <div class="col-md-6 d-flex align-items-center">
+                            <label for="fecha-fin-seguro" class="form-label">Fecha de Final:</label>
+                            <input type="date" id="fecha-fin-seguro" name="fecha_fin" class="form-control input-underline">
+                        </div>
+                    </div>
+            
+                    <div class="modal-footer">
+                        <button type="submit" class="btn btn-success">Guardar</button>
+                        <button type="button" class="btn btn-danger close" data-dismiss="modal">Cerrar</button>
+                    </div>
+                </form>
+            </div>
+            
+
+        </div>
+    </div>
+</div>

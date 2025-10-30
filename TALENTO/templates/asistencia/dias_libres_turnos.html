@@ -1,0 +1,628 @@
+{% extends 'menu_asistencia.html' %}
+{% load static %}
+
+{% block title %}
+{% if parametro == 'new' %}
+CREAR PLANILLA
+{% else %}
+{{ id_empleado }} - Dias Libres por Turnos
+{% endif %}
+{% endblock %}
+
+{% block body %}
+<style>
+
+</style>
+
+<body>
+
+    <div class="card  p-2 crear-container">
+        <div class="col-md-12">
+            <div class="card">
+                <div class="card-body" style="background-color: #f4f6f9;">
+                    <div class="d-flex justify-content-start ">
+                        <button class="btn btn-warning btn-sm  d-flex align-items-center " data-bs-toggle="modal"
+                            data-bs-target="#modalListadoDiaLibre"
+                            data-intro="Este botón crea una planilla. ¡Haz clic aquí!" data-step="1">
+                            <i class="material-icons me-1">add</i> Día no hábil
+                        </button>
+
+                    </div>
+                    <div class=" d-flex justify-content-between align-items-center ">
+                        <h4 class="card-title text-primary">Días no hábiles por
+                            Turnos</h4>
+
+                        <div class="d-flex gap-2 align-items-end">
+                            <div>
+                                <label for="periodoInicioDiasLibres" class="form-label mb-0">Desde</label>
+                                <input type="date" id="periodoInicioDiasLibres"
+                                    class="form-control form-control-sm pickedDate">
+                            </div>
+                            <div>
+                                <label for="periodoFinalDiasLibres" class="form-label mb-0">Hasta</label>
+                                <input type="date" id="periodoFinalDiasLibres"
+                                    class="form-control form-control-sm pickedDate">
+                            </div>
+                        </div>
+                    </div>
+                    <div class="table-responsive">
+                        <table id="dias-libres-table" class="table table-striped table-bordered table-top-border"
+                            style="width:100%">
+                            <thead>
+                                <tr>
+                                    <th>#</th>
+                                    <th>Turno</th>
+                                    <th>Fecha</th>
+                                    <th>Descipción</th>
+                                    <th>Acciones</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+
+                            </tbody>
+
+                        </table>
+
+                    </div>
+                </div>
+            </div>
+        </div>
+
+    </div>
+
+    {% include 'complementos/asistencia/modal_dia_libre.html' %}
+    {% include 'complementos/asistencia/modal_actualizar_dia_libre.html' %}
+
+
+</body>
+{% endblock %}
+
+{% block scripts %}
+<script>
+    function setPeriodDates(startSelector, endSelector) {
+        const today = new Date();
+        const currentYear = today.getFullYear();
+        const currentMonth = today.getMonth();
+
+
+        const firstDayOfMonth = new Date(currentYear, currentMonth, 1);
+        const formattedFirstDay = firstDayOfMonth.toISOString().split('T')[0];
+
+
+        const formattedToday = today.toISOString().split('T')[0];
+
+
+        $(startSelector).val(formattedFirstDay);
+        $(endSelector).val(formattedToday); // Cambiado para usar la fecha actual formateada
+    }
+
+    // Llama a la función
+    setPeriodDates('#periodoInicioDiasLibres', '#periodoFinalDiasLibres');
+
+    $(document).ready(function () {
+        var csrfToken = "{{ csrf_token }}";
+        var tableDiasLibres1, tableDiasTodosTurnos, idDiaLibre = 0;
+
+        var toastMixin = Swal.mixin({
+            toast: true,
+            icon: 'success',
+            title: 'General Title',
+            animation: false,
+            position: 'top-right',
+            showConfirmButton: false,
+            timer: 2000,
+            timerProgressBar: true,
+            didOpen: (toast) => {
+                toast.addEventListener('mouseenter', Swal.stopTimer);
+                toast.addEventListener('mouseleave', Swal.resumeTimer);
+            }
+        });
+
+        initializeTableDiasLibres();
+
+        // Volver a inicializar el DataTable al cambiar las fechas
+        $(".pickedDate").change(function (e) {
+            e.preventDefault();
+            initializeTableDiasLibres();
+        });
+
+        function limpiarCampos() {
+            $('#fechaTurno').val('');
+            $('#comentarioTurno').val('');
+
+            $('#todos-turnos-table').find('input.row-checkbox-turnos').prop('checked', false);
+        }
+
+        function initializeTableDiasLibres() {
+            // Destruir la tabla existente antes de volver a inicializarla
+
+            $('#dias-libres-table').DataTable().clear().destroy();
+
+
+            // Inicializar DataTable
+            tableDiasLibres1 = $('#dias-libres-table').DataTable({
+                autoWidth: false,
+                scrollX: true,
+                scrollY: '350px',
+                scrollCollapse: true,
+                pageLength: 50,
+                dom: 'Bfrtip',
+                language: {
+                    url: "{% static 'app/th/json/es-ES.json' %}",
+                },
+                ajax: {
+                    url: '{% url "mostrar_dias_libres" %}',
+                    type: 'POST',
+                    headers: {
+                        'X-CSRFToken': "{{ csrf_token }}"
+                    },
+                    data: function (d) {
+                        return {
+                            date1: $('#periodoInicioDiasLibres').val(),
+                            date2: $('#periodoFinalDiasLibres').val()
+                        };
+                    },
+                    dataSrc: function (json) {
+                        console.log('Respuesta completa del servidor:', json);
+                        if (json.data) {
+                            console.log('Datos de días libres:', json.data);
+                            return json.data;
+                        } else {
+                            console.error('Error al cargar los datos:', json.error);
+                            return [];
+                        }
+                    }
+                },
+                colReorder: {
+                    realtime: false,
+                },
+                buttons: [
+                    {
+                        extend: 'excel',
+                        text: '<i class="fas fa-file-excel"></i>',
+                        titleAttr: 'Exportar a Excel',
+                        className: 'btn btn-success',
+                    },
+                    {
+                        extend: 'pdf',
+                        text: '<i class="fas fa-file-pdf"></i>',
+                        titleAttr: 'Exportar a PDF',
+                        className: 'btn btn-danger',
+                    },
+                    {
+                        extend: 'print',
+                        text: '<i class="fas fa-print"></i>',
+                        titleAttr: 'Imprimir',
+                        className: 'btn btn-primary',
+                        orientation: 'landscape'
+                    }
+                ],
+                columns: [
+                    {
+                        data: 'id_dia_libre',
+                        width: '2%',
+                    },
+                    { data: 'nombre_turno' },
+                    { data: 'fecha' },
+                    { data: 'comentarios' },
+                    {
+                        data: null,
+                        width: '3%',
+                        title: "Acciones",
+                        render: function (data, type, row) {
+                            return `
+                         <div class="text-center">
+                            <div class="btn-group">
+                            
+                                <button class="btn btn-warning text-black btn-sm editarDiaLibre" data-id="${row.id_dia_libre}">
+                                    <i class="fas fa-edit"></i>
+                                </button> 
+                                 <button class="btn btn-danger text-black btn-sm eliminarDiaLibre" data-id="${row.id_dia_libre}">
+                                    <i class="fas fa-trash-alt"></i>
+                                </button> 
+                            
+                            </div>
+                        </div>
+                        `;
+                        }
+                    }
+                ],
+                order: [[1, "asc"]],
+            });
+        }
+
+
+
+        $('#modalListadoDiaLibre').on('shown.bs.modal', function () {
+            tableDiasTodosTurnos.columns.adjust().draw();
+        });
+
+        tableDiasTodosTurnos = $('#todos-turnos-table').DataTable({
+            autoWidth: false,
+            scrollX: true,
+            scrollY: '350px',
+            scrollCollapse: true,
+            pageLength: 50,
+            dom: 'Bfrtip',
+            initComplete: function () {
+                tableDiasTodosTurnos.columns.adjust().draw();
+                // Evento para el checkbox maestro
+                const table = $('#todos-turnos-table').DataTable();
+                $('#checkAllTurnos').off('click').on('click', function () {
+                    let isChecked = $(this).is(':checked');
+                    // Marcar/desmarcar todos los checkboxes en todas las páginas
+                    table.rows().nodes().to$().find('.row-checkbox-turnos').prop('checked', isChecked);
+                });
+
+                // Sincronizar estado del checkbox maestro con los checkboxes de las filas
+                $('#todos-turnos-table').on('change', '.row-checkbox-turnos', function () {
+                    let allChecked = $('.row-checkbox-turnos:checked').length === $('.row-checkbox-turnos').length;
+                    $('#checkAllTurnos').prop('checked', allChecked);
+                });
+            },
+            language: {
+                url: "{% static 'app/th/json/es-ES.json' %}",
+            },
+
+            ajax: {
+                url: '{% url "mostrar_todos_turnos" %}',
+                type: 'POST',
+                headers: {
+                    'X-CSRFToken': "{{ csrf_token }}"
+                },
+                dataSrc: function (json) {
+                    console.log('Respuesta turnos del servidor:', json);
+                    if (json.turnos) {
+                        return json.turnos;
+                    } else {
+                        console.error('Error al cargar los datos:', json.turnos);
+                        return [];
+                    }
+                }
+            },
+            colReorder: {
+                realtime: false,
+            },
+            buttons: [
+                {
+                    extend: 'excel',
+                    text: '<i class="fas fa-file-excel"></i>',
+                    titleAttr: 'Exportar a Excel',
+                    className: 'btn btn-success',
+                },
+                {
+                    extend: 'pdf',
+                    text: '<i class="fas fa-file-pdf"></i>',
+                    titleAttr: 'Exportar a PDF',
+                    className: 'btn btn-danger',
+                },
+                {
+                    extend: 'print',
+                    text: '<i class="fas fa-print"></i>',
+                    titleAttr: 'Imprimir',
+                    className: 'btn btn-primary',
+                }
+            ],
+            columns: [
+                { data: 'id_turno', width: '5%' },
+                { data: 'nombre_turno' },
+                { data: 'id_departamento' },
+                { data: 'nombre_departamento' },
+                {
+                    data: null,
+                    width: '5%',
+                    orderable: false,
+                    render: function (data, type, row) {
+                        return `
+                       <div style="display: flex; align-items: center; justify-content: center;">
+                            <input type="checkbox" class="row-checkbox-turnos" data-id="${row.nombre_turno}" style="margin-right: 5px;">
+                        </div>
+                                        `;
+                    }
+                }
+            ],
+            order: [[1, "asc"]],
+        });
+
+        $('#guardarDiaLibres').click(function (e) {
+            e.preventDefault();
+
+            const fechaTurno = $('#fechaTurno').val();
+            const comentarioTurno = $('#comentarioTurno').val();
+
+            const campos = [
+                {
+                    campo: '#fechaTurno',
+                    valor: fechaTurno,
+                    mensaje: 'El campo "Fecha" es obligatorio.',
+                },
+            ];
+
+            let campoInvalido = null;
+            $('.invalid-feedback').remove();
+
+            campos.forEach((item) => {
+                const $campo = $(item.campo);
+                const $parent = $campo.closest('.form-group');
+
+                $campo.removeClass('is-invalid');
+                $parent.find('.invalid-feedback').remove();
+
+                if (!item.valor || item.valor.trim() === '') {
+                    $campo.addClass('is-invalid');
+                    $parent.append(`<div class="invalid-feedback">${item.mensaje}</div>`); // Mostrar mensaje
+                    if (!campoInvalido) campoInvalido = $campo;
+                } else {
+                    /* $campo.removeClass('is-invalid').addClass('is-valid'); */
+                }
+            });
+
+            if (campoInvalido) {
+                console.warn('Campo inválido encontrado:', campoInvalido);
+                campoInvalido.focus();
+                return;
+            }
+
+            const datosSeleccionados = [];
+            $('#todos-turnos-table tbody tr').each(function () {
+                const $row = $(this);
+                const isChecked = $row.find('input[type="checkbox"]').is(':checked');
+
+                if (isChecked) {
+                    const idTurno = $row.find('td').eq(0).text().trim();
+                    console.log('Turno seleccionado:', idTurno);
+                    datosSeleccionados.push(idTurno);
+                }
+            });
+
+            if (datosSeleccionados.length === 0) {
+                Swal.fire({
+                    title: '',
+                    text: 'Por favor, selecciona al menos un turno!',
+                    icon: 'warning',
+                    confirmButtonText: 'OK',
+                });
+                return;
+            }
+
+
+            const opcion = idDiaLibre > 0 ? 2 : 1;
+            const datosParaGuardar = {
+                id_dia_libre: idDiaLibre,
+                fecha: fechaTurno,
+                comentarios: comentarioTurno,
+                turnos: JSON.stringify(datosSeleccionados),
+                opc: opcion,
+            };
+
+            console.log('Datos enviados al backend:', datosParaGuardar);
+
+            $.ajax({
+                url: "{% url 'insertar_dias_libres_turnos' %}",
+                type: 'POST',
+                data: datosParaGuardar,
+                headers: {
+                    'X-CSRFToken': csrfToken,
+                },
+                success: function (response) {
+                    console.log('Respuesta del servidor:', response);
+                    if (response.save === 1) {
+                        const mensaje = opcion === 1 ? 'Días insertados correctamente.' : 'Días actualizados correctamente.';
+                        tableDiasLibres1.ajax.reload();
+
+                        toastMixin.fire({
+                            title: mensaje,
+                            icon: 'success'
+                        });
+                        limpiarCampos();
+                        $('#modalListadoDiaLibre').modal('hide');
+                    } else {
+                        Swal.fire({
+                            title: 'Error',
+                            text: response.error || 'Ocurrió un error inesperado.',
+                            icon: 'error',
+                            confirmButtonText: 'OK',
+                        });
+                        console.error('Error en la respuesta del servidor:', response.error);
+                    }
+                },
+                error: function (xhr) {
+                    console.error('Error en la solicitud AJAX:', xhr);
+                    Swal.fire({
+                        title: 'Error',
+                        text: 'Ocurrió un error al procesar la solicitud.',
+                        icon: 'error',
+                        confirmButtonText: 'OK',
+                    });
+                },
+            });
+        });
+
+        $('#fechaTurno').on('input', function () {
+            const $campo = $(this);
+            const $parent = $campo.closest('.form-group');
+            if ($campo.val().trim() !== '') {
+                $campo.removeClass('is-invalid').addClass('is-valid');
+                $parent.find('.invalid-feedback').remove();
+            }
+        });
+        $(document).on('click', '.editarDiaLibre', function () {
+            limpiarCampos();
+
+            // Obtener la fila seleccionada
+            var fila = $(this).closest('tr');
+            idDiaLibre = fila.find("td:eq(0)").text().trim();
+            var turnoName = fila.find("td:eq(1)").text().trim();
+            var fecha = fila.find("td:eq(2)").text().trim();
+            var comentario = fila.find("td:eq(3)").text().trim();
+
+            // Setear valores en los campos del modal
+            $('#fechaTurnoActuralizar').val(fecha);
+            $('#comentarioTurnoActuralizar').val(comentario);
+            $('#idturnoActuralizar option').each(function () {
+                if ($(this).text().trim() === turnoName) {
+                    $('#idturnoActuralizar').val($(this).val());
+                }
+            });
+
+            $('#modalActualizarListadoDiaLibre').modal('show'); // Mostrar modal
+        });
+
+        $('#editarDiaLibres').click(function (e) {
+            e.preventDefault();
+
+            const fechaTurno = $('#fechaTurnoActuralizar').val();
+            const comentarioTurno = $('#comentarioTurnoActuralizar').val();
+            const turno = $('#idturnoActuralizar').val();
+            console.log('id turno' + turno);
+            const campos = [
+                {
+                    campo: '#fechaTurnoActuralizar',
+                    valor: fechaTurno,
+                    mensaje: 'El campo "Fecha" es obligatorio.',
+                },
+                {
+                    campo: '#idturnoActuralizar',
+                    valor: turno,
+                    mensaje: 'El campo "Turno" es obligatorio.',
+                },
+            ];
+
+            let campoInvalido = null;
+            $('.invalid-feedback').remove();
+
+            campos.forEach((item) => {
+                const $campo = $(item.campo);
+                const $parent = $campo.closest('.form-group');
+
+                $campo.removeClass('is-invalid');
+                $parent.find('.invalid-feedback').remove();
+
+                if (!item.valor || item.valor.trim() === '') {
+                    $campo.addClass('is-invalid');
+                    $parent.append(`<div class="invalid-feedback">${item.mensaje}</div>`);
+                    if (!campoInvalido) campoInvalido = $campo;
+                } else {
+                    /* $campo.removeClass('is-invalid').addClass('is-valid'); */
+                }
+            });
+
+            if (campoInvalido) {
+                console.warn('Campo inválido encontrado:', campoInvalido);
+                campoInvalido.focus();
+                return;
+            }
+
+            // Datos que se enviarán al backend
+            const datosParaGuardar = {
+                id_dia_libre: idDiaLibre,
+                fecha: fechaTurno,
+                comentarios: comentarioTurno,
+                turnos: turno,
+            };
+
+            $.ajax({
+                url: "{% url 'actualizar_dias_libres_turnos' %}",
+                type: 'POST',
+                data: datosParaGuardar,
+                headers: {
+                    'X-CSRFToken': csrfToken, // Asegúrate de que csrfToken esté definido globalmente
+                },
+                success: function (response) {
+                    console.log('Respuesta del servidor:', response);
+                    if (response.save === 1) {
+                        toastMixin.fire({
+                            title: 'Días actualizados correctamente.',
+                            icon: 'success',
+                        });
+                        tableDiasLibres1.ajax.reload();
+                        limpiarCampos();
+                        $('#modalActualizarListadoDiaLibre').modal('hide');
+                    } else {
+                        Swal.fire({
+                            title: 'Error',
+                            text: response.error || 'Ocurrió un error inesperado.',
+                            icon: 'error',
+                            confirmButtonText: 'OK',
+                        });
+                        console.error('Error en la respuesta del servidor:', response.error);
+                    }
+                },
+                error: function (xhr) {
+                    console.error('Error en la solicitud AJAX:', xhr);
+                    Swal.fire({
+                        title: 'Error',
+                        text: 'Ocurrió un error al procesar la solicitud.',
+                        icon: 'error',
+                        confirmButtonText: 'OK',
+                    });
+                },
+            });
+        });
+
+
+        $(document).on('click', '.eliminarDiaLibre', function (e) {
+            e.preventDefault();
+            const fila = $(this).closest("tr");
+            const idDiaLibre = fila.find("td:eq(0)").text().trim(); // Obtener ID del día libre
+            console.log('ID del día libre: ', idDiaLibre);
+
+            Swal.fire({
+                title: '¿Estás seguro?',
+                text: 'Esto eliminará el día libre por Turno.',
+                icon: 'warning',
+                showCancelButton: true,
+                confirmButtonText: 'Sí, eliminar',
+                cancelButtonText: 'Cancelar',
+                customClass: {
+                    confirmButton: 'btn btn-success',
+                    cancelButton: 'btn btn-danger'
+                },
+                buttonsStyling: false
+            }).then((result) => {
+                if (result.isConfirmed) {
+                    $.ajax({
+                        url: "{% url 'eliminar_dia_libre' %}", // URL de la vista Django
+                        type: 'POST',
+                        headers: {
+                            'X-CSRFToken': "{{ csrf_token }}"
+                        },
+                        data: {
+                            id_dia_libre: idDiaLibre
+
+                        },
+                        success: function (data) {
+                            if (data.save === 1) { // Comprobación correcta como número
+                                toastMixin.fire({
+                                    title: 'El día libre ha sido eliminado',
+                                    icon: 'success'
+                                });
+                                // Recargar la tabla
+                                tableDiasLibres1.ajax.reload();
+                            } else {
+                                Swal.fire({
+                                    icon: 'error',
+                                    title: 'Error',
+                                    text: data.error || 'No se pudo eliminar el día libre. Inténtelo nuevamente.',
+                                });
+                            }
+                        },
+                        error: function (xhr, status, error) {
+                            Swal.fire({
+                                icon: 'warning',
+                                title: 'Error',
+                                text: 'Hubo un problema al eliminar el día libre.',
+                            });
+                            console.error('Error del servidor:', error);
+                        }
+                    });
+                }
+            });
+        });
+
+    });
+
+
+
+</script>
+{% endblock %}

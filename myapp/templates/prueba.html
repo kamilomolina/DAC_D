@@ -1,0 +1,503 @@
+{% extends 'plantilla.html' %} <!-- Asegúrate de usar el nombre correcto de tu plantilla base -->
+
+{% block title %}
+Lista de teléfonos
+{% endblock%}
+
+{% block icon %}
+<i class="material-icons">smartphone</i>
+{% endblock %}
+
+{% block content %} <!-- Este bloque contendrá todo el contenido específico de la página de listado de teléfonos -->
+
+<div class="row">
+  <div class="col-sm-2 filter-column">
+    <label for="filterPresentacionTable">Nombre del empleado</label>
+    <input type="text" class="form-control form-control-sm" id="filterPresentacionTable" placeholder="Nombre empleado">
+  </div>
+  <div class="col-sm-2 filter-column">
+    <label for="filterCodigoVerificacion">Código de verificación</label>
+    <input type="text" class="form-control form-control-sm" id="filterCodigoVerificacion" placeholder="Código Verificación">
+  </div>
+</div>
+
+
+<div class="card-body">
+  <div class="d-flex justify-content-end">
+    <button type="button" class="btn btn-primary mr-2 custom-margin-bottom" data-bs-toggle="modal" data-bs-target="#modalAgregarTelefono2">
+      Agregar teléfono
+    </button>
+  </div>
+  <div class="table-responsive tabla-contenedor">
+    <table id="tabla_telefonos" class="table table-sm table-striped align-middle mb-0 bg-white table-basic custom-table" style="width:100%">  <thead>
+        <tr>
+          <th>id</th>
+          <th>Código Verificación</th>
+          <th>Registrado</th>
+          <th>Nombre del Empleado</th>
+          <th>MAC Address</th>
+          <th>SIM Serial</th>
+          <th>ID Telegram</th>
+          <th>Número de Teléfono</th>
+          <th>Activo</th>
+          <th>Observaciones</th>
+          <th>ID Vendedor</th>
+          <th>ID Supervisor</th>
+          <th>Venta PMA</th>
+          <th>Venta Carbajal</th>
+          <th>Acceso Total</th>
+          <th>Usuario</th>
+          <th>Perfil Empleado</th>
+          <th>Acciones</th>
+        </tr>
+      </thead>
+      <tbody>
+      </tbody>
+    </table>
+  </div>
+</div>
+</div>
+<div class="modal fade" id="modalAgregarTelefono2" tabindex="-1" aria-labelledby="modalAgregarLabel" aria-hidden="true"
+        data-bs-backdrop="static" data-bs-keyboard="false">
+        <div class="modal-dialog modal-lg">
+            <div class="modal-content">
+                <div class="modal-header" style="background-color: rgb(78, 115, 223);">
+                    <h5 class="modal-title" id="titleAgregar" style="font-weight: 900; color: white">AGREGAR TELEFONO</h5>
+                    <button type="button" class="btn-close btn_close_modal_cuentas" data-bs-dismiss="modal"
+                        aria-label="Close"></button>
+                  </div>
+                  <div class="modal-body">
+                  {% include 'agregar_telefono.html' %}
+                  <div id="contenidoModal">
+                  </div>
+                </div>
+                <div class="modal-footer">
+                </div>
+            </div>
+        </div>
+    </div>
+
+<div class="modal fade" id="modalEditarTelefono" tabindex="-1" aria-labelledby="modalLabel" aria-hidden="true"
+    data-bs-backdrop="static" data-bs-keyboard="false">
+    <div class="modal-dialog modal-lg">
+        <div class="modal-content">
+            <div class="modal-header" style="background-color: rgb(78, 115, 223);">
+                <h5 class="modal-title" id="titleAgregar" style="font-weight: 900; color: white">EDITAR TELEFONO</h5>
+                <button type="button" class="btn-close btn_close_modal_cuentas" data-bs-dismiss="modal"
+                    aria-label="Close"></button>
+              </div>
+              <div class="modal-body">
+                {% include 'editar_telefono.html' %}
+              <div id="contenidoModal">
+              </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<div class="modal fade" id="modalEliminarTelefono" tabindex="-1" role="dialog"
+  aria-labelledby="modalEliminarTelefonoLabel" aria-hidden="true">
+  <div class="modal-dialog" role="document">
+    <div class="modal-content">
+      <!-- Encabezado del modal -->
+      <div class="modal-header">
+        <h5 class="modal-title" id="modalEliminarTelefonoLabel">Confirmación de eliminación</h5>
+        <button type="button" class="close" data-dismiss="modal" aria-label="Close">
+          <span aria-hidden="true">&times;</span>
+        </button>
+      </div>
+      <!-- Cuerpo del modal -->
+      <div class="modal-body">
+        <p>¿Estás seguro de que quieres eliminar este teléfono?</p>
+        <p>Esta acción no se puede deshacer.</p>
+      </div>
+      <!-- Pie del modal con el formulario -->
+      <div class="modal-footer">
+        <form id="formEliminarTelefono" method="POST">
+          {% csrf_token %}
+          <input type="hidden" id="telefono_id" name="telefono_id">
+          <button type="submit" class="btn btn-danger">Eliminar</button>
+          <button type="button" class="btn btn-secondary" data-dismiss="modal">Cancelar</button>
+        </form>
+      </div>
+    </div>
+  </div>
+</div>
+
+  <!-- jQuery -->
+  <script src="https://code.jquery.com/jquery-3.5.1.js"></script>
+
+  <!-- DataTables JS -->
+  <script src="https://cdn.datatables.net/1.10.24/js/jquery.dataTables.min.js"></script>
+
+  <!-- Bootstrap JS (opcional) -->
+  <script src="https://stackpath.bootstrapcdn.com/bootstrap/4.5.2/js/bootstrap.min.js"></script>
+
+  <!-- Bootstrap del MODAL -->
+  <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.0.2/dist/js/bootstrap.bundle.min.js"></script>
+
+  <script>
+    $(document).ready(function () {
+      $('#tabla_telefonos').DataTable({
+        // Personaliza tu inicialización de DataTables aquí
+      });
+    });
+  </script>
+
+  <script>
+    $(document).on("click", ".btnEditTelefono", function () {
+      opcion = 2;
+      fila = $(this).closest("tr");
+
+      telefonoId = fila.find("td:eq(0)").text();
+      telefonoId = telefonoId.trim();
+      console.log("ID del teléfono:", telefonoId);
+
+      codigo_verificacion = fila.find("td:eq(1)").text();
+      nombre_empleado = fila.find("td:eq(3)").text();
+      mac_address = fila.find("td:eq(4)").text();
+      imei_1 = fila.find("td:eq(5)").text();
+      id_telegram = fila.find("td:eq(6)").text();
+      numero_telefono = fila.find("td:eq(7)").text();
+      activo = fila.find("td:eq(8)").text();
+      observaciones = fila.find("td:eq(9)").text();
+      id_vendedor = fila.find("td:eq(10)").text();
+      id_supervisor = fila.find("td:eq(11)").text();
+      usuario = fila.find("td:eq(15)").text();
+      perfil_empleado = fila.find("td:eq(16)").text();
+
+      registrado = fila.find("td:eq(2)").text();
+      activo = fila.find("td:eq(8)").text();
+      venta_pma =fila.find("td:eq(12)").text();
+      venta_carbajal =fila.find("td:eq(13)").text();
+      acceso_total =fila.find("td:eq(14)").text();
+
+      $('#input_telefono_id').val(telefonoId);
+      $('#input_codigo_verificacion').val(codigo_verificacion);
+      $('#input_nombre_empleado').val(nombre_empleado);
+      $('#input_mac_address').val(mac_address);
+      $('#input_imei_1').val(imei_1);
+      $('#input_id_telegram').val(id_telegram);
+      $('#input_numero_telefono').val(numero_telefono);
+      $('#input_observaciones').val(observaciones);
+      $('#input_id_vendedor').val(id_vendedor);
+      $('#input_id_supervisor').val(id_supervisor);
+      $('#input_usuario').val(usuario);
+      $('#input_perfil_empleado').val(perfil_empleado);
+      $('#input_telefono_id').val(telefonoId);
+
+      if(registrado == "true"){
+        $('#input_registrado').prop("checked", true);
+        $('#input_registrado').val(1);
+      } else {
+        $('#input_registrado').prop("checked", false);
+        $('#input_registrado').val(0);
+      }
+
+      if(activo == "true"){
+        $('#input_activo').prop("checked", true);
+        $('#input_activo').val(1);
+      } else {
+        $('#input_activo').prop("checked", false);
+        $('#input_activo').val(0);
+      }
+
+      if(venta_pma == "true"){
+        $('#input_venta_pma').prop("checked", true);
+        $('#input_venta_pma').val(1);
+      } else {
+        $('#input_venta_pma').prop("checked", false);
+        $('#input_venta_pma').val(0);
+      }
+
+      if(venta_carbajal == "true"){
+        $('#input_venta_carbajal').prop("checked", true);
+        $('#input_venta_carbajal').val(1);
+      } else {
+        $('#input_venta_carbajal').prop("checked", false);
+        $('#input_venta_carbajal').val(0);
+      }
+
+      if(acceso_total == "true"){
+        $('#input_acceso_total').prop("checked", true);
+        $('#input_acceso_total').val(1);
+      } else {
+        $('#input_acceso_total').prop("checked", false);
+        $('#input_acceso_total').val(0);
+      }
+
+      var actionUrl = "editar/" + telefonoId + "/";
+      $('#formEditarTelefono').attr('action', actionUrl);
+      $('#modalEditarTelefono').modal("show");
+    });
+
+    $(document).ready(function() {
+      $('#formEditarTelefono').on('submit', function(event) {
+          event.preventDefault();
+          var datosFormulario = $(this).serialize();
+        
+          $.ajax({
+              success: function(response) {
+                  $('#modalEditarTelefono').modal('hide');
+                  $('#tabla_telefonos').DataTable().ajax.reload();
+                
+              },
+              error: function(error) {
+                $('#modalEditarTelefono').modal('hide');
+                $('#tabla_telefonos').DataTable().ajax.reload(); // Actualizar la tabla
+              }
+          });
+      });
+
+      $('#formAgregarTelefono').on('submit', function(event) {
+        event.preventDefault();
+        var datosFormulario = $(this).serialize();
+      
+        $.ajax({
+            success: function(response) {
+                $('#modalAgregarTelefono2').modal('hide');
+                $('#tabla_telefonos').DataTable().ajax.reload();
+              
+            },
+            error: function(error) {
+              $('#modalAgregarTelefono2').modal('hide');
+              $('#tabla_telefonos').DataTable().ajax.reload(); // Actualizar la tabla
+            }
+        });
+    });
+  });
+
+  
+  $(document).ready(function () {
+    // Asigna el evento submit al formulario dentro del modal de agregar teléfono
+ 
+
+    $('#modalAgregarTelefono2, #modalEditarTelefono, #modalEliminarTelefono').on('hidden.bs.modal', function () {
+      $('body').removeClass('modal-open');
+      $('.modal-backdrop').remove();
+      $('body').css('overflow', ''); // Restablecer el desbordamiento del cuerpo
+    });
+
+
+    $(document).on("click", ".btnDeleteTelefono", function () {
+      var fila = $(this).closest("tr");
+      var idTelefono = fila.find("td:eq(0)").text(); // Asumiendo que el ID es la primera columna
+
+      $('#formEliminarTelefono #telefono_id').val(idTelefono);
+      $('#modalEliminarTelefono').modal('show');
+      });
+
+      // Asigna el evento submit al formulario dentro del modal de eliminar teléfono
+      $("#formEliminarTelefono").submit(function (event) {
+        event.preventDefault();
+        
+        var telefonoId = $('#telefono_id').val();
+        console.log(telefonoId);
+        var url = 'eliminar_telefono/' + telefonoId + '/';
+        var csrftoken = getCookie('csrftoken');
+
+        $.ajax({
+          url: url,
+          type: "POST",
+          headers: {
+            "X-CSRFToken": csrftoken
+          },
+          data: {
+            telefono_id: telefonoId
+          },
+          success: function (response) {
+            $('#modalEliminarTelefono').modal('hide');
+            $('#tabla_telefonos').DataTable().ajax.reload(); 
+            $('#modalEliminarTelefono').on('hidden.bs.modal', function (e) {
+              $('.modal-backdrop').remove();
+            Swal.fire("","Telefono eliminado exitosamente","success");
+          });
+          },
+          error: function (error) {
+            $('#modalEliminarTelefono').modal('hide');
+            $('#tabla_telefonos').DataTable().ajax.reload(); 
+            $('#modalEliminarTelefono').on('hidden.bs.modal', function (e) {
+              $('.modal-backdrop').remove();
+          });
+          }
+        });
+      });
+    });
+
+    function getCookie(name) {
+      var cookieValue = null;
+      if (document.cookie && document.cookie !== '') {
+        var cookies = document.cookie.split(';');
+        for (var i = 0; i < cookies.length; i++) {
+          var cookie = cookies[i].trim();
+          if (cookie.substring(0, name.length + 1) === (name + '=')) {
+            cookieValue = decodeURIComponent(cookie.substring(name.length + 1));
+            break;
+          }
+        }
+      }
+      return cookieValue;
+    }
+
+    function limpiarModal() {
+      $('#contenidoModal').empty(); // Suponiendo que '#contenidoModal' es el contenedor del contenido cargado
+    }
+
+    $(document).ready(function () {
+      
+      var windowSize = $(window).width();
+
+      if (windowSize <= 960) {
+        fixedColumnsIzq = 0;
+          fixedColumnsDer = 1;
+      } else if (windowSize > 960) {
+          fixedColumnsIzq = 4;
+          fixedColumnsDer = 1;
+      }
+
+      if ($.fn.DataTable.isDataTable('#tabla_telefonos')) {
+       $('#tabla_telefonos').DataTable().destroy();
+      }
+      var table = $('#tabla_telefonos').DataTable({
+        pageLength: 10,
+        fixedColumns: {
+            left: fixedColumnsIzq,
+            right: fixedColumnsDer
+        },
+        initComplete: function () {
+          //
+        },
+        ajax: {
+          beforeSend: function (xhr, type) {
+            if (!type.crossDomain) {
+              xhr.setRequestHeader(
+                'X-CSRF-Token',
+                $(
+                  'meta[name="csrf-token"]'
+                ).attr('content'));
+            }
+          },
+          url: 'obtener_telefonos/',
+          dataSrc: 'data'
+        },
+        dom:"prtliB",
+                    buttons: [{
+                            extend: 'excel',
+                            text: '<i class="fas fa-file-excel"></i>',
+                            titleAttr: 'Excel',
+                            className: 'btn btn-success',
+                        },
+                        {
+                            extend: 'pdf',
+                            text: '<i class="fas fa-file-pdf"></i>',
+                            titleAttr: 'PDF',
+                            className: 'btn btn-danger',
+                        },
+                        {
+                            extend: 'print',
+                            text: '<i class="fas fa-print"></i>',
+                            titleAttr: 'Imprimir',
+                            className: 'btn btn-null',
+                        }
+                    ],
+        language: {
+          url: "//cdn.datatables.net/plug-ins/1.11.5/i18n/es-ES.json",
+        },
+        columns: [
+        {
+          data: 'id',
+        },
+        {
+          data: 'codigo_verificacion',
+        },
+        {
+          data: 'registrado',
+        },
+        {
+          data: 'nombre_empleado',
+        },
+        {
+          data: 'mac_address',
+        },
+        {
+          data: 'imei_1',
+          defaultContent: "No disponible"
+        },
+        {
+          data: 'id_telegram',
+          defaultContent: "No disponible"
+        },
+        {
+          data: 'numero_telefono',
+          defaultContent: "No disponible"
+        },
+        {
+          data: 'activo',
+        },
+        {
+          data: 'observaciones',
+          defaultContent: "No disponible"
+        },
+        {
+          data: 'id_vendedor',
+        },
+        {
+          data: 'id_supervisor',
+          defaultContent: 1
+        },
+        {
+          data: 'venta_pma',
+        },
+        {
+          data: 'venta_carbajal',
+        },
+        {
+          data: 'acceso_total',
+        },
+        {
+          data: 'usuario',
+          defaultContent: "No disponible"
+        },
+        {
+          data: 'perfil_empleado',
+          defaultContent: 1
+        },
+        {
+          data: 'id', // Asegúrate de que 'id' sea el nombre del campo que contiene el ID del teléfono
+          render: function(data, type, row) {
+              return `
+              <div class="d-flex">
+                <a class="btn btn-sm btn-info btnEditTelefono mx-1" data-telefono-id="${data}">
+                    <i class="material-icons">edit</i>
+                </a>
+                <a class="btn btn-sm btn-danger btnDeleteTelefono mx-1" data-toggle="modal" data-target="#modalEliminarTelefono" data-telefono-id="${data}">
+                    <i class="material-icons">delete</i>
+                </a>
+            </div>
+              `;
+          },
+          orderable: false
+          }
+          ],
+      });
+      $('#filterPresentacionTable').keyup(function() {
+        table.column(3).search(this.value, true, false).draw();
+      });
+      $('#filterCodigoVerificacion').keyup(function() {
+        table.column(1).search(this.value, true, false).draw();
+      });
+    });
+     
+
+  </script>
+
+  <script>
+    $('#modalAgregarTelefono').on('hidden.bs.modal', function () {
+        // Encuentra el formulario dentro del modal y lo resetea
+        $(this).find('formAgregarTelefono').trigger('reset');
+
+    });
+  </script>
+
+
+  {% endblock %}

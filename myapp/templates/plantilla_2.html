@@ -1,0 +1,116 @@
+<form id="formAgregarTelefono" method="POST">
+    {% csrf_token %}
+        <input type="hidden" id="cuenta_id">
+        <input type="hidden" id="hidden_cuenta_opcion">
+        <div class="row">
+            <div class="col-lg-4">
+                <div>
+                  <label for="" class="col-form-label">Código verificacion:</label>
+                  <input type="number" class="form-control form-control-sm" id="codigo_verificacion"
+                      name="codigo_verificacion">
+                </div>
+                <div>
+                  <label for="" class="col-form-label">Nombre del empleado:</label>
+                  <input type="text" class="form-control form-control-sm" id="nombre_empleado"
+                      name="nombre_empleado">
+                </div>
+                <div>
+                  <label for="mac_address" class="col-form-label">MAC Address:</label>
+                  <input type="text" class="form-control form-control-sm" id="mac_address"
+                      name="mac_address">
+                </div>
+                <div>
+                  <label for="" class="col-form-label">SIM Serial:</label>
+                  <input type="text" class="form-control form-control-sm" id="imei_1"
+                      name="imei_1">
+                </div>
+            </div>
+            <div class="col-lg-4">
+                <div>
+                    <label for="id_telegram" class="col-form-label">ID telegram:</label>
+                    <input type="text" class="form-control form-control-sm" id="id_telegram"
+                        name="id_telegram">
+                </div>
+                <div>
+                  <label for="" class="col-form-label">Número de Teléfono:</label>
+                  <input type="text" class="form-control form-control-sm" id="numero_telefono"
+                      name="numero_telefono">
+                </div>
+                <div>
+                  <label for="id_vendedor" class="col-form-label">ID Vendedor:</label>
+                  <input type="text" class="form-control form-control-sm" id="id_vendedor"
+                      name="id_vendedor">
+                </div>
+                <div>
+                  <label for="" class="col-form-label">ID supervisor:</label>
+                  <input type="text" class="form-control form-control-sm" id="id_supervisor"
+                      name="id_supervisor">
+                </div>
+            </div>
+            <div class="col-lg-4">
+              <div>
+                  <label for="usuario" class="col-form-label">Usuario:</label>
+                  <input type="text" class="form-control form-control-sm" id="usuario"
+                      name="usuario">
+              </div>
+              <div>
+                <label for="perfil_empleado" class="col-form-label">Perfil empleado:</label>
+                <input type="text" class="form-control form-control-sm" id="perfil_empleado"
+                    name="perfil_empleado">
+              </div>
+              <div>
+                <label for="observaciones" class="col-form-label">Observaciones:</label>
+                <input type="text" class="form-control form-control-sm" id="cuentas_nombre"
+                    name="observaciones">
+              </div>
+          </div>
+        </div>
+
+        <div class="row">
+          <!-- Checkbox 1 -->
+          <div class="col">
+            <div class="form-check" style="margin-top: 5px;">
+                <input class="form-check-input" type="checkbox" id="registrado" name="registrado">
+                <label class="form-check-label" for="registrado">Registrado</label>
+            </div>
+        </div>
+
+          <div class="col">
+              <div class="form-check" style="margin-top: 5px;">
+                  <input class="form-check-input" type="checkbox" id="activo" name="activo">
+                  <label class="form-check-label" for="activo">Activo</label>
+              </div>
+          </div>
+  
+          <!-- Checkbox 2 -->
+          <div class="col">
+              <div class="form-check" style="margin-top: 5px;">
+                  <input class="form-check-input" type="checkbox" id="venta_pma" name="venta_pma">
+                  <label class="form-check-label" for="venta_pma">Venta PMA</label>
+              </div>
+          </div>
+  
+          <!-- Checkbox 3 -->
+          <div class="col">
+              <div class="form-check" style="margin-top: 5px;">
+                  <input class="form-check-input" type="checkbox" id="venta_carbajal" name="venta_carbajal">
+                  <label class="form-check-label" for="venta_carbajal">Venta Carbajal</label>
+              </div>
+          </div>
+  
+          <!-- Checkbox 4 -->
+          <div class="col">
+              <div class="form-check" style="margin-top: 5px;">
+                  <input class="form-check-input" type="checkbox" id="acceso_total" name="acceso_total">
+                  <label class="form-check-label" for="acceso_total">Acceso Total</label>
+              </div>
+          </div>
+      </div>
+        <br>
+        <div class="modal-footer">
+            <button type="submit" id="btnGuardarCuenta" class="btn btn-success">Guardar</button>
+            <button type="button" class="btn btn-danger btn_close_modal_cuentas"
+                id="btn_close_modal_cuentas">Cerrar</button>
+        </div>
+</form>
+

@@ -1,0 +1,2677 @@
+{% extends 'menu_nomina.html' %}
+{% load static %}
+
+{% block title %}
+{% if parametro == 'new' %}
+CREAR DEDUCCIONES
+{% else %}
+{{ id_empleado }} EDITAR DEDUCCIONES
+{% endif %}
+{% endblock %}
+
+{% block body %}
+
+<style>
+    .form-control,
+    .select2-container .select2-selection--single {
+        height: 38px !important;
+        /* Ajusta la altura para que coincida */
+        font-size: 14px;
+    }
+
+    .select2-container--default .select2-selection--single {
+        border: 1px solid #ced4da;
+        border-radius: 0.25rem;
+        padding: 6px 12px;
+        /* Agrega espacio interno para alinear el texto */
+        height: 38px !important;
+        /* Asegura la misma altura */
+    }
+
+    #archivo-deducciones {
+        padding: 2px 6px;
+        /* Hace el botón más delgado */
+        font-size: 12px;
+        /* Texto más pequeño */
+    }
+
+    /* Ajuste del estilo de los botones */
+    #archivo-deducciones,
+    #archivo-bonificaciones {
+        padding: 5px 10px;
+        font-size: 13px;
+    }
+
+    .gap-2>* {
+        margin-right: 10px;
+    }
+
+
+
+
+    .card-title {
+        margin-bottom: 0;
+        /* Remueve margen inferior del h4 */
+    }
+
+    .form-control[readonly],
+    .form-select,
+    .chosen-container .chosen-single {
+        background-color: #f8f9fa;
+        /* Fondo claro para inputs y selects */
+        color: #6c757d;
+        /* Color de texto gris */
+        border: 1px solid #ced4da;
+        /* Borde consistente */
+        height: calc(1.5em + 0.75rem + 2px);
+        /* Altura uniforme */
+        border-radius: 0.25rem;
+        /* Bordes redondeados */
+        font-size: 0.875rem;
+        /* Tamaño de texto */
+    }
+
+    label.form-label {
+        font-weight: 500;
+        color: #495057;
+    }
+
+    .chosen-container .chosen-drop {
+        border-radius: 0.25rem;
+        border-color: #ced4da;
+    }
+
+    .row.g-3 .col-md-6 {
+        margin-top: 1rem;
+    }
+
+    #detalle-planillas-no-asociados-table th {
+        text-align: center;
+        /* Centra el contenido en el encabezado */
+        vertical-align: middle;
+    }
+
+    #checkAll {
+        margin: 0;
+        /* Elimina márgenes extra */
+    }
+
+
+
+    .text-right {
+        text-align: right;
+    }
+
+    .selected-row {
+        background-color: #f8d7da;
+        /* Rojo claro */
+    }
+
+    .btn:focus {
+        outline: none !important;
+        box-shadow: none !important;
+    }
+
+    .btn-primary {
+        background-color: #007bff;
+        /* Color azul predeterminado */
+        border-color: #007bff;
+    }
+
+    .btn-primary:focus {
+        background-color: #0056b3;
+        /* Color más oscuro al hacer clic */
+        border-color: #0056b3;
+        outline: none;
+        box-shadow: none;
+    }
+</style>
+
+<body>
+    <div class="card p-3 crear-container">
+       <div class="row g-2 align-items-center">
+            <!-- Campos de la planilla alineados a la izquierda -->
+             <h5>{{ NombreEmpresa }}</h5>
+            <div class="row align-items-end">
+                <!-- Campo Nombre de la Empresa -->
+                <!-- <div class="col-md-3">
+                    <label for="nombre-empresa-planilla" class="form-label">Nombre de la Empresa</label>
+                    <input type="text" id="nombre-empresa-planilla" class="form-control form-control-sm"
+                        value="{{ NombreEmpresa }}" readonly>
+                </div> -->
+
+                <!-- Campo Nombre de la Planilla -->
+                <div class="col-md-1">
+                    <label for="nombre-planilla" class="form-label">Codigo</label>
+                    <input type="text" id="nombre-planilla" class="form-control form-control-sm"
+                        value="{{ nombre_planilla }}" readonly>
+                </div>
+
+                <!-- Campo Periodo de la Planilla -->
+                <div class="col-md-2">
+                    <label for="fecha-planilla" class="form-label">Periodo de la Planilla</label>
+                    <input type="text" id="fecha-planilla" class="form-control form-control-sm" value="{{ periodo }}"
+                        readonly>
+                </div>
+                <div class="col-md-2">
+                    <label for="fecha-aplicar" class="form-label">Fecha Aplicar Planilla</label>
+                    <input type="text" id="fecha-aplicar" class="form-control form-control-sm" value="{{ fecha_por_aplicar }}"
+                        readonly>
+                </div>
+
+                <!-- Campo Tipo de Planilla -->
+                <div class="col-md-2">
+                    <label for="tipo-planilla" class="form-label">Tipo de planilla</label>
+                    <input type="text" id="tipo-planilla" class="form-control form-control-sm"
+                        value="{{ descripcion_cargo_laboral }}" readonly>
+                </div>
+
+                <!-- Botón Subir alineado -->
+                <div class="col-md-4 d-flex justify-content-end " style="margin-bottom: 13px;">
+                    <form id="formSubirDeducciones" method="POST" enctype="multipart/form-data">
+                        {% csrf_token %}
+                        <div class="d-grid d-none" id="archivo-subida">
+                            <label for="archivoSubida"
+                                class="btn btn-primary btn-sm d-flex align-items-center justify-content-center"
+                                style="width: 120px; height: 40px;">
+                                <span class="material-icons">cloud_upload</span>
+                                Subir
+                            </label>
+                            <input type="file" id="archivoSubida" name="archivoSubida" accept=".xlsx, .xls"
+                                style="display: none;">
+                        </div>
+                        <input type="hidden" name="codigo" id="codigo" value="{{codigo}}">
+                        <input type="hidden" name="fecha_planilla" id="fecha_planilla" value="{{periodo}}">
+                        <input type="hidden" id="estado" value="{{ estado }}">
+                        <input id="creado-por" name="creado_por" type="hidden" value="{{ userName }}">
+                    </form>
+
+                    <!-- Botón Comprobante de Pago -->
+
+                    <button id="botonComprobantePago"
+                        class="btn btn-danger text-white d-none  btn-sm mx-1 d-flex align-items-center justify-content-center"
+                        style="width: 180px; height: 40px;" onclick="redirectToVoucher('{{codigo}}')">
+                        <i class="material-icons me-2" style="font-size: 20px;">receipt_long</i>
+                        <span>Comprobante Pago</span>
+                    </button>
+
+                    <!-- <button id="botonReporteBanco"
+                        class="btn btn-dark btn-sm d-none text-white d-flex align-items-center justify-content-center"
+                        data-bs-toggle="modal" data-bs-target="#modalComprobantePago"
+                        style="width: 180px; height: 40px;">
+                        <i class="material-icons me-2" style="font-size: 20px;">account_balance</i>
+                        <span>Reporte de Banco</span>
+                    </button> -->
+                </div>
+
+            </div>
+        </div>
+        <ul class="nav nav-tabs mt-4" id="myTab" role="tablist">
+            <li class="nav-item" role="presentation">
+                <button class="nav-link d-flex align-items-center" id="detalles-planillas-empleado-tab"
+                    data-bs-toggle="tab" data-bs-target="#detalles-planillas-empleado" type="button" role="tab"
+                    aria-controls="detalles-planillas-empleado" aria-selected="false">
+                    <i class="material-icons me-2 text-success">folder_open</i>
+                    Detalles de Planillas Asociados
+                </button>
+            </li>
+            <li class="nav-item" role="presentation">
+                <button class="nav-link d-flex align-items-center" id="detalles-planillas-no-asociados-tab"
+                    data-bs-toggle="tab" data-bs-target="#detalles-planillas-no-asociados" type="button" role="tab"
+                    aria-controls="detalles-planillas-no-asociados" aria-selected="false">
+                    <i class="material-icons me-2 text-danger">person_off</i>
+                    Empleados No Asociados
+                </button>
+            </li>
+        </ul>
+
+        <div id="detallePlanillasContenido" class="col-md-12 mt-4" style="display: none;">
+            <div class="card">
+                <div class="card-body" style="background-color: #f4f6f9;">
+
+                    <div class="d-flex justify-content-between align-items-center">
+                        <h4 class="card-title text-primary">Detalle de
+                            Planillas</h4>
+                        <!-- Contenedor para los botones -->
+                        <div class="d-flex align-items-center gap-2">
+                            <!-- ComboBox para Filtrar Tipo -->
+                            <select id="filtrarModo" class="form-select form-select-sm me-3 mb-3">
+                                <option value="AGRUPADO">Agrupar por
+                                    empleado</option>
+                                <option value="DETALLE">Agrupar por
+                                    detalle</option>
+                            </select>
+                            <button type="button" id="botonManual"
+                                class="btn btn-success btn-sm d-flex align-items-center gap-1 mb-3"
+                                data-bs-toggle="modal" data-bs-target="#bonificacionesYDeduccionesManualmente"
+                                style="white-space: nowrap;">
+                                <i class="material-icons">keyboard</i>Nuevo
+                                Registro
+                            </button>
+                            <div class="dropdown mb-3" id="dropdownAcciones" style="display: none;">
+                                <button type="button"
+                                    class="btn btn-secondary btn-sm d-flex align-items-center gap-1 dropdown-toggle"
+                                    id="accionesDropdown" data-bs-toggle="dropdown" aria-expanded="false"
+                                    style="margin: 0; padding: 0.5rem;">
+                                    <i class="fas fa-cog"></i> Acciones
+                                </button>
+                                <ul class="dropdown-menu" aria-labelledby="accionesDropdown">
+                                    <li><a class="dropdown-item" id="editar-detalle-planilla" href="#"><i
+                                                class="fas fa-edit me-2"></i> Editar</a>
+                                    </li>
+                                    <li><a class="dropdown-item" id="eliminar-detalle-planilla" href="#"><i
+                                                class="fas fa-trash me-2"></i> Eliminar</a>
+                                    </li>
+                                </ul>
+                            </div>
+
+                          
+
+                        </div>
+
+                    </div>
+
+                    <div class="table-responsive">
+                        <table id="detalle-planillas-table" class="table table-striped table-bordered table-top-border"
+                            style="width:100%">
+                            <thead>
+                                <tr>
+                                    <th class="text-wrap">#</th>
+                                    <th class="text-wrap">Planilla</th>
+                                    <th class="text-wrap">Dni</th>
+                                    <th class="text-wrap">Nombre completo</th>
+                                    <th class="text-wrap">Periodo</th>
+                                    <th class="text-wrap">Fecha Creado</th>
+                                    <th class="text-wrap">Creado Por</th>
+                                    <th class="text-wrap">Fecha Modificado</th>
+                                    <th class="text-wrap">Modificado Por</th>
+                                    <th class="text-wrap">Salario Base</th>
+                                    <th class="text-wrap">Aplica Salario Completo</th>
+                                    <th class="text-wrap">Dias Trabajados</th>
+                                    <th class="text-wrap">Salario</th>
+                                    <th class="text-wrap">Deducciones</th>
+                                    <th class="text-wrap">Salario Bruto</th>
+                                    <th class="text-wrap">Bonificaciones</th>
+                                    <th class="text-wrap">Comisiones</th>
+                                    <th class="text-wrap">Salario Neto</th>
+                                    <th class="text-wrap">Salario por Día</th>
+                                    <th class="text-wrap">Banco</th>
+                                    <th class="text-wrap">Cuenta Bancaria</th>
+                                    <th class="text-wrap">Tipo Planilla</th>
+                                    <th class="text-wrap">Estado</th>
+                                    <th>
+                                        <div style="display: flex; align-items: center; justify-content: center;">
+                                            <input type="checkbox" id="checkAllPlanilla"
+                                                style="margin-right: 5px; color: white">Acciones
+                                        </div>
+                                    </th>
+
+                                </tr>
+                            </thead>
+                            <tbody>
+                            </tbody>
+                            <tfoot>
+                                <tr>
+
+                                    <th class="text-center">Totales:</th>
+                                    <th>-</th>
+                                    <th>-</th>
+                                    <th>-</th>
+                                    <th>-</th>
+                                    <th>-</th>
+                                    <th>-</th>
+                                    <th>-</th>
+                                    <th>-</th>
+                                    <th class="text-right"></th>
+                                    <!-- Sueldo Base -->
+                                    <th class="text-right"></th>
+                                    <!-- Deducciones -->
+                                    <th class="text-right"></th>
+                                    <!-- Bonificaciones -->
+                                    <th class="text-right"></th>
+                                    <!-- Comisiones -->
+                                    <th>-</th> <!-- Estado -->
+                                    <th>-</th> <!-- Acciones -->
+                                    <th>-</th> <!-- Acciones -->
+                                    <th>-</th> <!-- Acciones -->
+                                    <th>-</th> <!-- Acciones -->
+                                    <th>-</th> <!-- Acciones -->
+                                    <th>-</th> <!-- Acciones -->
+                                    <th>-</th> <!-- Acciones -->
+                                    <th>-</th> <!-- Acciones -->
+                                    <th>-</th> <!-- Acciones -->
+                                    <th>-</th> <!-- Acciones -->
+                                </tr>
+                            </tfoot>
+
+                        </table>
+
+                    </div>
+                </div>
+            </div>
+        </div>
+
+
+        <div id="detallePlanillasNoAsociadosContenido" class="col-md-12 mt-4" style="display: none;">
+            <div class="card">
+                <div class="card-body" style="background-color: #f4f6f9;">
+
+                    <div class="d-flex justify-content-between align-items-center">
+                        <h4 class="card-title text-danger">Detalle de Planillas
+                            Empleados No Asociados</h4>
+                        <div class="dropdown mb-3" id="dropdownAcciones">
+                            <button type="button"
+                                class="btn btn-secondary btn-sm d-flex align-items-center gap-1 dropdown-toggle"
+                                id="accionesDropdown1" data-bs-toggle="dropdown" aria-expanded="false"
+                                style="margin: 0; padding: 0.5rem;">
+                                <i class="fas fa-cog"></i> Acciones
+                            </button>
+                            <ul class="dropdown-menu" aria-labelledby="accionesDropdown1">
+                                <li><a class="dropdown-item" id="asociar-detalle-planilla" href="#"><i
+                                            class="fas fa-edit me-2"></i> Asociar Seleccionados</a>
+                                </li>
+                                <li><a class="dropdown-item" id="asociar-eliminar-detalle-planilla" href="#"><i
+                                            class="fas fa-trash me-2"></i> Eliminar Seleccionados</a>
+                                </li>
+                            </ul>
+                        </div>
+                    </div>
+
+                    <div class="table-responsive">
+                        <table id="detalle-planillas-no-asociados-table"
+                            class="table table-striped table-bordered table-top-border" style="width:100%">
+                            <thead>
+                                <tr>
+                                    <th>#</th>
+                                    <th>Planilla</th>
+                                    <th>Periodo</th>
+                                    <th>Fecha Creado</th>
+                                    <th>Creado por</th>
+                                    <th>Codigo Empleado</th>
+                                    <th>Nombre Completo</th>
+                                    <th>DNI</th>
+                                    <th>Monto</th>
+                                    <th>Ajuste Nomina</th>
+                                    <th>
+                                        <div style="display: flex; align-items: center; justify-content: center;">
+                                            <input type="checkbox" id="checkAll" style="margin-right: 5px;">
+                                            Acciones
+                                        </div>
+                                    </th>
+
+                                </tr>
+                            </thead>
+                            <tbody>
+                            </tbody>
+                            <tfoot>
+                                <tr>
+                                    <th class="text-center">Totales:</th>
+                                    <!-- Primera columna con "Totales" -->
+                                    <th>-</th>
+                                    <th>-</th>
+                                    <th>-</th>
+                                    <th>-</th>
+                                    <th class="text-right"></th>
+                                    <!-- Monto (sumable) -->
+                                    <th>-</th> <!-- Tipo -->
+                                    <th>-</th> <!-- Checkbox -->
+                                    <th>-</th> <!-- Acciones -->
+                                    <th>-</th> <!-- Acciones -->
+                                    <th>-</th> <!-- Acciones -->
+
+
+                                </tr>
+                            </tfoot>
+                        </table>
+
+                    </div>
+                </div>
+            </div>
+        </div>
+        {% include 'complementos/planilla/modal_crear_comprobante_banco.html' %}
+        {% include 'complementos/planilla/modal_detalle_empleado.html' %}
+        {% include 'complementos/planilla/modal_crear_deducciones_manual.html'%}
+        {% include 'complementos/planilla/modal_empleados_sin_asociar.html' %}
+
+    </div>
+
+</body>
+{% endblock %}
+
+{% block scripts %}
+
+<script>
+
+    function redirectToVoucher(idPlanilla) {
+        const baseURL = "{% url 'generar_voucher' id_planilla=0 %}";
+        const redirectURL = baseURL.replace("0", idPlanilla);
+
+        // Abrir en una nueva pestaña
+        window.open(redirectURL, "_blank");
+    }
+
+
+
+    window.addEventListener('load', function () {
+        // Restablecer el valor del select al cargar la página
+        document.getElementById('filtrarModo').selectedIndex = 1;
+    });
+    var tableDetallePlanillas;
+    var tableDetalleXEmpleado;
+    var idPlanilla = '{{codigo}}';
+    var tableNoAsociados;
+    var tableDiasComprobanteBanco;
+
+
+    $(document).ready(function () {
+
+        var toastMixin = Swal.mixin({
+            toast: true,
+            icon: 'success',
+            title: 'General Title',
+            animation: false,
+            position: 'top-right',
+            showConfirmButton: false,
+            timer: 2000,
+            timerProgressBar: true,
+            didOpen: (toast) => {
+                toast.addEventListener('mouseenter', Swal.stopTimer);
+                toast.addEventListener('mouseleave', Swal.resumeTimer);
+            }
+        });
+
+        var buttons = "Brtlip";
+
+        $('#checkAllPlanilla').on('click', function () {
+            const table = $('#detalle-planillas-table').DataTable(); // Asegúrate de reemplazar '#miTabla' con el ID de tu tabla.
+            const isChecked = $(this).is(':checked');
+
+            if (isChecked) {
+                // Mostrar el dropdown con animación
+                $('#dropdownAcciones').fadeIn();
+                // Deshabilitar la opción de Editar
+                // $('.dropdown-item:contains("Editar")').addClass('disabled');
+
+                // Seleccionar todos los checkboxes en las filas visibles y en el conjunto filtrado
+                table.rows({ search: 'applied' }).nodes().to$().find('.row-checkbox').prop('checked', true);
+            } else {
+                // Ocultar el dropdown si se desmarca
+                $('#dropdownAcciones').fadeOut();
+                // Habilitar la opción de Editar nuevamente
+                // $('.dropdown-item:contains("Editar")').removeClass('disabled');
+
+                // Deseleccionar todos los checkboxes en las filas visibles y en el conjunto filtrado
+                table.rows({ search: 'applied' }).nodes().to$().find('.row-checkbox').prop('checked', false);
+            }
+        });
+
+        // Manejar clic en el checkbox
+        $(document).on('click', '.row-checkbox', function () {
+            actualizarDropdownAcciones();
+        });
+
+        // Manejar clic en una fila para alternar el estado del checkbox
+        $(document).on('dblclick', '#detalle-planillas-table tbody tr', function (e) {
+            if (!$(e.target).is('input, button, a')) {  // Evita conflictos al hacer clic en botones, enlaces o inputs
+                let checkbox = $(this).find('.row-checkbox');
+                checkbox.prop('checked', !checkbox.is(':checked'));
+
+                // Llamar a la función para actualizar el dropdown después de cambiar el estado del checkbox
+                actualizarDropdownAcciones();
+            }
+        });
+
+        // Función para mostrar/ocultar el dropdown
+        function actualizarDropdownAcciones() {
+            const checkboxesMarcados = $('.row-checkbox:checked').length;
+
+            if (checkboxesMarcados > 0) {
+                $('#dropdownAcciones').fadeIn();
+                // $('.dropdown-item:contains("Editar")').addClass('disabled');
+            } else {
+                $('#dropdownAcciones').fadeOut();
+            }
+        }
+        const csrfToken = document.querySelector('[name=csrfmiddlewaretoken]').value;
+
+        $(document).on('change', '.tipoArchivo', function () {
+            var selectedText = $(this).find('option:selected').text(); // Obtener el texto de la opción seleccionada
+            $('#tipo').text('Tipo ' + selectedText); // Actualizar el texto del label dinámicamente
+        });
+
+        $.ajax({
+            url: "{% url 'obtener_tipos_archivo' %}",
+            type: "GET",
+            success: function (response) {
+                if (response.status === 'success') {
+                    const tiposArchivo = response.tipos_archivo;
+
+                    // Limpiar el select antes de llenarlo
+                    $('.tipoArchivo').empty();
+
+                    // Agregar la opción predeterminada
+                    $('.tipoArchivo').append('<option value="">Seleccione una opción</option>');
+
+                    // Recorrer los resultados y añadirlos al select
+                    tiposArchivo.forEach(tipo => {
+                        $('.tipoArchivo').append(new Option(tipo.nombre, tipo.id));
+                    });
+                } else {
+                    console.error('Error en la respuesta:', response.message);
+                }
+            },
+            error: function (jqXHR, textStatus, errorThrown) {
+                console.error('Error en la solicitud AJAX:', textStatus, errorThrown);
+            }
+        });
+
+        $('.close').on('click', function () {
+            $('#detallePlanillaEmpleado').modal('hide');
+        });
+        $('#detallePlanillasContenido').show();
+
+
+        // Detecta el clic en la pestaña "Detalles de Planillas Asociados"
+        $('#detalles-planillas-empleado-tab').on('click', function () {
+            $('#detallePlanillasContenido').show(); // Mostrar contenido asociado
+            $('#detallePlanillasNoAsociadosContenido').hide(); // Ocultar el contenido no asociado
+        });
+
+        // Mostrar el contenido de la pestaña de "Empleados No Asociados"
+        $('#detalles-planillas-no-asociados-tab').on('click', function () {
+            // Reiniciar el checkbox (desmarcar)
+            $('#checkAll').prop('checked', false);
+
+            $('#detallePlanillasNoAsociadosContenido').show(); // Mostrar contenido no asociado
+            $('#detallePlanillasContenido').hide(); // Ocultar el contenido asociado
+        });
+
+        function cargarEmpleados(selectEmpleadoId, url, idEmpresa) {
+            let empleadosSelect = $(selectEmpleadoId);
+
+            $.ajax({
+                url: url,
+                type: 'GET',
+                data: { id_empresa: idEmpresa }, // Pasa el parámetro id_empresa
+                success: function (data) {
+                    if (data.status === 'success') {
+                        empleadosSelect.empty().append('<option value="">Seleccione un empleado</option>');
+
+                        data.empleados.forEach(function (empleado) {
+                            let opcion = `
+                        <option value="${empleado.id_empleado}" 
+                                data-nombre="${empleado.nombre_completo}" 
+                                data-identidad="${empleado.identidad}">
+                            ${empleado.nombre_completo} | ${empleado.identidad}
+                        </option>`;
+                            empleadosSelect.append(opcion);
+                        });
+
+                        if (empleadosSelect.hasClass('chosen-select')) {
+                            empleadosSelect.trigger("chosen:updated");
+                        }
+                    } else {
+                        mostrarError('No se pudo obtener la lista de empleados. Inténtelo nuevamente.');
+                    }
+                },
+                error: function (xhr, status, error) {
+                    console.error('Error al cargar empleados:', status, error);
+                    mostrarError('Hubo un problema al realizar la solicitud.');
+                }
+            });
+        }
+        // Inicializa la carga
+        cargarEmpleados('#empleado-planilla-manual', "{% url 'obtener_empleados' %}", '{{PkEmpresa}}');
+        cargarEmpleados('#empleado-planilla-no-Asociados', "{% url 'obtener_empleados' %}", '{{PkEmpresa}}');
+
+        // Inicializar Chosen en todos los select con clase .chosen-select
+        $(".chosen-select").chosen({
+            width: "100%"
+        });
+
+        // Función de error
+        function mostrarError(mensaje) {
+            Swal.fire({
+                icon: 'error',
+                title: 'Error',
+                text: mensaje,
+            });
+        }
+
+        $('#tipoArchivoManual').on('change', function () {
+            var selectedValue = $(this).val(); // Obtener el valor seleccionado
+            console.log('Valor seleccionado:', selectedValue); // Log para verificar el valor seleccionado
+
+            var tipoSelectManual = $('#deduccion-planilla-manual');
+            tipoSelectManual.empty(); // Limpiar el select de deducción
+            tipoSelectManual.append('<option value="">Seleccione una opción</option>'); // Agregar opción por defecto
+
+            if (selectedValue) {
+                $.ajax({
+                    url: "{% url 'obtener_tipos_manuales' %}", // Asegúrate de que esta URL coincida con tu urls.py
+                    type: 'GET',
+                    data: { tipo: selectedValue }, // Enviar el valor seleccionado como parámetro
+                    success: function (data) {
+
+                        if (data.resultados) {
+                            data.resultados.forEach(function (item) {
+                                tipoSelectManual.append(`<option value="${item.id}">${item.descripcion}</option>`);
+                            });
+                            tipoSelectManual.trigger('chosen:updated'); // Actualizar Chosen si lo usas
+                        } else {
+                            console.warn('No se encontraron resultados.');
+                        }
+                    },
+                    error: function (xhr, status, error) {
+                        console.error('Error al cargar los datos:', error);
+                    }
+                });
+            } else {
+                console.warn('No se seleccionó una opción válida.');
+            }
+        });
+
+        if (idPlanilla) {
+            initializeTableNoAsociados(idPlanilla);
+        } else {
+            console.error("ID de planilla no encontrado.");
+            return;
+        }
+
+        function initializeTableNoAsociados(idPlanilla) {
+            Swal.fire({
+                title: '',
+                html: '<b>Cargando Datos</b>',
+                didOpen: () => {
+                    Swal.showLoading();
+                },
+                allowOutsideClick: false,
+                showConfirmButton: false
+            });
+
+            $('#detalle-planillas-no-asociados-table').DataTable().clear().destroy();
+
+            tableNoAsociados = $('#detalle-planillas-no-asociados-table').DataTable({
+                autoWidth: false,
+                scrollX: true,  // Habilitar scroll horizontal
+                scrollY: '60vh',  // Habilitar scroll vertical con una altura específica
+                scrollCollapse: true,  // Permitir colapso si hay pocas filas
+                pageLength: 50,
+                language: {
+                    "processing": "Procesando...",
+                    "lengthMenu": "Mostrar _MENU_ registros",
+                    "zeroRecords": "No se encontraron resultados",
+                    "emptyTable": "Ningún dato disponible en esta tabla",
+                    "info": "Mostrando registros del _START_ al _END_ de un total de _TOTAL_ registros",
+                    "infoEmpty": "Mostrando registros del 0 al 0 de un total de 0 registros",
+                    "infoFiltered": "(filtrado de un total de _MAX_ registros)",
+                    "search": "Buscar:",
+                    "infoThousands": ",",
+                    "loadingRecords": "Cargando...",
+                    "paginate": {
+                        "first": "Primero",
+                        "last": "Último",
+                        "next": "Siguiente",
+                        "previous": "Anterior"
+                    },
+                    "aria": {
+                        "sortAscending": ": Activar para ordenar la columna de manera ascendente",
+                        "sortDescending": ": Activar para ordenar la columna de manera descendente"
+                    },
+                    "buttons": {
+                        "copy": "Copiar",
+                        "colvis": "Visibilidad"
+                    }
+                },
+                ajax: {
+                    url: "{% url 'obtener_detalles_planilla_no_asociados' %}",
+                    type: "POST",
+                    headers: {
+                        'X-CSRFToken': csrfToken
+                    },
+                    data: {
+                        id_planilla: idPlanilla
+                    },
+                    cache: false,
+                    dataSrc: function (json) {
+
+                        if (json.status === 'success' && Array.isArray(json.detalles_planilla_no_asociados)) {
+                            Swal.close();
+                            return json.detalles_planilla_no_asociados;
+                        } else {
+                            console.error("Error al cargar los datos:", json.error);
+                            return [];
+                        }
+                    },
+                    error: function (jqXHR, textStatus, errorThrown) {
+                        console.error("Error en la llamada AJAX:", textStatus, errorThrown);
+                    }
+                },
+                buttons: [
+                    {
+                        extend: 'excel',
+                        text: '<i class="fas fa-file-excel"></i>',
+                        titleAttr: 'Exportar a Excel',
+                        className: 'btn btn-success btn-sm',
+                    },
+                    {
+                        extend: 'pdf',
+                        text: '<i class="fas fa-file-pdf"></i>',
+                        titleAttr: 'Exportar a PDF',
+                        className: 'btn btn-danger btn-sm',
+                    },
+                    {
+                        extend: 'print',
+                        text: '<i class="fas fa-print"></i>',
+                        titleAttr: 'Imprimir',
+                        className: 'btn btn-primary btn-sm',
+                        orientation: 'landscape'
+                    }
+                ],
+                columns: [
+                    { "data": "id_deduccion" },
+                    { "data": "id_planilla" },
+                    { "data": "fecha_planilla" },
+                    {
+                        "data": "fecha_hora_creado",
+                        className: 'text-wrap'
+                    },
+                    { "data": "creado_por" },
+                    {
+                        "data": "id_empleado",
+                        "render": function (data, type, row) {
+                            if (data === 0) {
+                                return `<span style="background-color: orange; color: white; font-weight: bold; padding: 2px 10px; border-radius: 5px; display: inline-block;">No existe</span>`;
+                            }
+                            return data; // Muestra el valor original si no se cumple la condición
+                        },
+                        "className": "text-center"
+                    },
+                    {
+                        "data": "nombre_completo",
+                        "render": function (data, type, row) {
+                            if (data === "") {
+                                return `<span style="background-color: orange; color: white; font-weight: bold; padding: 2px 10px; border-radius: 5px; display: inline-block;">Sin Nombre</span>`;
+                            }
+                            return data; // Muestra el valor original si no se cumple la condición
+                        },
+                        "className": "text-wrap"
+                    },
+                    {
+                        "data": "identidad",
+                        "render": function (data, type, row) {
+                            if (data === "") {
+                                return `<span style="background-color: orange; color: white; font-weight: bold; padding: 2px 10px; border-radius: 5px; display: inline-block;">Sin DNI</span>`;
+                            }
+                            return data; // Muestra el valor original si no se cumple la condición
+                        },
+                        "className": "text-center"
+                    },
+                    {
+                        "data": "monto",
+                        "render": function (data, type, row) {
+                            if (data === "" || data == null) {
+                                return `<span style="background-color: orange; color: white; font-weight: bold; padding: 2px 10px; border-radius: 5px; display: inline-block;">0</span>`;
+                            }
+                            return $.fn.dataTable.render.number(',', '.', 2).display(data);
+                        },
+                        "className": "text-right"
+                    },
+                    {
+                        "data": "tipo",
+                        "render": function (data, type, row) {
+                            if (data === "") {
+
+                                return `<span style="background-color: orange; color: white; font-weight: bold; padding: 2px 10px; border-radius: 5px; display: inline-block;">Sin ajuste nómina</span>`;
+                            }
+                            return data;
+                        },
+                        "className": "text-center"
+                    },
+                    {
+                        "data": null,
+                        "render": function (data, type, row) {
+                            return `<input type="checkbox" class="asociar-checkbox" data-id="${row.id_empleado}">`;
+                        },
+                        "orderable": false,
+                        "className": "text-center"
+                    }
+                ],
+
+                order: [[0, "asc"]],
+                fixedColumns: {
+                    left: 0,
+                    right: 2
+                },
+                footerCallback: function (row, data, start, end, display) {
+                    var api = this.api();
+
+                    // Función para sumar una columna, manejando valores no numéricos o nulos
+                    var sumColumn = function (index) {
+                        return api
+                            .column(index, { page: 'current' })
+                            .data()
+                            .reduce(function (a, b) {
+                                return (parseFloat(a) || 0) + (parseFloat(b) || 0);
+                            }, 0);
+                    };
+
+                    // Índices de columnas a sumar
+                    var sumColumns = [8]; // Solo "Monto"
+
+                    // Actualizar el footer para columnas sumables con alineación a la derecha
+                    sumColumns.forEach(function (index) {
+                        $(api.column(index).footer()).html(
+                            $.fn.dataTable.render.number(',', '.', 2).display(sumColumn(index))
+                        ).css('text-align', 'right');
+                    });
+
+                    // Columnas no sumables con texto centrado
+                    var nonSummableColumns = [0, 1, 2, 3, 4, 5, 6, 7];
+                    nonSummableColumns.forEach(function (index) {
+                        $(api.column(index).footer()).html('-').css('text-align', 'center');
+                    });
+
+                    // Primera columna con "Totales"
+                    $(api.column(0).footer()).html('Totales:').css('text-align', 'center').addClass('font-weight-bold');
+                },
+                initComplete: function () {
+                    tableNoAsociados.columns.adjust().draw();
+
+                    console.log("Tabla inicializada");
+
+                    // Evento para el checkbox maestro
+                    $('#checkAll').off('click').on('click', function () {
+                        let isChecked = $(this).is(':checked');
+                        $('#detalle-planillas-no-asociados-table .asociar-checkbox').prop('checked', isChecked);
+                    });
+
+                    // Sincronizar estado del checkbox maestro con los checkboxes de las filas
+                    $('#detalle-planillas-no-asociados-table').on('change', '.asociar-checkbox', function () {
+                        let allChecked = $('.asociar-checkbox:checked').length === $('.asociar-checkbox').length;
+                        $('#checkAll').prop('checked', allChecked);
+                    });
+                }
+            });
+        }
+
+        // Botón "Asociar Seleccionado"
+        $('#asociar-detalle-planilla').on('click', function () {
+            $('#formCrearDeduccionSinAsociar')[0].reset();
+
+            // Resetear los selects
+            $('#empleado-planilla-no-Asociados').val('').trigger('chosen:updated');
+            $('#tipoArchivoManualSinAsociar').val('');
+            if (deduccionesSeleccionadas.length === 0) {
+                Swal.fire('No hay deducciones seleccionadas.', '', 'warning');
+                return;
+            }
+            // Mostrar el modal para asociar deducciones
+            $('#bonificacionesYDeduccionesSinAsociar').modal('show');
+        });
+
+        let deduccionesSeleccionadas = [];
+
+        $(document).on('click', '#checkAll', function () {
+            let isChecked = $(this).is(':checked');
+
+            // Obtener la instancia de DataTable
+            let table = $('#detalle-planillas-no-asociados-table').DataTable();
+
+            // Seleccionar todas las filas filtradas, incluso las que no están visibles en la página actual
+            table.rows({ search: 'applied' }).every(function () {
+                let data = this.data(); // Datos de la fila
+                let node = this.node(); // Nodo DOM de la fila
+
+                // Marca o desmarca el checkbox en el DOM
+                $(node).find('.asociar-checkbox').prop('checked', isChecked);
+
+                if (isChecked) {
+
+                    if (!deduccionesSeleccionadas.some(d => d.id_deduccion === data.id_deduccion)) {
+                        deduccionesSeleccionadas.push({
+                            id_deduccion: data.id_deduccion,
+                            id_empleado: data.id_empleado,
+                            id_planilla: data.id_planilla,
+                            fecha_planilla: data.fecha_planilla,
+                            monto: data.monto,
+                            tipo_registro: data.tipo // DEDUCCION o BONIFICACION
+                        });
+                    }
+                } else {
+
+                    deduccionesSeleccionadas = deduccionesSeleccionadas.filter(d => d.id_deduccion !== data.id_deduccion);
+                }
+            });
+        });
+
+
+        // Evento para checkboxes individuales
+        $(document).on('change', '.asociar-checkbox', function () {
+            let isChecked = $(this).is(':checked');
+            let table = $('#detalle-planillas-no-asociados-table').DataTable();
+            let rowData = table.row($(this).closest('tr')).data();
+
+            if (isChecked) {
+                if (!deduccionesSeleccionadas.some(d => d.id_deduccion === rowData.id_deduccion)) {
+                    deduccionesSeleccionadas.push({
+                        id_deduccion: rowData.id_deduccion,
+                        id_empleado: rowData.id_empleado,
+                        id_planilla: rowData.id_planilla,
+                        fecha_planilla: rowData.fecha_planilla,
+                        monto: rowData.monto,
+                        tipo_registro: rowData.tipo
+                    });
+                }
+            } else {
+                deduccionesSeleccionadas = deduccionesSeleccionadas.filter(d => d.id_deduccion !== rowData.id_deduccion);
+            }
+
+            // Actualizar el estado del checkbox maestro
+            let allChecked = $('.asociar-checkbox:checked').length === $('.asociar-checkbox').length;
+            $('#checkAll').prop('checked', allChecked);
+        });
+
+        $('#formCrearDeduccionSinAsociar').on('submit', function (e) {
+            e.preventDefault();
+
+            let empleadoId = $('#empleado-planilla-no-Asociados').val();
+            let tipoRegistro = $('#tipoArchivoManualSinAsociar').val();
+
+            if (!empleadoId) {
+                Swal.fire('Seleccione un empleado.', '', 'warning');
+                return;
+            }
+
+            if (deduccionesSeleccionadas.length === 0) {
+                Swal.fire('No hay deducciones seleccionadas.', '', 'warning');
+                return;
+            }
+
+            Swal.fire({
+                title: '',
+                html: '',
+                didOpen: () => {
+                    Swal.showLoading();
+                },
+                allowOutsideClick: false,
+                showConfirmButton: false
+            });
+
+            let dataToSend = {
+                empleado_id: empleadoId,
+                deducciones: deduccionesSeleccionadas,
+                modificado_por: '{{userName}}',
+                tipo_registro: tipoRegistro,
+            };
+
+
+
+
+            $.ajax({
+                url: "{% url 'actualizar_detalle_planilla_no_asociada' %}",
+                method: 'POST',
+                data: JSON.stringify(dataToSend),
+                contentType: 'application/json',
+                headers: {
+                    'X-CSRFToken': document.querySelector('[name=csrfmiddlewaretoken]').value
+                },
+                success: function (response) {
+                    Swal.close();
+                    Swal.fire('Éxito', response.success, 'success');
+                    $('#bonificacionesYDeduccionesSinAsociar').modal('hide');
+                    deduccionesSeleccionadas = [];
+                    tableNoAsociados.ajax.reload();
+                    tableDetallePlanillas.ajax.reload();
+                },
+                error: function (xhr) {
+                    Swal.close();
+                    let errorMessage = xhr.responseJSON ? xhr.responseJSON.error : 'Error inesperado.';
+                    Swal.fire('Error', errorMessage, 'error');
+                }
+            });
+        });
+
+         var tableDetallaPlanillaEmpleados;
+
+        function initializeTableDeducciones(data) {
+            // Destruir la tabla si ya existe
+            if ($.fn.DataTable.isDataTable('#deduccionesXempleados')) {
+                $('#deduccionesXempleados').DataTable().clear().destroy();
+            }
+
+            // Inicializar la tabla
+            tableDetallaPlanillaEmpleados = $('#deduccionesXempleados').DataTable({
+                data: data,
+                autoWidth: false,
+                scrollX: true,
+                scrollY: '60vh',
+                scrollCollapse: true,
+                pageLength: 50,
+                dom: 'Bfrtip',
+                initComplete: function () {
+                    // Ajustar las columnas después de la inicialización
+                    this.api().columns.adjust().draw();
+                },
+                buttons: [
+                    {
+                        extend: 'excel',
+                        text: '<i class="fas fa-file-excel"></i>',
+                        titleAttr: 'Exportar a Excel',
+                        className: 'btn btn-success'
+                    },
+                    {
+                        extend: 'pdf',
+                        text: '<i class="fas fa-file-pdf"></i>',
+                        titleAttr: 'Exportar a PDF',
+                        className: 'btn btn-danger',
+                        orientation: 'landscape'
+                    },
+                    {
+                        extend: 'print',
+                        text: '<i class="fas fa-print"></i>',
+                        titleAttr: 'Imprimir',
+                        className: 'btn btn-primary'
+                    }
+                ],
+                language: {
+                    processing: "Procesando...",
+                    lengthMenu: "Mostrar _MENU_ registros",
+                    zeroRecords: "No se encontraron resultados",
+                    emptyTable: "Ningún dato disponible en esta tabla",
+                    info: "Mostrando registros del _START_ al _END_ de un total de _TOTAL_ registros",
+                    infoEmpty: "Mostrando registros del 0 al 0 de un total de 0 registros",
+                    infoFiltered: "(filtrado de un total de _MAX_ registros)",
+                    search: "Buscar:",
+                    loadingRecords: "Cargando...",
+                    paginate: {
+                        first: "Primero",
+                        last: "Último",
+                        next: "Siguiente",
+                        previous: "Anterior"
+                    }
+                },
+                columns: [
+                    { data: "id_deduccion", title: "#" },
+                    { data: "fecha_planilla", title: "Periodo" },
+                    { data: "id_empleado", title: "Código Empleado" },
+                    {
+                        data: "nombre_completo",
+                        title: "Nombre completo",
+                        className: 'text-wrap'
+                    },
+                    { data: "identidad", title: "DNI" },
+                    {
+                        data: "monto",
+                        title: "Monto Detallado",
+                        className: 'text-right',
+                        render: $.fn.dataTable.render.number(',', '.', 2)
+                    },
+                    { data: "tipo", title: "Tipo" },
+                    { data: "tipo_especifico", title: "Nombre" },
+                    { data: "categoria", title: "Ajuste Detalle" },
+                    {
+                        data: null,
+                        title: "Acciones",
+                        render: function (data, type, row) {
+                            return `
+            <div class="btn-group">
+                <button class="btn btn-warning btn-sm btn-editar-detail-planilla-empleado" data-id="${row.id_deduccion}">
+                    <i class="fas fa-edit"></i>
+                </button>
+                <button class="btn btn-danger btn-sm btn-delete-detail-planilla-empleado" data-id="${row.id_deduccion}">
+                    <i class="fas fa-trash"></i>
+                </button>
+            </div>`;
+                        },
+                        orderable: false,
+                        width: '15%'
+                    }
+                ],
+                order: [[0, "asc"]],
+             fixedColumns: {
+                    left: 0,
+                    right: 2
+                },
+                footerCallback: function (row, data, start, end, display) {
+                    const api = this.api();
+
+                    // Sumar una columna
+                    const sumColumn = (index) => {
+                        return api
+                            .column(index, { page: 'current' })
+                            .data()
+                            .reduce((a, b) => (parseFloat(a) || 0) + (parseFloat(b) || 0), 0);
+                    };
+
+                    const sumColumns = [5]; // Solo la columna de monto
+
+                    // Actualizar el footer con los totales
+                    sumColumns.forEach((index) => {
+                        $(api.column(index).footer()).html(
+                            $.fn.dataTable.render.number(',', '.', 2).display(sumColumn(index))
+                        ).css('text-align', 'right');
+                    });
+                    $(api.column(0).footer()).html('Totales:').css('text-align', 'center').addClass('font-weight-bold');
+                }
+            });
+        }
+
+
+        function actualizarTablaDeducciones(idEmpleado) {
+            $.ajax({
+                url: "{% url 'get_detalles_x_empleado' %}",
+                method: 'POST',
+                data: {
+                    'id_planilla': '{{codigo}}',
+                    'id_empleado': idEmpleado,
+                    'csrfmiddlewaretoken': '{{ csrf_token }}'
+                },
+                success: function (response) {
+                    if (response.status === 'success') {
+                        initializeTableDeducciones(response.data);
+                    } else {
+                        Swal.fire({
+                            icon: 'error',
+                            title: 'Error',
+                            text: 'Error al obtener las deducciones.'
+                        });
+                    }
+                },
+                error: function () {
+                    Swal.fire({
+                        icon: 'error',
+                        title: 'Error',
+                        text: 'Error en la solicitud al servidor.'
+                    });
+                }
+            });
+        }
+
+        function actualizarTablaBonificaciones() {
+            // Realizar la llamada AJAX para obtener deducciones
+            $.ajax({
+                url: "{% url 'obtener_bonificaciones_por_empleado' %}",
+                method: 'POST',
+                data: {
+                    'id_empleado': codigoEmpleado,
+                    'id_planilla': idPlanilla,
+                    'csrfmiddlewaretoken': '{{ csrf_token }}'
+                },
+                success: function (response) {
+                    if (response.status === 'success') {
+                        initializeTableBonificaciones(response.bonificaciones);  // Llenar la tabla de bonificaciones
+                    } else {
+                        alert('Error al obtener las bonificaciones');
+                    }
+                },
+                error: function () {
+                    alert('Error en la solicitud al servidor');
+                }
+            });
+
+        }
+
+        $('#formCrearDeduccionManual').on('submit', function (e) {
+            e.preventDefault();
+        	   console.log('clic');
+
+            let idDeduccion = $('#idDeduccionDetalle').val();
+            let csrfToken = $('input[name="csrfmiddlewaretoken"]').val();
+            let formData;
+            valor = $('#valor-deduccion-manual').val();
+            valor = valor.replace(/,/g, "");
+            agrupacion = $('#filtrarModo').val();
+
+            if (agrupacion == "AGRUPADO") {
+                valueAgrupacion = 1;
+            } else {
+                valueAgrupacion = 2;
+            }
+
+            // Validar campos obligatorios
+            let campos = [];
+
+            if (idDeduccion) {
+                // Validación para edición
+                formData = {
+                    id_deduccion: idDeduccion,
+                    id_tipo: $('#deduccion-planilla-manual').val(),
+                    valor: valor,
+                    modificado_por: '{{ userName }}',
+                    tipoArchivo: $('#tipoArchivoManual').val(),
+                    csrfmiddlewaretoken: csrfToken
+                };
+
+                campos = [
+                    { campo: '#deduccion-planilla-manual', valor: formData.id_tipo, mensaje: 'Seleccione un tipo.' },
+                    { campo: '#valor-deduccion-manual', valor: formData.valor, mensaje: 'Ingrese un valor.' },
+                ];
+            } else {
+                // Validación para creación
+                let empleadoSelect = $('#empleado-planilla-manual').find(':selected');
+                let idEmpleado = $('#empleado-planilla-manual').val();
+                let nombreCompleto = empleadoSelect.data('nombre') ? empleadoSelect.data('nombre').trim() : '';
+                let identidad = empleadoSelect.data('identidad') ? empleadoSelect.data('identidad').replace(/[^0-9]/g, '') : '';
+
+                formData = {
+                    tipoArchivo: $('#tipoArchivoManual').val(),
+                    cod_planilla_manual: $('#cod-planilla-manual').val(),
+                    fecha_planilla_manual: $('#fecha-planilla-manual').val(),
+                    tipo_planilla_manual: $('#tipo-planilla-manual').val(),
+                    id_empleado: idEmpleado,
+                    identidad_empleado: identidad,
+                    nombre_completo: nombreCompleto,
+                    deduccion_planilla_manual: $('#deduccion-planilla-manual').val(),
+                    valor_deduccion: $('#valor-deduccion-manual').val().replace(/,/g, ""),
+                    creado_por: '{{ userName }}',
+                    csrfmiddlewaretoken: csrfToken
+                };
+
+
+                campos = [
+                    { campo: '#tipoArchivoManual', valor: formData.tipoArchivo, mensaje: 'Seleccione un concepto de planilla.' },
+                    { campo: '#empleado-planilla-manual', valor: formData.id_empleado, mensaje: 'Seleccione un empleado.' },
+                    { campo: '#deduccion-planilla-manual', valor: formData.deduccion_planilla_manual, mensaje: 'Seleccione un tipo de deducción/bonificación.' },
+                    { campo: '#valor-deduccion-manual', valor: formData.valor_deduccion, mensaje: 'Ingrese un valor.' }
+                ];
+            }
+
+            // Validación
+            let campoInvalido = null;
+            $('.invalid-feedback').remove(); // Remover mensajes previos
+
+            campos.forEach(item => {
+                const $campo = $(item.campo);
+                if (!item.valor) {
+                    $campo.addClass('is-invalid');
+                    if (!campoInvalido) campoInvalido = item.campo;
+
+                    // Agregar mensaje de error
+                    $campo.after(`<div class="invalid-feedback">${item.mensaje}</div>`);
+                } else {
+                    /*  $campo.removeClass('is-invalid').addClass('is-valid'); */
+                }
+            });
+
+            if (campoInvalido) {
+                $(campoInvalido).focus();
+                return;
+            }
+
+            // Determinar la URL según acción
+            let url = idDeduccion ? "{% url 'editar_deduccion' %}" : "{% url 'insertar_deduccion_manual' %}";
+
+            // Enviar datos con AJAX
+            $.ajax({
+                url: url,
+                type: 'POST',
+                data: formData,
+                success: function (response) {
+                    if (response.status === 'success') {
+                        let mensaje = idDeduccion ? 'Deducción/Bonificación actualizada correctamente' : 'Deducción/Bonificación insertada correctamente';
+                        Swal.fire({
+                            icon: 'success',
+                            title: 'Éxito',
+                            text: mensaje,
+                        });
+
+                        $('#bonificacionesYDeduccionesManualmente').modal('hide');
+
+                        $('#formCrearDeduccionManual')[0].reset();
+                        $('#formCrearDeduccionManual .chosen-select').val('').trigger('chosen:updated');
+                        const idEmpleado = $('#idempleadomanua').val() || 0;
+                        actualizarTablaDeducciones(idEmpleado);
+                        tableDetallePlanillas.ajax.reload();
+
+
+                    } else {
+
+                    }
+                },
+
+            });
+
+            // $('.dropdown-item:contains("Editar")').removeClass('disabled');
+        });
+
+        // Eliminar el color rojo cuando el usuario comienza a escribir
+        $('#formCrearDeduccionManual').on('input change', '.is-invalid', function () {
+            $(this).removeClass('is-invalid').next('.invalid-feedback').remove();
+        });
+
+        $('#filtrarModo').change(function () {
+            const modoAgrupacion = $(this).val(); // Obtener el valor del select
+            console.log(`Modo de agrupación seleccionado: ${modoAgrupacion}`);
+
+            if (typeof idPlanilla === 'undefined' || !idPlanilla) {
+                console.error('Error: idPlanilla no está definido o tiene un valor inválido.');
+                return;
+            }
+
+            if (!modoAgrupacion) {
+                console.error('Error: modoAgrupacion no tiene un valor válido.');
+                return;
+            }
+
+            let table = $('#detalle-planillas-table').DataTable();
+
+            // Cambiar el texto del encabezado dinámicamente
+            if (modoAgrupacion === 'AGRUPADO') {
+                $(table.column(1).header()).text('Planilla');
+                $(table.column(3).header()).text('Empleado');
+                $(table.column(2).header()).text('DNI');
+                $(table.column(9).header()).text('Salario Base');
+                $(table.column(13).header()).text('Deducciones');
+                $(table.column(15).header()).text('Bonificaciones');
+                $(table.column(16).header()).text('Comisiones');
+            } else if (modoAgrupacion === 'DETALLE') {
+                $(table.column(1).header()).text('Código');
+                $(table.column(9).header()).text('Monto Detallado');
+                $(table.column(13).header()).text('Ajuste Nómina');
+                $(table.column(15).header()).text('Ajuste Tipo');
+                $(table.column(16).header()).text('Detalle Ajuste');
+            }
+
+            // Deselecciona las filas y oculta el dropdown de acciones
+            $('.row-checkbox').prop('checked', false);
+            $('#dropdownAcciones').fadeOut();
+
+            // Ajustar y redibujar la tabla
+            table.columns.adjust().draw();
+
+            // Reinicializar la tabla con la nueva configuración
+            initializeTablePlanillas(idPlanilla, modoAgrupacion);
+        });
+
+        // Inicializar con AGRUPADO al cargar
+        $('#filtrarModo').val('AGRUPADO').change();
+
+
+        function initializeTablePlanillas(idPlanilla, modoAgrupacion) {
+            // Destruir la tabla existente si existe
+            Swal.fire({
+                title: '',
+                html: '<b>Cargando Datos</b>',
+                didOpen: () => {
+                    Swal.showLoading();
+                },
+                allowOutsideClick: false,
+                showConfirmButton: false
+            });
+
+            $('#detalle-planillas-table').DataTable().clear().destroy();
+
+            // Inicializar la tabla de planillas
+            tableDetallePlanillas = $('#detalle-planillas-table').DataTable({
+                autoWidth: false,
+                scrollX: true,
+                scrollY: '350px',
+                scrollCollapse: true,
+                pageLength: 50,
+                dom: 'Bfrtip',
+                initComplete: function () {
+                    tableDetallePlanillas.columns.adjust().draw();
+                },
+                language: {
+                    url: "{% static 'app/th/json/es-ES.json' %}",
+                },
+                ajax: {
+                    url: "{% url 'obtener_detalles_planilla' %}",
+                    type: "POST",
+                    headers: {
+                        'X-CSRFToken': csrfToken
+                    },
+                    data: {
+                        id_planilla: idPlanilla,
+                        modo_agrupacion: modoAgrupacion
+                    },
+                    cache: false,
+                    dataSrc: function (json) {
+                        if (json.status === 'success' && Array.isArray(json.detalles_planilla)) {
+                            Swal.close();
+                            console.warn("La respuesta no contiene datos.");
+                            return json.detalles_planilla;
+                        } else {
+                            console.error("Error al cargar los datos:", json.error || "Respuesta inesperada del servidor.");
+                            return [];
+                        }
+                    },
+                    error: function (jqXHR, textStatus, errorThrown) {
+                        console.error(`Error en la llamada AJAX: ${textStatus} - ${errorThrown}`);
+             
+                    }
+                },
+                colReorder: {
+                    realtime: false
+                },
+                buttons: [
+                    {
+                        extend: 'excel',
+                        text: '<i class="fas fa-file-excel"></i>',
+                        titleAttr: 'Exportar a Excel',
+                        className: 'btn btn-success btn-sm',
+                    },
+                    {
+                        extend: 'pdf',
+                        text: '<i class="fas fa-file-pdf"></i>',
+                        titleAttr: 'Exportar a PDF',
+                        className: 'btn btn-danger btn-sm',
+                    },
+                    {
+                        extend: 'print',
+                        text: '<i class="fas fa-print"></i>',
+                        titleAttr: 'Imprimir',
+                        className: 'btn btn-primary btn-sm',
+                        orientation: 'landscape'
+                    }
+                ],
+                columns: [
+
+                    { data: "id_deduccion" },
+                    { data: "id_empleado" },
+                    { data: "identidad" },
+                    {
+                        data: "nombre_completo",
+                        className: 'text-wrap'
+                    },
+                    {
+                        data: "fecha_planilla",
+
+                    },
+                    {
+                        data: "fecha_hora_creado",
+                        className: 'text-wrap'
+                    },
+                    { data: "creado_por" },
+                    {
+                        data: "fecha_hora_modificado",
+                        className: 'text-wrap'
+                    },
+                    { data: "modificado_por" },
+                    {
+                        data: "salario_base",
+                        className: 'text-right',
+                        render: $.fn.dataTable.render.number(',', '.', 2)
+                    },
+                    {
+                        data: null,
+                        render: function (data, type, row) {
+                            var checked = row.aplica_salario_completo == 1 ? 'checked' : '';
+
+                            return `<div class="d-flex justify-content-center align-items-center"><input type="checkbox" class="aplica-salario-completo-checkbox mx-2" style="width:20px; height:20px;" data-id-empleado="${row.id_empleado}" ${checked}></div>`;
+                        },
+                    },
+                    {
+                        data: "dias_trabajados",
+                        className: 'text-right',
+                        render: $.fn.dataTable.render.number(',', '.', 2)
+                    },
+                    {
+                        data: "salario_esperado_bruto",
+                        className: 'text-right',
+                        render: $.fn.dataTable.render.number(',', '.', 2)
+                    },
+                    {
+                        data: "total_deducciones",
+                        className: 'text-right',
+                        render: $.fn.dataTable.render.number(',', '.', 2)
+                    },
+                    {
+                        data: "salario_bruto",
+                        className: 'text-right',
+                        render: $.fn.dataTable.render.number(',', '.', 2)
+                    },
+                    {
+                        data: "total_bonificaciones",
+                        className: 'text-right',
+                        render: $.fn.dataTable.render.number(',', '.', 2)
+                    },
+                    {
+                        data: "total_comisiones",
+                        className: 'text-right',
+                        render: $.fn.dataTable.render.number(',', '.', 2)
+                    },
+                    {
+                        data: "total_pagar",
+                        className: 'text-right',
+                        render: $.fn.dataTable.render.number(',', '.', 2)
+                    },
+                    {
+                        data: "salario_x_dia",
+                        className: 'text-right',
+                        render: $.fn.dataTable.render.number(',', '.', 2)
+                    },
+                    {
+                        data: "Banco",
+                        className: 'text-right',
+                        render: $.fn.dataTable.render.number(',', '.', 2)
+                    },
+                    {
+                        data: "cuenta_bancaria"
+                    },
+                    {
+                        data: "tipo_planilla",
+                        className: 'text-right',
+                        render: $.fn.dataTable.render.number(',', '.', 2)
+                    },
+                    {
+                        data: "estado", // Aunque uses este data, puedes ignorarlo en el render
+                        render: function (data, type, row) {
+                            // Usa row.estado_calculado como fuente principal del estado
+                            const estado = '{{estado}}'; // Prioriza estado_calculado, usa "estado" como fallback
+
+                            let colorClass = '';
+                            let estadoTexto = '';
+
+                            if (type === 'display' && estado) {
+                                switch (estado.trim()) {
+                                    case 'Creada':
+                                        colorClass = 'bg-success text-white';
+                                        estadoTexto = 'Creada';
+                                        break;
+                                    case 'En proceso':
+                                        colorClass = 'bg-primary text-white';
+                                        estadoTexto = 'En proceso';
+                                        break;
+                                    case 'Aplicada':
+                                        colorClass = 'bg-warning text-dark';
+                                        estadoTexto = 'Aplicada';
+                                        break;
+                                    case 'Eliminado':
+                                        colorClass = 'bg-danger text-white';
+                                        estadoTexto = 'Eliminado';
+                                        break;
+                                    default:
+                                        colorClass = 'bg-secondary text-white';
+                                        estadoTexto = 'Estado Desconocido';
+                                }
+
+                                return `<span class="badge ${colorClass}">${estadoTexto}</span>`;
+                            } else {
+                                return `<span class="badge bg-secondary text-white">Sin Estado</span>`;
+                            }
+                        }
+                    },
+                    {
+                        data: null,
+                        orderable: false,
+                        className: 'text-center',
+                        render: function (data, type, row) {
+                            return `
+                                <div style="display: flex; align-items: center; justify-content: center;">
+                                    <input type="checkbox" class="row-checkbox" data-id="${row.id_deduccion}" style="margin-right: 5px;">
+                                </div>
+                            `;
+                        }
+                    }
+
+                ],
+                order: [[0, "asc"]],
+                fixedColumns: {
+
+                    right: 2
+                },
+                initComplete: function () {
+                    tableDetallePlanillas.columns.adjust().draw();
+
+                    const table = this.api();
+                    if (modoAgrupacion === "DETALLE") {
+                        table.column(10).visible(false);
+                        table.column(11).visible(false);
+                        table.column(12).visible(false);
+                        table.column(14).visible(false);
+                        table.column(17).visible(false);
+                        table.column(18).visible(false);
+                        table.column(19).visible(false);
+                        table.column(20).visible(false);
+                        table.column(21).visible(false);
+                    } else {
+                        table.column(10).visible(true);
+                        table.column(11).visible(true);
+                        table.column(12).visible(true);
+                        table.column(13).visible(true);
+                        table.column(14).visible(true);
+                        table.column(15).visible(true);
+                        table.column(16).visible(true);
+                        table.column(17).visible(true);
+                        table.column(18).visible(true);
+                        table.column(19).visible(true);
+                        table.column(20).visible(true);
+                        table.column(21).visible(true);
+
+                    }
+
+                    $('#checkAllPlanilla').on('click', function () {
+                        if ($(this).is(':checked')) {
+                            $('#dropdownAcciones').fadeIn(); // Mostrar el dropdown con animación
+                            // $('.dropdown-item:contains("Editar")').addClass('disabled');  // Deshabilitar "Editar" porque hay múltiples filas seleccionadas
+
+                            // Seleccionar todos los checkboxes de las filas
+                            $('.row-checkbox').prop('checked', true).closest('tr').addClass('selected-row');
+                        } else {
+                            $('#dropdownAcciones').fadeOut(); // Ocultar el dropdown si se desmarca
+                            $('.row-checkbox').prop('checked', false).closest('tr').removeClass('selected-row');
+                        }
+                    });
+
+                    // Evento para checkboxes individuales
+                    $('.row-checkbox').on('change', function () {
+                        let selectedCount = $('.row-checkbox:checked').length;
+
+                        if (selectedCount > 0) {
+                            $('#dropdownAcciones').fadeIn(); // Mostrar el dropdown si hay filas seleccionadas
+
+                            if (selectedCount === 1) {
+                                // $('.dropdown-item:contains("Editar")').removeClass('disabled'); // Habilitar "Editar" si hay solo una fila seleccionada
+                            } else {
+                                // $('.dropdown-item:contains("Editar")').addClass('disabled');  // Deshabilitar "Editar" si hay más de una fila seleccionada
+                            }
+                        } else {
+                            $('#dropdownAcciones').fadeOut(); // Ocultar el dropdown si no hay filas seleccionadas
+                        }
+                    });
+
+                    // Evento para hacer clic en una fila
+                    $('#detalle-planillas-table tbody').on('click', 'tr', function (e) {
+                        if (!$(e.target).is('input, button, a')) {  // Evita conflictos al hacer clic en botones, enlaces o inputs
+                            let checkbox = $(this).find('.row-checkbox');
+                            checkbox.prop('checked', !checkbox.is(':checked')).trigger('change');
+                        }
+                    });
+
+                },
+                footerCallback: function (row, data, start, end, display) {
+                    var api = this.api();
+
+                    // Función para sumar una columna
+                    var sumColumn = function (index) {
+                        return api
+                            .column(index, { page: 'current' })
+                            .data()
+                            .reduce(function (a, b) {
+                                return (parseFloat(a) || 0) + (parseFloat(b) || 0);
+                            }, 0);
+                    };
+
+                    // Índices de columnas a sumar
+                    var sumColumns = [9, 12, 13, 14, 15, 16, 17]; // Sueldo Base, Deducciones, Bonificaciones, Comisiones
+
+                    // Actualizar el footer para columnas sumables con alineación a la derecha
+                    sumColumns.forEach(function (index) {
+                        $(api.column(index).footer()).html(
+                            $.fn.dataTable.render.number(',', '.', 2).display(sumColumn(index))
+                        ).css('text-align', 'right'); // Forzar el texto a alinearse a la derecha
+                    });
+
+                    // Columnas no sumables con texto centrado
+                    var nonSummableColumns = [1, 2, 3, 4, 5, 6, 7, 8];
+                    nonSummableColumns.forEach(function (index) {
+                        $(api.column(index).footer()).html('-').css('text-align', 'center');
+                    });
+
+                    // Primera columna con "Totales"
+                    $(api.column(0).footer()).html('Totales:').css('text-align', 'center').addClass('font-weight-bold');
+                }
+
+            });
+        }
+
+        $(document).on('click', '.aplica-salario-completo-checkbox', function () {
+            var filaAplica = $(this).closest('tr');
+            id_empleado = filaAplica.find("td:eq(0)").text();
+            
+            aplica_salario = $(this).is(':checked') ? 1 : 0;
+
+            $.ajax({
+                url: "{% url 'aplica_salario_completo' %}", 
+                type: "POST",
+                data: {
+                    id_empleado: id_empleado,
+                    id_planilla: '{{codigo}}',
+                    aplica_salario: aplica_salario,
+                    csrfmiddlewaretoken: "{{ csrf_token }}"
+                },
+                success: function (data) {
+                    if (data.save == 1) {
+                        if (aplica_salario == 1) {
+                            toastMixin.fire({
+                                animation: true,
+                                title: 'Aplica Salario Completo Marcado!'
+                            });
+                        } else {
+                            toastMixin.fire({
+                                animation: true,
+                                title: 'Aplica Salario Completo Desmarcado!'
+                            });
+                        }
+
+                        // REEMPLAZAR RELOAD POR LA TABLA QUE SE ESTA UTILIZANDO
+                        tableDetallePlanillas.ajax.reload(null, false);
+                    } else {
+                        Swal.fire({
+                            icon: 'error',
+                            title: 'Error',
+                            text: 'No se Puede Aplicar el Salario Completo!'
+                        });
+                    }
+                }
+            });
+        });
+
+
+        $('button[data-bs-toggle="tab"]').on('click', function (e) {
+            let target = $(this).attr('data-bs-target');
+
+            if (target === '#detalles-planillas-empleado') {
+                tableDetallePlanillas.columns.adjust().draw();
+            } else if (target === '#detalles-planillas-no-asociados') {
+                tableNoAsociados.columns.adjust().draw();
+            }
+        });
+
+        $(document).on("click", ".btn-editar-detail-planilla", function (e) {
+            e.preventDefault();
+            selectedValue = $('#filtrarModo').val();
+
+            if (selectedValue == 'AGRUPADO') {
+                codigoEmpleado = $(this).closest('tr').find('td').eq(0).text();
+                $('#cod-empleado').val(codigoEmpleado);
+
+                actualizarTablaDeducciones(codigoEmpleado);
+                $('#detallePlanillaEmpleado').modal('show');
+            } else if (selectedValue == 'DETALLE') {
+                var deduccionRow = $(this).closest('tr');
+                var rowData = $('#detalle-planillas-table').DataTable().row(deduccionRow).data();
+                idDeduccion = deduccionRow.find("td:eq(0)").text();
+                let valor = deduccionRow.find('td').eq(9).text().trim(); // Obtener texto con formato
+
+                // Asignar directamente el valor limpio al input sin máscara
+                $('#valor-deduccion-manual').val(valor);
+
+
+                tipo = deduccionRow.find('td').eq(10).text();
+                $('#tipoArchivoManual').prop('disabled', true);
+                if (tipo === 'DEDUCCION') {
+                    $('#tipoArchivoManual').val(1).trigger('change');
+                } else if (tipo === 'BONIFICACION') {
+                    $('#tipoArchivoManual').val(2).trigger('change');
+                } else if (tipo === 'COMISION') {
+                    $('#tipoArchivoManual').val(3).trigger('change');
+                }
+                let idEmpleados = deduccionRow.find('td').eq(1).text();
+                $('#empleado-planilla-manual').val(idEmpleados).trigger('chosen:updated');
+                $('#empleado-planilla-manual').val('').prop('disabled', true);
+
+                $('#idDeduccionDetalle').val(idDeduccion);
+
+                nombre1 = deduccionRow.find('td').eq(11).text();
+                nombre2 = deduccionRow.find('td').eq(12).text();
+                nombre = nombre1 + nombre2;
+                console.log('nombre' + nombre)
+
+                // Esperar a que las opciones del select estén cargadas.
+                waitForOptions('#deduccion-planilla-manual', nombre, nombre, 5000)
+                    .then(() => {
+                        $('#deduccion-planilla-manual').trigger('chosen:updated');
+                    })
+                    .catch((err) => {
+                        console.error('Error:', err);
+                    });
+                // Cambiar título y botón al modo de edición
+                $('#CrearDeduccionEmpledado').text('Editar Registro');
+                $('#formCrearDeduccionManual button[type="submit"]').html('<i class="material-icons">edit</i> Editar');
+
+                $('#bonificacionesYDeduccionesManualmente').modal('show');
+            }
+        });
+
+
+        $(document).on('click', '.btn-delete-detail-planilla', function (e) {
+            e.preventDefault();
+            fila = $(this).closest("tr");
+
+            idEmpleado = fila.find("td:eq(0)").text();
+            let table = $('#detalle-planillas-table').DataTable();
+
+
+            let modoAgrupacion = $('#filtrarModo').val();
+
+            Swal.fire({
+                title: '¿Estás seguro?',
+                text: 'Esto eliminará los detalles de la deducción en esta planilla.',
+                icon: 'warning',
+                showCancelButton: true,
+                confirmButtonText: 'Sí, eliminar',
+                cancelButtonText: 'Cancelar',
+                customClass: {
+                    confirmButton: 'btn btn-success',
+                    cancelButton: 'btn btn-danger'
+                },
+                buttonsStyling: false
+            }).then((result) => {
+                if (result.isConfirmed) {
+                    $.ajax({
+                        url: "{% url 'eliminar_deduccion' %}",  // Asegúrate de que esta URL sea correcta
+                        type: 'POST',
+                        data: {
+                            id_empleado: idEmpleado,
+                            id_planilla: idPlanilla,
+                            modo_agrupacion: modoAgrupacion,
+                            modificado_por: '{{ userName }}',  // Usuario actual
+                            csrfmiddlewaretoken: csrfToken
+                        },
+                        success: function (data) {
+                            if (data.status === 'success') {
+                                Swal.fire({
+                                    icon: 'success',
+                                    title: 'Eliminado',
+                                    text: 'El detalle de la planilla ha sido eliminado correctamente.',
+                                }).then(() => {
+                                    table.ajax.reload();
+
+
+                                });
+                            } else {
+                                Swal.fire({
+                                    icon: 'error',
+                                    title: 'Error',
+                                    text: data.message || 'No se pudo eliminar el detalle de la planilla. Inténtelo nuevamente.',
+                                });
+                            }
+                        },
+                        error: function (xhr, status, error) {
+                            Swal.fire({
+                                icon: 'warning',
+                                title: 'Error',
+                                text: 'Hubo un problema al eliminar el detalle de la planilla.',
+                            });
+                        }
+                    });
+                }
+            });
+        });
+
+        $('.formattedMoneyInputs').inputmask("decimal", {
+            radixPoint: ".",
+            groupSeparator: ",",
+            digits: 2,
+            autoGroup: true,
+            rightAlign: false,
+            removeMaskOnSubmit: true,
+        });
+
+        $(document).on('click', '.btn-delete-detail-planilla-empleado', function (e) {
+            e.preventDefault();
+
+            var deduccionRow = $(this).closest('tr');
+            var rowData = $('#detalle-planillas-table').DataTable().row(deduccionRow).data();
+            idDeduccion = deduccionRow.find("td:eq(0)").text();
+
+            let table = $('#detalle-planillas-table').DataTable();
+            let table_detalle = $('#deduccionesXempleados').DataTable();
+            Swal.fire({
+                title: '¿Estás seguro?',
+                text: 'Esto eliminará los detalles de la deducción en esta planilla.',
+                icon: 'warning',
+                showCancelButton: true,
+                confirmButtonText: 'Sí, eliminar',
+                cancelButtonText: 'Cancelar',
+                customClass: {
+                    confirmButton: 'btn btn-success',
+                    cancelButton: 'btn btn-danger'
+                },
+                buttonsStyling: false
+            }).then((result) => {
+                if (result.isConfirmed) {
+                    $.ajax({
+                        url: "{% url 'eliminar_deduccion_x_empleado' %}",  // Asegúrate de que esta URL sea correcta
+                        type: 'POST',
+                        data: {
+                            id_deduccion: idDeduccion,
+                            id_planilla: '{{ codigo }}',
+                            modificado_por: '{{ userName }}',
+                            csrfmiddlewaretoken: csrfToken
+                        },
+                        success: function (data) {
+                            if (data.status === 'success') {
+                                Swal.fire({
+                                    icon: 'success',
+                                    title: 'Eliminado',
+                                    text: 'El detalle de la planilla ha sido eliminado correctamente.',
+                                }).then(() => {
+                                    table.ajax.reload();
+
+                                    const idEmpleado = $('#idempleadomanua').val(); // Asumiendo que tienes el ID del empleado en un input o variable
+                                    actualizarTablaDeducciones(idEmpleado);
+
+
+                                });
+                            } else {
+                                Swal.fire({
+                                    icon: 'error',
+                                    title: 'Error',
+                                    text: data.message || 'No se pudo eliminar el detalle de la planilla. Inténtelo nuevamente.',
+                                });
+                            }
+                        },
+                        error: function (xhr, status, error) {
+                            Swal.fire({
+                                icon: 'warning',
+                                title: 'Error',
+                                text: 'Hubo un problema al eliminar el detalle de la planilla.',
+                            });
+                        }
+                    });
+                }
+            });
+        });
+
+        $(document).on("click", ".btn-editar-detail-planilla-empleado", function (e) {
+            e.preventDefault();
+
+            var deduccionRow = $(this).closest('tr');
+            var rowData = $('#detalle-planillas-table').DataTable().row(deduccionRow).data();
+            idDeduccion = deduccionRow.find("td:eq(0)").text();
+            valor = deduccionRow.find('td').eq(5).text();
+            tipo = deduccionRow.find('td').eq(6).text();
+            $('#tipoArchivoManual').prop('disabled', false);
+            if (tipo === 'DEDUCCION') {
+                $('#tipoArchivoManual').val(1).trigger('change');
+            } else if (tipo === 'BONIFICACION') {
+                $('#tipoArchivoManual').val(2).trigger('change');
+            } else if (tipo === 'COMISION') {
+                $('#tipoArchivoManual').val(3).trigger('change');
+            }
+            let idEmpleados = deduccionRow.find('td').eq(2).text();
+            $('#empleado-planilla-manual').val(idEmpleados).trigger('chosen:updated');
+
+            $('#valor-deduccion-manual').val(valor);
+            $('#idDeduccionDetalle').val(idDeduccion);
+
+            nombre1 = deduccionRow.find('td').eq(7).text();
+            nombre2 = deduccionRow.find('td').eq(8).text();
+            nombre = (nombre1 + ' | ' + nombre2);
+            nombre_sin_pleca = nombre1;
+
+            console.log('nombre' + nombre);
+
+            // Esperar a que las opciones del select estén cargadas.
+            waitForOptions('#deduccion-planilla-manual', nombre, nombre_sin_pleca, 5000)
+                .then(() => {
+                    $('#deduccion-planilla-manual').trigger('chosen:updated');
+                })
+                .catch((err) => {
+                    console.error('Error:', err);
+                });
+            // Cambiar título y botón al modo de edición
+            $('#CrearDeduccionEmpledado').text('Editar Registro');
+            $('#formCrearDeduccionManual button[type="submit"]').html('<i class="material-icons">edit</i> Editar');
+
+            $('#bonificacionesYDeduccionesManualmente').modal('show');
+
+        });
+
+        // Función para esperar que las opciones del select estén listas
+        function waitForOptions(selector, targetName, targetNameNoPleca, timeout) {
+            return new Promise((resolve, reject) => {
+                let elapsedTime = 0;
+                const interval = 100; // Comprobar cada 100 ms
+                const checkOptions = setInterval(() => {
+                    if (elapsedTime >= timeout) {
+                        clearInterval(checkOptions);
+                        reject(`No se encontró la opción: ${targetName} dentro del tiempo límite`);
+                    }
+
+                    $(selector + ' option').each(function () {
+                        if ($(this).text().trim() === targetName.trim() || $(this).text().trim() === targetNameNoPleca.trim()) {
+                            $(this).prop('selected', true);
+                            clearInterval(checkOptions);
+                            resolve();
+                        }
+                    });
+
+                    elapsedTime += interval;
+                }, interval);
+            });
+        }
+
+        $(document).on("click", ".cerrar-modal-ded", function () {
+            // Limpiar el formulario
+            $('#formCrearDeduccionManual')[0].reset();
+
+            // Restablecer los select con Chosen
+            $('#formCrearDeduccionManual .chosen-select').val('').trigger('chosen:updated');
+
+            // Limpiar campos específicos si es necesario
+            $('#idDeduccionDetalle').val('');
+            $('#tipoArchivoManual').prop('disabled', false).val('');
+
+            // Opcional: Restablecer el título y el botón del modal
+            $('#CrearDeduccionEmpledado').text('Nuevo Ingreso');
+            $('#formCrearDeduccionManual button[type="submit"]').html('<i class="material-icons">save</i> Guardar');
+        });
+
+        $('#formSubirDeducciones').submit(function (e) {
+            e.preventDefault();
+
+            var formData = new FormData(this);
+
+            $.ajax({
+                url: "{% url 'subir_deducciones_bonificaciones' %}",
+                type: 'POST',
+                data: formData,
+                processData: false,
+                contentType: false,
+                success: function (response) {
+                    alert(response.mensaje);
+                },
+                error: function (xhr, status, error) {
+                    alert("Error: " + xhr.responseText);
+                }
+            });
+        });
+        $(document).on('click', 'label[for="archivoSubida"]', async function (e) {
+            e.preventDefault(); // Prevenir comportamiento predeterminado de abrir el selector
+            const label = $(this);
+
+            if (label.data('blocked')) {
+                console.log("Evento bloqueado temporalmente para evitar múltiples clics.");
+                return;
+            }
+
+            label.data('blocked', true); // Bloquear el evento
+
+            try {
+                console.log("Iniciando verificación de registros existentes.");
+                const response = await verificarRegistros(); // Llamada AJAX para verificar registros
+
+                if (response.hay_registros) {
+                    console.log("Hay registros existentes. Mostrando confirmación.");
+                    const confirmed = await mostrarConfirmacion(response.cantidad_registros);
+
+                    if (confirmed) {
+                        console.log("Usuario confirmó la eliminación. Procediendo a abrir selector de archivos.");
+                        abrirSelectorArchivos(); // Abrir selector manualmente
+                    } else {
+                        console.log("Usuario canceló la acción.");
+                        Swal.fire({
+                            icon: 'info',
+                            title: 'Cancelado',
+                            text: 'La acción fue cancelada.',
+                        });
+                    }
+                } else {
+                    console.log("No hay registros existentes. Abriendo selector directamente.");
+                    abrirSelectorArchivos(); // Abrir selector manualmente
+                }
+            } catch (error) {
+                console.error("Error en la verificación de registros:", error);
+                Swal.fire({
+                    icon: 'error',
+                    title: 'Error',
+                    text: 'Ocurrió un problema al verificar los registros.',
+                });
+            } finally {
+                label.data('blocked', false); // Reactivar el evento
+            }
+        });
+
+        // Función para abrir el selector de archivos manualmente
+        function abrirSelectorArchivos() {
+            $('#archivoSubida').click(); // Abrir el input
+        }
+
+        // Evento change para manejar la selección del archivo
+        $('#archivoSubida').change(function () {
+            console.log("Evento 'change' detectado en el input de archivo.");
+            const file = $('#archivoSubida')[0].files[0];
+
+            if (!file) {
+                console.log("No se seleccionó ningún archivo.");
+                Swal.fire({
+                    icon: 'error',
+                    title: 'Error',
+                    text: 'No se ha seleccionado ningún archivo.',
+                });
+                return;
+            }
+
+            console.log("Archivo seleccionado:", file.name);
+            subirArchivo(file); // Subir archivo
+            $('#archivoSubida').val('');
+        });
+
+        // Función asincrónica para verificar registros existentes
+        async function verificarRegistros() {
+            return new Promise((resolve, reject) => {
+                $.ajax({
+                    url: "{% url 'verificar_registros_deducciones' %}",
+                    type: "POST",
+                    headers: {
+                        'X-CSRFToken': csrfToken
+                    },
+                    data: {
+                        id_planilla: idPlanilla
+                    },
+                    success: function (response) {
+                        resolve(response);
+                    },
+                    error: function (error) {
+                        reject(error);
+                    }
+                });
+            });
+        }
+
+        // Función asincrónica para mostrar confirmación
+        async function mostrarConfirmacion(cantidadRegistros) {
+            const result = await Swal.fire({
+                title: '¿Estás seguro?',
+                text: `Esto eliminará ${cantidadRegistros} registros existentes. ¡Esta acción no se puede deshacer!`,
+                icon: 'warning',
+                showCancelButton: true,
+                confirmButtonColor: '#28A745',
+                cancelButtonColor: '#d33',
+                confirmButtonText: 'Sí, continuar',
+                cancelButtonText: 'Cancelar'
+            });
+
+
+            return result.isConfirmed;
+        }
+
+        // Función para subir el archivo
+        async function subirArchivo(file) {
+            console.log("Iniciando la subida del archivo:", file.name);
+
+            Swal.fire({
+                title: '',
+                html: '<b>Cargando Datos</b>',
+                didOpen: () => {
+                    Swal.showLoading();
+                },
+                allowOutsideClick: false,
+                showConfirmButton: false
+            });
+
+            const formData = new FormData();
+            formData.append('codigo', $('#codigo').val());
+            formData.append('fecha_planilla', $('#fecha_planilla').val());
+            formData.append('creado_por', $('#creado-por').val());
+            formData.append('archivoSubida', file);
+
+            try {
+                const response = await enviarArchivo(formData);
+                console.log("Archivo subido exitosamente:", response);
+
+                Swal.close();
+                tableDetallePlanillas.ajax.reload();
+                tableNoAsociados.ajax.reload();
+                Swal.fire({
+                    icon: 'success',
+                    title: 'Éxito',
+                    text: response.mensaje,
+                    confirmButtonText: 'OK'
+                });
+            } catch (error) {
+                console.error("Error al subir el archivo:", error);
+                Swal.fire({
+                    icon: 'error',
+                    title: 'Error',
+                    text: error.responseJSON?.error || 'Error al procesar el archivo.',
+                });
+            }
+        }
+
+        // Función asincrónica para enviar el archivo
+        async function enviarArchivo(formData) {
+            return new Promise((resolve, reject) => {
+                $.ajax({
+                    url: "{% url 'subir_deducciones_bonificaciones' %}",
+                    type: "POST",
+                    data: formData,
+                    processData: false,
+                    contentType: false,
+                    headers: {
+                        'X-CSRFToken': csrfToken
+                    },
+                    success: function (response) {
+                        resolve(response);
+                    },
+                    error: function (error) {
+                        reject(error);
+                    }
+                });
+            });
+        }
+
+        function pushEmpleadoDetalles(id_detalle_x_empleado) {
+
+            return {
+                id_detalle_x_empleado: id_detalle_x_empleado,
+            }
+
+        }
+
+         $(document).on('click', '#asociar-eliminar-detalle-planilla', function () {
+            var checkboxesSeleccionados = $('#detalle-planillas-no-asociados-table .asociar-checkbox:checked').length;
+
+            if (checkboxesSeleccionados == 0) {
+                Swal.fire({
+                    title: '',
+                    text: 'Para Eliminar debes seleccionar uno o más Registros!',
+                    icon: 'warning',
+                    confirmButtonText: 'OK'
+                });
+                return false;
+            }
+            groupText = "los Detalles de empleados sin asociar!";
+            successMsg = "Detalles Seleccionados Eliminados!";
+
+
+            var arrEmpleadoDetalle = [];
+            let table = $('#detalle-planillas-no-asociados-table').DataTable();
+
+            // Usar DataTables para iterar sobre las filas seleccionadas en todo el conjunto filtrado
+            table.rows({ search: 'applied' }).every(function () {
+                var data = this.node(); // Obtener el nodo DOM de la fila
+                var checkbox = $(data).find('.asociar-checkbox'); // Buscar el checkbox en la fila
+
+                if (checkbox.is(':checked')) {
+                    var detalle = $(data).find('td:eq(0)').text(); // Extraer el texto de la celda
+                    arrEmpleadoDetalle.push(pushEmpleadoDetalles(detalle));
+                }
+            });
+            // Confirmación de eliminación con SweetAlert2
+            Swal.fire({
+                title: '¿Estás seguro de eliminar ' + groupText,
+                text: 'Esta acción eliminará los datos seleccionados',
+                icon: 'warning',
+                showCancelButton: true,
+                confirmButtonColor: '#28A745',
+                cancelButtonColor: '#d33',
+                confirmButtonText: 'Sí, eliminar',
+                cancelButtonText: 'Cancelar'
+            }).then((result) => {
+                if (result.isConfirmed) {
+                    Swal.fire({
+                        title: '',
+                        html: '',
+                        didOpen: () => {
+                            Swal.showLoading();
+                        },
+                        allowOutsideClick: false,
+                        showConfirmButton: false
+                    });
+
+                    $.ajax({
+                        url: "{% url 'eliminar_deduccion' %}", 
+                        type: 'POST',
+                        data: {
+                            id_planilla: idPlanilla,
+                            arrEmpleadoDetalle: arrEmpleadoDetalle,
+                            agrupacion: 2,
+                            modificado_por: '{{ userName }}', 
+                            csrfmiddlewaretoken: csrfToken
+                        },
+                        success: function (data) {
+                            Swal.close();
+                            if (data.save == 1) {
+                                tableNoAsociados.ajax.reload();
+                                Swal.fire("", successMsg, "success");
+                            } else {
+                                Swal.fire("", "No se pudo Eliminar. Inténtelo nuevamente.", "error");
+                                console.log(data.error);
+                            }
+
+                        },
+                    });
+
+
+                } else {
+
+                }
+            });
+        });
+
+    
+    	$(document).on('click', '#eliminar-detalle-planilla', function () {
+
+            agrupacion = $('#filtrarModo').val();
+
+            if (agrupacion == "AGRUPADO") {
+                value = 1;
+                groupText = "los Detalles de los Empleados Seleccionados!";
+                successMsg = "Detalles de Empleados Seleccionados Eliminados!";
+            } else {
+                value = 2;
+                groupText = "los Detalles Seleccionados!";
+                successMsg = "Detalles Seleccionados Eliminados!";
+            }
+
+            var arrEmpleadoDetalle = [];
+            const table = $('#detalle-planillas-table').DataTable();
+
+            // Usar DataTables para iterar sobre las filas seleccionadas en todo el conjunto filtrado
+            table.rows({ search: 'applied' }).every(function () {
+                var data = this.node(); // Obtener el nodo DOM de la fila
+                var checkbox = $(data).find('.row-checkbox'); // Buscar el checkbox en la fila
+
+                if (checkbox.is(':checked')) {
+                    var detalle = $(data).find('td:eq(0)').text(); // Extraer el texto de la celda
+                    arrEmpleadoDetalle.push(pushEmpleadoDetalles(detalle));
+                }
+            });
+
+            // Confirmación de eliminación con SweetAlert2
+            Swal.fire({
+                title: '¿Estás seguro de eliminar ' + groupText,
+                text: 'Esta acción eliminará los datos seleccionados',
+                icon: 'warning',
+                showCancelButton: true,
+                confirmButtonColor: '#28A745',
+                cancelButtonColor: '#d33',
+                confirmButtonText: 'Sí, continuar',
+                cancelButtonText: 'Cancelar'
+            }).then((result) => {
+                if (result.isConfirmed) {
+                    Swal.fire({
+                        title: '',
+                        html: '',
+                        didOpen: () => {
+                            Swal.showLoading();
+                        },
+                        allowOutsideClick: false,
+                        showConfirmButton: false
+                    });
+
+                    $.ajax({
+                        url: "{% url 'eliminar_deduccion' %}",  // Asegúrate de que esta URL sea correcta
+                        type: 'POST',
+                        data: {
+                            id_planilla: idPlanilla,
+                            arrEmpleadoDetalle: arrEmpleadoDetalle,
+                            agrupacion: value,
+                            modificado_por: '{{ userName }}',  // Usuario actual
+                            csrfmiddlewaretoken: csrfToken
+                        },
+                        success: function (data) {
+                            Swal.close();
+                            if (data.save == 1) {
+                                tableDetallePlanillas.ajax.reload();
+                                Swal.fire("", successMsg, "success");
+                            } else {
+                                Swal.fire("", "No se pudo Eliminar. Inténtelo nuevamente.", "error");
+                                console.log(data.error);
+                            }
+
+                        },
+                    });
+
+                } else {
+
+                }
+            });
+
+        });
+
+        let deduccionesSeleccionadas1 = [];
+
+        $(document).on('change', '.row-checkbox', function () {
+            let isChecked = $(this).is(':checked');
+            let idDeduccion = $(this).data('id'); // Obtener el ID desde el data-id del checkbox
+
+            // Verificar si el checkbox está marcado y si el botón existe o está visible
+            if (isChecked) {
+                let table = $('#detalle-planillas-table').DataTable();
+                $('#empleado-planilla-manual').val('').prop('disabled', true);
+                // Buscar la fila por ID en DataTable
+                let rowData = table.rows().data().toArray().find(row => row.id_deduccion == idDeduccion);
+
+                if (!rowData) {
+                    console.error('No se encontró información para el ID:', idDeduccion);
+                    return;
+                }
+
+                // Cargar datos en el modal
+                $('#idDeduccionDetalle').val(rowData.id_deduccion);
+                $('#empleado-planilla-manual').val(rowData.id_empleado).trigger('chosen:updated');
+                $('#valor-deduccion-manual').val(rowData.salario_base);
+
+                // Determinar tipo basado en total_deducciones
+                if (rowData.total_deducciones === 'DEDUCCION') {
+                    $('#tipoArchivoManual').val(1).trigger('change');
+                } else if (rowData.total_deducciones === 'BONIFICACION') {
+                    $('#tipoArchivoManual').val(2).trigger('change');
+                } else if (rowData.total_deducciones === 'COMISION') {
+                    $('#tipoArchivoManual').val(3).trigger('change');
+                }
+                $('#idDeduccionDetalle').val(idDeduccion);
+
+
+                nombre1 = (rowData.total_bonificaciones);
+                nombre2 = (rowData.total_comisiones);
+
+
+                nombre = (nombre1 + ' | ' + nombre2);
+                nombre_sin_pleca = nombre1;
+
+                console.log('nombre' + nombre);
+
+                // Esperar a que las opciones del select estén cargadas.
+                waitForOptions('#deduccion-planilla-manual', nombre, nombre_sin_pleca, 5000)
+                    .then(() => {
+                        $('#deduccion-planilla-manual').trigger('chosen:updated');
+                    })
+                    .catch((err) => {
+                        console.error('Error:', err);
+                    });
+                // Cambiar título y botón al modo de edición
+                $('#CrearDeduccionEmpledado').text('Editar Registro');
+                $('#formCrearDeduccionManual button[type="submit"]').html('<i class="material-icons">edit</i> Editar');
+
+
+                $('#fecha-planilla-manual').val(rowData.fecha_planilla); // Fecha de planilla
+
+            }
+        });
+
+
+
+        $(document).on("click", "#editar-detalle-planilla", function (e) {
+            e.preventDefault();
+            let selectedValue = $('#filtrarModo').val();
+
+            var checkboxesSeleccionados = $('#detalle-planillas-table .row-checkbox:checked').length;
+
+            // Verificar si hay 0 o más de 1 seleccionados.
+            if (checkboxesSeleccionados == 0 || checkboxesSeleccionados > 1) {
+                Swal.fire({
+                    title: '',
+                    text: 'Para Editar solo debes seleccionar un Registro!',
+                    icon: 'warning',
+                    confirmButtonText: 'OK'
+                });
+                return false; // Detener la ejecución del código.
+            }
+
+            if (selectedValue == 'AGRUPADO') {
+                let arrEmpleadoDetalle = [];
+                $("#detalle-planillas-table tbody .row-checkbox:checked").each(function () {
+                    var fila = $(this).closest("tr");
+
+                    // Obtiene el detalle de la primera celda
+                    var detalle = fila.find("td:eq(0)").text();
+
+                    // Muestra el detalle en la consola
+                    console.log("Detalle obtenido:", detalle);
+                    $('#idempleadomanua').val(detalle);
+
+                    actualizarTablaDeducciones(detalle);
+
+                });
+
+                $('#detallePlanillaEmpleado').modal('show');
+            } else if (selectedValue == 'DETALLE') {
+                // Mostrar el modal con datos cargados
+                $('#bonificacionesYDeduccionesManualmente').modal('show');
+
+
+            }
+        });
+        $('#modalComprobantePago').on('shown.bs.modal', function () {
+            tableDiasComprobanteBanco.columns.adjust().draw();
+        });
+
+
+
+    });
+    $(document).ready(function () {
+        tableDiasComprobanteBanco = $('#comprobante-bancos-table').DataTable({
+            scrollX: true,
+            scrollCollapse: true,
+            scrollY: '450px',
+            pageLength: 50,
+            dom: 'Bfrtip',
+            language: {
+                url: "{% static 'app/th/json/es-ES.json' %}",
+            },
+            buttons: [
+                {
+                    extend: 'excel',
+                    text: '<i class="fas fa-file-excel"></i>',
+                    titleAttr: 'Exportar a Excel',
+                    className: 'btn btn-success',
+                },
+                {
+                    extend: 'pdf',
+                    text: '<i class="fas fa-file-pdf"></i>',
+                    titleAttr: 'Exportar a PDF',
+                    className: 'btn btn-danger',
+                },
+                {
+                    extend: 'print',
+                    text: '<i class="fas fa-print"></i>',
+                    titleAttr: 'Imprimir',
+                    className: 'btn btn-primary',
+                    orientation: 'landscape',
+                },
+            ],
+            ajax: {
+                url: '{% url "comprobante_bancos" %}', // Endpoint para cargar los datos
+                type: 'POST',
+                headers: {
+                    'X-CSRFToken': csrfToken,
+                },
+                data: function (d) {
+                    d.id_planilla = '{{codigo}}';
+                },
+                dataSrc: 'comprobante', // Extraer datos desde la propiedad "comprobante"
+            },
+            columns: [
+                { data: 'identidad' },
+                { data: 'nombre_completo' },
+                { data: 'cuenta_bancaria' },
+                { data: 'Banco' }, // Coincide con el valor del filtro
+                {
+                    data: 'total_pagar',
+                    className: 'text-right',
+                    render: $.fn.dataTable.render.number(',', '.', 2),
+                },
+            ],
+            order: [[1, "asc"]],
+            initComplete: function () {
+                const api = this.api();
+
+                $('#id-banco-comprobante').on('change', function () {
+                    const selectedBanco = $(this).val(); // Obtener el banco seleccionado
+                    console.log("Banco seleccionado:", selectedBanco); // Depuración
+                    console.log("Datos en la columna Banco:", api.column(3).data().toArray()); // Mostrar datos de la columna
+                    if (selectedBanco) {
+                        // Aplicar filtro a la columna "Banco"
+                        api.column(3).search(selectedBanco).draw();
+                    } else {
+                        // Limpiar el filtro si no hay selección
+                        api.column(3).search('').draw();
+                    }
+                });
+
+
+
+                // Ajustar columnas después de mostrar el modal
+                $('#modalComprobantePago').on('shown.bs.modal', function () {
+                    api.columns.adjust().draw();
+                });
+            },
+        });
+    });
+
+    $('#botonManual').on('click', function () {
+        // Limpia todos los inputs dentro del formulario
+        $('#empleado-planilla-manual').val('').prop('disabled', false);
+
+        $('#formCrearDeduccionManual')[0].reset();
+
+        // Limpia los selects específicos (si usan librerías como chosen)
+        $('#tipoArchivoManual').val('').trigger('chosen:updated');
+        $('#empleado-planilla-manual').val('').trigger('chosen:updated');
+        $('#deduccion-planilla-manual').val('').trigger('chosen:updated');
+        $('#CrearDeduccionEmpledado').text('Nuevo Registro');
+        $('#formCrearDeduccionManual button[type="submit"]').html('<i class="material-icons">save</i> Guardar');
+
+        // Limpia campos ocultos
+        $('#idDeduccionDetalle').val('');
+        $('#idempleadomanua').val('');
+    });
+    document.addEventListener('DOMContentLoaded', function () {
+        // Verifica si el elemento con id 'estado' existe antes de acceder a él
+        const estadoElem = document.getElementById('estado');
+
+        if (estadoElem) {
+            const estado = estadoElem.value.trim().toLowerCase();  // Aquí se define 'estado'
+            console.log('Primer estado:', estado);  // Ahora 'estado' está definido
+            const botonDeduccionesManuales = document.getElementById('botonManual');
+            const botonSubidaArchivo = document.getElementById('archivo-subida');
+            const accionesDropdown = document.getElementById('accionesDropdown');
+            const accionesDropdown1 = document.getElementById('accionesDropdown1');
+            const botonComprobantePago = document.getElementById('botonComprobantePago');
+
+            if (estado === 'aplicada') {
+
+
+                // Verificar si los elementos existen en el DOM
+                if (botonSubidaArchivo && botonDeduccionesManuales && accionesDropdown && accionesDropdown1 && botonComprobantePago) {
+                    botonSubidaArchivo.classList.add('d-none');
+
+                    botonDeduccionesManuales.classList.add('d-none');
+                    accionesDropdown.classList.add('d-none');
+                    accionesDropdown1.classList.add('d-none');
+                    botonComprobantePago.classList.remove('d-none');
+
+                    Swal.fire({
+                        icon: 'info',
+                        title: 'Planilla Aplicada',
+                        text: 'No se pueden subir deducciones, bonificaciones ni archivos a una planilla aplicada.',
+                        confirmButtonText: 'Aceptar'
+                    });
+                } else {
+                    console.error('Algunos botones de deducciones, bonificaciones o subida de archivo no se encontraron');
+                }
+            } else {
+
+                botonComprobantePago.classList.add('d-none');
+                botonSubidaArchivo.classList.add('d-none');
+                botonSubidaArchivo.classList.remove('d-none');
+                botonDeduccionesManuales.classList.remove('d-none');
+                accionesDropdown.classList.remove('d-none');
+                accionesDropdown1.classList.remove('d-none');
+
+            }
+        } else {
+            console.error('El elemento con id "estado" no se encontró en el DOM.');
+        }
+    });
+
+</script>
+{% endblock %}

@@ -1,0 +1,464 @@
+{% extends 'menu_control_suministros.html' %}
+{% load static %}
+
+{% block title %}
+GESTIONAR OTROS
+{% endblock %}
+
+
+{% block body %}
+
+<div class="row align-items-center">
+    <div class="col d-flex align-items-center">
+        <!-- <button id="toggle-sidebar" class="hamburger btnMenu me-3" title="Mostrar/Ocultar Menu">
+            <i class="fas fa-bars"></i>
+        </button> -->
+        <h3 class="page-title mb-0">
+            <i class="fas fa-box"></i> <strong>LISTADO DE ALMACENES</strong>
+        </h3>
+    </div>
+
+    <div class="col-auto text-end float-end ms-auto download-grp">
+        <button class="btn btn-sm btn-success" style="background-color: #697a8a; text-align: justify;" id="btnNuevo"
+            title="Crear Nuevo"><i class="fas fa-plus me-2"></i>
+            <strong>Nuevo Almacen</strong></button>
+    </div>
+</div>
+
+<hr>
+
+<br>
+
+<div class="row mb-3">
+    <div class="col-auto">
+        <label for="estadoFiltro" class="form-label"><strong>Filtrar por Estado</strong></label>
+        <select id="estadoFiltro" class="form-select" aria-label="Filtrar por Estado">
+            <option value="0">Todo el listado</option>
+            <option value="1">Listado de Almacenes Activos</option>
+            <option value="3">Listado de Almacenes Deshabilitados</option>
+        </select>
+    </div>
+</div>
+
+<div class="row">
+    <div class="table-responsive bg-white shadow rounded-4 p-3">
+        <table id="Tabla_Almacenes"
+            class="table table-hover table-bordered table-striped table-sm align-middle mb-0 rounded-4"
+            style="width: 100%; border-collapse: collapse; border-radius: 10px; box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);">
+            <thead class="text-white text-center rounded-4" style="background-color: #697a8a; text-align: justify;">
+                <tr>
+                    <th class="text-center">No.</th>
+                    <th class="text-center">Nombre</th>
+                    <th class="text-center">Ubicación</th>
+                    <th class="text-center">Fecha de Creación</th>
+                    <th class="text-center">Grupo</th>
+                    <th class="text-center">Estado</th>
+                    <th class="text-center">Acciones</th>
+                </tr>
+            </thead>
+
+            <tbody>
+
+            </tbody>
+        </table>
+    </div>
+</div>
+
+{% include 'Modales_S/agregar_almacen.html' %}
+
+{% endblock %}
+
+
+{% block scripts %}
+
+<script>
+    $(document).ready(function () {
+        var csrfToken = "{{ csrf_token }}";
+        var cambiar_estado_actual = 0;
+        // var opcion = "{{ prueba }}";
+
+
+        var toastMixin = Swal.mixin({
+            toast: true,
+            icon: 'success',
+            title: 'General Title',
+            animation: false,
+            position: 'top-right',
+            showConfirmButton: false,
+            timer: 2000,
+            timerProgressBar: true,
+            didOpen: (toast) => {
+                toast.addEventListener('mouseenter', Swal.stopTimer);
+                toast.addEventListener('mouseleave', Swal.resumeTimer);
+            }
+        });
+
+        $('#menu_gestion_otros, #listar_almacenes_submenu').addClass('active');
+
+        select_estado_almacen = 0;
+
+        fillAlmacenes()
+
+        function fillAlmacenes() {
+
+            $("#Tabla_Almacenes").DataTable().clear().destroy();
+
+            Tabla_Almacenes = $("#Tabla_Almacenes").DataTable({
+                autoWidth: false,
+                scrollX: true,
+                scrollY: '350px',
+                scrollCollapse: true,
+                pageLength: 10,
+                dom: 'Brftip',
+                language: {
+                    url: "{% static 'app/th/json/es-ES.json' %}",
+                },
+                ajax: {
+                    url: `{% url 'get_almacenes_data' %}`,
+                    type: "POST",
+                    dataScr: 'data',
+                    data: {
+                        varEstado: select_estado_almacen,
+                        csrfmiddlewaretoken: csrfToken
+                    },
+                },
+                colReorder: {
+                    realtime: false,
+                },
+                buttons: [
+                    {
+                        extend: 'excel',
+                        text: '<i class="fas fa-file-excel"></i>',
+                        titleAttr: 'Excel',
+                        className: 'btn btn-success',
+                    },
+                    {
+                        extend: 'pdf',
+                        text: '<i class="fas fa-file-pdf"></i>',
+                        titleAttr: 'PDF',
+                        className: 'btn btn-danger',
+                    },
+                    {
+                        extend: 'print',
+                        text: '<i class="fas fa-print"></i>',
+                        titleAttr: 'Imprimir',
+                        className: 'btn btn-null',
+                        orientation: 'landscape'
+                    }
+                ],
+                columns: [
+                    {
+                        data: 'id_almacen'
+                    },
+                    {
+                        data: 'nombre_almacen',
+                    },
+                    {
+                        data: 'ubicacion_almacen'
+                    },
+                    {
+                        data: 'fecha_hora_creacion'
+                    },
+                    {
+                        data: 'GrupoNombre'
+                    },
+                    {
+                        data: 'estado',
+                        className: 'text-center',
+                        render: function (data, type, row) {
+                            var badge = "";
+                            if (data == 3) {
+                                badge +=
+                                    '<span class="badge badge-pill custom-red">DESHABILITADO</span>';
+                            } else {
+                                badge +=
+                                    '<span class="badge badge-pill bg-success">ACTIVO</span>';
+                            }
+
+                            return badge;
+                        },
+                    },
+                    {
+                        data: null,
+                        width: '3%',
+                        title: "Acciones",
+                        render: function (data, type, row) {
+                            if (row.estado == 3) {
+                                return `
+                            <div class="text-center">
+                                <div class="btn-group">
+                                    <button class="btn btn-danger btn-sm anularAlmacen rounded-pill shadow-sm" title="Cambiar Estado" data-id="${row.id_almacen}" data-estado="${row.estado}">
+                                        <i class="fas fa-sync-alt"></i>
+                                    </button>                                
+                                </div>
+                            </div>
+                            `;
+                            }
+                            return `
+                            <div class="text-center">
+                                <div class="btn-group">
+                                    
+                                    <button class="btn btn-warning btn-sm editarAlmacen rounded-pill shadow-sm" title="Editar Almacen" data-id="${row.id_almacen}"  data-id_grupo="${row.PKgrupo}" data-estado="${row.estado}">
+                                        <i class="fas fa-edit"></i>
+                                    </button>
+                                    <button class="btn btn-danger btn-sm anularAlmacen rounded-pill shadow-sm" title="Cambiar Estado" data-id="${row.id_almacen}" data-estado="${row.estado}">
+                                        <i class="fas fa-sync-alt"></i>
+                                    </button>                                
+                                </div>
+                            </div>
+                            `;
+                        }
+                    }
+                ],
+            });
+        }
+
+
+        // Agregar nuevo proveedores-categorias 
+        $('#btnNuevo').click(function (e) {
+            e.preventDefault();
+
+            $('#formAlmacenes').trigger('reset');
+            $('#modalAlmacenLabel').html('<strong>Crear Nuevo Almacen</strong>');
+            $('#modalAlmacen').modal('show');
+
+            // Establecer valores por defecto para el nuevo suministro
+            opcion = 1;
+            id_almacen = null;
+        });
+
+        // EDITAR EL ALMACÉN 
+        $(document).on('click', '.editarAlmacen', function () {
+            $('#formAlmacenes').trigger('reset'); // Limpiar el formulario antes de asignar nuevos valores
+
+            // Establecer la opción de editar y obtener la fila seleccionada
+            opcion = 2;
+            filaAlmacen = $(this).closest('tr');
+            id_almacen = $(this).data('id');
+            nombre_almacen = filaAlmacen.find("td:eq(1)").text();
+            ubicacion_almacen = filaAlmacen.find("td:eq(2)").text();
+            fkgrupo = $(this).data('id_grupo');
+
+            // Obtener la fecha desde la tabla (que es en formato YYYY-MM-DDTHH:MM:SS)
+            var fecha = filaAlmacen.find("td:eq(3)").text();  // Asumimos que la fecha está en formato YYYY-MM-DDTHH:MM:SS
+
+            // Verificar que la fecha no esté vacía
+            if (fecha) {
+                // Crear un objeto Date a partir de la fecha (en formato ISO 8601)
+                var fechaConvertida = new Date(fecha);
+
+                // Comprobar si la fecha se ha convertido correctamente
+                if (!isNaN(fechaConvertida)) {
+                    // Extraer la fecha en formato YYYY-MM-DD (sin la hora)
+                    var fechaFormateada = fechaConvertida.toISOString().split('T')[0]; // Esto obtiene solo la parte YYYY-MM-DD
+
+                    // Asignar la fecha al campo de fecha
+                    $('#fecha').val(fechaFormateada);
+                } else {
+                    console.error("La fecha no es válida: " + fecha);
+                }
+            } else {
+                console.error("No se ha encontrado una fecha válida.");
+            }
+
+            // Asignar los valores a los campos del formulario
+            $('#id_almacen').val(id_almacen); // Establecer el ID del almacén (si es necesario en el backend)
+            $('#nombre_almacen').val(nombre_almacen); // Establecer el nombre del almacén
+            $('#ubicacion').val(ubicacion_almacen); // Establecer la ubicación del almacén
+            $('#area').val(fkgrupo).change();
+
+            // Actualizar el estado del almacén a "Editado" (suponiendo que el estado es 2 para editar)
+            cambiar_estado_actual = 2;
+
+            $.ajax({
+                url: "{% url 'actualizar_estado_almacenes' %}",  // URL para actualizar el estado a 'Editado'
+                type: "POST",
+                data: {
+                    id_almacen: id_almacen,
+                    estado: cambiar_estado_actual,  // Estado Editado
+                    csrfmiddlewaretoken: csrfToken
+                },
+                success: function (response) {
+                    // Aquí puedes manejar la respuesta, como mostrar un mensaje de éxito
+                    console.log("Estado actualizado correctamente");
+                },
+                error: function (xhr, status, error) {
+                    // Aquí puedes manejar errores, como mostrar un mensaje de error
+                    console.error("Hubo un problema al actualizar el estado:", error);
+                }
+            });
+
+            // Mostrar el modal con el título adecuado
+            $('#modalAlmacenLabel').html('<strong>Editar Almacen #' + id_almacen +'</strong>'); // Título del modal con el ID del almacén
+            $('#modalAlmacen').modal('show'); // Mostrar el modal
+        });
+
+        // AGREGAR NUEVO ALMACÉN
+        $('#formAlmacenes').submit(function (e) {
+            e.preventDefault();
+
+            // Recoger valores de los campos del formulario
+            var nombre_almacen = $('#nombre_almacen').val();
+            var ubicacion_almacen = $('#ubicacion').val();
+            var fkgrupo = $('#area').val();
+
+            // Validación básica de campos
+            if (nombre_almacen == '' || ubicacion_almacen == '' || !fkgrupo == '#') {
+                Swal.fire("", "Debes llenar todos los campos!", "warning");
+            } else {
+                // Enviar datos al servidor
+                $.ajax({
+                    url: "{% url 'insertar_actualizar_almacen_data' %}",
+                    type: "POST",
+                    data: {
+                        id_almacen: id_almacen,
+                        nombre_almacen: nombre_almacen,
+                        ubicacion_almacen: ubicacion_almacen,
+                        fkgrupo: fkgrupo,
+
+                        csrfmiddlewaretoken: csrfToken
+                    },
+                    success: function (data) {
+                        // Verificar si el dato fue guardado correctamente
+                        if (data.save == 1) {
+                            if (opcion == 1) {  // Si es una nueva creación
+                                if (data.existe == 0) {
+                                    $('#modalAlmacen').modal('hide');
+
+                                    toastMixin.fire({
+                                        animation: true,
+                                        title: 'Almacén Creado!'
+                                    });
+                                } else {
+                                    Swal.fire("", "warning");
+                                }
+                            } else {  // Si es una edición
+                                $('#modalAlmacen').modal('hide');
+
+                                toastMixin.fire({
+                                    animation: true,
+                                    title: 'Almacén Editado!'
+                                });
+                            }
+
+                            // Recargar la tabla
+                            Tabla_Almacenes.ajax.reload(null, false);
+                        } else {
+                            Swal.fire("", "Error D: " + data.error, "error");
+                        }
+                    },
+                    error: function () {
+                        Swal.fire("", "Ocurrió un error al guardar los datos.", "error");
+                    }
+                });
+            }
+        });
+
+        // CAMBIAR ESTADO DEL ALMACEN (DESHABILITAR O ACTIVAR)
+        $(document).on('click', '.anularAlmacen', function () {
+            var id_almacen = $(this).data('id');
+            var estado_actual = $(this).data('estado');  // Este atributo 'data-estado' debe tener el estado actual de la requisición
+
+            // Definir mensaje y acción según el estado actual
+            var mensaje = estado_actual == 3
+                ? '¿Estás seguro de que quieres activar esta requisición?'
+                : '¿Estás seguro de que quieres deshabilitar esta requisición?';
+            var confirmButtonText = estado_actual == 3
+                ? 'Sí, activar'
+                : 'Sí, deshabilitar';
+            var action = estado_actual == 3
+                ? 1  // Activar
+                : 3;  // Deshabilitar
+
+            Swal.fire({
+                title: estado_actual == 3 ? 'Activar Requisición' : 'Deshabilitar Requisición',
+                text: mensaje,
+                icon: 'warning',
+                showCancelButton: true,
+                confirmButtonText: confirmButtonText,
+                cancelButtonText: 'Cancelar'
+            }).then((result) => {
+                if (result.isConfirmed) {
+                    $.ajax({
+                        url: "{% url 'actualizar_estado_almacenes' %}", // URL de tu vista
+                        type: "POST",
+                        data: {
+                            id_almacen: id_almacen,
+                            estado: action,  // El estado que corresponde según la acción (activar o deshabilitar)
+                            csrfmiddlewaretoken: csrfToken
+                        },
+                        success: function (data) {
+                            if (data.success) {
+                                var mensajeExito = estado_actual == 3
+                                    ? 'La requisición ha sido activada.'
+                                    : 'La requisición ha sido deshabilitada.';
+                                Swal.fire(estado_actual == 3 ? 'Activada!' : 'Deshabilitada!', mensajeExito, 'success');
+
+                                // Actualizar el estado de la requisición en la interfaz
+                                var row = $('tr[data-id="' + id_almacen + '"]');
+                                row.find('.estado').html(
+                                    estado_actual == 3
+                                        ? '<span class="badge badge-pill bg-success">ACTIVO</span>'
+                                        : '<span class="badge badge-pill bg-danger">DESHABILITADO</span>'
+                                );
+
+                                // Recargar la tabla de requisiciones después de actualizar el estado
+                                Tabla_Almacenes.ajax.reload(null, false);
+                            } else {
+                                Swal.fire('Error!', data.error || 'No se pudo actualizar el estado de la requisición.', 'error');
+                            }
+                        },
+                        error: function () {
+                            Swal.fire('Error!', 'Ocurrió un error al intentar cambiar el estado de la requisición.', 'error');
+                        }
+                    });
+                }
+            });
+        });
+
+        // ------------------------------------------------------------------------------------------------------------------------------- //
+
+        $('#estadoFiltro').change(function (e) {
+            e.preventDefault();
+
+
+            select_estado_almacen = $("#estadoFiltro").val();
+            fillAlmacenes();
+        });
+
+        // ------------------------------------------------------------------------------------------------------------------------------- //
+
+        
+        $.ajax({
+            url: '{% url "get_grupos_por_usuario" %}',  // URL de la vista para obtener los grupos
+            type: 'GET',  // Usamos GET ya que no estamos enviando datos adicionales
+            dataType: 'json',  // Aseguramos que la respuesta sea en formato JSON
+            success: function(response) {
+                console.log("Respuesta del servidor:", response);  // Verifica lo que estás recibiendo
+
+                if (response.data && response.data.length > 0) {
+                    // Limpiamos las opciones del select antes de agregar las nuevas
+                    $('#area').empty();
+                    $('#area').append('<option value="#">Seleccione el área:</option>'); // Opción por defecto
+
+                    // Agregamos las opciones de los grupos al select
+                    $.each(response.data, function(index, grupo) {
+                        $('#area').append('<option value="' + grupo.PKgrupo + '">' + grupo.GrupoNombre + '</option>');
+                    });
+                } else {
+                    // Si no hay grupos, podemos agregar un mensaje
+                    $('#area').empty();
+                    $('#area').append('<option value="#">No hay grupos disponibles</option>');
+                }
+            },
+            error: function(xhr, status, error) {
+                console.error('Error al cargar los grupos: ', error);
+                // Opcional: Mostrar un mensaje de error en el select
+                $('#area').empty();
+                $('#area').append('<option value="#">Error al cargar los grupos</option>');
+            }
+        });
+
+    });
+</script>
+{% endblock %}

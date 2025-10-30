@@ -1,0 +1,158 @@
+:root {
+  --navbar-color: #000000;
+  --main-color: linear-gradient(to right, #ad6852, #e4bf1a, #7c2f2f);
+  --body-color: #f4f5f7;
+
+  --table1-color: #a4d5d7;
+  --table2-color: #e9bfa7;
+  --table3-color: #d1c1e2;
+  --table4-color: #f7cc92;
+  --table5-color: #aedff2;
+
+  --background-color: #1e2a38;
+
+  --black-color: #151111;
+  --hover-color: #7c2f2f;
+  --link-navbar: #f4f5f7;
+}
+
+
+*,
+*::before,
+*::after {
+  padding: 0;
+  margin: 0;
+  box-sizing: border-box;
+}
+
+body {
+  margin: 0 0 55px 0;
+  font-family: roboto, sans-serif;
+  font-size: 15px;
+  background-color: var(--body-color);
+}
+
+h1,
+h2,
+h3,
+h4,
+h5,
+h6 {
+  font-family: roboto, sans-serif;
+  margin-top: 0;
+  color: var(--black-color);
+}
+
+a:hover,
+a:active,
+a:focus {
+  outline: none;
+  text-decoration: none;
+}
+
+input,
+button,
+a {
+  transition: all 0.4s ease;
+  -moz-transition: all 0.4s ease;
+  -o-transition: all 0.4s ease;
+  -ms-transition: all 0.4s ease;
+  -webkit-transition: all 0.4s ease;
+}
+
+.main-wrapper {
+  display: flex;
+}
+
+.nav {
+  position: fixed;
+  top: 0;
+  width: 100%;
+  height: 55px;
+  box-shadow: 0 0 3px rgba(0, 0, 0, 0.2);
+  background-color: var(--body-color);
+  display: flex;
+  overflow-x: auto;
+}
+
+.navbar {
+  background-color: var(--navbar-color);
+}
+
+.nav__link {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  flex-grow: 1;
+  min-width: 50px;
+  overflow: hidden;
+  white-space: nowrap;
+  font-family: sans-serif;
+  font-size: 14px;
+  font-weight: 600;
+  color: var(--link-navbar);
+  text-decoration: none;
+  -webkit-tap-highlight-color: transparent;
+  transition: background-color 0.1s ease-in-out;
+}
+
+.navbar .nav-link {
+  color: white;
+}
+
+.nav-link:hover {
+  background-color: var(--hover-color);
+  color: #eeeeee;
+}
+
+.nav__icon {
+  font-size: 25px;
+}
+
+@media (max-width: 550px) {
+  .nav__link {
+    margin: 5%;
+  }
+}
+
+/* Page Wrapper */
+.page-wrapper {
+  flex-grow: 1;
+  padding: 20px;
+  transition: margin-left 0.3s ease;
+}
+
+.page-wrapper .hamburger {
+  background: linear-gradient(to right, #ad6852, #e4bf1a, #7c2f2f);
+  border: none;
+  color: #fff;
+  font-size: 20px;
+  cursor: pointer;
+  margin-bottom: 20px;
+  padding: 10px 15px;
+  border-radius: 4px;
+  transition: transform 0.3s ease, box-shadow 0.3s ease;
+}
+
+.page-wrapper .hamburger:hover {
+  transform: scale(1.1);
+  box-shadow: 0 4px 10px rgba(0, 0, 0, 0.2);
+}
+
+/* Header Styles */
+.page-wrapper h1 {
+  color: #7c2f2f;
+}
+
+.page-wrapper p {
+  color: #333;
+}
+
+.table-gradient {
+  background: linear-gradient(to right, #ad69521c, #e4bf1a1e, #7c2f2f17);
+}
+
+table {
+  font-size: 12px;
+}

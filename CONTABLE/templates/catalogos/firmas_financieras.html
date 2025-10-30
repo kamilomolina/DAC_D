@@ -1,0 +1,231 @@
+{% extends 'componentes/menu_contable.html' %}
+{% load static %}
+
+{% block title %}
+FIRMAS FINANCIERAS
+{% endblock %}
+
+
+{% block body %}
+
+<div class="row align-items-center">
+    <div class="col d-flex align-items-center">
+        <button id="toggle-sidebar" class="hamburger btnMenu me-3" title="Mostrar/Ocultar Menu">
+            <i class="fas fa-bars"></i>
+        </button>
+        <h3 class="page-title mb-0">FIRMAS FINANCIERAS</h3>
+    </div>
+
+    <div class="col-auto text-end float-end ms-auto download-grp">
+        <button class="btn btn-sm btn-success" id="btnNuevo" title="Crear Nuevo"><i class="fas fa-plus me-2"></i>
+            Nuevo</button>
+    </div>
+</div>
+
+<hr>
+
+<div class="row">
+
+    <div class="col-lg-4">
+        <label for="">Empresa:</label>
+        <select id="selectEmpresa" class="form-select form-select-sm" name="selectEmpresa">
+            {% for e in empresasData %}
+            <option value="{{ e.id }}">{{ e.nombre }}</option>
+            {% endfor %}
+        </select>
+    </div>
+
+</div>
+
+<br>
+
+<div class="row">
+    <div class="table-responsive">
+        <table id="tableFirmas"
+            class="table table-striped table-bordered mb-0 table-sm rounded-4 table-hover align-middle"
+            style="width: 100%;">
+            <thead class="table-gradient text-dark">
+                <tr>
+                    <th>#</th>
+                    <th>Tipo Firma</th>
+                    <th>Usuario Firma</th>
+                    <th>Cargo</th>
+                    <th>Empresa</th>
+                    <th>Estado</th>
+                    <th>Acciones</th>
+                </tr>
+            </thead>
+
+            <tbody>
+
+            </tbody>
+        </table>
+    </div>
+</div>
+
+{% include 'catalogos/modales_catalogos/m_firmas_financieras.html' %}
+
+{% endblock %}
+
+
+
+{% block scripts %}
+
+<script>
+    $(document).ready(function () {
+        var csrfToken = "{{ csrf_token }}";
+        var tableFirmas, firma_id;
+
+        var toastMixin = Swal.mixin({
+            toast: true,
+            icon: 'success',
+            title: 'General Title',
+            animation: false,
+            position: 'top-right',
+            showConfirmButton: false,
+            timer: 2000,
+            timerProgressBar: true,
+            didOpen: (toast) => {
+                toast.addEventListener('mouseenter', Swal.stopTimer);
+                toast.addEventListener('mouseleave', Swal.resumeTimer);
+            }
+        });
+
+        /* MENU ID Y SUBMENU ID */
+        $('#catalogosMenu, #firmas_submenu').addClass('active');
+
+
+        $('#selectEmpresa').change(function (e) {
+            e.preventDefault();
+
+            getFirmasEmpresa($(this).val());
+        });
+
+        getFirmasEmpresa(2);
+
+        function getFirmasEmpresa(empresa) {
+
+            $("#tableFirmas").DataTable().clear().destroy();
+
+            tableFirmas = $('#tableFirmas').DataTable({
+                autoWidth: false,
+                scrollX: true,
+                scrollY: '350px',
+                scrollCollapse: true,
+                pageLength: 50,
+                dom: 'rftip',
+                language: {
+                    url: "{% static 'app/th/json/es-ES.json' %}",
+                },
+                ajax: {
+                    url: `{% url 'dataFirmasFinancieras' %}`,
+                    type: "POST",
+                    dataScr: 'data',
+                    data: {
+                        empresa: empresa,
+                        opcion: 0,
+                        csrfmiddlewaretoken: csrfToken
+                    },
+                },
+                colReorder: {
+                    realtime: false,
+                },
+                buttons: [
+                    {
+                        extend: 'excel',
+                        text: '<i class="fas fa-file-excel"></i>',
+                        titleAttr: 'Exportar a Excel',
+                        className: 'btn btn-success',
+                    },
+                    {
+                        extend: 'pdf',
+                        text: '<i class="fas fa-file-pdf"></i>',
+                        titleAttr: 'Exportar a PDF',
+                        className: 'btn btn-danger',
+                    },
+                    {
+                        extend: 'print',
+                        text: '<i class="fas fa-print"></i>',
+                        titleAttr: 'Imprimir',
+                        className: 'btn btn-primary',
+                        orientation: 'landscape'
+                    }
+                ],
+                columns: [
+                    {
+                        data: 'id_numero_fila',
+                    },
+                    {
+                        data: 'nombre_numero_firma',
+                    },
+                    {
+                        data: 'nombre_completo',
+                    },
+                    {
+                        data: 'cargo'
+                    },
+                    {
+                        data: 'empresa',
+                        className: 'text-wrap'
+                    },
+                    {
+                        data: 'estado',
+                        className: 'text-center',
+                        render: function (data, type, row) {
+                            var badge = "";
+                            if (data == 3) {
+                                badge +=
+                                    '<span class="badge badge-pill bg-danger">DESHABILITADO</span>';
+                            } else {
+                                badge +=
+                                    '<span class="badge badge-pill bg-success">ACTIVO</span>';
+                            }
+
+                            return badge;
+                        },
+                    },
+                    {
+                        data: null,
+                        width: '3%',
+                        title: "Acciones",
+                        render: function (data, type, row) {
+                            return `
+                            <div class="text-center">
+                                <div class="btn-group">
+                                    
+                                    <button class="btn btn-warning btn-sm editarCuenta" data-id="${row.id_firma}" data-empresa="${row.id_empresa}">
+                                        <i class="fas fa-edit"></i>
+                                    </button> 
+                                    <button class="btn btn-danger btn-sm statusCuenta" data-id="${row.id_firma}">
+                                        <i class="fas fa-sync-alt"></i>
+                                    </button> 
+                                
+                                </div>
+                            </div>
+                            `;
+                        }
+                    }
+                ],
+                order: [[1, "asc"]],
+            });
+
+        }
+
+
+
+        $('#formFirmas').click(function (e) {
+            e.preventDefault();
+
+            $('#formClasificacionCuentas').trigger('reset');
+            $('#modalClasificacionCuentasLabel').text('CREAR NUEVA CLASIFICACION');
+            $('#modalClasificacionCuentas').modal('show');
+
+            opcion = 1;
+            clasificacion_id = null;
+        });
+
+
+        /*  */
+    });
+</script>
+{% endblock %}

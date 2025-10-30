@@ -1,0 +1,422 @@
+{% extends 'TICKETIT_MAIN.html' %}
+
+
+{% block title %} NOTIFICACIONES POR REPORTES {% endblock %}
+
+{% block body %}
+
+
+<div class="row">
+    <div class="col-lg-1">
+        <a href="http://45.33.4.28/TICKETIT/public/admin/dashboard" type="button" class="btn btn-primary btnBack"><i
+            class="material-icons">arrow_back</i></a>
+    </div>
+
+    <div class="col-lg-12">
+
+        <input type="hidden" id="user_id" value="{{id}}">
+        <input type="hidden" id="user_name" value="{{username}}">
+
+        <div class="card card-table comman-shadow shadow-lg">
+            <div class="card-body">
+                <div class="row align-items-center">
+                    <div class="col">
+                        <h3 class="page-title">NOTIFICACIONES DE CORREOS POR REPORTES</h3>
+                    </div>
+                    <div class="col-lg-2 text-start float-end ms-auto download-grp">
+                        <div class="form-group">
+                            <label for="" class="col-form-label">Modulo:</label>
+                            <select class="form-select form-select-sm" id="modulo" name="modulo">
+                                <option value="#" selected>Seleccione un Modulo</option>
+                                {% for modulo in modulos %}
+                                <option value="{{ modulo.PKmodulo }}">{{ modulo.Nombre }}</option>
+                                {% endfor %}
+                            </select>
+                        </div>
+                    </div>
+                    <div class="col-lg-4 text-start float-end ms-auto download-grp">
+                        <div class="form-group">
+                            <label for="" class="col-form-label">Acceso:</label>
+                            <select class="form-select form-select-sm" id="acceso" name="acceso">
+                            </select>
+                        </div>
+                    </div>
+                </div>
+                <br>
+
+                <div class="row">
+                    <div class="col-lg-6">
+                        <div class="row text-center">
+                            <span><b>USUARIOS AGREGADOS AL REPORTE</b></span>
+                        </div>
+                        <div class="row">
+                            <div class="table-responsive">
+                                <table id="usuariosReporte"
+                                    class="table table-hover table-center table-bordered table-striped"
+                                    style="width:100%">
+                                    <thead class="thead-light">
+                                        <tr>
+                                            <th class="text-center">#</th>
+                                            <th class="text-center">Usuario</th>
+                                            <th class="text-center">Correo</th>
+                                            <th class="text-center">Acciones</th>
+                                        </tr>
+                                    </thead>
+                                    <tbody>
+
+                                    </tbody>
+                                </table>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="col-lg-6">
+                        <div class="row text-center">
+                            <span><b>USUARIOS DISPONIBLES PARA AGREGAR AL REPORTE</b></span>
+                        </div>
+                        <div class="row">
+                            <div class="table-responsive">
+                                <table id="disponiblesReporte"
+                                    class="table table-hover table-center table-bordered table-striped"
+                                    style="width:100%">
+                                    <thead class="thead-light">
+                                        <tr>
+                                            <th class="text-center">#</th>
+                                            <th class="text-center">Usuario</th>
+                                            <th class="text-center">Correo</th>
+                                            <th class="text-center">Acciones</th>
+                                        </tr>
+                                    </thead>
+                                    <tbody>
+
+                                    </tbody>
+                                </table>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+            </div>
+        </div>
+
+    </div>
+</div>
+
+
+{% endblock %}
+
+
+
+{% block scripts %}
+
+
+<script>
+    $(document).ready(function () {
+        var buttons = "Bfrtlip";
+
+        var csrfToken = "{{ csrf_token }}";
+
+        var toastMixin = Swal.mixin({
+            toast: true,
+            icon: 'success',
+            title: 'General Title',
+            animation: false,
+            position: 'top-right',
+            showConfirmButton: false,
+            timer: 2000,
+            timerProgressBar: true,
+            didOpen: (toast) => {
+                toast.addEventListener('mouseenter', Swal.stopTimer)
+                toast.addEventListener('mouseleave', Swal.resumeTimer)
+            }
+        });
+
+        $("#acceso").chosen({
+            width: "100%"
+        });
+
+        $('#usuariosReporte, #disponiblesReporte').DataTable({
+            language: {
+                url: "//cdn.datatables.net/plug-ins/1.11.5/i18n/es-ES.json",
+            },
+        });
+
+        $('#modulo').change(function (e) {
+            e.preventDefault();
+
+
+            modulo = $(this).val();
+
+            try {
+                $.ajax({
+                    beforeSend: function (xhr, type) {
+                        if (!type.crossDomain) {
+                            xhr.setRequestHeader(
+                                'X-CSRF-Token', $(
+                                    'meta[name="csrf-token"]'
+                                ).attr(
+                                    'content'));
+                        }
+                    },
+                    url: `{% url 'menus_x_modulo' %}`,
+                    type: "POST",
+                    dataScr: 'data',
+                    data: {
+                        modulo: modulo,
+                        csrfmiddlewaretoken: csrfToken
+                    },
+                    success: function (data) {
+
+                        var select = $('#acceso');
+                        select.empty();
+
+                        select.append($('<option>', {
+                                value: '#',
+                                text: 'Seleccione un Acceso'
+                            }));
+
+                        $.each(data.accesosData, function (index, acceso) {
+                            select.append($('<option>', {
+                                value: acceso.Posicion,
+                                text: acceso.Menu
+                            }));
+                        });
+
+                        $('#acceso').trigger('chosen:updated');
+
+                    },
+                });
+            } catch (error) {
+                Swal.fire("", "Error A: " + error, "error")
+            }
+
+        });
+
+
+
+        $('#acceso').change(function (e) {
+            e.preventDefault();
+
+            modulo = $('#modulo').val();
+            acceso = $(this).val();
+
+            $("#usuariosReporte, #disponiblesReporte").DataTable().clear().destroy();
+
+
+
+            usuariosReporte = $("#usuariosReporte").DataTable({
+                scrollX: true,
+                scrollCollapse: true,
+                scrollY: '450px',
+                pageLength: 50,
+                initComplete: function () {
+
+                },
+                ajax: {
+                    beforeSend: function (xhr, type) {
+                        if (!type.crossDomain) {
+                            xhr.setRequestHeader(
+                                'X-CSRF-Token',
+                                $(
+                                    'meta[name="csrf-token"]'
+                                ).attr('content'));
+                        }
+                    },
+                    url: `{% url 'correos_x_acceso' %}`,
+                    type: "POST",
+                    dataScr: 'data',
+                    data: {
+                        modulo: modulo,
+                        acceso: acceso,
+                        csrfmiddlewaretoken: csrfToken
+                    },
+                },
+                dom: buttons,
+                language: {
+                    url: "//cdn.datatables.net/plug-ins/1.11.5/i18n/es-ES.json",
+                },
+                colReorder: {
+                    realtime: false,
+                },
+                buttons: [{
+                    extend: 'excel',
+                    text: '<i class="fas fa-file-excel"></i>',
+                    titleAttr: 'Excel',
+                    className: 'btn btn-success',
+                },
+                {
+                    extend: 'pdf',
+                    text: '<i class="fas fa-file-pdf"></i>',
+                    titleAttr: 'PDF',
+                    className: 'btn btn-danger',
+                },
+                {
+                    extend: 'print',
+                    text: '<i class="fas fa-print"></i>',
+                    titleAttr: 'Imprimir',
+                    className: 'btn btn-null',
+                    orientation: 'landscape'
+                }
+                ],
+                columns: [
+                    {
+                        data: 'id'
+                    },
+                    {
+                        data: 'Nombre'
+                    },
+                    {
+                        data: 'correo'
+                    },
+                    {
+                        defaultContent: "<div class='text-center'><div class='btn-group'><button class='btn btn-danger btn-sm btnEliminar' id='btnEliminar' title='Eliminar' ><i class='material-icons'>delete</i></button></div></div>"
+                    }
+                ],
+                order: [[1, "asc"]]
+            });
+
+
+            disponiblesReporte = $("#disponiblesReporte").DataTable({
+                scrollX: true,
+                scrollCollapse: true,
+                scrollY: '450px',
+                pageLength: 50,
+                initComplete: function () {
+
+                },
+                ajax: {
+                    beforeSend: function (xhr, type) {
+                        if (!type.crossDomain) {
+                            xhr.setRequestHeader(
+                                'X-CSRF-Token',
+                                $(
+                                    'meta[name="csrf-token"]'
+                                ).attr('content'));
+                        }
+                    },
+                    url: `{% url 'correos_not_acceso' %}`,
+                    type: "POST",
+                    dataScr: 'data',
+                    data: {
+                        modulo: modulo,
+                        acceso: acceso,
+                        csrfmiddlewaretoken: csrfToken
+                    },
+                },
+                dom: buttons,
+                language: {
+                    url: "//cdn.datatables.net/plug-ins/1.11.5/i18n/es-ES.json",
+                },
+                colReorder: {
+                    realtime: false,
+                },
+                buttons: [{
+                    extend: 'excel',
+                    text: '<i class="fas fa-file-excel"></i>',
+                    titleAttr: 'Excel',
+                    className: 'btn btn-success',
+                },
+                {
+                    extend: 'pdf',
+                    text: '<i class="fas fa-file-pdf"></i>',
+                    titleAttr: 'PDF',
+                    className: 'btn btn-danger',
+                },
+                {
+                    extend: 'print',
+                    text: '<i class="fas fa-print"></i>',
+                    titleAttr: 'Imprimir',
+                    className: 'btn btn-null',
+                    orientation: 'landscape'
+                }
+                ],
+                columns: [
+                    {
+                        data: 'PKUsuario'
+                    },
+                    {
+                        data: 'Nombre'
+                    },
+                    {
+                        data: 'correo'
+                    },
+                    {
+                        defaultContent: "<div class='text-center'><div class='btn-group'><button class='btn btn-info btn-sm btnAgregar' id='btnAgregar' title='Agregar'><i class='material-icons'>add</i></button></div></div>"
+                    }
+                ],
+                order: [[1, "asc"]]
+            });
+
+
+
+
+        });
+
+
+        $(document).on('click', '.btnAgregar, .btnEliminar', function () {
+            fila = $(this).closest('tr');
+
+            id = fila.find("td:eq(0)").text();
+
+            modulo = $('#modulo').val();
+            acceso = $('#acceso').val();
+
+            user_id = $('#user_id').val();
+            user_name = $('#user_name').val();
+
+            varID = this.id;
+
+            if (varID == 'btnAgregar') {
+                opc = 2;
+                alert = 'agregar';
+                message = 'Agregado!';
+            } else {
+                opc = 1;
+                alert = 'eliminar';
+                message = 'Eliminado!';
+            }
+
+            try {
+                $.ajax({
+                    url: "{% url 'add_delete_correo' %}",
+                    type: "POST",
+                    datatype: "json",
+                    async: false,
+                    data: {
+                        id: id,
+                        modulo: modulo,
+                        acceso: acceso,
+                        user_name: user_name,
+                        opcion: opc,
+                        csrfmiddlewaretoken: csrfToken
+                    },
+                    success: function (data) {
+                        if (data.save == 1) {
+
+                            toastMixin.fire({
+                                animation: true,
+                                title: "Registro " + message
+                            });
+
+                            usuariosReporte.ajax.reload(null, false);
+                            disponiblesReporte.ajax.reload(null, false);
+
+                        } else {
+
+                            Swal.fire("", "Error D: " + data.error,
+                                "error");
+
+                        }
+                    },
+                });
+            } catch (error) {
+                Swal.fire("", "Error A: " + error, "error")
+            }
+
+        });
+
+    });
+</script>
+
+
+
+{% endblock %}

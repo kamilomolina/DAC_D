@@ -1,0 +1,90 @@
+CREATE DEFINER=`it_db`@`%` PROCEDURE `TH_INSERT_TH_CAT_TIPOS_CURRICULUM`(
+    IN p_tipo_curriculum varchar(100),
+    IN p_creado_por varchar(30)
+)
+BEGIN
+    INSERT INTO th_cat_tipos_curriculum (
+        tipo_curriculum,
+        estado,
+        creado_por,
+        fecha_hora_creado
+    )
+    VALUES (
+        p_tipo_curriculum,
+        1,
+        p_creado_por,
+        NOW()
+    );
+    SELECT LAST_INSERT_ID() AS id_tipo_curriculum;
+END;
+
+def crear_nuevo_tipo_curriculum(request):
+    if request.method == 'POST':
+        # Obtener los datos del formulario
+        tipo_curriculum = request.POST.get('tipo_curriculum')
+        creado_por = request.POST.get('creado_por')
+
+        try:
+            with connections['universal'].cursor() as cursor:
+                # Llamar al procedimiento almacenado para insertar el tipo de currículum
+                cursor.callproc('TH_INSERT_TH_CAT_TIPOS_CURRICULUM', [
+                    tipo_curriculum,
+                    creado_por
+                ])
+                # Obtener el ID del tipo de currículum recién creado
+                resultado = cursor.fetchone()
+                nuevo_tipo_curriculum_id = resultado[0] if resultado else None
+
+            return JsonResponse({'status': 'success', 'id': nuevo_tipo_curriculum_id})
+        except Exception as e:
+            return JsonResponse({'status': 'fail', 'error': str(e)})
+    return JsonResponse({'status': 'fail', 'error': 'Método no permitido'}, status=405)
+
+
+ path('crear_nuevo_tipo_curriculum/', views.crear_nuevo_tipo_curriculum, name='crear_nuevo_tipo_curriculum'),
+
+$('#formCrearTipoCurriculum').on('submit', function (event) {
+            event.preventDefault(); // Evitar el envío normal del formulario
+
+            // Obtener los valores de los campos del formulario
+            let tipoCurriculum = $('#nuevo-tipo-curriculum').val();
+            const creadoPor = $('#creado_por').val(); // Asegúrate de tener este campo en tu formulario o en tu página
+
+            // Convertir el nombre del tipo de currículum a mayúsculas
+            tipoCurriculum = tipoCurriculum.toUpperCase();
+
+            $.ajax({
+                type: 'POST',
+                url: '{% url "crear_nuevo_tipo_curriculum" %}', // URL de la vista Django que maneja la solicitud
+                data: {
+                    'tipo_curriculum': tipoCurriculum,
+                    'creado_por': creadoPor,
+                    'csrfmiddlewaretoken': '{{ csrf_token }}' // Token CSRF para seguridad
+                },
+                success: function (response) {
+                    if (response.status === 'success') {
+                        // Cerrar el modal si la respuesta es exitosa
+                        $('#modalCrearTipoCurriculum').modal('hide');
+
+                        // Añadir el nuevo tipo de currículum al select como la primera opción
+                        const newOption = new Option(tipoCurriculum, response.id, true, true); // Mostrar el nombre, pero usar el ID como valor
+                        $('#nuevo-tipo-curriculum').prepend(newOption);
+                        $('#nuevo-tipo-curriculum').val(response.id).trigger('change'); // Seleccionar la nueva opción
+
+                        // Verificación adicional para asegurarse de que el ID es numérico
+                        console.log('ID que se está enviando:', $('#nuevo-tipo-curriculum').val());
+
+                        // Limpiar el formulario
+                        $('#nuevo-tipo-curriculum').val('');
+
+                    } else {
+                        console.error('Error en la respuesta del servidor:', response.error);
+                        alert('Error al crear el tipo de currículum. Por favor, inténtelo nuevamente.');
+                    }
+                },
+                error: function (response) {
+                    console.error('Error al enviar la solicitud:', response); // Verificar el error
+                    alert('Error al enviar la solicitud. Por favor, inténtelo nuevamente.');
+                }
+            });
+        });

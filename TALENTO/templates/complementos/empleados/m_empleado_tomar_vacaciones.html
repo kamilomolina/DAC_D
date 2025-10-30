@@ -1,0 +1,60 @@
+<div class="modal fade" id="modalVacaciones" tabindex="-1" role="dialog" aria-labelledby="exampleModalLabel"
+    data-bs-backdrop="static" aria-hidden="true" data-bs-backdrop="static" data-bs-keyboard="false" aria-hidden="true">
+    <div class="modal-dialog" role="document">
+        <div class="modal-content">
+            <div class="modal-header" style="background-color: #304458; color:white">
+                <h5 class="modal-title" id="exampleModalLabel">Solicitud de Vacaciones</h5>
+                <button type="button" class="close" data-dismiss="modal" aria-label="Close">
+                    <span aria-hidden="true">&times;</span>
+                </button>
+            </div>
+            <input type="hidden" id="diasDisponibles" class="form-control">
+            <form id="formVacaciones">
+
+
+                <div class="modal-body">
+                    <div class="row">
+                        <div class="col-lg-6">
+                            <div class="form-group">
+                                <label>Inicio Vacaciones</label>
+                                <input type="date" id="inicioVacaciones" class="form-control form-control-sm" value="">
+                            </div>
+                        </div>
+                        <div class="col-lg-6">
+                            <div class="form-group">
+                                <label>Final Vacaciones</label>
+                                <input type="date" id="finalVacaciones" class="form-control form-control-sm" value="">
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="row">
+                        <div class="form-group">
+                            <label for="" class="form-label">Comentario</label>
+                            <textarea class="form-control form-control-sm" name="commentVacaciones"
+                                id="commentVacaciones" rows="3"></textarea>
+                            <small id="feedback" class="help-block text-danger Feedback">
+                                Campo opcional.
+                            </small>
+                        </div>
+                    </div>
+
+                    <div class="modal-footer">
+                        <button type="submit" id="btnGuardar" class="btn btn-success">Guardar</button>
+                        <button type="button" class="btn btn-dark closeModal" id="btnCancelar"
+                            data-dismiss="modal">Cancelar</button>
+                    </div>
+
+                </div>
+            </form>
+        </div>
+    </div>
+</div>
+
+<script>
+    $(document).ready(function () {
+        $("#btnCancelar").on('click', function () {
+            $('#modalVacaciones').modal('hide');  // Cierra el modal llamado modalVacaciones
+        });
+    });
+</script>

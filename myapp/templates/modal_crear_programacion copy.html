@@ -1,0 +1,459 @@
+{% load static %}
+<!DOCTYPE html>
+<html lang="es">
+
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Tu Aplicación</title>
+  <link href="https://maxcdn.bootstrapcdn.com/bootstrap/4.5.2/css/bootstrap.min.css" rel="stylesheet">
+  <style>
+    .card {
+      margin-bottom: 20px;
+      /* Espacio entre tarjetas */
+      box-shadow: 0 4px 8px 0 rgba(0, 0, 0, 0.2);
+      /* Sombra para efecto flotante */
+      transition: 0.3s;
+      /* Transición suave para efecto hover */
+    }
+
+    .card:hover {
+      box-shadow: 0 8px 16px 0 rgba(0, 0, 0, 0.2);
+      /* Sombra más pronunciada al pasar el mouse */
+    }
+  </style>
+
+
+  <!-- Bootstrap CSS -->
+  <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap@5.0.2/dist/css/bootstrap.min.css"
+    crossorigin="anonymous">
+  <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap@5.0.2/dist/css/bootstrap.min.css"
+    crossorigin="anonymous">
+
+  <!-- Material Icons -->
+  <link href="https://fonts.googleapis.com/icon?family=Material+Icons" rel="stylesheet">
+
+  <!-- DataTables CSS -->
+  <link rel="stylesheet" href="https://cdn.datatables.net/1.10.24/css/jquery.dataTables.min.css">
+  <link rel="stylesheet" href="https://cdn.datatables.net/searchpanes/2.0.2/css/searchPanes.bootstrap5.min.css">
+  <link rel="stylesheet" href="https://cdn.datatables.net/select/1.4.0/css/select.bootstrap5.min.css">
+  <link rel="stylesheet" href="https://nightly.datatables.net/fixedcolumns/css/fixedColumns.dataTables.min.css">
+  <link rel="stylesheet" href="https://nightly.datatables.net/fixedheader/css/fixedHeader.dataTables.min.css">
+  <link href="https://fonts.googleapis.com/icon?family=Material+Icons" rel="stylesheet">
+
+  <!-- Chosen CSS -->
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/chosen/1.8.7/chosen.min.css">
+  <link rel="stylesheet" href="{% static 'app/css/style.css' %}">
+
+
+
+</head>
+
+<body>
+  <div class="container mt-5">
+    <!-- Sección Superior -->
+    <div class="row">
+      <!-- Tarjeta para la Tabla de Registros con Checkbox (2/3 de la pantalla) -->
+      <div class="col-md-8">
+        <div class="card">
+          <div class="card-body">
+            <h2>Consolidados</h2>
+            <div class="table-responsive tabla-contenedor">
+              <table id="tabla_consolidados"
+                class="table table-sm table-striped align-middle mb-0 bg-white table-basic custom-table"
+                style="width:100%">
+                <thead>
+                  <tr>
+                    <th>Id_Consolidado</th>
+                    <th>Total</th>
+                    <th>Peso_total</th>
+                    <th>Acciones</th>
+                  </tr>
+                </thead>
+                <tbody id="tableBody">
+                </tbody>
+              </table>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Tarjeta para Detalles Consolidados (1/3 de la pantalla) -->
+      <div class="col-md-4">
+        <div class="card">
+          <div class="card-body">
+            <h2>Detalles consolidado</h2>
+            <form>
+              <div class="row">
+                <div class="col-6">
+                  <label for="nombre">Peso total:</label>
+                  <input type="text" class="form-control" id="peso_total" readonly>
+                </div>
+                <div class="col-6">
+                  <label for="detalles">Cant. Facturas:</label>
+                  <input type="text" class="form-control" id="cantidad_facturas" readonly>
+                </div>
+              </div>
+
+              <div class="row">
+                <div class="col-6">
+                  <label for="cantidad_clientes">Cant. Clientes:</label>
+                  <input type="text" class="form-control" id="cantidad_clientes" readonly>
+                </div>
+                <div class="col-6">
+                  <label for="cantidad_productos">Cant. Productos:</label>
+                  <input type="text" class="form-control" id="cantidad_productos" readonly>
+                </div>
+              </div>
+
+              <div class="row">
+                <div class="col-6">
+                  <label for="volumen">Volumen:</label>
+                  <input type="text" class="form-control" id="volumen" readonly>
+                </div>
+                <div class="col-6">
+                  <label for="utilidad">Utilidad:</label>
+                  <input type="text" class="form-control" id="utilidad" readonly>
+                </div>
+              </div>
+              <div class="form-group">
+                <label for="rentabilidad">Rentabilidad:</label>
+                <input type="text" class="form-control" id="rentabilidad" readonly>
+              </div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <div class="row mt-3">
+      <div class="col-12">
+        <div class="card">
+          <div class="card-body">
+            <h2>Información Adicional</h2>
+            <form>
+              <div class="row">
+                <!-- Fecha -->
+                <div class="col-md-2">
+                  <label for="fecha">Fecha:</label>
+                  <input type="datetime-local" class="form-control" id="fecha">
+                </div>
+
+                <!-- Chosen Vehículo -->
+                <div class="col-md-2">
+                  <label for="vehiculo">Vehículo:</label>
+                  <select class="form-control form-control-lg" id="id_vehiculo">
+                    <!-- Opciones del vehículo aquí -->
+                  </select>
+                </div>
+
+                <!-- Chosen Combustible -->
+                <div class="col-md-2">
+                  <label for="gasolina">Combustible:</label>
+                  <select class="form-control form-control-lg" id="id_combustible">
+                    <!-- Opciones de combustible aquí -->
+                  </select>
+                </div>
+
+                <!-- Chosen Destino -->
+                <div class="col-md-2">
+                  <label for="destino">Destino:</label>
+                  <select class="form-control form-control-lg" id="id_destino">
+                    <!-- Opciones de destino aquí -->
+                  </select>
+                </div>
+
+                <div class="col-md-2">
+                  <label for="ruta">Ruta:</label>
+                  <button type="button" class="btn btn-olive btn-block" id="btnAgregarRuta">Agregar Rutas</button>
+                </div>
+
+                <div class="col-md-2">
+                  <label for="ruta">Tripulantes:</label>
+                  <button type="button" class="btn btn-olive btn-block" id="btnAgregarTripulantes">Agregar
+                    Tripulantes</button>
+                </div>
+
+              </div>
+          </div>
+          </form>
+        </div>
+
+        <div class="row mt-3">
+          <div class="col-md-2">
+            <button type="submit" class="btn btn-primary btn-block">Guardar</button>
+          </div>
+          <div class="col-md-2">
+            <button type="button" class="btn btn-secondary btn-block" onclick="cancelarAccion();">Cancelar</button>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- JavaScript (jQuery para simplificar) y Bootstrap JS -->
+  <script src="https://ajax.googleapis.com/ajax/libs/jquery/3.5.1/jquery.min.js"></script>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/popper.js/1.16.0/umd/popper.min.js"></script>
+  <script src="https://maxcdn.bootstrapcdn.com/bootstrap/4.5.2/js/bootstrap.min.js"></script>
+
+  <script>
+    $(document).ready(function () {
+      $('#tabla_consolidados').DataTable({
+        // Personaliza tu inicialización de DataTables aquí
+      });
+      $('#id_destino').chosen();
+      $('#id_vehiculo').chosen();
+
+
+    });
+  </script>
+  <script>
+    function getCookie(name) {
+      var cookieValue = null;
+      if (document.cookie && document.cookie !== '') {
+        var cookies = document.cookie.split(';');
+        for (var i = 0; i < cookies.length; i++) {
+          var cookie = cookies[i].trim();
+          if (cookie.substring(0, name.length + 1) === (name + '=')) {
+            cookieValue = decodeURIComponent(cookie.substring(name.length + 1));
+            break;
+          }
+        }
+      }
+      return cookieValue;
+    }
+    $(document).ready(function () {
+
+      //////////////////////////////////////////////////////////TABLA CONSOLIDADOS////////////////////////////////////////////////////
+      if ($.fn.DataTable.isDataTable('#tabla_consolidados')) {
+        $('#tabla_consolidados').DataTable().destroy();
+      }
+      var table = $('#tabla_consolidados').DataTable({
+        pageLength: 5,
+
+        initComplete: function () {
+          //
+        },
+        ajax: {
+          beforeSend: function (xhr, type) {
+            if (!type.crossDomain) {
+              xhr.setRequestHeader(
+                'X-CSRF-Token',
+                $(
+                  'meta[name="csrf-token"]'
+                ).attr('content'));
+            }
+          },
+          url: 'procesar_consolidados/',
+          dataSrc: 'data'
+        },
+        dom: "prtliB",
+        buttons: [{
+          extend: 'excel',
+          text: '<i class="fas fa-file-excel"></i>',
+          titleAttr: 'Excel',
+          className: 'btn btn-success',
+        },
+        {
+          extend: 'pdf',
+          text: '<i class="fas fa-file-pdf"></i>',
+          titleAttr: 'PDF',
+          className: 'btn btn-danger',
+        },
+        {
+          extend: 'print',
+          text: '<i class="fas fa-print"></i>',
+          titleAttr: 'Imprimir',
+          className: 'btn btn-null',
+        }
+        ],
+        language: {
+          url: "//cdn.datatables.net/plug-ins/1.11.5/i18n/es-ES.json",
+        },
+        columns: [
+          {
+            data: 'id_consolidado',
+          },
+          {
+            data: 'total_suma',
+            render: $.fn.dataTable.render.number(',', '.', 2)
+          },
+          {
+            data: 'cantidad_vendida_peso_suma',
+            render: $.fn.dataTable.render.number(',', '.', 2)
+          },
+          {
+            data: 'id', // Asegúrate de que 'id' sea el nombre del campo que contiene el ID del teléfono
+            render: function (data, type, row) {
+              // Retorna un checkbox con el valor del id
+              return '<input type="checkbox" name="id[]" value="' + data + '">';
+            },
+            orderable: false
+          }
+        ],
+        'rowCallback': function (row, data) {
+          // Cuando se hace click en una fila...
+          $(row).on('click', function () {
+            mostrarDetallesConsolidado(data); // Función que actualiza los detalles del consolidado
+            $(row).addClass('selected').siblings().removeClass('selected'); // Resalta la fila seleccionada
+          });
+        },
+      });
+      
+
+      function mostrarDetallesConsolidado(data) {
+        $('#peso_total').val(parseFloat(data.cantidad_vendida_peso_suma).toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 }));
+        $('#cantidad_facturas').val(parseFloat(data.cantidad_registros).toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 }));
+        $('#cantidad_clientes').val(parseFloat(data.cantidad_clientes).toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 }));
+        $('#cantidad_productos').val(parseFloat(data.cantidad_total_productos_suma).toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 }));
+        $('#volumen').val(parseFloat(data.total_suma).toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 }));
+        $('#utilidad').val(parseFloat(data.utilidad).toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 }));
+        $('#rentabilidad').val(parseFloat(data.rentabilidad).toFixed(2)); // Formatear a dos decimales
+        const volumen = parseFloat(data.total_suma).toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 });
+        const utilidad = parseFloat(data.utilidad).toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 });
+        
+      }
+
+      ////////////////////////////////////////////////////FUNCIONES//////////////////////////////////////////////////////////////
+
+      $('#id_combustible').chosen();
+      // Realiza la solicitud AJAX para cargar las opciones en tu select
+      $.ajax({
+        url: "combustibles/obtener_combustibles",
+        method: 'GET',
+        dataType: 'json',
+        success: function (data) {
+          var select = $('#id_combustible');
+          select.empty(); // Limpia las opciones existentes
+
+          data.data.forEach(function (item) {
+            select.append($('<option>', {
+              value: item.id_combustible,
+              text: item.nombre_combustible
+            }));
+            select.trigger(
+              "chosen:updated"
+            );
+          });
+        },
+        error: function (xhr, status, error) {
+          console.error("Error al cargar datos: ", status, error);
+        }
+      });
+
+      $.ajax({
+        url: "vehiculos/obtener_vehiculos",
+        method: 'GET',
+        dataType: 'json',
+        success: function (data) {
+          var select = $('#id_vehiculo');
+          select.empty(); // Limpia las opciones existentes
+
+          data.data.forEach(function (item) {
+            select.append($('<option>', {
+              value: item.id_vehiculo,
+              text: item.nombre_vehiculo
+            }));
+            select.trigger(
+              "chosen:updated"
+            );
+          });
+        },
+        error: function (xhr, status, error) {
+          console.error("Error al cargar datos: ", status, error);
+        }
+      });
+
+      $.ajax({
+        url: "destinos/obtener_destinos",
+        method: 'GET',
+        dataType: 'json',
+        success: function (data) {
+          var select = $('#id_destino');
+          select.empty(); // Limpia las opciones existentes
+
+          data.data.forEach(function (item) {
+            select.append($('<option>', {
+              value: item.id_destino,
+              text: item.nombre_destino
+            }));
+            select.trigger(
+              "chosen:updated"
+            );
+          });
+        },
+        error: function (xhr, status, error) {
+          console.error("Error al cargar datos: ", status, error);
+        }
+      });
+
+      $.ajax({
+        url: "destinos/obtener_destinos",
+        method: 'GET',
+        dataType: 'json',
+        success: function (data) {
+          var select = $('#id_destino');
+          select.empty(); // Limpia las opciones existentes
+
+          data.data.forEach(function (item) {
+            select.append($('<option>', {
+              value: item.id_destino,
+              text: item.nombre_destino
+            }));
+            select.trigger(
+              "chosen:updated"
+            );
+          });
+        },
+        error: function (xhr, status, error) {
+          console.error("Error al cargar datos: ", status, error);
+        }
+      });
+
+
+    });
+  </script>
+
+
+
+  <style>
+    .selected {
+      background-color: #D2E4FC;
+      /* Color azul claro, cambia según tus preferencias */
+    }
+  </style>
+  <!-- jQuery (necesario para Bootstrap y DataTables) -->
+  <script src="https://code.jquery.com/jquery-3.5.1.js"></script>
+
+  <!-- Popper.js (necesario para Bootstrap) -->
+  <script src="https://cdn.jsdelivr.net/npm/@popperjs/core@2.9.2/dist/umd/popper.min.js"
+    crossorigin="anonymous"></script>
+
+  <!-- Bootstrap JS -->
+  <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.0.2/dist/js/bootstrap.min.js" crossorigin="anonymous"></script>
+  <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.0.2/dist/js/bootstrap.bundle.min.js"
+    crossorigin="anonymous"></script>
+  <!-- Font Awesome para iconos -->
+  <script src="https://kit.fontawesome.com/e716b78aa6.js" crossorigin="anonymous"></script>
+
+  <!-- SweetAlert para alertas bonitas -->
+  <script src="https://unpkg.com/sweetalert/dist/sweetalert.min.js"></script>
+
+  <!-- DataTables y sus plugins -->
+  <script src="https://cdn.datatables.net/1.10.24/js/jquery.dataTables.min.js"></script>
+  <script src="https://cdn.datatables.net/searchpanes/2.0.2/js/dataTables.searchPanes.min.js"></script>
+  <script src="https://cdn.datatables.net/select/1.4.0/js/dataTables.select.min.js"></script>
+  <script src="https://cdn.datatables.net/searchpanes/2.0.2/js/searchPanes.bootstrap5.min.js"></script>
+  <script src="https://nightly.datatables.net/fixedcolumns/js/dataTables.fixedColumns.min.js"></script>
+  <script src="https://nightly.datatables.net/fixedheader/js/dataTables.fixedHeader.min.js"></script>
+
+  <!-- Otros plugins y scripts -->
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/FileSaver.js/2.0.5/FileSaver.min.js"></script>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.17.0/xlsx.full.min.js"></script>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/TableExport/5.2.0/js/tableexport.min.js"></script>
+  <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/chosen/1.8.7/chosen.jquery.min.js"></script>
+  <script src="https://cdn.jsdelivr.net/npm/autonumeric@4.6.0/dist/autoNumeric.min.js"></script>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/jquery.inputmask/5.0.6/jquery.inputmask.min.js"></script>
+</body>
+
+</html>

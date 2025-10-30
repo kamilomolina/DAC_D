@@ -1,0 +1,71 @@
+<div class="modal fade" id="modalFamiliares" tabindex="-1" role="dialog" aria-labelledby="exampleModalLabel" data-bs-keyboard="false" data-bs-backdrop="static"
+    aria-hidden="true">
+    <div class="modal-dialog modal-lg" role="document">
+        <div class="modal-content">
+            <div class="modal-header" style="background-color: #304458; color:white">
+                <h5 class="modal-title" id="exampleModalLabel">
+                    <i class="material-icons me-2 text-gray">family_restroom</i> Familiares*
+                </h5>
+                <button type="button" class="close" data-dismiss="modal" aria-label="Close">
+                    <span aria-hidden="true">&times;</span>
+                </button>
+            </div>
+            <div class="modal-body">
+                <form id="formCrearContactoFamiliar">
+                    <div class="row mb-2 align-items-center">
+
+                        <input type="hidden" id="id-familiar" name="id_familiar" value="">
+
+                        <div class="col-md-12 d-flex align-items-center">
+                            <label for="nombre-familiar" class="form-label">Nombre del Familiar:</label>
+                            <input type="text" id="nombre-familiar" name="nombre-familiar"
+                                class="form-control input-underline">
+                        </div>
+
+                    </div>
+                    <div class="row mb-2 align-items-center">
+
+                        <div class="col-md-12 d-flex align-items-center ">
+                            <label for="parentesco" class="form-label label-width">Parentesco:</label>
+                        <select id="nuevo-parentesco-familiar" name="nuevo-parentesco-familiar" style="width: 100%;"
+                            class="form-control input-underline select2" placeholder="Nivel certificado">
+                            <option value="">Seleccione una opción</option>
+                            <option value="new-parentesco-familiar">Crear un nuevo parentesco</option>
+                            {% for cer in parentescos %}
+                            <option value="{{ cer.0 }}">{{ cer.1 }}</option>
+                            {% endfor %}
+                        </select>
+
+                    </div>
+                    <div class="row mb-2 align-items-center">
+                        <div class="col-md-6 d-flex align-items-center">
+                            <label for="telefono-familiar" class="form-label">Teléfono:</label>
+                            <input type="text" id="telefono-familiar" name="telefono-familiar" placeholder="XXXX-XXXX"
+                                class="form-control input-underline">
+                        </div>
+                        <div class="col-md-6 d-flex align-items-center">
+                            <label for="lugar-residencia" class="form-label">Lugar de Residencia:</label>
+                            <input type="text" id="lugar-residencia" name="lugar_residencia"
+                                class="form-control input-underline">
+                        </div>
+                    </div>
+
+                    <div class="modal-footer">
+                        <button type="submit" class="btn btn-success animate__animated animate__pulse animate__slow animate__infinite">Guardar</button>
+                        <button type="button" class="btn btn-danger close" data-dismiss="modal">Cerrar</button>
+                    </div>
+                </form>
+            </div>
+
+        </div>
+    </div>
+</div>
+
+<script>
+   
+    $("#telefono-familiar, #TutorID").inputmask({
+        mask: "9999-9999",
+        placeholder: "x",
+        clearMaskOnLostFocus: false
+    });
+</script>

@@ -1,0 +1,1068 @@
+{% extends 'DAC_MAIN.html' %}
+
+
+{% block title %} CREAR VENTA PERDIDA {% endblock %}
+
+{% block body %}
+
+{% include 'complementos/btnBack.html' %}
+
+<div class="container-margin p-3 viewSection">
+    <div class="row">
+        <h4 class=""> <i class="material-icons nav__icon">monetization_on</i>
+            CREAR VENTA PERDIDA
+        </h4>
+
+        <input type="hidden" id="user_id" value="{{id}}">
+        <input type="hidden" id="user_name" value="{{username}}">
+
+        <div class="col-sm p-2 shadow-lg border m-2 rounded-4">
+
+            <div class="row getDataSection">
+                <div class="col-lg-2">
+                    <div class="form-group">
+                        <label for="formato_select" class="col-form-label">Formato:</label>
+                        <select class="form-select form-select-sm" name="formato_select" id="formato_select">
+                            <option value="#">Seleccione un Formato</option>
+                            {% if acceso == 1 %}
+                            <option value="1">DISTRIBUIDORA</option>
+                            {% elif acceso == 2 %}
+                            <option value="2">SUPERMERCADO</option>
+                            {% elif acceso == 3 %}
+                            <option value="1">DISTRIBUIDORA</option>
+                            <option value="2">SUPERMERCADO</option>
+                            {% endif %}
+                        </select>
+                    </div>
+                </div>
+
+                <div class="col-lg-2">
+                    <div class="form-group">
+                        <label for="almacen_select" class="col-form-label">Almacen:</label>
+                        <select class="form-select form-select-sm" name="almacen_select" id="almacen_select">
+                            <option value="#">Seleccione un almacen</option>
+                        </select>
+                    </div>
+                </div>
+
+                <div class="col-lg-4">
+                    <div class="form-group">
+                        <label for="cliente_select" class="col-form-label">Cliente:</label>
+                        <select class="form-select form-select-sm" name="cliente_select" id="cliente_select">
+                        </select>
+                    </div>
+                </div>
+            </div>
+
+
+            <hr>
+
+
+            <div class="row formSection">
+
+                <input type="hidden" id="motivo_de_ingreso">
+                <input type="hidden" id="motivo_de_ingreso_main">
+
+                <form id="formVentaPerdida">
+
+                    <div class="row">
+
+                        <!-- PRODUCT INFO -->
+                        <div class="col-lg-6">
+
+                            <div class="row">
+                                <span class="text-center"><b>Información del Producto</b></span>
+                            </div>
+
+                            <hr>
+
+                            <input type="hidden" id="subgrupo">
+                            <input type="hidden" id="marca">
+
+                            <div class="row">
+
+                                <div class="row">
+
+                                    <div class="col-lg-6">
+                                        <div class="form-group">
+                                            <label for="nombre_producto" class="col-form-label">Producto:</label>
+                                            <select id="nombre_producto" class="form-select form-select-sm">
+                                                <option value="#">Seleccione un Producto</option>
+                                            </select>
+                                        </div>
+                                    </div>
+                                    <div class="col-lg-6">
+                                        <div class="form-group">
+                                            <label for="presentacion" class="col-form-label">Presentacion:</label>
+                                            <select id="presentacion" class="form-select form-select-sm">
+                                                <option value="#">Seleccione una Presentacion</option>
+                                            </select>
+                                        </div>
+                                    </div>
+
+
+                                </div>
+                                <div class="row">
+
+                                    <div class="col-lg-3">
+                                        <div class="form-group">
+                                            <label for="cantidad" class="col-form-label">Cantidad:</label>
+                                            <input type="text" step="any" placeholder="0.00" name="cantidad"
+                                                id="cantidad"
+                                                class="form-control form-control-sm formattedMoneyInputs alertasInputsKeyUp">
+                                        </div>
+                                    </div>
+                                    <div class="col-lg-4">
+                                        <div class="form-group">
+                                            <label for="existencia" class="col-form-label"
+                                                id="existencia_text">Existencia:</label>
+                                            <input type="text" step="any" placeholder="0.00" name="existencia"
+                                                id="existencia"
+                                                class="form-control form-control-sm formattedMoneyInputs" readonly>
+                                        </div>
+                                    </div>
+                                    <div class="col-lg-5">
+                                        <div class="form-group">
+                                            <label for="fecha_llegada" class="col-form-label">Fecha Esperada
+                                                Entrega:</label>
+                                            <input type="text" name="fecha_llegada" id="fecha_llegada"
+                                                class="form-control form-control-sm" readonly>
+                                        </div>
+                                    </div>
+
+                                </div>
+
+                                <div class="row">
+
+                                    <div class="col-lg-4">
+                                        <div class="form-group">
+                                            <label for="precio_min">Precio:</label>
+                                            <input type="text" step="0.01" placeholder="0.00" name="precio" id="precio"
+                                                class="form-control form-control-sm formattedMoneyInputs alertasInputsKeyUp">
+                                        </div>
+                                    </div>
+
+                                    <div class="col-lg-4">
+                                        <div class="form-group">
+                                            <label for="precio_min">Precio Mínimo:</label>
+                                            <input type="text" step="0.01" placeholder="0.00" name="precio_min"
+                                                id="precio_min"
+                                                class="form-control form-control-sm formattedMoneyInputs" readonly>
+                                        </div>
+                                    </div>
+
+                                    <div class="col-lg-4">
+                                        <div class="form-group">
+                                            <label for="precio">Precio Maximo:</label>
+                                            <input type="text" step="0.01" placeholder="0.00" name="precio_max"
+                                                id="precio_max"
+                                                class="form-control form-control-sm formattedMoneyInputs" readonly>
+                                        </div>
+                                    </div>
+
+                                </div>
+
+
+                            </div>
+
+                            <hr>
+
+                            <div class="row alertasSection">
+                                <span class="text-center"><b>Alertas Dinámicas</b></span>
+                            </div>
+
+                            <div class="row alertasSection">
+
+
+                                <div class="col-lg-12 appendAlertas">
+                                    <div class="form-check alert alert-success p-2">
+                                        <input class="form-check-input mx-auto p-1 alertaDinamica" type="radio"
+                                            name="alertaDinamica" id="revisarServicio" value="0">
+                                        <label class="form-check-label" for="revisarServicio">
+                                            <span class="text-success"><strong>Motivo: Servicio</strong>.</span>
+                                        </label>
+                                    </div>
+                                </div>
+
+
+                            </div>
+
+                        </div>
+
+                        <!-- MOTIVOS INFO -->
+                        <div class="col-lg-6 sectionMotivoSelection">
+
+                            <div class="row">
+                                <span class="text-center"><b id="motivosText">Motivos Venta Perdida</b></span>
+                            </div>
+
+                            <hr>
+
+                            <div class="row">
+
+                                <div class="row competenciaInputs">
+                                    <div class="col-lg-6">
+                                        <div class="form-group">
+                                            <label for="competencia_vp" class="col-form-label">Competencia:</label>
+                                            <select id="competencia_vp" class="form-select form-select-sm"
+                                                name="competencia_vp">
+                                                <option value="#">Seleccionar Competencia</option>
+                                                {% for empresa in empresas %}
+                                                <option value="{{ empresa.id_competencia }}">
+                                                    {{empresa.nombre_competencia }}</option>
+                                                {% endfor %}
+                                            </select>
+                                            <small id="competencia_vpFeedback" class="help-block text-danger vpFeedback">
+                                                Campo opcional.
+                                            </small>
+                                        </div>
+                                    </div>
+                                    <div class="col-lg-6">
+                                        <div class="form-group">
+                                            <label for="precio_vp" class="col-form-label">Precio:</label>
+                                            <input type="text" class="form-control form-control-sm formattedMoneyInputs"
+                                                placeholder="0.00" name="precio_vp" id="precio_vp">
+                                            <small id="precio_vpFeedback" class="help-block text-danger vpFeedback">
+                                                Campo opcional.
+                                            </small>
+                                        </div>
+
+                                    </div>
+                                </div>
+
+                                <div class="row motivoInputs">
+                                    <div class="col-lg-12">
+                                        <div class="form-group">
+                                            <label for="motivo_vp" class="col-form-label">Motivo:</label>
+                                            <select id="motivo_vp" class="form-select form-select-sm" name="motivo_vp">
+                                                <option value="#">Seleccione un Motivo</option>
+                                                {% for motivo in motivos %}
+                                                <option value="{{ motivo.id_motivo }}">{{ motivo.nombre_motivo }}
+                                                </option>
+                                                {% endfor %}
+                                            </select>
+                                        </div>
+                                    </div>
+                                </div>
+
+                                <div class="row">
+                                    <div class="form-group">
+                                        <label for="comentario_vp" class="col-form-label">Comentario:</label>
+                                        <textarea class="form-control form-control-sm" placeholder="Comentario"
+                                            name="comentario_vp" id="comentario_vp" rows="4"></textarea>
+                                    </div>
+                                </div>
+
+
+                            </div>
+
+                        </div>
+                    </div>
+
+                    <hr>
+
+                    <div class="modal-footer">
+                        <button type="submit" class="btn btn-secondary">Guardar</button>
+                    </div>
+                </form>
+
+            </div>
+
+        </div>
+    </div>
+</div>
+
+
+{% endblock %}
+
+
+{% block scripts %}
+
+
+<script>
+    $(document).ready(function () {
+        var buttons = "Bfrtlip";
+
+        var csrfToken = "{{ csrf_token }}";
+
+        var user_id = $('#user_id').val();
+        var user_name = $('#user_name').val();
+
+        $('#formVentaPerdida').trigger('reset');
+        $('#formato_select').val('#').change();
+        $('#almacen_select').val('#').change();
+
+        $('#cliente_select').chosen({
+            no_results_text: "Cliente no Encontrado!",
+            allow_single_deselect: true,
+            width: "100%"
+        });
+        $('#nombre_producto').chosen({
+            no_results_text: "Producto no Encontrado!",
+            allow_single_deselect: true,
+            width: "100%"
+        });
+        $('#presentacion').chosen({
+            no_results_text: "Presentacion no Encontrada!",
+            allow_single_deselect: true,
+            width: "100%"
+        });
+
+        var select = $('#cliente_select');
+        select.empty();
+
+        select.append($('<option>', {
+            value: '#',
+            text: 'Seleccione un Cliente'
+        }));
+
+
+
+
+
+        function cargarClientesDistribuidora() {
+            $.ajax({
+                url: '/DAC/ventas/obtener_clientes/', // Asegúrate de reemplazar esto con la ruta correcta a tu función de vista
+                type: 'GET', // Método HTTP utilizado
+                dataType: 'json', // Tipo de datos esperado
+                success: function (response) {
+                    // Elimina las opciones existentes, excepto la primera
+                    var select = $('#cliente_select');
+                    select.empty();
+
+                    select.append($('<option>', {
+                        value: '#',
+                        text: 'Seleccione un Cliente'
+                    }));
+
+
+                    // Itera sobre el arreglo de clientes y los añade al select
+                    $.each(response.clientes, function (i, cliente) {
+                        // Verifica que nombre_cliente y id_cliente existan antes de usarlos
+                        if (cliente.nombre_cliente && cliente.id_cliente) {
+                            $('#cliente_select').append(new Option(cliente.nombre_cliente.trim(), cliente.id_cliente));
+                        }
+                    });
+
+                    // Actualiza el elemento Chosen con los nuevos datos
+                    $('#cliente_select').trigger('chosen:updated');
+                },
+                error: function (xhr, status, error) {
+                    console.error("Error al cargar los clientes: ", error);
+                }
+            });
+        }
+
+        function cargarClientesSuper() {
+            $.ajax({
+                url: '/DAC/ventas/obtener_clientes_super/', // Asegúrate de reemplazar esto con la ruta correcta a tu función de vista
+                type: 'GET', // Método HTTP utilizado
+                dataType: 'json', // Tipo de datos esperado
+                success: function (response) {
+                    // Elimina las opciones existentes, excepto la primera
+                    var select = $('#cliente_select');
+                    select.empty();
+
+                    select.append($('<option>', {
+                        value: '#',
+                        text: 'Seleccione un Cliente'
+                    }));
+
+                    // Itera sobre el arreglo de clientes y los añade al select
+                    $.each(response.clientes, function (i, cliente) {
+                        // Verifica que nombre_cliente y id_cliente existan antes de usarlos
+                        if (cliente.nombre_cliente && cliente.id_cliente) {
+                            $('#cliente_select').append(new Option(cliente.nombre_cliente.trim(), cliente.id_cliente));
+                        }
+                    });
+
+                    // Actualiza el elemento Chosen con los nuevos datos
+                    $('#cliente_select').trigger('chosen:updated');
+                },
+                error: function (xhr, status, error) {
+                    console.error("Error al cargar los clientes: ", error);
+                }
+            });
+        }
+
+        function cargarAlmacenSuper() {
+            $.ajax({
+                url: '/DAC/ventas/obtener_almacenes/', // Asegúrate de reemplazar esto con la ruta correcta a tu función de vista
+                type: 'GET', // Método HTTP utilizado
+                dataType: 'json', // Tipo de datos esperado
+                success: function (response) {
+                    // Elimina las opciones existentes, excepto la primera
+                    var select = $('#almacen_select');
+                    select.empty();
+
+                    select.append($('<option>', {
+                        value: '#',
+                        text: 'Seleccione un Almacen'
+                    }));
+
+                    // Itera sobre el arreglo de clientes y los añade al select
+                    $.each(response.almacen, function (i, almacen) {
+                        // Verifica que nombre_cliente y id_cliente existan antes de usarlos
+                        if (almacen.almacen && almacen.id_almacen) {
+                            $('#almacen_select').append(new Option(almacen.almacen.trim(), almacen.id_almacen));
+                        }
+                    });
+
+                },
+                error: function (xhr, status, error) {
+                    console.error("Error al cargar los motivos: ", error);
+                }
+            });
+        }
+
+        function cargarAlmacenDistribuidora() {
+            $.ajax({
+                url: '/DAC/ventas/obtener_almacenes_dc/', // Asegúrate de reemplazar esto con la ruta correcta a tu función de vista
+                type: 'GET', // Método HTTP utilizado
+                dataType: 'json', // Tipo de datos esperado
+                success: function (data) {
+                    // Elimina las opciones existentes, excepto la primera
+                    var select = $('#almacen_select');
+                    select.empty();
+
+                    select.append($('<option>', {
+                        value: '#',
+                        text: 'Seleccione un Almacen'
+                    }));
+
+                    // Itera sobre el arreglo de clientes y los añade al select
+                    $.each(data.almacenesData, function (index, alm) {
+                        select.append($('<option>', {
+                            value: alm.id_almacen,
+                            text: alm.almacen
+                        }));
+                    });
+
+                },
+                error: function (xhr, status, error) {
+                    console.error("Error al cargar los almacenes: ", error);
+
+                    var select = $('#almacen_select');
+                    select.empty();
+
+                    select.append($('<option>', {
+                        value: '#',
+                        text: 'Seleccione un Almacen'
+                    }));
+                }
+            });
+        }
+
+        function cargarProductos(formato) {
+            try {
+                $.ajax({
+                    beforeSend: function (xhr, type) {
+                        if (!type.crossDomain) {
+                            xhr.setRequestHeader(
+                                'X-CSRF-Token', $(
+                                    'meta[name="csrf-token"]'
+                                ).attr(
+                                    'content'));
+                        }
+                    },
+                    url: `{% url 'productosFormato' %}`,
+                    type: "POST",
+                    dataScr: 'data',
+                    data: {
+                        formato: formato,
+                        csrfmiddlewaretoken: csrfToken
+                    },
+                    success: function (data) {
+
+                        var select = $('#nombre_producto');
+                        select.empty();
+
+                        select.append($('<option>', {
+                            value: '#',
+                            text: 'Seleccione un Producto'
+                        }));
+
+                        var presentacion = $('#presentacion');
+                        presentacion.empty();
+
+                        presentacion.append($('<option>', {
+                            value: '#',
+                            text: 'Seleccione una Presentacion'
+                        }));
+
+                        $.each(data.productosData, function (index, producto) {
+                            select.append($('<option>', {
+                                value: producto.id_producto,
+                                text: producto.producto_name
+                            }));
+                        });
+
+                        $('#nombre_producto').trigger('chosen:updated');
+                        $('#presentacion').trigger('chosen:updated');
+
+                    },
+                });
+            } catch (error) {
+                Swal.fire("", "Error A: " + error, "error")
+            }
+        }
+
+        document.getElementById("formato_select").addEventListener("change", function () {
+            var selectedOption = this.value;
+
+            if (selectedOption === "1") {
+                cargarClientesDistribuidora();
+                cargarAlmacenDistribuidora();
+
+                $('#existencia_text').text('Existencia Inicio del Dia');
+
+            } else if (selectedOption === "2") {
+                cargarClientesSuper();
+                cargarAlmacenSuper();
+
+                $('#existencia_text').text('Existencia');
+            }
+
+            $('#formVentaPerdida').trigger('reset');
+
+            var nombre_producto = $('#nombre_producto');
+            nombre_producto.empty();
+
+            nombre_producto.append($('<option>', {
+                value: '#',
+                text: 'Seleccione un Producto'
+            }));
+
+            var presentacion = $('#presentacion');
+            presentacion.empty();
+
+            presentacion.append($('<option>', {
+                value: '#',
+                text: 'Seleccione una Presentacion'
+            }));
+
+
+            document.getElementById('nombre_producto').selectedIndex = '#';
+            document.getElementById('presentacion').selectedIndex = '#';
+            $('#nombre_producto').trigger('chosen:updated');
+            $('#presentacion').trigger('chosen:updated');
+        });
+
+        $('#almacen_select').change(function (e) {
+            e.preventDefault();
+
+            formato = $('#formato_select').val();
+
+            cargarProductos(formato);
+            $('#formVentaPerdida').trigger('reset');
+        });
+
+
+        $('#nombre_producto').change(function (e) {
+            e.preventDefault();
+
+            producto = $(this).val();
+            formato = $('#formato_select').val();
+
+            $.ajax({
+                beforeSend: function (xhr, type) {
+                    if (!type.crossDomain) {
+                        xhr.setRequestHeader(
+                            'X-CSRF-Token', $(
+                                'meta[name="csrf-token"]'
+                            ).attr(
+                                'content'));
+                    }
+                },
+                url: `{% url 'presentacionesProductoFormato' %}`,
+                type: "POST",
+                dataScr: 'data',
+                data: {
+                    formato: formato,
+                    producto: producto,
+                    csrfmiddlewaretoken: csrfToken
+                },
+                dataType: "json",
+                success: function (data) {
+
+                    var select = $('#presentacion');
+                    select.empty();
+
+                    select.append($('<option>', {
+                        value: '#',
+                        text: 'Seleccione una Presentacion'
+                    }));
+
+                    $.each(data.presentacionesData, function (index, presentacion) {
+                        select.append($('<option>', {
+                            value: presentacion.id_presentacion,
+                            text: presentacion.presentacion
+                        }));
+                    });
+
+                    $('#presentacion').trigger('chosen:updated');
+
+                }
+            });
+
+        });
+
+
+        function getInfoProductoPresentacion() {
+            formato = $('#formato_select').val();
+            almacen = $('#almacen_select').val();
+            presentacion = $('#presentacion').val();
+            producto = $('#nombre_producto').val();
+            cliente = $('#cliente_select').val();
+
+            if (cliente == '#') {
+                document.getElementById('cliente_select').selectedIndex = "#";
+                $('#cliente_select').trigger('chosen:updated');
+
+                Swal.fire("", "Debes elegir un cliente para cargar la informacion de la presentacion del Producto en base al Cliente!", "warning");
+            } else {
+
+                //
+
+                $.ajax({
+                    beforeSend: function (xhr, type) {
+                        if (!type.crossDomain) {
+                            xhr.setRequestHeader(
+                                'X-CSRF-Token', $(
+                                    'meta[name="csrf-token"]'
+                                ).attr(
+                                    'content'));
+                        }
+                    },
+                    url: `{% url 'getDataPresentacionAlmacen' %}`,
+                    type: "POST",
+                    dataScr: 'data',
+                    data: {
+                        formato: formato,
+                        almacen: almacen,
+                        presentacion: presentacion,
+                        producto: producto,
+                        cliente: cliente,
+                        csrfmiddlewaretoken: csrfToken
+                    },
+                    dataType: "json",
+                    success: function (data) {
+
+                        if (data.save == 1) {
+                            $('#existencia').val(data.existencia);
+                            $('#precio_min').val(data.precio_min);
+                            $('#precio_max').val(data.precio_max);
+                            $('#subgrupo').val(data.subgrupo);
+                            $('#marca').val(data.marca);
+                            $('#fecha_llegada').val(data.fecha_llegada);
+
+                            if (data.fecha_llegada == "SIN FECHA PROXIMA") {
+
+                            }
+
+                        } else {
+                            $('#existencia').val('0.00');
+                            $('#precio_min').val('0.00');
+                            $('#precio_max').val('0.00');
+                            $('#subgrupo').val('');
+                            $('#marca').val('');
+                            $('#fecha_llegada').val('');
+                        }
+
+                    }
+                });
+
+
+                //
+
+            }
+        }
+
+        $('#presentacion, #cliente_select').change(function (e) {
+            e.preventDefault();
+
+            getInfoProductoPresentacion();
+
+        });
+
+        $('html, body').animate({
+            scrollTop: $('.viewSection').offset().top
+        }, 'slow');
+
+        $('.sectionMotivoSelection').css('visibility', 'hidden');
+        $('.sectionMotivoSelection').css('height', '0');
+
+        $('#motivo_de_ingreso').val(1);
+        $('#motivo_de_ingreso_main').val(1);
+
+        $(document).on('click', '.alertaDinamica', function () {
+            varID = this.id;
+
+            console.log(varID);
+
+            $('.sectionMotivoSelection').css('visibility', 'visible');
+            $('.sectionMotivoSelection').css('height', 'auto');
+
+            if (varID == 'cantidadExistencia') {
+                $(".competenciaInputs").css('visibility', 'hidden');
+                $(".competenciaInputs").css('height', '0');
+
+                $(".motivoInputs").css('visibility', 'hidden');
+                $(".motivoInputs").css('height', '0');
+
+                $('#motivo_vp').val(3).change();
+                $('#motivo_de_ingreso').val(3);
+                $('#motivo_de_ingreso_main').val(3);
+
+                $('#motivosText').text('Motivos de Venta Perdida: INVENTARIO');
+            }
+            else if (varID == 'revisarServicio') {
+                $(".competenciaInputs").css('visibility', 'visible');
+                $(".competenciaInputs").css('height', 'auto');
+
+                $(".motivoInputs").css('visibility', 'visible');
+                $(".motivoInputs").css('height', 'auto');
+
+                $('.vpFeedback').css('visibility', 'visible');
+                $('.vpFeedback').css('height', 'auto');
+
+                $('#motivo_vp').val(1).change();
+                $('#motivo_de_ingreso').val(1);
+                $('#motivo_de_ingreso_main').val(1);
+
+                $('#motivosText').text('Motivos de Venta Perdida: SERVICIO');
+            }
+            else {
+                $(".competenciaInputs").css('visibility', 'visible');
+                $(".competenciaInputs").css('height', 'auto');
+
+                $(".motivoInputs").css('visibility', 'hidden');
+                $(".motivoInputs").css('height', '0');
+
+                $('.vpFeedback').css('visibility', 'hidden');
+                $('.vpFeedback').css('height', '0');
+
+                $('#motivo_vp').val(2).change();
+                $('#motivo_de_ingreso').val(2);
+                $('#motivo_de_ingreso_main').val(2);
+
+                $('#motivosText').text('Motivos de Venta Perdida: PRECIO');
+            }
+
+        });
+
+
+        $('#cantidad').keyup(function (e) {
+
+            cantidad = $('#cantidad').val();
+            existencia = $('#existencia').val();
+
+            cantidad = cantidad.replace(/,/g, "");
+            existencia = existencia.replace(/,/g, "");
+
+            if (!$(this).val() || cantidad == 0) {
+                $(this).val(0);
+                cantidad = 0;
+            }
+        });
+
+
+
+
+        $('#precio').keyup(function (e) {
+
+            precio = $('#precio').val();
+            precio_min = $('#precio_min').val();
+
+            precio = precio.replace(/,/g, "");
+            precio_min = precio_min.replace(/,/g, "");
+
+            if (!$(this).val() || precio == 0) {
+                $(this).val(0);
+                precio = 0;
+            }
+        });
+
+        $(document).on('keyup', '.alertasInputsKeyUp', function () {
+            cantidad = $('#cantidad').val();
+            existencia = $('#existencia').val();
+
+            cantidad = cantidad.replace(/,/g, "");
+            existencia = existencia.replace(/,/g, "");
+
+            precio = $('#precio').val();
+            precio_min = $('#precio_min').val();
+
+            precio = precio.replace(/,/g, "");
+            precio_min = precio_min.replace(/,/g, "");
+
+            $('.appendAlertas').empty();
+
+            if (parseFloat(cantidad) < parseFloat(existencia) && parseFloat(precio) > parseFloat(precio_min)) {
+                $(".competenciaInputs").css('visibility', 'visible');
+                $(".competenciaInputs").css('height', 'auto');
+
+                $(".motivoInputs").css('visibility', 'visible');
+                $(".motivoInputs").css('height', 'auto');
+
+                $('#motivo_vp').val(1).change();
+                $('#motivo_de_ingreso').val(1);
+                $('#motivo_de_ingreso_main').val(1);
+
+                $('#motivosText').text('Motivos de Venta Perdida');
+            }
+
+
+            if (parseFloat(cantidad) > parseFloat(existencia)) {
+                $('.appendAlertas').append(`
+                    <div class="form-check alert alert-info p-2">
+                        <input class="form-check-input mx-auto p-1 alertaDinamica" type="radio" name="alertaDinamica"
+                            id="cantidadExistencia" value="0">
+                        <label class="form-check-label" for="cantidadExistencia">
+                            Cantidad inferior a Existencia. <span class="text-primary">
+                                <strong>Motivo:  Inventario</strong>.</span>
+                        </label>
+                    </div>
+                `);
+            }
+
+            if (parseFloat(precio) < parseFloat(precio_min)) {
+
+                $('.vpFeedback').css('visibility', 'hidden');
+                $('.vpFeedback').css('height', '0');
+                
+
+                $('.appendAlertas').append(`
+                    <div class="form-check alert alert-warning p-2">
+                        <input class="form-check-input mx-auto p-1 alertaDinamica" type="radio" name="alertaDinamica" id="precioMinimo"
+                            value="0">
+                        <label class="form-check-label" for="precioMinimo">
+                            Precio inferior al Mínimo. <span class="text-danger">
+                                <strong>Motivo:  Precio</strong>.</span>
+                        </label>
+                    </div>
+                `);
+
+            }
+
+            //$('.alertasSection').css('visibility', 'visible');
+            //$('.alertasSection').css('height', 'auto');
+
+            $('.appendAlertas').append(`
+                    <div class="form-check alert alert-success p-2">
+                        <input class="form-check-input mx-auto p-1 alertaDinamica" type="radio" name="alertaDinamica" id="revisarServicio"
+                            value="0">
+                        <label class="form-check-label" for="revisarServicio">
+                            <span class="text-success"><strong>Motivo:  Servicio</strong>.</span>
+                        </label>
+                    </div>
+                `);
+
+        });
+
+
+        $('#id_motivo').change(function (e) {
+            e.preventDefault();
+
+            $('#motivo_de_ingreso').val($(this).val());
+        });
+
+
+
+        // SUBMIT SECTION
+
+        $('#formVentaPerdida').submit(function (e) {
+            e.preventDefault();
+
+            motivo_de_ingreso = $('#motivo_de_ingreso_main').val();
+
+            id_cliente = $('#cliente_select').val();
+            cliente = $('#cliente_select option:selected').text();
+
+            id_almacen = $('#almacen_select').val();
+            almacen = $('#almacen_select option:selected').text();
+
+            id_producto = $('#nombre_producto').val();
+            producto = $('#nombre_producto option:selected').text();
+
+            id_presentacion = $('#presentacion').val();
+            presentacion = $('#presentacion option:selected').text();
+
+            cantidad = $('#cantidad').val();
+            existencia = $('#existencia').val();
+
+            precio = $('#precio').val();
+            precio_min = $('#precio_min').val();
+            precio_max = $('#precio_max').val();
+
+
+            id_competencia = $('#competencia_vp').val();
+            competencia = $('#competencia_vp option:selected').text();
+
+            if (id_competencia == "#") {
+                competencia = "";
+            }
+
+            precio_vp = $('#precio_vp').val();
+
+            id_motivo = $('#motivo_de_ingreso').val();
+
+            motivo_select = $('#motivo_vp').val();
+            comentario = $('#comentario_vp').val();
+
+            empresa = $('#formato_select').val();
+
+            user_name = $('#user_name').val();
+
+            subgrupo = $('#subgrupo').val();
+            marca = $('#marca').val();
+
+            var formDataArray = $(this).serializeArray();
+            
+            console.log(formDataArray);
+
+            if (id_cliente == "#" || id_almacen == "#" || empresa == "#" || id_producto == "#" || id_presentacion == "#" || !$('#cantidad').val() || !$('#precio').val() || cantidad == 0 || precio == 0) {
+                Swal.fire("", "Debes llenar y/o seleccionar todos los campos!", "warning");
+            } else {
+
+
+
+                if (motivo_de_ingreso == 1 && motivo_select == "#") {
+                    Swal.fire("", "Debes seleccionar un Motivo!", "warning");
+                } else if (motivo_de_ingreso == 2 && id_competencia == "#") {
+                    Swal.fire("", "Debes seleccionar una Empresa Competencia y/o definir el precio de la competencia!", "warning");
+                } else {
+
+                    $.ajax({
+                        beforeSend: function (xhr, type) {
+                            if (!type.crossDomain) {
+                                xhr.setRequestHeader(
+                                    'X-CSRF-Token', $(
+                                        'meta[name="csrf-token"]'
+                                    ).attr(
+                                        'content'));
+                            }
+                        },
+                        url: `{% url 'saveVentaPerdida' %}`,
+                        type: "POST",
+                        dataScr: 'data',
+                        async: false,
+                        data: {
+                            id_cliente: id_cliente,
+                            nombre_cliente: cliente,
+                            id_equivalencia_x_categoria: id_presentacion,
+                            id_producto: id_producto,
+                            nombre_producto: producto,
+                            presentacion: presentacion,
+                            id_almacen: id_almacen,
+                            almacen: almacen,
+                            cantidad: cantidad,
+                            existencia: existencia,
+                            precio: precio,
+                            precio_min: precio_min,
+                            precio_max: precio_max,
+
+                            id_motivo: id_motivo,
+                            id_competencia: id_competencia,
+                            nombre_competencia: competencia,
+
+                            precio_competencia: precio_vp,
+                            comentario: comentario,
+
+                            id_empresa: empresa,
+
+                            sistema: 1,
+
+                            subgrupo: subgrupo,
+                            marca: marca,
+
+                            user_name: user_name,
+
+                            csrfmiddlewaretoken: csrfToken
+                        },
+                        dataType: "json",
+                        success: function (data) {
+
+                            if (data.save == 1) {
+                                Swal.fire("", "Venta Perdida Registrada!", "success");
+
+                                document.getElementById('nombre_producto').selectedIndex = '#';
+                                document.getElementById('presentacion').selectedIndex = '#';
+                                $('#nombre_producto').trigger('chosen:updated');
+                                $('#presentacion').trigger('chosen:updated');
+
+                                $('#formVentaPerdida').trigger('reset');
+
+
+                                $('#cantidad').val('');
+                                $('#existencia').val('');
+                                $('#precio').val('');
+                                $('#precio_min').val('');
+                                $('#precio_max').val('');
+
+                                $('.appendAlertas').empty();
+
+                                $('.appendAlertas').append(`
+                                    <div class="form-check alert alert-success p-2">
+                                        <input class="form-check-input mx-auto p-1 alertaDinamica" type="radio" name="alertaDinamica" id="revisarServicio"
+                                            value="0">
+                                        <label class="form-check-label" for="revisarServicio">
+                                            <span class="text-success"><strong>Motivo:  Servicio</strong>.</span>
+                                        </label>
+                                    </div>
+                                `);
+
+                                //$('.alertasSection').css('visibility', 'hidden');
+                                //$('.alertasSection').css('height', '0');
+
+                                $('.sectionMotivoSelection').css('visibility', 'hidden');
+                                $('.sectionMotivoSelection').css('height', '0');
+
+                                $(".competenciaInputs").css('visibility', 'hidden');
+                                $(".competenciaInputs").css('height', '0');
+
+                                $(".motivoInputs").css('visibility', 'hidden');
+                                $(".motivoInputs").css('height', '0');
+
+                                $('#motivo_de_ingreso').val(1);
+                                $('#motivo_de_ingreso_main').val(1);
+
+                                $('#motivosText').text('Motivos de Venta Perdida');
+
+                            } else {
+                                Swal.fire("", "Error D: " + data.error, "error");
+                            }
+
+                        }
+                    });
+
+
+                }
+
+
+
+
+
+            }
+
+
+
+
+        });
+
+
+
+
+
+
+
+
+
+
+
+    });
+</script>
+
+
+
+{% endblock %}

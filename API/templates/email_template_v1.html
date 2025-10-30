@@ -1,0 +1,88 @@
+{% load static %}
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Verificación de Cuenta</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            background-color: #f4f4f4;
+            margin: 0;
+            padding: 0;
+        }
+
+        .container {
+            width: 100%;
+            max-width: 600px;
+            margin: 0 auto;
+            background-color: #ffffff;
+            padding: 20px;
+            border-radius: 10px;
+            box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
+        }
+
+        .header {
+            text-align: center;
+            padding: 20px;
+        }
+
+        .header img {
+            max-width: 100px;
+        }
+
+        .content {
+            padding: 20px;
+            text-align: center;
+        }
+
+        .content h1 {
+            color: #333333;
+        }
+
+        .content p {
+            color: #666666;
+        }
+
+        .button {
+            display: inline-block;
+            padding: 10px 20px;
+            margin-top: 20px;
+            background-color: #2ecc71;
+            color: #ffffff;
+            text-decoration: none;
+            border-radius: 5px;
+        }
+
+        .footer {
+            text-align: center;
+            padding: 20px;
+            color: #999999;
+            font-size: 12px;
+        }
+    </style>
+</head>
+
+<body>
+    <div class="container">
+        <div class="header">
+            <img src="http://3.230.160.184:81/static/app/cws/images/letra.png" alt="CWS Logo">
+            <h2 class="h5">{{ title }}</h2>
+        </div>
+        <div class="content">
+            <p>{{ message }}</p>
+            <br>
+            <h4>{{token}}</h4>
+            {% if btn_redirect == 1 %}
+                <a href="{{ login_url }}" class="button">Ingresar al Sistema</a>
+            {% endif %}
+        </div>
+        <div class="footer">
+            <p>&copy; 2024 CARBAJAL WEB SERVICE. Todos los derechos reservados.</p>
+        </div>
+    </div>
+</body>
+
+</html>

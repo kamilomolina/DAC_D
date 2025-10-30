@@ -1,0 +1,122 @@
+#sidebar,
+.header .header-left {
+    background: #205c634c;
+}
+
+body {
+    font-family: 'Roboto', sans-serif;
+    margin: 0;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    height: 100vh;
+    background-color: #E7ECEE;
+
+}
+
+.img-container {
+    width: 100%;
+    padding-top: 75%;
+    /* Aspect ratio 4:3 */
+    position: relative;
+    overflow: hidden;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+}
+
+.card-img-top {
+    max-width: 100%;
+    max-height: 100%;
+    position: absolute;
+    top: 50%;
+    left: 50%;
+    transform: translate(-50%, -50%);
+}
+
+html,
+body {
+    height: 100%;
+    margin: 0;
+}
+
+.main-wrapper {
+    display: flex;
+    flex-direction: column;
+    min-height: 100vh;
+    /* Asegura que la altura cubra toda la ventana */
+}
+
+.page-wrapper {
+    flex: 1;
+    /* Hace que el contenido ocupe el espacio disponible */
+}
+
+footer {
+    text-align: center;
+    background-color: #f8f9fa;
+    padding: 10px;
+    position: relative;
+    width: 100%;
+}
+
+input.form-control,
+select.form-control,
+textarea.form-control {
+    padding: 4px 8px;
+    /* Reduce el padding */
+    height: auto;
+    /* Asegura que no se fuerce una altura específica */
+    line-height: 1.25;
+    /* Ajusta la altura de línea para reducir el espacio vertical */
+    font-size: 14px;
+    /* Ajusta el tamaño de la fuente */
+}
+
+.modal {
+    z-index: 1050;
+    /* Ajusta si es necesario */
+}
+
+.modal-backdrop {
+    z-index: 1040;
+    /* La capa de fondo del modal */
+}
+
+.select2-container .select2-selection--single {
+    height: auto;
+    /* Ajusta la altura */
+    padding: 4px 8px;
+    /* Ajusta el padding para reducir el espacio interno */
+    font-size: 12px;
+    /* Reduce el tamaño del texto */
+    line-height: 1.25;
+    /* Ajusta la altura de línea */
+}
+
+.select2-container--default .select2-selection--single .select2-selection__rendered {
+    padding-left: 8px;
+    /* Ajusta el padding interno */
+    padding-right: 8px;
+    line-height: 1.25;
+    /* Ajusta la altura de línea */
+}
+
+.select2-container--default .select2-selection--single .select2-selection__arrow {
+    height: 26px;
+    /* Ajusta la altura de la flecha */
+}
+
+.card {
+    margin-bottom: 10px; /* Espacio entre tarjetas */
+    padding: 1px; /* Padding en la tarjeta */
+}
+
+.card-body {
+    padding: 1px; /* Reducir padding dentro del cuerpo de la tarjeta */
+}
+
+.card-body p {
+    margin-bottom: 1px; /* Reducir el margen inferior del párrafo */
+}
+

@@ -1,0 +1,55 @@
+
+<div class="modal fade" id="modalCrearAsistenciaManual" tabindex="-1" role="dialog" aria-labelledby="exampleModalLabel"
+    data-bs-keyboard="false" data-bs-backdrop="static" aria-hidden="true">
+    <div class="modal-dialog modal-lg" role="document">
+        <div class="modal-content">
+            <div class="modal-header" style="background-color: #304458; color:white">
+                <h5 class="modal-title" id="exampleModalLabelTurnos">Crear Turnos</h5>
+                <button type="button" class="close-turnos" data-bs-dismiss="modal" aria-label="Close">
+                    <span aria-hidden="true">&times;</span>
+                </button>
+            </div>
+            <div class="modal-body">
+                <form id="formCrearAsistenciaManual">
+                    {% csrf_token %}
+                    <div class="row">
+                
+                        <input type="hidden" id="id-turnos" name="id_asistencia_manual">
+                        <div class="col-md-12 mb-3">
+                            <label for="id-usuario-biometrico"><span style="color: red;">*</span> Empleado:</label>
+                            <select class="form-control chosen-select" id="id-usuario-biometrico" name="id-usuario-biometrico">
+                                <option value="">Seleccione una opción</option>
+                                {% for usuario in usuarios_biometrico %}
+                                <option value="{{ usuario.0 }}">{{ usuario.1 }}</option>
+                                {% endfor %}
+                            </select>
+                        </div>
+
+                        <div class="col-md-12 mb-3">
+                            <label for="datetime"><span style="color: red;">*</span> Hora/Fecha Acceso:</label>
+                            <input type="datetime-local" id="datetime" name="datetime" class="form-control">
+                        </div>
+                        <div class="col-md-12 mb-3">
+                            <label for="tipo-registro"><span style="color: red;">*</span>Tipo de Registro:</label>
+                            <select class="form-control chosen-select" id="tipo-registro" name="tipo-registro">
+                                {% for registro in tipo_registro %}
+                                <option value="{{ registro.0 }}">{{ registro.2 }}</option>
+                                {% endfor %}
+                            </select>
+                        </div>
+                        
+                    </div>
+
+                    <div class="modal-footer">
+                        <button type="submit" id="guardar-editar-turnos"
+                            class="btn btn-success animate__animated animate__pulse animate__slow animate__infinite">Guardar</button>
+                        <button type="button" class="btn btn-danger close-tipo-turnos"
+                            data-bs-dismiss="modal">Cerrar</button>
+                    </div>
+                </form>
+
+
+            </div>
+        </div>
+    </div>
+</div>

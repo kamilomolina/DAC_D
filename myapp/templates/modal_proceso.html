@@ -1,0 +1,115 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Tabla Elegante</title>
+    <style>
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background-color: #f4f4f4;
+            margin: 0;
+            padding: 20px;
+        }
+
+        .elegant-table {
+            width: 100%;
+            border-collapse: collapse;
+            margin: 25px 0;
+            font-size: 0.9em;
+            background-color: #fff;
+            min-width: 400px;
+            box-shadow: 0 0 20px rgba(0, 0, 0, 0.15);
+        }
+
+        .elegant-table thead tr {
+            background-color:  #556B2F;
+            color: #ffffff;
+            text-align: left;
+        }
+
+        .elegant-table th,
+        .elegant-table td {
+            padding: 12px 15px;
+        }
+
+        .elegant-table tbody tr {
+            border-bottom: 1px solid #dddddd;
+        }
+
+        .elegant-table tbody tr:nth-of-type(even) {
+            background-color: #f3f3f3;
+        }
+
+        .elegant-table tbody tr:last-of-type {
+            border-bottom: 2px solid  #556B2F;
+        }
+
+        .elegant-table tbody tr.active-row {
+            font-weight: bold;
+            color:  #556B2F;
+        }
+
+        .elegant-table td {
+            padding: 12px 15px;
+            border: 1px solid  #556B2F;
+            /* Agrega un borde alrededor de cada celda */
+        }
+
+        .elegant-table tbody tr:nth-of-type(even) {
+            background-color: #f3f3f3;
+        }
+
+        /* Eliminar el borde inferior de la última fila para evitar un borde más grueso */
+        .elegant-table tbody tr:last-of-type td {
+            border-bottom: none;
+        }
+
+        .elegant-table .form-input {
+            width: 100%;
+            padding: 5px;
+            margin: 4px 0;
+            box-sizing: border-box;
+            border: 1px solid #ccc;
+            border-radius: 4px;
+        }
+
+        /* Estilizar el focus para mejorar la accesibilidad */
+        .elegant-table .form-input:focus {
+            border-color:  #556B2F;
+            outline: none;
+        }
+    </style>
+</head>
+
+<body>
+
+    <table class="elegant-table">
+        <thead>
+            <tr>
+                <th>Id_programacion</th>
+                <th>Fecha-Hora Inicio Carga</th>
+                <th>Fecha-Hora Fin Carga</th>
+                <th>Fecha-Hora Entrega</th>
+                <th>Fecha-Hora Regreso Esperado</th>
+                <th>Fecha-Hora Regreso</th>
+            </tr>
+        </thead>
+        <tbody>
+            <tr>
+                
+                <td><input type="text" class="form-input" name="id_programacion" /></td>
+                <td><input type="datetime-local" class="form-input" name="hora_carga_inicio" /></td>
+                <td><input type="datetime-local" class="form-input" name="hora_carga_fin" /></td>
+                <td><input type="datetime-local" class="form-input" name="hora_entrega" /></td>
+                <td><input type="datetime-local" class="form-input" name="hora_regreso_esperado" /></td>
+                <td><input type="datetime-local" class="form-input" name="hora_regreso" /></td>
+            </tr>
+            <!-- Más filas aquí -->
+        </tbody>
+    </table>
+
+</body>
+
+</html>

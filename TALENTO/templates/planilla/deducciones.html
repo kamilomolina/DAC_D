@@ -1,0 +1,873 @@
+{% extends 'menu_nomina.html' %}
+{% load static %}
+
+{% block title %}
+{% if parametro == 'new' %}
+CREAR PLANILLA
+{% else %}
+{{ id_empleado }} - TIPOS DEDUCCIONES
+{% endif %}
+{% endblock %}
+
+{% block body %}
+
+<body>
+    <div class="card  p-2 crear-container">
+        <div class="row ">
+            <div class="col-md-12">
+                <div class="card">
+                    <div class="card-body" style="background-color: #f4f6f9;">
+                        <div class="d-flex justify-content-between align-items-center mb-4 mt-2">
+                            <h4 class="text-primary">
+                                Tipo deducción de planilla
+                            </h4>
+
+                            <button type="button" id="limpieza-id"
+                                class="btn btn-add-adicional animate__animated animate__pulse animate__slow animate__infinite"
+                                style="background-color: #f5c542; color: #ffffff;" data-bs-toggle="modal"
+                                data-bs-target="#modalCrearDeducciones">
+                                <i class="material-icons">add</i>
+                            </button>
+
+                        </div>
+                        <div class="table-responsive">
+                            <table id="tipos-deducciones-empleados"
+                                class="table table-striped table-bordered table-top-border" style="width:100%">
+                                <thead>
+                                    <tr>
+                                        <th>#</th>
+                                        <th>Nombre</th>
+                                        <th>Descripción</th>
+                                        <th>Automatización</th>
+                                        <th>Forma</th>
+                                        <th>Tipo</th>
+                                        <th>Fecha Creado</th>
+                                        <th>Creado Por</th>
+                                        <th>Fecha Modificado</th>
+                                        <th>Modificado Por</th>
+                                        <th>Acciones</th>
+                                    </tr>
+                                </thead>
+                                <tbody>
+
+                                </tbody>
+                            </table>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+    {% include 'complementos/planilla/modal_crear_categoria_deducciones.html' %}
+    {% include 'complementos/planilla/modal_crear_deducciones.html' %}
+    {% include 'complementos/planilla/modal_crear_tipo_deduccion_banco.html' %}
+
+
+</body>
+{% endblock %}
+{% block scripts %}
+<script>
+    $(document).ready(function () {
+        // Configurar el mixin de Toasts
+        var toastMixin = Swal.mixin({
+            toast: true,
+            icon: 'success',
+            title: 'General Title',
+            animation: false,
+            position: 'top-right',
+            showConfirmButton: false,
+            timer: 2000,
+            timerProgressBar: true,
+            didOpen: (toast) => {
+                toast.addEventListener('mouseenter', Swal.stopTimer);
+                toast.addEventListener('mouseleave', Swal.resumeTimer);
+            }
+        });
+
+
+        // Cerrar y limpiar el modal al hacer clic en el botón
+        $('.close-tipo-deduccion').on('click', function () {
+            $('#modalCrearDeducciones').modal('hide');
+            document.getElementById('formCrearTipoDeduccion').reset();
+
+            // Restablecer select2
+            $('#id-categoria').val('').trigger('chosen:updated');
+            $('#tipo-deduccion').val('').trigger('chosen:updated');
+            $('#automatizacion-deduccion').val('').trigger('chosen:updated');
+            $('#id-deduccion').val('');
+            $('#formCrearTipoDeduccion .is-invalid, #formCrearTipoDeduccion .is-valid').removeClass('is-invalid is-valid');
+            $('.invalid-feedback').remove();
+        });
+
+
+        $('#limpieza-id').on('click', function () {
+            document.getElementById('formCrearTipoDeduccion').reset();
+            $('#id-deduccion').val('');
+            // Cambiar el título del modal a 'Editar Tipo de Deducción'
+            $('#exampleModalLabel').text('Crear tipo de deducción');
+
+            // Cambiar el texto del botón de guardar a 'Actualizar'
+            $('#guardar-editar-btn').text('Guardar');
+        });
+
+
+        $('.close-modal').on('click', function () {
+            $('#modalCrearCategoria').modal('hide');
+            $('#modalCrearDeducciones').modal('show');
+        });
+
+        $('.close').on('click', function () {
+            $('#tipoDeduccionModal').modal('hide');
+        });
+
+
+        $('.close-banco').on('click', function () {
+            $('#modalCrearTipoDeduccionBanco').modal('hide');
+            $('#modalCrearDeducciones').modal('show');
+        });
+
+        $('#tipo-deduccion').on('change', function () {
+            var tipoSeleccionado = $(this).val();
+
+            // Verificar si la opción seleccionada es "new-tipo-deduccion" para abrir el modal
+            if (tipoSeleccionado === 'new-tipo-deduccion') {
+                // Abrir el modal para crear un nuevo tipo de deducción
+                $('#modalCrearTipoDeduccionBanco').modal('show');
+                $('#modalCrearDeducciones').modal('hide');
+
+                // Restablecer la selección después de abrir el modal
+                $(this).val(''); // Opcional: volver a seleccionar la opción predeterminada
+                $(this).trigger("chosen:updated");
+            }
+        });
+
+        // Función para cargar los tipos de deducción según la categoría seleccionada
+        function cargarTiposDeduccion(id_categoria) {
+            if (id_categoria) {
+                $.ajax({
+                    url: "{% url 'mostrar_tipos_deduccion_banco' %}",
+                    type: 'GET',
+                    data: {
+                        'id_categoria': id_categoria  // Pasar el id_categoria como parámetro
+                    },
+                    success: function (data) {
+                        let tipoSelect = $('#tipo-deduccion');
+
+                        // Limpiar el select, manteniendo la opción "Crear Tipo Deducción"
+                        tipoSelect.find('option:not([value="new-tipo-deduccion"])').remove();
+
+                        // Añadir la opción "Seleccione un tipo de deducción" al inicio como deshabilitada
+                        if (tipoSelect.find('option[value=""]').length === 0) {
+                            tipoSelect.prepend('<option value="" disabled selected>Seleccione un tipo de deducción</option>');
+                        }
+
+                        if (data.deducciones && data.deducciones.length > 0) {
+                            // Agregar las opciones al select
+                            data.deducciones.forEach(function (deduccion) {
+                                tipoSelect.append(`<option value="${deduccion.id_tipo_deduccion}">${deduccion.nombre_tipo}</option>`);
+                            });
+                        } else {
+                            console.error('No se encontraron tipos de deducción.');
+                        }
+
+                        // Asegurar que la opción "Crear Tipo Deducción" esté siempre al final
+                        if (tipoSelect.find('option[value="new-tipo-deduccion"]').length === 0) {
+                            tipoSelect.append('<option value="new-tipo-deduccion">Crear Tipo Deducción</option>');
+                        }
+
+                        // Actualizar Chosen después de cargar opciones
+                        tipoSelect.trigger('chosen:updated');
+                    },
+                    error: function (xhr, status, error) {
+                        console.error('Error al cargar los tipos de deducción:', error);
+                        console.log('Estado del error:', status);
+                        console.log('Respuesta completa de error:', xhr.responseText);
+                    }
+                });
+            }
+        }
+
+        // Configurar el evento para actualizar opciones al cambiar la categoría
+        $('#id-categoria').on('change', function () {
+            var id_categoria = $(this).val();  // Obtener el id_categoria seleccionado
+            cargarTiposDeduccion(id_categoria);  // Llamar a la función para cargar tipos de deducción
+        });
+        // Evento de envío del formulario para crear un nuevo tipo de deducción
+        $('#formCrearTipoDeduccionBanco').on('submit', function (e) {
+            e.preventDefault(); // Evitar el envío tradicional del formulario
+
+            // Obtener los valores de los campos
+            let idCategoria = $('#id-categoria').val();
+            let nombreTipo = $('#nombre-tipo-banco').val().trim();
+            let creadoPor = '{{ userName }}'; // Asegúrate de que `userName` esté definido en el contexto
+            const csrfToken = '{{ csrf_token }}'; // Token CSRF para solicitudes POST
+
+            // Lista de validaciones
+            let campos = [
+                { campo: '#id-categoria', valor: idCategoria, mensaje: 'Debe seleccionar una categoría.' },
+                { campo: '#nombre-tipo-banco', valor: nombreTipo, mensaje: 'El nombre del tipo de deducción es obligatorio.' }
+            ];
+
+            let campoInvalido = null;
+
+            // Eliminar mensajes de error previos
+            $('.invalid-feedback').remove();
+            campos.forEach(item => {
+                const $campo = $(item.campo);
+                const $parent = $campo;
+
+                // Remover mensajes de error previos
+                $parent.find('.invalid-feedback').remove();
+
+                if (!item.valor || item.valor.trim() === "") {
+                    $campo.addClass('is-invalid');
+                    if (!campoInvalido) campoInvalido = item.campo;
+
+                    // Agregar mensaje de error en el contenedor adecuado
+                    $parent.after(`<div class="invalid-feedback">${item.mensaje}</div>`);
+                } else {
+
+                }
+            });
+
+            if (campoInvalido) {
+                $(campoInvalido).focus();
+                return;
+            }
+
+            // Preparar los datos a enviar
+            let formData = {
+                id_categoria: idCategoria,
+                nombre_tipo: nombreTipo,
+                creado_por: creadoPor
+            };
+
+            // Realizar la solicitud AJAX
+            $.ajax({
+                url: "{% url 'insertar_tipo_deduccion_banco' %}",  // Asegúrate de que esta URL es correcta
+                type: 'POST',
+                data: JSON.stringify(formData),  // Convertir los datos a JSON
+                contentType: 'application/json',  // Establecer el tipo de contenido como JSON
+                headers: {
+                    'X-CSRFToken': csrfToken  // Incluir el token CSRF en el encabezado
+                },
+                success: function (response) {
+                    if (response.status === 'success') {
+                        toastMixin.fire({
+                            title: 'Tipo de deducción creado exitosamente.',
+                            icon: 'success'
+                        });
+
+                        $('#modalCrearTipoDeduccionBanco').modal('hide');
+                        $('#modalCrearDeducciones').modal('show');
+                        $('#formCrearTipoDeduccionBanco')[0].reset();
+
+                        // Crear una nueva opción para el tipo de deducción con el ID devuelto
+                        const newOption = new Option(nombreTipo, response.last_id);
+
+                        // Añadir la nueva opción al select #tipo-deduccion y seleccionarla
+                        $('#tipo-deduccion').append(newOption).val(response.last_id).trigger("chosen:updated");
+                    } else {
+                        Swal.fire({
+                            icon: 'error',
+                            title: 'Error',
+                            text: response.error,
+                        });
+                    }
+                },
+                error: function (xhr, status, error) {
+                    console.error("Error en AJAX:", xhr, status, error);
+                    try {
+                        const response = JSON.parse(xhr.responseText);
+                        Swal.fire({
+                            icon: 'error',
+                            title: 'Error',
+                            text: response.error || 'Hubo un problema al realizar la solicitud.',
+                        });
+                    } catch (e) {
+                        Swal.fire({
+                            icon: 'error',
+                            title: 'Error',
+                            text: 'Hubo un problema al realizar la solicitud.',
+                        });
+                    }
+                }
+            });
+        });
+
+        // Eliminar el color rojo y el mensaje de error cuando el usuario comienza a escribir o cambiar una selección
+        $('#formCrearTipoDeduccionBanco').on('input change', '.is-invalid', function () {
+            const $elemento = $(this);
+            $elemento.removeClass('is-invalid').addClass('is-valid').next('.invalid-feedback').remove();
+        });
+
+
+        // Inicializar Chosen en todos los select con clase .chosen-select
+        $(".chosen-select").chosen({
+            width: "100%"
+        });
+
+        function cargarCategoriasDeduccion() {
+            $.ajax({
+                url: "{% url 'obtener_cat_categorias_tipos_deduccion' %}", // Verifica que esta URL sea correcta
+                type: 'GET',
+                success: function (data) {
+                    let categoriaSelect = $('#id-categoria');
+                    categoriaSelect.empty(); // Limpiar el select
+                    categoriaSelect.append('<option value="" disabled selected>Seleccione una categoría</option>'); // Placeholder
+                    categoriaSelect.append('<option value="crear">Crear categorías</option>'); // Agregar la opción de crear
+
+                    if (data.categorias) {
+                        // Agregar las opciones dinámicamente al select
+                        data.categorias.forEach(function (categoria) {
+                            categoriaSelect.append(`<option value="${categoria.id}">${categoria.nombre}</option>`);
+                        });
+
+                        // Ajustar el tamaño del select original
+                        categoriaSelect.css({
+                            height: '38px', // Altura estándar para inputs
+                            'line-height': '1.5', // Centrado vertical
+                        });
+
+                        // Actualizar Chosen
+                        categoriaSelect.trigger('chosen:updated');
+
+                        // Ajustar el contenedor de Chosen después de la actualización
+                        $('.chosen-container').css({
+                            height: '38px', // Ajusta la altura al contenedor de Chosen
+                        });
+                        $('.chosen-container .chosen-single').css({
+                            height: '38px', 
+                            'line-height': '38px',
+                        });
+                    } else {
+                        console.error('No se encontraron categorías.');
+                    }
+                },
+                error: function (xhr, status, error) {
+                    console.error('Error al cargar las categorías:', error);
+                }
+            });
+
+        }
+
+
+        $('#formCrearCategoria').on('submit', function (event) {
+            event.preventDefault();
+
+            const nombreCategoria = $('#nombre-categoria').val().trim();
+            const creadoPor = '{{ userName }}';  // Reemplaza con el valor dinámico del usuario actual
+            const nombreCategoriaMayus = nombreCategoria.toUpperCase();
+            const csrfToken = '{{ csrf_token }}';
+
+
+            // Validar campos obligatorios
+            let campos = [
+                { campo: '#nombre-categoria', valor: nombreCategoria, mensaje: 'El nombre de la categoría es obligatorio.' }
+            ];
+
+            let campoInvalido = null;
+
+            // Eliminar mensajes de error previos
+            $('.invalid-feedback').remove();
+            campos.forEach(item => {
+                const $campo = $(item.campo);
+                const $parent = $campo;
+
+                // Remover mensajes de error previos
+                $parent.find('.invalid-feedback').remove();
+
+                if (!item.valor || item.valor.trim() === "") {
+                    $campo.addClass('is-invalid');
+                    if (!campoInvalido) campoInvalido = item.campo;
+
+                    // Agregar mensaje de error en el contenedor adecuado
+                    $parent.after(`<div class="invalid-feedback">${item.mensaje}</div>`);
+                } else {
+
+                }
+            });
+
+            if (campoInvalido) {
+                $(campoInvalido).focus();
+                return;
+            }
+
+            // Enviar datos por AJAX
+            $.ajax({
+                type: 'POST',
+                url: '{% url "insertar_categoria_deduccion" %}',
+                data: {
+                    'nombre_categoria': nombreCategoriaMayus,
+                    'creado_por': creadoPor,
+                    'csrfmiddlewaretoken': csrfToken
+                },
+                success: function (response) {
+                    if (response.status === 'success') {
+                        /* Swal.fire({
+                            icon: 'success',
+                            title: '¡Éxito!',
+                            text: 'Categoría creada exitosamente.',
+                        }); */
+                        toastMixin.fire({
+                            title: 'Categoría creada exitosamente.',
+                            icon: 'success'
+                        });
+
+
+                        // Cerrar el modal actual y abrir el de deducciones
+                        $('#modalCrearCategoria').modal('hide');
+                        $('#modalCrearDeducciones').modal('show');
+
+                        // Crear una nueva opción con el ID devuelto por el servidor
+                        const newOption = new Option(nombreCategoriaMayus, response.last_id);
+
+                        // Añadir la nueva opción al select de categoría y seleccionarla
+                        $('#id-categoria')
+                            .prepend(newOption)
+                            .val(response.last_id)
+                            .trigger("chosen:updated")
+                            .trigger("change");
+
+                        // Limpiar el campo del formulario
+                        $('#nombre-categoria').val('').removeClass('is-valid');
+                    } else {
+                        Swal.fire({
+                            icon: 'error',
+                            title: 'Error',
+                            text: response.error || 'Hubo un problema al crear la categoría.',
+                        });
+                        console.error('Error en la respuesta del servidor:', response.error);
+                    }
+                },
+                error: function (xhr) {
+                    let errorMessage = 'No se pudo crear la categoría. Por favor, intente nuevamente.';
+                    if (xhr.responseJSON && xhr.responseJSON.error) {
+                        errorMessage = xhr.responseJSON.error;
+                    }
+                    Swal.fire({
+                        icon: 'error',
+                        title: 'Error',
+                        text: errorMessage,
+                    });
+                    console.error('Error al crear la categoría:', xhr);
+                }
+            });
+        });
+
+        // Eliminar el color rojo y el mensaje de error cuando el usuario comienza a escribir o cambiar una selección
+        $('#formCrearCategoria').on('input change', '.is-invalid', function () {
+            const $elemento = $(this);
+            $elemento.removeClass('is-invalid').addClass('is-valid').next('.invalid-feedback').remove();
+        });
+
+        // Evento para seleccionar "Crear categorías" al abrir el select
+        $('#id-categoria').on('focus', function () {
+            $(this).val('crear'); // Selecciona automáticamente "Crear categorías"
+            $(this).trigger('chosen:updated');
+        });
+
+        // Evento para abrir el modal y cerrar el otro modal al seleccionar "Crear categorías"
+        $('#id-categoria').on('change', function () {
+            if (this.value === 'crear') {
+                $('#modalCrearDeducciones').modal('hide');
+                $('#modalCrearCategoria').modal('show'); // Muestra el modal 'modalCrearCategoria'
+                this.value = ''; // Resetea el valor del select para evitar reabrir el modal automáticamente
+            }
+        });
+
+
+        $('#tipos-deducciones').select2({
+            placeholder: 'Seleccione un tipo de deducción',
+            allowClear: true,
+            width: '100%'  // Asegura que el select ocupe el 100% del ancho
+        });
+
+        $('#categoria-deduccion').select2({
+            placeholder: 'Seleccione una categoría',
+            allowClear: true,
+            width: '100%'
+        });
+
+        // Cargar las categorías al cargar la página
+        cargarCategoriasDeduccion();
+
+
+        // Inicializar DataTables
+        $('#tipos-deducciones-empleados').DataTable();
+
+        let tableDeducciones;
+
+        function initializeTableDeducciones() {
+
+            if ($.fn.DataTable.isDataTable('#tipos-deducciones-empleados')) {
+                $('#tipos-deducciones-empleados').DataTable().clear().destroy();
+            }
+
+            // Inicializar la tabla de tipos de deducciones
+            tableDeducciones = $('#tipos-deducciones-empleados').DataTable({
+                autoWidth: false,
+                scrollX: true,
+                scrollY: '300px',
+                scrollCollapse: true,
+                pageLength: 50,
+                dom: 'Bfrtip',
+                language: {
+                    "processing": "Procesando...",
+                    "lengthMenu": "Mostrar _MENU_ registros",
+                    "zeroRecords": "No se encontraron resultados",
+                    "emptyTable": "Ningún dato disponible en esta tabla",
+                    "info": "Mostrando registros del _START_ al _END_ de un total de _TOTAL_ registros",
+                    "infoEmpty": "Mostrando registros del 0 al 0 de un total de 0 registros",
+                    "infoFiltered": "(filtrado de un total de _MAX_ registros)",
+                    "search": "Buscar:",
+                    "paginate": {
+                        "first": "Primero",
+                        "last": "Último",
+                        "next": "Siguiente",
+                        "previous": "Anterior"
+                    }
+                },
+                ajax: {
+                    url: "{% url 'mostrar_tipos_deducciones' %}",
+                    type: "GET",
+                    dataSrc: function (json) {
+                        console.log('Datos recibidos de la solicitud AJAX:', json);
+
+                        if (json.deducciones && Array.isArray(json.deducciones)) {
+                            return json.deducciones;
+                        } else {
+                            console.error("Error: La clave 'deducciones' no está presente o no es un array.");
+                            return [];
+                        }
+                    }
+                },
+                colReorder: {
+                    realtime: false,
+                },
+                buttons: [
+                    {
+                        extend: 'excel',
+                        text: '<i class="fas fa-file-excel"></i>',
+                        titleAttr: 'Exportar a Excel',
+                        className: 'btn btn-success',
+                    },
+                    {
+                        extend: 'pdf',
+                        text: '<i class="fas fa-file-pdf"></i>',
+                        titleAttr: 'Exportar a PDF',
+                        className: 'btn btn-danger',
+                    },
+                    {
+                        extend: 'print',
+                        text: '<i class="fas fa-print"></i>',
+                        titleAttr: 'Imprimir',
+                        className: 'btn btn-primary',
+                        orientation: 'landscape'
+                    }
+                ],
+                columns: [
+                    { "data": "id_deduccion" },
+                    { "data": "nombre_categoria" },  // Mostrar el nombre de la categoría
+                    { "data": "descripcion" },
+                    {
+                        "data": "automatizacion",
+                        "render": function (data, type, row) {
+                            return data ? 'Sí' : 'No';
+                        }
+                    },
+                    { "data": "forma" },
+                    { "data": "nombre_tipo" },
+                    {
+                        "data": "fecha_creacion",
+                        className: 'text-wrap'
+                    },
+                    { "data": "creado_por" },
+                    {
+                        "data": "fecha_modificacion",
+                        className: 'text-wrap'
+                    },
+                    { "data": "modificado_por" },
+                    {
+                        "data": null,
+                        "render": function (data, type, row) {
+                            return `
+                            <div class="btn-group">
+                                <button class="btn btn-warning btn-sm btn-edit-tip-deduc" data-id="${row.id_deduccion}">
+                                    <i class="fas fa-edit"></i>
+                                </button> 
+                                <button class="btn btn-danger btn-sm btn-delete-tip-deduc" data-id="${row.id_deduccion}">
+                                    <i class="fas fa-trash-alt"></i>
+                                </button>
+                            </div>    
+                             `;
+                        },
+                        "orderable": false,
+                        "width": '10%'
+                    }
+                ],
+                order: [[0, "asc"]],
+                fixedColumns: {
+                    left: 0,
+                    right: 2
+                },
+            });
+        }
+
+        // Editar deducción en el modal
+        $(document).on('click', '.btn-edit-tip-deduc', function (e) {
+            e.preventDefault();  // Evita la recarga de la página
+
+            var deduccionRow = $(this).closest('tr');  // Obtiene la fila más cercana
+            var rowData = tableDeducciones.row(deduccionRow).data();  // Obtiene los datos de la fila desde DataTables
+
+            // Cargar los datos en el modal usando los valores de rowData
+            $('#id-deduccion').val(rowData.id_deduccion);  // ID de la deducción
+            $('#id-categoria').val(rowData.id_categoria).trigger('chosen:updated');  // Categoría de deducción
+            $('#descripcion-deduccion').val(rowData.descripcion);  // Descripción de la deducción
+            $('#forma-deduccion').val(rowData.forma);  // Forma de deducción
+            $('#automatizacion-deduccion').val(rowData.automatizacion).trigger('chosen:updated');  // Automatización
+
+            // Cambiar el título del modal a 'Editar Tipo de Deducción'
+            $('#exampleModalLabel').text('Editar tipo de deducción');
+
+            // Cambiar el texto del botón de guardar a 'Actualizar'
+            $('#guardar-editar-btn').text('Actualizar');
+
+            // Realizar la llamada AJAX para cargar los tipos de deducción según el id_categoria seleccionado
+            var id_categoria = rowData.id_categoria;
+            if (id_categoria) {
+                $.ajax({
+                    url: "{% url 'mostrar_tipos_deduccion_banco' %}",  // Asegúrate de que esta URL es correcta
+                    type: 'GET',
+                    data: {
+                        'id_categoria': id_categoria  // Pasar el id_categoria como parámetro
+                    },
+                    success: function (data) {
+                        let tipoSelect = $('#tipo-deduccion');  // Select del tipo de deducción
+                        tipoSelect.empty();  // Limpiar el select
+                        tipoSelect.append('<option value="">Seleccione un tipo de deducción</option>');
+
+                        if (data.deducciones) {
+                            // Agregar las opciones al select
+                            data.deducciones.forEach(function (deduccion) {
+                                tipoSelect.append(`<option value="${deduccion.id_tipo_deduccion}">${deduccion.nombre_tipo}</option>`);
+                            });
+
+                            // Establecer el valor actual del tipo de deducción en el select
+                            tipoSelect.val(rowData.tipo).trigger('chosen:updated');
+                        } else {
+                            console.error('No se encontraron tipos de deducción.');
+                        }
+                    },
+                    error: function (xhr, status, error) {
+                        console.error('Error al cargar los tipos de deducción:', error);
+                        console.log('Estado del error:', status);
+                        console.log('Respuesta completa de error:', xhr.responseText);
+
+                        // Mostrar alerta en caso de error
+                        alert(`Error al cargar tipos de deducción: ${xhr.responseText}`);
+                    }
+                });
+            } else {
+                console.warn('ID de categoría no seleccionado');
+            }
+
+            // Abrir el modal
+            $('#modalCrearDeducciones').modal('show');
+        });
+
+
+        $(document).on('click', '.btn-delete-tip-deduc', function () {
+            var idDeduccion = $(this).data('id');
+            var csrfToken = '{{ csrf_token }}';  // Obtiene el token CSRF desde el contexto de la plantilla
+
+            // Confirmación antes de eliminar
+            Swal.fire({
+                title: '¿Estás seguro?',
+                text: "Esta acción cambiará el estado de deducción a 'Eliminada'.",
+                icon: 'warning',
+                showCancelButton: true,
+                confirmButtonColor: '#28A745',
+                cancelButtonColor: '#d33',
+                confirmButtonText: 'Sí, eliminar',
+                cancelButtonText: 'Cancelar'
+            }).then((result) => {
+                if (result.isConfirmed) {
+                    // Llamada AJAX para eliminar la deducción
+                    $.ajax({
+                        url: "{% url 'eliminar_tipo_deduccion' %}",  // Ajusta la URL según tu ruta en Django
+                        type: 'POST',
+                        data: {
+                            id_deduccion: idDeduccion,
+                            modificado_por: '{{ userName }}',  // Ajusta con el usuario actual
+                            csrfmiddlewaretoken: csrfToken
+                        },
+                        success: function (response) {
+                            if (response.status === 'success') {
+                                Swal.fire({
+                                    icon: 'success',
+                                    title: 'Eliminado',
+                                    text: 'El tipo de deducción se ha eliminado correctamente.',
+                                    confirmButtonText: 'OK'
+                                });
+                                // Recargar la tabla de deducciones
+                                tableDeducciones.ajax.reload();
+                            } else {
+                                Swal.fire({
+                                    icon: 'error',
+                                    title: 'Error',
+                                    text: response.message || 'Hubo un problema al eliminar la deducción.',
+                                    confirmButtonText: 'OK'
+                                });
+                            }
+                        },
+                        error: function (xhr) {
+                            Swal.fire({
+                                icon: 'error',
+                                title: 'Error',
+                                text: 'Hubo un problema al realizar la solicitud.',
+                                confirmButtonText: 'OK'
+                            });
+                        }
+                    });
+                }
+            });
+        });
+
+        // Llama a la función para inicializar la tabla
+        $(document).ready(function () {
+            initializeTableDeducciones();
+        });
+        $('#formCrearTipoDeduccion').on('submit', function (e) {
+            e.preventDefault();  // Evitar el envío tradicional del formulario
+
+            // Obtener valores del formulario
+            let idDeduccion = $('#id-deduccion').val();
+            let idCategoria = $('#id-categoria').val();
+            let descripcionDeduccion = $('#descripcion-deduccion').val();
+            let formaDeduccion = $('#forma-deduccion').val();
+            let tipoDeduccion = $('#tipo-deduccion').val();
+            let automatizacionDeduccion = $('#automatizacion-deduccion').val();
+            let csrfToken = $('input[name="csrfmiddlewaretoken"]').val();
+
+            // Validar campos obligatorios
+            let campos = [
+                { campo: '#id-categoria', valor: idCategoria, mensaje: 'Debe seleccionar una categoría.' },
+                { campo: '#forma-deduccion', valor: formaDeduccion, mensaje: 'La forma de deducción es obligatoria.' },
+                { campo: '#tipo-deduccion', valor: tipoDeduccion, mensaje: 'Debe seleccionar un tipo de deducción.' },
+                { campo: '#automatizacion-deduccion', valor: automatizacionDeduccion, mensaje: 'Debe seleccionar una opción de automatización.' }
+            ];
+
+            let campoInvalido = null;
+
+            // Eliminar mensajes de error previos
+            $('.invalid-feedback').remove();
+            campos.forEach(item => {
+                const $campo = $(item.campo);
+                const $chosenContainer = $campo.hasClass('chosen-select') ? $campo.next('.chosen-container') : null;
+                const $parent = $chosenContainer || $campo;
+
+                // Remover mensajes de error previos
+                $parent.find('.invalid-feedback').remove();
+
+                if (!item.valor || item.valor.trim() === "") {
+                    $campo.addClass('is-invalid');
+                    if ($chosenContainer) {
+                        $chosenContainer.addClass('is-invalid');
+                    }
+                    if (!campoInvalido) campoInvalido = item.campo;
+
+                    // Agregar mensaje de error en el contenedor adecuado
+                    $parent.after(`<div class="invalid-feedback">${item.mensaje}</div>`);
+                } else {
+                    /*  $campo.removeClass('is-invalid').addClass('is-valid');
+                     if ($chosenContainer) {
+                         $chosenContainer.removeClass('is-invalid').addClass('is-valid');
+                     } */
+                }
+            });
+
+            if (campoInvalido) {
+                $(campoInvalido).focus();
+                return;
+            }
+
+            // Preparar datos para el envío
+            let formData = {
+                id_deduccion: idDeduccion,
+                id_categoria: idCategoria,
+                descripcion: descripcionDeduccion,
+                forma: formaDeduccion,
+                tipo: tipoDeduccion,
+                automatizacion: automatizacionDeduccion,
+                creado_por: '{{ userName }}'  // Reemplazar con el contexto de usuario
+            };
+
+
+
+            // Enviar datos por AJAX
+            $.ajax({
+                url: "{% url 'guardar_tipo_deduccion' %}",
+                type: 'POST',
+                data: JSON.stringify(formData),
+                contentType: 'application/json',
+                headers: {
+                    'X-CSRFToken': csrfToken
+                },
+                success: function (response) {
+                    if (response.status === 'success') {
+                        $('#modalCrearDeducciones').modal('hide');
+                        $('#formCrearTipoDeduccion')[0].reset();
+                        $('.chosen-select').val('').trigger('chosen:updated');
+                        $('#formCrearTipoDeduccion .is-invalid, #formCrearTipoDeduccion .is-valid').removeClass('is-invalid is-valid');
+                        $('.invalid-feedback').remove();
+                        tableDeducciones.ajax.reload();
+                        toastMixin.fire({
+                            title: 'Tipo de deducción creado exitosamente.',
+                            icon: 'success'
+                        });
+
+                    } else {
+                        Swal.fire({
+                            icon: 'error',
+                            title: 'Error',
+                            text: response.error || 'No se pudo guardar el tipo de deducción.'
+                        });
+                    }
+                },
+                error: function (xhr) {
+                    Swal.fire({
+                        icon: 'error',
+                        title: 'Error',
+                        text: 'Hubo un problema al realizar la solicitud.'
+                    });
+                    console.error("Error en AJAX:", xhr.responseText);
+                }
+            });
+        });
+
+
+        // Eliminar el color rojo y el mensaje de error cuando el usuario comienza a escribir o cambiar una selección
+        $('#formCrearTipoDeduccion').on('input change', '.is-invalid, .chosen-select', function () {
+            const $elemento = $(this);
+            const $chosenContainer = $elemento.hasClass('chosen-select') ? $elemento.next('.chosen-container') : null;
+
+            // Remover is-invalid y agregar is-valid
+            $elemento.removeClass('is-invalid').addClass('is-valid').next('.invalid-feedback').remove();
+
+            if ($chosenContainer) {
+                $chosenContainer.removeClass('is-invalid').addClass('is-valid');
+                $chosenContainer.find('.invalid-feedback').remove();
+            }
+        });
+
+
+        $('#modalCrearDeducciones').on('shown.bs.modal', function () {
+            $(this).removeAttr('aria-hidden');
+            $(this).find('input, select').filter(':visible:first').focus(); // Focalizar el primer campo visible
+        });
+    });
+
+</script>
+{% endblock %}

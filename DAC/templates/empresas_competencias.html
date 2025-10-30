@@ -1,0 +1,389 @@
+{% extends 'DAC_MAIN.html' %}
+
+
+{% block title %} EMPRESAS COMPETENCIAS {% endblock %}
+
+{% block body %}
+
+{% include 'complementos/btnBack.html' %}
+
+<div class="container-margin p-3">
+    <div class="row">
+        <h4 class=""> <i class="material-icons nav__icon">domain</i>
+            EMPRESAS COMPETENCIAS
+        </h4>
+
+        <input type="hidden" id="user_id" value="{{id}}">
+        <input type="hidden" id="user_name" value="{{username}}">
+
+        <div class="col-sm p-2 shadow-lg border m-2 rounded-4">
+
+            <div class="row d-flex justify-content-end align-items-end">
+
+                <div class="col-sm-2">
+                    <button class="btn btn-sm btn-secondary create__buttons w-100" id="btnCrearEmpresa"
+                        title="Nueva Empresa Competencia">Nuevo</button>
+                </div>
+
+            </div>
+
+            <div class="row p-2">
+
+                <div class="row d-flex justify-content-end">
+
+                    <span><b>Filtros Rápidos</b></span>
+
+                    <div class="mainFilters">
+
+                        <div class="row f-flex justify-content-end">
+
+
+                            <div class="col-sm">
+                                <label for="">Empresa</label>
+                                <input type="text" class="form-control form-control-sm tableMainFilters"
+                                    id="filterEmpresaTable" placeholder="Empresa">
+                            </div>
+                            <div class="col-sm">
+                                <label for="">Descripcion</label>
+                                <input type="text" class="form-control form-control-sm tableMainFilters"
+                                    id="filterDescripcionTable" placeholder="Descripcion">
+                            </div>
+                            <div class="col-sm">
+                                <label for="">Estado</label>
+                                <select class="form-select form-select-sm filterStyle text-nowrap"
+                                    name="filterEstadoTable" id="filterEstadoTable">
+                                    <option value="">TODOS</option>
+                                    <option value="Activo">ACTIVOS</option>
+                                    <option value="Anulado">ANULADOS</option>
+                                </select>
+                            </div>
+
+                        </div>
+
+                    </div>
+                </div>
+
+            </div>
+
+            <br>
+
+            <div class="row">
+
+
+                <div class="table-responsive">
+
+                    <table id="tabla_competencias_extendida"
+                        class="table rounded-4 table-sm table-bordered table-striped align-middle mb-0 table-principal"
+                        style="width:100%">
+                        <thead class="bg-light">
+                            <tr>
+                                <th class="text-center">#</th>
+                                <th class="text-center">Empresa Competencia</th>
+                                <th class="text-center">Descripción</th>
+                                <th class="text-center">Estado</th>
+                                <th class="text-center">Acciones</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+
+                        </tbody>
+                    </table>
+
+                </div>
+
+
+            </div>
+
+        </div>
+    </div>
+</div>
+
+{% include 'modales/modalEmpresasCompetencias.html' %}
+
+{% endblock %}
+
+
+
+{% block scripts %}
+
+
+<script>
+    $(document).ready(function () {
+        var buttons = "Bfrtlip";
+
+        var csrfToken = "{{ csrf_token }}";
+
+        tabla_competencias_extendida = $('#tabla_competencias_extendida').DataTable({
+            scrollX: true,
+            scrollCollapse: true,
+            scrollY: '400px',
+            pageLength: 50,
+            initComplete: function () {
+
+            },
+            ajax: {
+                beforeSend: function (xhr, type) {
+                    if (!type.crossDomain) {
+                        xhr.setRequestHeader(
+                            'X-CSRF-Token',
+                            $(
+                                'meta[name="csrf-token"]'
+                            ).attr('content'));
+                    }
+                },
+                url: `{% url 'listEmpresasCompetencias' %}`,
+                type: "GET",
+                dataScr: 'data',
+                /* data: {
+                    csrfmiddlewaretoken: csrfToken
+                }, */
+            },
+            dom: "Bfrtip",
+            language: {
+                url: "//cdn.datatables.net/plug-ins/1.11.5/i18n/es-ES.json",
+            },
+            buttons: [{
+                extend: 'excel',
+                text: '<i class="fas fa-file-excel"></i>',
+                titleAttr: 'Excel',
+                className: 'btn btn-success',
+            },
+            {
+                extend: 'pdf',
+                text: '<i class="fas fa-file-pdf"></i>',
+                titleAttr: 'PDF',
+                className: 'btn btn-danger',
+            },
+            {
+                extend: 'print',
+                text: '<i class="fas fa-print"></i>',
+                titleAttr: 'Imprimir',
+                className: 'btn btn-null',
+                orientation: 'landscape'
+            }
+            ],
+            columns: [
+                {
+                    data: 'id_competencia',
+                    width: '8%'
+                },
+                {
+                    data: 'nombre_competencia'
+                },
+                {
+                    data: 'descripcion'
+                },
+                {
+                    data: "estado",
+                    className: "text-center",
+                    render: function (data, type, row) {
+                        var badge = "";
+                        if (data == "3" || data == 3) {
+                            badge +=
+                                '<span class="badge badge-pill badge-danger">Anulado</span>';
+                        } else {
+                            badge +=
+                                '<span class="badge badge-pill badge-success">Activo</span>';
+                        }
+
+                        return badge;
+                    },
+                },
+                {
+                    defaultContent: "<div class='text-center'><div class='btn-group'><button class='btn btn-sm btn-warning btnEdit' title='Editar'><i class='material-icons'>edit</i></button>  <button class='btn btn-sm btn-danger btnStatus' title='Cambiar Estado'><i class='material-icons'>change_circle</i></button>    </div></div>",
+                }
+            ],
+            order: [[1, "asc"]]
+        });
+
+
+        $('#filterEmpresaTable').keyup(function () {
+            tabla_competencias_extendida.column(1).search(this.value).draw();
+        });
+        $('#filterDescripcionTable').keyup(function () {
+            tabla_competencias_extendida.column(2).search(this.value).draw();
+        });
+        $('#filterEstadoTable').change(function () {
+            tabla_competencias_extendida.column(3).search(this.value).draw();
+        });
+
+        $('#btnCrearEmpresa').click(function (e) {
+            e.preventDefault();
+
+            $('#competenciaForm').trigger('reset');
+            $('#modalEmpresasCompetencias').modal('show');
+            $('#modalEmpresasCompetenciasLabel').text('NUEVA EMPRESA COMPETENCIA');
+
+            id_competencia = null;
+            $('#opcion').val(1);
+
+        });
+
+
+
+        $(document).on('click', '.btnEdit', function () {
+            fila = $(this).closest('tr');
+
+            $('#competenciaForm').trigger('reset');
+
+            id_competencia = fila.find("td:eq(0)").text();
+            competencia = fila.find("td:eq(1)").text();
+            descripcion = fila.find("td:eq(2)").text();
+
+            $('#id_competencia').val(id_competencia);
+            $('#nombreEmpresa').val(competencia);
+            $('#descripcionEmpresa').val(descripcion);
+            $('#opcion').val(2);
+
+            $('#modalEmpresasCompetencias').modal('show');
+            $('#modalEmpresasCompetenciasLabel').text('EDITAR EMPRESA COMPETENCIA ' + competencia);
+        });
+
+
+        $('#competenciaForm').submit(function (e) {
+            e.preventDefault();
+
+
+            id_competencia = $('#id_competencia').val();
+            competencia = $('#nombreEmpresa').val();
+            descripcion = $('#descripcionEmpresa').val();
+            opcion = $('#opcion').val();
+
+            username = $('#user_name').val();
+
+            if (!$('#nombreEmpresa').val() || !$('#descripcionEmpresa').val()) {
+                Swal.fire("", "Debes llenar TODOS los campos!", "warning");
+            } else {
+                try {
+                    $.ajax({
+                        url: "{% url 'saveEditEmpresasCompetencias' %}",
+                        type: "POST",
+                        datatype: "json",
+                        async: false,
+                        data: {
+                            id_competencia: id_competencia,
+                            competencia: competencia,
+                            descripcion: descripcion,
+                            username: username,
+                            opcion: opcion,
+                            csrfmiddlewaretoken: csrfToken
+                        },
+                        success: function (data) {
+                            if (data.save == 1) {
+
+                                if (opcion == 1) {
+                                    if (data.existe == 1) {
+                                        Swal.fire("", "Ya EXISTE esta Empresa!", "warning");
+                                    } else {
+                                        Swal.fire("", "Empresa Creada!", "success");
+
+                                        $('#competenciaForm').trigger('reset');
+                                        $('#modalEmpresasCompetencias').modal('hide');
+                                    }
+                                } else {
+                                    Swal.fire("", "Empresa Editada!", "success");
+
+                                    $('#competenciaForm').trigger('reset');
+                                    $('#modalEmpresasCompetencias').modal('hide');
+                                }
+
+                                tabla_competencias_extendida.ajax.reload(null, false);
+
+
+                            } else {
+
+                                Swal.fire("", "Error D: " + data.error,
+                                    "error");
+
+                            }
+                        },
+                    });
+                } catch (error) {
+                    Swal.fire("", "Error A: " + error, "error")
+                }
+            }
+
+
+
+        });
+
+
+        $(document).on('click', '.btnStatus', function () {
+            fila = $(this).closest('tr');
+
+            id_competencia = fila.find("td:eq(0)").text();
+            competencia = fila.find("td:eq(1)").text();
+            descripcion = fila.find("td:eq(2)").text();
+            estado = fila.find("td:eq(3)").text();
+
+            username = $('#user_name').val();
+
+            if (estado == 'Activo') {
+                value = 3;
+                alert = 'ANULAR';
+                message = 'Empresa Anulada!';
+            } else {
+                value = 2;
+                alert = 'HABILITAR';
+                message = 'Empresa Habilitada!';
+            }
+
+
+            Swal.fire({
+                title: "Estás Seguro de " + alert + " esta Empresa Competencia?",
+                text: "Al confirmar debes esperar el mensaje de finalización para poder continuar!",
+                icon: "warning",
+                showCancelButton: true,
+                confirmButtonColor: '#3085d6',
+                cancelButtonColor: '#d33',
+                confirmButtonText: 'Confirmar!',
+                didOpen: () => {
+                    Swal.getConfirmButton().addEventListener('click', function () {
+                        this.disabled = true;
+                    });
+                }
+            }).then((result) => {
+                if (result.isConfirmed) {
+
+                    try {
+                        $.ajax({
+                            url: "{% url 'updateStatusEmpresasCompetencias' %}",
+                            type: "POST",
+                            datatype: "json",
+                            async: false,
+                            data: {
+                                id_competencia: id_competencia,
+                                value: value,
+                                username: username,
+                                csrfmiddlewaretoken: csrfToken
+                            },
+                            success: function (data) {
+                                if (data.save == 1) {
+
+                                    Swal.fire("", message, "success");
+                                    tabla_competencias_extendida.ajax.reload(null, false);
+
+                                } else {
+
+                                    Swal.fire("", "Error L: " + data.error,
+                                        "error");
+
+                                }
+                            },
+                        });
+                    } catch (error) {
+                        Swal.fire("", "Error A: " + error, "error")
+                    }
+
+                }
+            });
+
+
+        });
+
+    });
+</script>
+
+
+
+{% endblock %}

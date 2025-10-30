@@ -1,0 +1,330 @@
+{% extends 'componentes/menu_contable.html' %}
+{% load static %}
+
+{% block title %}
+CUENTAS NIC
+{% endblock %}
+
+
+{% block body %}
+
+<div class="row align-items-center">
+    <div class="col d-flex align-items-center">
+        <button id="toggle-sidebar" class="hamburger btnMenu me-3" title="Mostrar/Ocultar Menu">
+            <i class="fas fa-bars"></i>
+        </button>
+        <h3 class="page-title mb-0">CUENTAS NIC</h3>
+    </div>
+
+    <div class="col-auto text-end float-end ms-auto download-grp">
+        <button class="btn btn-sm btn-success" id="btnNuevo" title="Crear Nuevo"><i class="fas fa-plus me-2"></i>
+            Nuevo</button>
+    </div>
+</div>
+
+<hr>
+
+<div class="row">
+    <div class="col-lg-3">
+        <label for="">Tipos NIC:</label>
+        <select id="filterTiposNIC" class="form-select form-select-sm" name="filterTiposNIC">
+            {% for t_nic in tiposNICData %}
+            <option value="{{ t_nic.PkNic }}">{{ t_nic.Nic }}
+            </option>
+            {% endfor %}
+        </select>
+    </div>
+</div>
+
+<br>
+
+<div class="row">
+    <div class="table-responsive">
+        <table id="cuentasNIC_Table"
+            class="table table-striped table-bordered mb-0 table-sm rounded-4 table-hover align-middle"
+            style="width: 100%;">
+            <thead class="table-gradient text-dark">
+                <tr>
+                    <th>#</th>
+                    <th>Concepto</th>
+                    <th>Cuenta Base</th>
+                    <th>Estado</th>
+                    <th>Acciones</th>
+                </tr>
+            </thead>
+
+            <tbody>
+
+            </tbody>
+        </table>
+    </div>
+</div>
+
+{% include 'catalogos/modales_catalogos/m_cuentas_NIC.html' %}
+
+{% endblock %}
+
+
+{% block scripts %}
+
+<script>
+    $(document).ready(function () {
+        var csrfToken = "{{ csrf_token }}";
+        var tipoNIC = 1, cuentasNIC_Table, nic_id, opcion;
+
+
+        var toastMixin = Swal.mixin({
+            toast: true,
+            icon: 'success',
+            title: 'General Title',
+            animation: false,
+            position: 'top-right',
+            showConfirmButton: false,
+            timer: 2000,
+            timerProgressBar: true,
+            didOpen: (toast) => {
+                toast.addEventListener('mouseenter', Swal.stopTimer);
+                toast.addEventListener('mouseleave', Swal.resumeTimer);
+            }
+        });
+
+        $('#catalogosMenu, #cuentasNIC_submenu').addClass('active');
+
+
+        fillCuentasNIC(tipoNIC);
+
+        $('#filterTiposNIC').change(function (e) {
+            e.preventDefault();
+
+            tipoNIC = $('#filterTiposNIC').val();
+
+
+            fillCuentasNIC(tipoNIC);
+        });
+
+
+        function fillCuentasNIC(tipoNIC) {
+
+            $("#cuentasNIC_Table").DataTable().clear().destroy();
+
+            cuentasNIC_Table = $("#cuentasNIC_Table").DataTable({
+                autoWidth: false,
+                scrollX: true,
+                scrollY: '350px',
+                scrollCollapse: true,
+                pageLength: 50,
+                dom: 'rftip',
+                language: {
+                    url: "{% static 'app/th/json/es-ES.json' %}",
+                },
+                ajax: {
+                    url: `{% url 'dataCuentasNIC' %}`,
+                    type: "POST",
+                    dataScr: 'data',
+                    data: {
+                        tipoNIC: tipoNIC,
+                        opcion: 0,
+                        csrfmiddlewaretoken: csrfToken
+                    },
+                },
+                colReorder: {
+                    realtime: false,
+                },
+                buttons: [
+                    {
+                        extend: 'excel',
+                        text: '<i class="fas fa-file-excel"></i>',
+                        titleAttr: 'Excel',
+                        className: 'btn btn-success',
+                    },
+                    {
+                        extend: 'pdf',
+                        text: '<i class="fas fa-file-pdf"></i>',
+                        titleAttr: 'PDF',
+                        className: 'btn btn-danger',
+                    },
+                    {
+                        extend: 'print',
+                        text: '<i class="fas fa-print"></i>',
+                        titleAttr: 'Imprimir',
+                        className: 'btn btn-null',
+                        orientation: 'landscape'
+                    }
+                ],
+                columns: [
+                    {
+                        data: 'PkDetalleNic'
+                    },
+                    {
+                        data: 'Concepto'
+                    },
+                    {
+                        data: 'Cuenta',
+                        className: 'averages'
+                    },
+                    {
+                        data: 'estado',
+                        className: 'text-center',
+                        render: function (data, type, row) {
+                            var badge = "";
+                            if (data == 3) {
+                                badge +=
+                                    '<span class="badge badge-pill bg-danger">DESHABILITADO</span>';
+                            } else {
+                                badge +=
+                                    '<span class="badge badge-pill bg-success">ACTIVO</span>';
+                            }
+
+                            return badge;
+                        },
+                    },
+                    {
+                        data: null,
+                        width: '3%',
+                        title: "Acciones",
+                        render: function (data, type, row) {
+                            return `
+                            <div class="text-center">
+                                <div class="btn-group">
+                                    
+                                    <button class="btn btn-warning btn-sm editarCuentaNIC" data-id="${row.PkDetalleNic}" data-fk_cuenta="${row.FkCuentaBase}">
+                                        <i class="fas fa-edit"></i>
+                                    </button> 
+                                    <button class="btn btn-danger btn-sm statusCuentaNIC" data-id="${row.PkDetalleNic}" data-fk_cuenta="${row.FkCuentaBase}">
+                                        <i class="fas fa-sync-alt"></i>
+                                    </button> 
+                                
+                                </div>
+                            </div>
+                            `;
+                        }
+                    }
+                ],
+            });
+        }
+
+
+
+        $('#btnNuevo').click(function (e) {
+            e.preventDefault();
+
+            $('#formCuentasNIC').trigger('reset');
+            $('#modalCuentasNICLabel').text('CREAR NUEVA CUENTA NIC');
+            $('#modalCuentasNIC').modal('show');
+
+            opcion = 1;
+            nic_id = null;
+            $('#cuenta_base').val('#').change();
+        });
+
+
+        $(document).on('click', '.editarCuentaNIC', function () {
+            $('#formCuentasNIC').trigger('reset');
+
+            opcion = 2;
+            filaCuentasNIC = $(this).closest('tr');
+            nic_id = $(this).data('id');
+            concepto = filaCuentasNIC.find("td:eq(1)").text();
+            cuenta_base = $(this).data('fk_cuenta');
+
+            $('#concepto').val(concepto);
+            $('#cuenta_base').val(cuenta_base).change();
+
+            $('#modalCuentasNICLabel').text('EDITAR CUENTA NIC ' + concepto);
+            $('#modalCuentasNIC').modal('show');
+        });
+
+
+        $(document).on('click', '.statusCuentaNIC', function () {
+            $('#formCuentasNIC').trigger('reset');
+
+            filaCuentasNIC = $(this).closest('tr');
+            nic_id = $(this).data('id');
+
+            $.ajax({
+                url: "{% url 'update_status_cuentas_nic' %}",
+                type: "POST",
+                data: {
+                    nic_id: nic_id,
+                    csrfmiddlewaretoken: csrfToken
+                },
+                success: function (data) {
+                    if (data.save == 1) {
+                        toastMixin.fire({
+                            animation: true,
+                            title: 'Estado de Cuenta NIC Editado!'
+                        });
+                        cuentasNIC_Table.ajax.reload(null, false);
+                    } else {
+                        Swal.fire("", "Error D: " + data.error, "error");
+                    }
+                }
+            });
+        });
+
+
+
+        $('#formCuentasNIC').submit(function (e) {
+            e.preventDefault();
+
+            concepto = $('#concepto').val();
+            cuenta_base = $('#cuenta_base').val();
+            tipo_nic = $('#filterTiposNIC').val();
+
+            if (!concepto || cuenta_base == '#') {
+                Swal.fire("", "Debes llenar todos los campos!", "warning");
+            } else {
+                $.ajax({
+                    url: "{% url 'insert_update_cuenta_nic' %}", 
+                    type: "POST",
+                    data: {
+                        nic_id: nic_id,
+                        concepto: concepto,
+                        cuenta_base: cuenta_base,
+                        tipo_nic: tipo_nic,
+                        opcion: opcion,
+                        csrfmiddlewaretoken: csrfToken
+                    },
+                    success: function (data) {
+                        if (data.save == 1) {
+                            if (opcion == 1) {
+                                if (data.existe == 0) {
+                                    $('#modalCuentasNIC').modal('hide');
+
+                                    toastMixin.fire({
+                                        animation: true,
+                                        title: 'Cuenta NIC Creada!'
+                                    });
+                                } else {
+                                    Swal.fire("", "Ya existe una Cuenta NIC con este nombre!", "warning");
+                                }
+                            } else {
+                                $('#modalCuentasNIC').modal('hide');
+
+                                toastMixin.fire({
+                                    animation: true,
+                                    title: 'Cuenta NIC Editada!'
+                                });
+                            }
+
+                            cuentasNIC_Table.ajax.reload(null, false);
+                        } else {
+                            Swal.fire("", "Error D: " + data.error, "error");
+                        }
+                    }
+                });
+            }
+
+        });
+
+        
+
+
+
+
+
+
+        /*  */
+    });
+</script>
+{% endblock %}

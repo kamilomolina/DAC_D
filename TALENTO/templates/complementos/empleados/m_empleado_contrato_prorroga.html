@@ -1,0 +1,62 @@
+<!-- MODAL DETALLES / PRORROGAS CONTRATO -->
+<div class="modal fade" id="modalProrrogasContrato" tabindex="-1" role="dialog" aria-labelledby="exampleModalLabel" data-bs-keyboard="false" data-bs-backdrop="static"
+    aria-hidden="true">
+    <div class="modal-dialog modal-xl" role="document">
+        <div class="modal-content">
+            <div class="modal-header" style="background-color: #304458; color:white">
+                <input type="hidden" id="sumaActual">
+                <h5 class="modal-title" id="exampleModalLabel">
+                    <i class="material-icons me-2 text-gray">description</i> DETALLES / PRORROGAS CONTRATO
+
+                </h5>
+                <button type="button" class="close" data-dismiss="modal" aria-label="Close">
+                    <span aria-hidden="true">&times;</span>
+                </button>
+            </div>
+            <div class="modal-body">
+               
+                <div class="card-body d-flex justify-content-end align-items-center">
+                    <button type="button"
+                        class="btn btn-add-prorroga animate__animated animate__pulse animate__slow animate__infinite"
+                        style="background-color: #f5c542; color: #ffffff;" id="btnNuevo" data-toggle="modal"
+                        data-target="#modalContratos">
+                        <i class="material-icons">add</i>
+                    </button>
+
+                </div>
+                <div class="table-responsive">
+                    <table id="prorrogasTable"
+                        class="table table-sm table-hover table-center table-borderless table-striped"
+                        style="width:100%">
+                        <thead class="bg-light">
+                            <tr>
+                                <th class="text-center">#</th>
+                                <th class="text-center">Identidad</th>
+                                <th class="text-center">Empleado</th>
+                                <th class="text-center">Descripción</th>
+                                <th class="text-center">Fecha Inicio</th>
+                                <th class="text-center">Fecha Final</th>
+                                <th class="text-center">Meses</th>
+                                <th class="text-center">Tipo</th>
+                                <th class="text-center">Estado</th>
+                                <th class="text-center">Acciones</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                          
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+
+            <div class="modal-footer">
+                <button type="button" class="btn btn-danger close" data-dismiss="modal">Cerrar</button>
+            </div>
+        </div>
+    </div>
+</div>
+
+<script>
+   
+
+</script>

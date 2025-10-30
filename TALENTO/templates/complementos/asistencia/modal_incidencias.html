@@ -1,0 +1,49 @@
+<div class="modal fade" id="modalIncidencias" tabindex="-1" aria-labelledby="modalListadoTurnosLabel"
+    aria-hidden="true" data-bs-keyboard="false" data-bs-backdrop="static">
+    <div class="modal-dialog modal-lg"> 
+        <div class="modal-content">
+            <div class="modal-header" style="background-color: #304458; color: white;">
+                <h5 class="modal-title modalListadoTurnosLabel" id="modalListadoTurnosLabel">
+                    <i class="material-icons me-2 text-gray">list</i>Asociar Incidencias
+                </h5>
+
+                <button type="button" class="close" data-bs-dismiss="modal" aria-label="Close"><span
+                        aria-hidden="true">&times;</span></button>
+
+            </div>
+
+
+            <div class="modal-body" style="background-color: #f4f6f9;">
+                <div class="modal-body" style="background-color: #f4f6f9;">
+                    <div class="row mb-3">
+                        <div class="form-group col-md-12">
+                            <label for="idTipoIncidencia" class="form-label">
+                                Incidencias
+                            </label>
+                            <select id="idTipoIncidencia" class="form-select form-select-sm">
+                                {% for incidencia in incidencias %}
+                                <option value="{{ incidencia.0 }}">{{ incidencia.1 }}</option>
+                                {% endfor %}
+                            </select>
+                        </div>
+                    </div>
+                    <div class="row mb-3">
+                      
+                        <div class="form-group col-md-12">
+                            <label for="comentarioIncidencia" class="form-label">
+                                Descripción:
+                            </label>
+                            <textarea id="comentarioIncidencia" rows="3" class="form-control form-control-sm" placeholder="Escribe una Descripción..." style="height: 150px !important;"></textarea>
+                        </div>
+                    </div>
+
+                </div>
+                
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-success btn-sm" id="guardarIncidencia">Guardar</button>
+                <button type="button" class="btn btn-danger btn-sm" data-bs-dismiss="modal">Cerrar</button>
+            </div>
+        </div>
+    </div>
+</div>

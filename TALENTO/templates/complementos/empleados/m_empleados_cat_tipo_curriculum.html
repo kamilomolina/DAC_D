@@ -1,0 +1,33 @@
+<!-- Modal para crear un nuevo tipo curriculum -->
+<div class="modal fade" id="modalCrearTipoCurriculum" tabindex="-1" role="dialog" data-bs-keyboard="false"
+    data-bs-backdrop="static" aria-labelledby="exampleModalLabel" aria-hidden="true">
+    <div class="modal-dialog modal-lg" role="document">
+        <div class="modal-content" style="height: 50vh;">
+            <div class="modal-header" style="background-color: #304458; color:white">
+                <h5 class="modal-title" id="exampleModalLabel">Crear Nuevo Tipo Curriculum</h5>
+                <button type="button" class="close" data-dismiss="modal" aria-label="Close">
+                    <span aria-hidden="true">&times;</span>
+                </button>
+            </div>
+            <div class="modal-body">
+                <form id="formCrearTipoCurriculum">
+
+                    <div class="mb-3">
+                        <label for="nuevo-tipo-curriculum">Nombre del Tipo: <span style="color: red;">*</span></label>
+                        <input type="text" class="form-control" id="nuevo_tipo_curriculum" name="nuevo_tipo_curriculum"
+                            name="nuevo-tipo-curriculum">
+                    </div>
+                    <div class="modal-footer">
+                        <button type="submit"
+                            class="btn btn-success animate__animated animate__pulse animate__slow animate__infinite">Guardar</button>
+                        <!-- Botón de cerrar con funcionalidad para abrir el otro modal -->
+                        <button type="button" class="btn btn-danger close" data-dismiss="modal"
+                            id="btnCerrarCrearTipoCurriculum">Cerrar</button>
+
+                    </div>
+
+                </form>
+            </div>
+        </div>
+    </div>
+</div>

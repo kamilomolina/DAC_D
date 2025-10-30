@@ -1,0 +1,132 @@
+<div class="modal fade" id="modalRelacionarTicketsComunes" data-bs-keyboard="false" data-bs-backdrop="static"
+    role="dialog" aria-labelledby="modalRelacionarTicketsComunesLabel" aria-hidden="true">
+    <div class="modal-dialog modal-xl">
+        <div class="modal-content">
+            <div class="modal-header" style="background-color: rgb(14, 63, 22);">
+                <h5 class="modal-title" id="modalRelacionarTicketsComunesLabel" style="color: #fff">ASIGNAR
+                    TICKETS
+                    DE VACACIONES SOLICITADOS</h5>
+                <button class="btn_close_modal_tickets_comunes" type="button"
+                    style="background-color: #ffffff00; border: 0px;" id="btn_close_modal_tickets_comunes"><i
+                        class="fas fa-times"></i></button>
+            </div>
+            <div class="modal-body">
+                <div class="row">
+                    <input type="hidden" id="hidden_indicador_id_tickets">
+
+                    <div class="row d-flex justify-content-center" style="scale: 0.75">
+                        <div class="page-sub-header d-flex justify-content-center">
+                            <ul class="breadcrumb">
+                                <li class="breadcrumb-item"><b class="menu-item-head-tickets"
+                                        id="asignadosTicketsMenu"><span
+                                            class="badge badge-pill badge-process text-white"
+                                            style="margin-right: 5px">TICKET ASIGNADO</span></b></li>
+
+                                <li class="breadcrumb-item"><b class="menu-item-head-tickets mb-3"
+                                        id="disponiblesTicketsMenu"><span class="badge badge-pill badge-null text-white"
+                                            style="margin-right: 5px">TICKETS SIN ASIGNAR</span></b></li>
+
+                            </ul>
+
+                        </div>
+                    </div>
+
+                    <div id="ticketsAsignadosSection">
+                        <div class="row">
+                            <div class="row">
+                                <span class="text-center"><b id="mainTitleTickets">TICKET DE VACACIONES
+                                        ASIGNADO</b></span>
+                            </div>
+
+                            <div class="row">
+                                <div class="table-responsive">
+
+                                    <table id="tableTicketsComunesAsignados"
+                                        class="table rounded-4 table-sm table-bordered table-striped align-middle mb-0 bg-white table-basic"
+                                        style="width:100%">
+
+                                        <thead class="bg-light">
+                                            <tr>
+                                                <th class="text-center">#</th>
+                                                <th class="text-center">Asunto</th>
+                                                <th class="text-center">Descripcion</th>
+                                                <th class="text-center">Empleado</th>
+                                                <th class="text-center">Fecha Aprobado</th>
+                                                <th class="text-center">Acciones</th>
+                                            </tr>
+                                        </thead>
+                                        <tbody>
+
+                                        </tbody>
+
+                                    </table>
+
+                                </div>
+                            </div>
+
+                        </div>
+                    </div>
+
+
+                    <div id="ticketsDisponiblesSection">
+                        <div class="row">
+                            <div class="row">
+                                <span class="text-center"><b id="secondaryTitleTickets">TICKETS DE VACACIONES SIN
+                                        ASIGNAR</b></span>
+                            </div>
+
+                            <div class="row d-flex justify-content-end align-items-end ml-auto">
+                                <div class="col-lg-2">
+                                    <label>Desde</label>
+                                    <input type="date" id="periodoInicioTicket"
+                                        class="form-control form-control-sm pickedDateTicket mb-3" value="">
+                                </div>
+                                <div class="col-lg-2">
+                                    <label>Hasta</label>
+                                    <input type="date" id="periodoFinalTicket"
+                                        class="form-control form-control-sm pickedDateTicket mb-3" value="">
+                                </div>
+                               
+                            </div>
+
+
+
+
+                            <div class="row">
+                                <div class="table-responsive">
+
+                                    <table id="tableTicketsComunesDisponibles"
+                                        class="table rounded-4 table-sm table-bordered table-striped align-middle mb-0 bg-white table-basic"
+                                        style="width:100%">
+
+                                        <thead class="bg-light">
+                                            <tr>
+                                                <th class="text-center">#</th>
+                                                <th class="text-center">Asunto</th>
+                                                <th class="text-center">Descripcion</th>
+                                                <th class="text-center">Empleado</th>
+                                                <th class="text-center">Fecha Aprobado</th>
+                                                <th class="text-center">Acciones</th>
+                                            </tr>
+                                        </thead>
+                                        <tbody>
+
+                                        </tbody>
+
+                                    </table>
+
+                                </div>
+                            </div>
+
+                        </div>
+                    </div>
+
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-danger btn_close_modal_tickets_comunes"
+                        id="btn_close_modal_tickets_comunes" data-dismiss="modal">Cancelar</button>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>

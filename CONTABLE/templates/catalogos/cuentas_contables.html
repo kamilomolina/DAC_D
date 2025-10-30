@@ -1,0 +1,499 @@
+{% extends 'componentes/menu_contable.html' %}
+
+{% load static %}
+
+{% block title %}
+CUENTAS CONTABLES
+{% endblock %}
+
+{% block body %}
+
+<div class="row align-items-center">
+    <div class="col d-flex align-items-center">
+        <button id="toggle-sidebar" class="hamburger btnMenu me-3" title="Mostrar/Ocultar Menu">
+            <i class="fas fa-bars"></i>
+        </button>
+        <h3 class="page-title mb-0">CUENTAS CONTABLES</h3>
+    </div>
+
+    <div class="col-auto text-end float-end ms-auto download-grp">
+        <button class="btn btn-sm btn-success" id="btnNuevo" title="Crear Nuevo" data-bs-toggle="modal"
+            data-bs-target="#modalCrearCuenta"><i class="fas fa-plus me-2"></i>
+            Nuevo</button>
+    </div>
+</div>
+
+<hr>
+
+<div class="row">
+
+    <div class="col-lg-4">
+        <label for="">Empresa:</label>
+        <select id="selectEmpresa" class="form-select form-select-sm" name="selectEmpresa">
+            <option value="0">TODAS LAS EMPRESAS</option>
+            {% for e in empresasData %}
+            <option value="{{ e.id }}">{{ e.nombre }}</option>
+            {% endfor %}
+        </select>
+    </div>
+
+</div>
+
+<br>
+
+<div class="row">
+    <div class="table-responsive ">
+        <table id="cuentas_contables_table"
+            class="table table-striped table-bordered mb-0 table-sm rounded-4 table-hover align-middle"
+            style="width: 100%;">
+            <thead class="table-gradient text-dark ">
+                <tr>
+                    <th>Codigo Cuenta</th>
+                    <th>Concepto Cuenta</th>
+                    <th>Descripcion Cuenta</th>
+                    <th>Tipo Cuenta</th>
+                    <th>Tipo Movimiento</th>
+                    <th>Es Padre</th>
+                    <th>Se Acredita Cuando</th>
+                    <th>Tipo Saldo</th>
+                    <th>Empresa</th>
+                    <th>Estado</th>
+                    <th>Acciones</th>
+                </tr>
+            </thead>
+            <tbody>
+
+            </tbody>
+        </table>
+    </div>
+</div>
+
+{% include 'catalogos/modales_catalogos/m_cuentas_contables.html' %}
+
+{% endblock %}
+
+{% block scripts %}
+<script>
+    $(document).ready(function () {
+        var csrfToken = "{{ csrf_token }}";
+        var tableCuentasContables, opcionCuenta = 1;
+
+        var toastMixin = Swal.mixin({
+            toast: true,
+            icon: 'success',
+            title: 'General Title',
+            animation: false,
+            position: 'top-right',
+            showConfirmButton: false,
+            timer: 2000,
+            timerProgressBar: true,
+            didOpen: (toast) => {
+                toast.addEventListener('mouseenter', Swal.stopTimer);
+                toast.addEventListener('mouseleave', Swal.resumeTimer);
+            }
+        });
+
+        $('#catalogosMenu, #cuentasContables_submenu').addClass('active');
+
+        $('#btnNuevo').on('click', function () {
+            $('#formCrearCuenta').trigger('reset');
+            opcionCuenta = 1;
+            cuenta_id = null;
+
+            $('#descripcionCuenta').val('DESCRIPCION DE CUENTA PENDIENTE');
+            $('#tratamientoCuenta').val('TRATAMIENTO DE CUENTA PENDIENTE');
+        });
+
+        $('#selectEmpresa').change(function (e) {
+            e.preventDefault();
+
+            initializeTableCuentasContables($(this).val());
+        });
+
+        initializeTableCuentasContables(0);
+
+        function initializeTableCuentasContables(empresa) {
+            $("#cuentas_contables_table").DataTable().clear().destroy();
+
+            tableCuentasContables = $('#cuentas_contables_table').DataTable({
+                autoWidth: false,
+                scrollX: true,
+                scrollY: '350px',
+                scrollCollapse: true,
+                pageLength: 50,
+                dom: 'Bfrtip',
+                language: {
+                    url: "{% static 'app/th/json/es-ES.json' %}"
+                },
+                ajax: {
+                    url: `{% url 'dataCuentasContables' %}`,
+                    type: "POST",
+                    dataScr: 'data',
+                    data: {
+                        empresa: empresa,
+                        opcion: 0,
+                        csrfmiddlewaretoken: csrfToken
+                    },
+                },
+                colReorder: {
+                    realtime: false,
+                },
+                buttons: [
+                    {
+                        extend: 'excel',
+                        text: '<i class="fas fa-file-excel"></i>',
+                        titleAttr: 'Exportar a Excel',
+                        className: 'btn btn-success',
+                    },
+                    {
+                        extend: 'pdf',
+                        text: '<i class="fas fa-file-pdf"></i>',
+                        titleAttr: 'Exportar a PDF',
+                        className: 'btn btn-danger',
+                    },
+                    {
+                        extend: 'print',
+                        text: '<i class="fas fa-print"></i>',
+                        titleAttr: 'Imprimir',
+                        className: 'btn btn-primary',
+                        orientation: 'landscape'
+                    }
+                ],
+                columns: [
+                    { data: 'codigo' },
+                    { data: 'nombre' },
+                    { data: 'descripcion' },
+                    { data: 'tipo_cuenta' },
+                    { data: 'tipo_movimiento' },
+                    {
+                        "data": null,
+                        "render": function (data, type, row) {
+                            return `
+                            <input type="checkbox" class="asociar-padre" data-id="${row.id_cuenta}" ${row.es_cuenta_padre === 1 ? 'checked' : ''}>
+                        `;
+                        },
+                        "orderable": false,
+                        "className": "text-center"
+                    },
+                    { data: 'tratamiento' },
+                    { data: 'tipo_saldo' },
+                    { data: 'empresa', className: 'text-wrap' },
+                    {
+                        data: 'estado',
+                        className: 'text-center',
+                        render: function (data, type, row) {
+                            var badge = "";
+                            if (data == 3) {
+                                badge +=
+                                    '<span class="badge badge-pill bg-danger">Deshabilitado</span>';
+                            } else {
+                                badge +=
+                                    '<span class="badge badge-pill bg-success">Activo</span>';
+                            }
+
+                            return badge;
+                        },
+                    },
+                    {
+                        data: null,
+                        width: '2%',
+                        title: "Acciones",
+                        render: function (data, type, row) {
+                            return `
+                                <div class="text-center">
+                                    <div class="btn-group">
+                                        <button class="btn btn-warning text-black btn-sm EditarCuentas" data-id="${row.id_cuenta}" data-tipo_saldo="${row.id_tipo_saldo}" data-tipo_movimiento="${row.id_tipo_movimiento}" data-clasificacion_cuenta="${row.id_clasificacion_cuentas}" data-empresa="${row.id_empresa}">
+                                            <i class="fas fa-edit"></i> 
+                                        </button>
+                                        <button class="btn btn-danger text-white btn-sm eliminarCuenta" data-id="${row.id_cuenta}">
+                                            <i class="fas fa-sync-alt"></i>
+                                        </button>
+                                    </div>
+                                </div>
+                            `;
+                        }
+                    }
+                ]
+            });
+        }
+
+
+
+
+
+        $(document).on('change', '.asociar-padre', function () {
+            idCuenta = $(this).data('id');
+            es_padre = $(this).is(':checked') ? 1 : 0;
+
+            $.ajax({
+                url: "{% url 'conta_update_es_cuenta_padre' %}", // Cambia esto a tu endpoint Django
+                type: "POST",
+                data: {
+                    cuenta_id: idCuenta,
+                    es_padre: es_padre,
+                    csrfmiddlewaretoken: "{{ csrf_token }}"
+                },
+                success: function (data) {
+                    if (data.save == 1) {
+                        if (es_padre == 1) {
+                            toastMixin.fire({
+                                animation: true,
+                                title: 'Cuenta Padre Marcada!'
+                            });
+                        } else {
+                            toastMixin.fire({
+                                animation: true,
+                                title: 'Cuenta Padre Desmarcada!'
+                            });
+                        }
+                        tableCuentasContables.ajax.reload(null, false);
+                    } else {
+                        Swal.fire({
+                            icon: 'error',
+                            title: 'Error',
+                            text: 'No se pudo realizar la accion!'
+                        });
+                    }
+                }
+            });
+
+            
+        });
+
+
+
+
+
+        $(document).on('click', '.EditarCuentas', function () {
+            $('#formCrearCuenta').trigger('reset');
+
+            opcion = 2;
+            cuentasContables = $(this).closest('tr');
+
+            idCuenta = $(this).data('id');
+            tipo_saldo = $(this).data('tipo_saldo');
+            tipo_movimiento = $(this).data('tipo_movimiento');
+            clasificacion_cuenta = $(this).data('clasificacion_cuenta');
+            empresa = $(this).data('empresa');
+
+            codigo = cuentasContables.find("td:eq(0)").text();
+            concepto = cuentasContables.find("td:eq(1)").text();
+            descripcion = cuentasContables.find("td:eq(2)").text();
+            cuentaBase = cuentasContables.find("td:eq(3)").text();
+            esPadre = cuentasContables.find("td:eq(5)").find('input[type="checkbox"]').is(':checked');
+            tratamientiento = cuentasContables.find("td:eq(6)").text();
+
+            opcionCuenta = 2;
+
+            codigo_cuenta_padre = codigo + ' | ' + concepto;
+
+            $('#cuentaBase').val(clasificacion_cuenta).change();
+            $('#cuenta_empresa').val(empresa).change();
+
+            $('#tipoSaldo').val(tipo_saldo).change();
+            $('#codigoCuenta').val(codigo);
+            $('#nombreCuenta').val(concepto);
+            $('#descripcionCuenta').val(descripcion);
+            $('#tratamientoCuenta').val(tratamientiento);
+            $('#isCuentaPadre').prop('checked', esPadre);
+
+            setTimeout(() => {
+                $('#cuentaPadre option').each(function () {
+                    if ($(this).text() == codigo_cuenta_padre) {
+                        $(this).prop('selected', true);
+                        codigo_cuenta_padre = true;
+                        return false; // Break the loop
+                    }
+                });
+            }, 2000);
+
+
+            $('#modalCrearCuentaLabel').text('EDITAR CUENTAS CONTABLES: ' + concepto);
+            $('#modalCrearCuenta').modal('show');
+        });
+
+
+        $(document).on('click', '.eliminarCuenta', function () {
+            cuenta_id = $(this).data('id');
+
+            $.ajax({
+                url: "{% url 'update_status_cuentas_contables' %}",
+                type: "POST",
+                data: {
+                    cuenta_id: cuenta_id,
+                    csrfmiddlewaretoken: csrfToken
+                },
+                success: function (data) {
+                    if (data.save == 1) {
+                        toastMixin.fire({
+                            animation: true,
+                            title: 'Estado de Cuenta Contable Actualizado!'
+                        });
+                        tableCuentasContables.ajax.reload(null, false);
+                    } else {
+                        Swal.fire("", "Error D: " + data.error, "error");
+                    }
+                }
+            });
+        });
+
+        $('#cuentaBase').on('change', function () {
+            const cuentaPadreId = $(this).val();
+            $('#cuentaPadre').html('<option value="" selected disabled>Seleccione la Cuenta Padre</option>');
+
+            if (cuentaPadreId) {
+                $.ajax({
+                    url: '{% url "obtener_subcuentas" %}',
+                    type: 'GET',
+                    data: { cuenta_padre: cuentaPadreId },
+                    success: function (data) {
+                        if (data.subcuentas) {
+
+                            data.subcuentas.forEach(function (subcuenta) {
+                                $('#cuentaPadre').append(
+                                    `<option value="${subcuenta.id}">${subcuenta.nombre}</option>`
+                                );
+                            });
+                        } else {
+                            alert('No se encontraron subcuentas.');
+                        }
+                    },
+                    error: function (xhr, status, error) {
+                        console.error('Error al obtener las subcuentas:', error);
+                        alert('Hubo un error al intentar cargar las subcuentas.');
+                    }
+                });
+            }
+        });
+
+        $('#cuentaBase').val('1');
+        $('#cuentaBase').trigger('change');
+
+        $('#cuentaPadre').on('change', function () {
+            const cuentaPadreId = $(this).val();
+
+            $.ajax({
+                url: '{% url "generar_codigo" %}',
+                type: 'GET',
+                data: { cuenta_padre: cuentaPadreId },
+                success: function (response) {
+                    console.log('Respuesta completa:', response);
+                    console.log('Nuevo Código:', response.nuevo_codigo);
+
+                    if (response.nuevo_codigo) {
+                        $('#codigoCuenta').val(response.nuevo_codigo);
+                    } else {
+                        console.warn('No se pudo generar un nuevo código. Respuesta inesperada:', response);
+                        alert('No se pudo generar el código.');
+                    }
+                },
+                error: function (xhr, status, error) {
+                    console.error('Error al realizar la solicitud:', error);
+                    alert('Error al generar el código.');
+                }
+            });
+        });
+
+        $('#formCrearCuenta').on('submit', function (event) {
+            event.preventDefault();
+
+            // Capturar valores de los inputs
+            let codigoCuenta = $('#codigoCuenta').val();
+            let nombreCuenta = $('#nombreCuenta').val().trim().toUpperCase();
+            let FkCuentaBase = $('#cuentaBase').val();
+            let tipoCuenta = $('#cuentaBase  option:selected').text();
+            let cuentaPadre = $('#cuentaPadre').val();
+            let descripcionCuenta = $('#descripcionCuenta').val().trim();
+            let tipoSaldo = $('#tipoSaldo option:selected').text();
+            let tratamientoCuenta = $('#tratamientoCuenta').val().trim();
+            let esCuentaPadre = $('#isCuentaPadre').is(':checked') ? 1 : 0;
+            let cuenta_empresa = $('#cuenta_empresa').val();
+
+            console.log('Es padre' + esCuentaPadre);
+
+            // Validaciones de campos obligatorios
+            let errores = [];
+            if (!tipoCuenta) errores.push('El tipo de cuenta es obligatorio.');
+            if (!nombreCuenta) errores.push('El nombre de la cuenta es obligatorio.');
+            if (!descripcionCuenta) errores.push('La descripción de la cuenta es obligatoria.');
+            if (!tipoSaldo) errores.push('El tipo de saldo es obligatorio.');
+
+            // Mostrar errores si existen
+            if (errores.length > 0) {
+                Swal.fire({
+                    icon: 'error',
+                    title: 'Error',
+                    html: errores.join('<br>'), // Mostrar los mensajes de error como una lista
+                });
+                return;
+            }
+
+            // Enviar datos por AJAX
+            $.ajax({
+                url: "{% url 'insertar_actualizar_cuenta' %}", // URL de la vista en Django
+                type: 'POST',
+                data: {
+                    id_cuenta: idCuenta,
+                    codigo: codigoCuenta,
+                    nombre: nombreCuenta,
+                    tipo_cuenta: tipoCuenta,
+                    cuenta_padre: cuentaPadre,
+                    descripcion: descripcionCuenta,
+                    tipo_saldo: tipoSaldo,
+                    tratamiento_cuenta: tratamientoCuenta,
+                    es_cuenta_padre: esCuentaPadre,
+                    FkCuentaBase: FkCuentaBase,
+                    empresa: cuenta_empresa,
+                    opcion: opcionCuenta,
+                    csrfmiddlewaretoken: csrfToken
+                },
+                beforeSend: function () {
+                    Swal.fire({
+                        title: 'Procesando...',
+                        text: 'Por favor, espere.',
+                        allowOutsideClick: false,
+                        showConfirmButton: false,
+                        willOpen: () => {
+                            Swal.showLoading();
+                        }
+                    });
+                },
+                success: function (data) {
+                    Swal.close(); // Cerrar mensaje de carga
+                    if (data.status == 'success') {
+                        Swal.fire({
+                            icon: 'success',
+                            title: 'Éxito',
+                            text: opcionCuenta == 1 ? 'Cuenta creada correctamente.' : 'Cuenta actualizada correctamente.',
+                        });
+
+                        // Ocultar modal y resetear formulario
+                        $('#modalCrearCuenta').modal('hide');
+                        $('#formCrearCuenta')[0].reset();
+
+                        // Recargar la tabla de cuentas contables
+                        tableCuentasContables.ajax.reload(null, false);
+                    } else {
+                        Swal.fire({
+                            icon: 'warning',
+                            title: 'Advertencia',
+                            text: data.message || 'No se pudo completar la operación.',
+                        });
+                    }
+                },
+                error: function (xhr, status, error) {
+                    Swal.close(); // Cerrar mensaje de carga
+                    Swal.fire({
+                        icon: 'error',
+                        title: 'Error',
+                        text: 'Ocurrió un error en el servidor. Por favor, inténtelo nuevamente.',
+                    });
+                    console.error('Error en la solicitud AJAX:', error);
+                }
+            });
+        });
+
+    });
+
+</script>
+{% endblock %}

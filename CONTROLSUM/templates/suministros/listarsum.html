@@ -1,0 +1,989 @@
+{% extends 'menu_control_suministros.html' %}
+{% load static %}
+
+{% block title %}
+GESTION DE SUMINISTROS
+{% endblock %}
+
+
+{% block body %}
+
+<div class="row align-items-center">
+    <div class="col d-flex align-items-center">
+        <!-- <button id="toggle-sidebar" class="hamburger btnMenu me-3" title="Mostrar/Ocultar Menu">
+            <i class="fas fa-bars"></i>
+        </button> -->
+        <h3 class="page-title mb-0">
+            <i class="fas fa-box"></i> <strong>LISTADO DE SUMINISTROS</strong>
+        </h3>
+    </div>
+
+    <div class="col-auto text-end float-end ms-auto download-grp">
+        <button class="btn btn-sm btn-success" style="background-color: #697a8a; text-align: justify;" id="btnNuevo"
+            title="Crear Nuevo"><i class="fas fa-plus me-2"></i>
+            <strong>Nuevo Suministro</strong></button>
+    </div>
+</div>
+
+<hr>
+
+<br>
+
+<div class="row mb-3">
+    <div class="col-auto">
+        <label for="Filtro" class="form-label"><strong>Filtrar por Estado</strong></label>
+        <select id="Filtro" class="form-select" aria-label="Filtrar por Estado">
+            <option value="0">Todo el listado</option>
+            <option value="1">Listado de Suministros Activos</option>
+            <option value="3">Listado de Suministros Deshabilitados</option>
+        </select>
+    </div>
+</div>
+
+<div class="row">
+    <div class="table-responsive bg-white shadow rounded-4 p-3">
+        <table id="Tabla_Suministros"
+            class="table table-hover table-bordered table-striped table-sm align-middle mb-0 rounded-4"
+            style="width: 100%; border-collapse: collapse; border-radius: 10px; box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);">
+            <thead class="text-white text-center rounded-4" style="background-color: #697a8a; text-align: justify;">
+                <tr>
+                    <th style="border-radius: 10px 0 0 0;">No.</th>
+                    <th class="text-center">Nombre</th>
+                    <th class="text-center">Descripción</th>
+                    <th class="text-center">Categoría</th>
+                    <th class="text-center">Cant. Max</th>
+                    <th class="text-center">Cant. Stock</th>
+                    <th class="text-center">Cant. Min</th>
+                    <th class="text-center">Precio Unitario</th>
+                    <th class="text-center">Fecha</th>
+                    <th class="text-center">Acreedor</th>
+                    <th class="text-center">Almacén</th>
+                    <th class="text-center">Grupo</th>
+                    <th class="text-center">Estado Stock</th>
+                    <th class="text-center">Estado</th>
+                    <th style="border-radius: 10px 0 0 0;">Acciones</th>
+                </tr>
+            </thead>
+
+            <tbody>
+            </tbody>
+        </table>
+    </div>
+</div>
+
+<input type="hidden" id="hidden_suministro_id">
+<input type="hidden" id="hidden_suministro_name">
+
+{% include 'Modales_S/movimientos_suministros.html' %}
+{% include 'Modales_S/agregar_suministro.html' %}
+
+{% endblock %}
+
+
+{% block scripts %}
+
+<script>
+    $(document).ready(function () {
+        var csrfToken = "{{ csrf_token }}";
+        var cambiar_estado_actual = 0;
+        // var opcion = "{{ prueba }}";
+
+        var toastMixin = Swal.mixin({
+            toast: true,
+            icon: 'success',
+            title: 'General Title',
+            animation: false,
+            position: 'top-right',
+            showConfirmButton: false,
+            timer: 2000,
+            timerProgressBar: true,
+            didOpen: (toast) => {
+                toast.addEventListener('mouseenter', Swal.stopTimer);
+                toast.addEventListener('mouseleave', Swal.resumeTimer);
+            }
+        });
+
+        function showLoadingScreen(text = '') {
+            Swal.fire({
+                title: '',
+                html: `<b>${text}</b>`,
+                didOpen: () => {
+                    Swal.showLoading();
+                },
+                allowOutsideClick: false,
+                showConfirmButton: false
+            });
+        }
+
+
+        let dollarUSLocale = Intl.NumberFormat("en-US", {
+            minimumFractionDigits: 2,
+            maximumFractionDigits: 2
+        });
+
+        $('#menu_gestion_suministros, #listarsuministros_submenu').addClass('active');
+
+        id_almacen_seleccionado = null;
+        select_estado_suministro = 0;
+
+        var alertaMostrada = false; // Variable global para verificar si ya se mostró la alerta
+
+        fillSuministro()
+
+        function fillSuministro() {
+
+            $("#Tabla_Suministros").DataTable().clear().destroy();
+
+            Tabla_Suministros = $("#Tabla_Suministros").DataTable({
+                autoWidth: true,
+                scrollX: true,
+                scrollY: '350px',
+                scrollCollapse: true,
+                pageLength: 30,
+                dom: 'Brftip',
+                // fixedColumns: {
+                //     left: 0,
+                //     right: 1
+                // },
+                language: {
+                    url: "{% static 'app/th/json/es-ES.json' %}",
+                },
+                ajax: {
+                    url: `{% url 'get_suministros_data' %}`,
+                    type: "POST",
+                    dataScr: 'data',
+                    data: {
+                        varEstado: select_estado_suministro,
+                        csrfmiddlewaretoken: csrfToken
+                    },
+                },
+                colReorder: {
+                    realtime: false,
+                },
+                buttons: [
+                    {
+                        extend: 'excel',
+                        text: '<i class="fas fa-file-excel"></i>',
+                        titleAttr: 'Excel',
+                        className: 'btn btn-success',
+                    },
+                    {
+                        extend: 'pdf',
+                        text: '<i class="fas fa-file-pdf"></i>',
+                        titleAttr: 'PDF',
+                        className: 'btn btn-danger',
+                    },
+                    {
+                        extend: 'print',
+                        text: '<i class="fas fa-print"></i>',
+                        titleAttr: 'Imprimir',
+                        className: 'btn btn-null',
+                        orientation: 'landscape'
+                    }
+                ],
+                columns: [
+                    {
+                        data: 'id_suministros'
+                    },
+                    {
+                        data: 'nombre'
+                    },
+                    {
+                        data: 'descripcion',
+                    },
+                    {
+                        data: 'nombre_categoria'
+                    },
+                    {
+                        data: 'cantidad_inicial',
+                        className: 'formattAverages'
+                    },
+                    {
+                        data: 'cantidad_stock',
+                        className: 'formattAverages',
+                        // render: function (data, type, row) {
+                        //     // Verifica si el artículo está deshabilitado
+                        //     if (row.estado == 3) { // El artículo está deshabilitado
+                        //         return data; // No resaltar el stock si está deshabilitado
+                        //     }
+                        //     // Verifica si el stock es bajo y el artículo está habilitado
+                        //     // if (parseInt(data) <= 10) {
+                        //     //     return `<span class="text-danger">${data}</span>`; // Resalta el stock bajo con color rojo
+                        //     // }
+
+                        //     return data;
+                        // }
+                    },
+                    {
+                        data: 'cantidad_minima',
+                        className: 'formattAverages'
+                    },
+                    {
+                        data: 'precio_unitario',
+                        className: 'formattMoney',
+                        render: $.fn.dataTable.render.number(',', '.', 2)
+                    },
+                    {
+                        data: 'fecha_adquisicion'
+                    },
+                    {
+                        data: 'nombre_proveedor'
+                    },
+                    {
+                        data: 'nombre_almacen'
+                    },
+                    {
+                        data: 'nombre_grupo'
+                    },
+                    {
+                        data: 'cantidad_stock',
+                        className: 'text-center',
+                        render: function (data, type, row) {
+                            let cantidadMinima = row.cantidad_minima; // Obtener cantidad mínima del dataset
+                            let cantidadMaxima = row.cantidad_inicial; // Obtener cantidad máxima del dataset
+
+                            if (parseInt(data) <= cantidadMinima) {
+                                return '<span class="badge badge-pill custom-red">STOCK BAJO</span>'; // Bajo
+                            } else if (parseInt(data) > cantidadMaxima) {
+                                return '<span class="badge badge-pill bg-warning text-dark">SOBREGIRADO</span>'; // Sobregirado
+                            } else {
+                                return '<span class="badge badge-pill bg-success">NORMAL</span>'; // Lleno
+                            }
+                        }
+                    },
+                    {
+                        data: 'estado',
+                        className: 'text-center',
+                        render: function (data, type, row) {
+                            var badge = "";
+                            if (data == 3) {
+                                badge +=
+                                    '<span class="badge badge-pill custom-red">DESHABILITADO</span>';
+                            } else {
+                                badge +=
+                                    '<span class="badge badge-pill bg-success">ACTIVO</span>';
+                            }
+                            return badge;
+                        },
+                    },
+                    {
+                        data: null,
+                        width: '3%',
+                        title: "Acciones",
+                        render: function (data, type, row) {
+                            if (row.estado == 3) {
+                                return `
+                            <div class="text-center">
+                                <div class="btn-group">
+                                    <button class="btn btn-danger btn-sm anularSuministro rounded-pill shadow-sm" title="Cambiar estado Suministro" data-id="${row.id_suministros}" data-name="${row.nombre}" data-estado="${row.estado}">
+                                        <i class="fas fa-sync-alt"></i>
+                                    </button>                                
+                                </div>
+                            </div>
+                            `;
+                            }
+                            return `
+                            <div class="text-center">
+                                <div class="d-flex flex-column align-items-center gap-1">
+                                    <button class="btn btn-warning btn-sm editarSuministro rounded-pill shadow-sm" title="Editar Suministro" data-id="${row.id_suministros}"  data-almacenes="${row.id_almacen}" data-categoria="${row.id_categoria}" data-imagen_suministro="${row.imagen_url}" data-grupos="${row.PKgrupo}" data-acreedores="${row.id_proveedor}" data-estado="${row.estado}">
+                                        <i class="fas fa-edit"></i>
+                                    </button>
+                                    <button class="btn btn-info btn-sm historialSuministro rounded-pill shadow-sm" title="Historial del Suministro" data-id="${row.id_suministros}">
+                                        <i class="fas fa-list"></i>
+                                    </button>
+                                    <button class="btn btn-danger btn-sm anularSuministro rounded-pill shadow-sm" title="Cambiar estado Suministro" data-id="${row.id_suministros}" data-name="${row.nombre}" data-estado="${row.estado}">
+                                        <i class="fas fa-sync-alt"></i>
+                                    </button>      
+                                </div>
+                            </div>
+                            `;
+                        }
+                    }
+                ],
+
+                "initComplete": function (settings, json) {
+                    var stockBajoEncontrado = false; // Variable para verificar si hay stock bajo
+
+                    $('#Tabla_Suministros tbody tr').each(function () {
+                        var row = $(this);
+
+                        // Obtiene los datos de la fila desde la tabla DataTable
+                        var rowData = $('#Tabla_Suministros').DataTable().row(row).data();
+
+                        if (rowData) {
+                            var cantidadStock = parseInt(rowData.cantidad_stock);
+                            var cantidadMinima = parseInt(rowData.cantidad_minima);
+                            var cantidadMaxima = parseInt(rowData.cantidad_inicial);
+                            var estado = rowData.estado; // Asegurar que el estado se obtiene correctamente
+
+                            // Verifica si el stock está por debajo o igual a la cantidad mínima
+                            if (estado !== 3 && (cantidadStock <= cantidadMinima || cantidadStock > cantidadMaxima)) {
+                                row.addClass('bg-danger'); // Resalta la fila con fondo rojo y texto blanco
+                                stockBajoEncontrado = true;
+                            } else {
+                                row.removeClass('bg-danger'); // Elimina la clase si la condición ya no aplica
+                            }
+                        }
+                    });
+
+                    // Si se encontró stock bajo y la alerta aún no se ha mostrado, la muestra
+                    // if (stockBajoEncontrado && typeof alertaMostrada === 'undefined') {
+                    //     mostrarAlertaStockBajo();
+                    //     alertaMostrada = true; // Evita que la alerta se repita innecesariamente
+                    // }
+                }
+
+            });
+        }
+
+
+        // Agregar nuevo suministro 
+        $('#btnNuevo').click(function (e) {
+            e.preventDefault();
+
+            $('#formSuministro').trigger('reset');
+            $('#modalSuministroLabel').html('<strong>Crear Nuevo Suministro</strong>');
+            $('#modalSuministro').modal('show');
+
+            // Establecer valores por defecto para el nuevo suministro
+            opcion = 1;
+            id_suministros = null;
+            $('#id-suministro').val(id_suministros);
+        });
+
+        // Editar suministro 
+        $(document).on('click', '.editarSuministro', function () {
+            $('#formSuministro').trigger('reset');
+
+            // Establecer la opción de editar y obtener la fila seleccionada
+            opcion = 2;
+            filaSuministro = $(this).closest('tr');
+            id_suministros = $(this).data('id');
+
+            // Deshabilitar el campo "cantidad_stock"
+            $('#cantidad_stock').prop('disabled', true);
+
+            nombre_sum = filaSuministro.find("td:eq(1)").text();
+            descripcion = filaSuministro.find("td:eq(2)").text();
+            categoria_id = $(this).data('categoria');
+            id_almacen_seleccionado = $(this).data('almacenes');
+            cantidad_inicial = filaSuministro.find("td:eq(4)").text();
+            cantidad_stock = filaSuministro.find("td:eq(5)").text();
+            cantidad_minima = filaSuministro.find("td:eq(6)").text();
+            precio_unitario = filaSuministro.find("td:eq(7)").text();
+
+            // Eliminar las comas y convertir a número
+            precio_unitario = parseFloat(precio_unitario.replace(/,/g, ''));
+
+            // Obtener la fecha desde la tabla (en formato YYYY-MM-DDTHH:MM:SS)
+            var fecha_adquisicion = filaSuministro.find("td:eq(8)").text();  // Asumimos que la fecha está en formato YYYY-MM-DDTHH:MM:SS
+
+            // Verificar que la fecha no esté vacía
+            if (fecha_adquisicion) {
+                // Crear un objeto Date a partir de la fecha (en formato ISO 8601)
+                var fechaConvertida = new Date(fecha_adquisicion);
+
+                // Comprobar si la fecha se ha convertido correctamente
+                if (!isNaN(fechaConvertida)) {
+                    // Extraer la fecha en formato YYYY-MM-DD (sin la hora)
+                    var fechaFormateada = fechaConvertida.toISOString().split('T')[0]; // Esto obtiene solo la parte YYYY-MM-DD
+
+                    // Asignar la fecha al campo de fecha
+                    $('#fecha_adquisicion').val(fechaFormateada);
+                } else {
+                    console.error("La fecha no es válida: " + fecha);
+                }
+            } else {
+                console.error("No se ha encontrado una fecha válida.");
+            }
+
+            // Obtener otros datos
+            imagen = $(this).data('imagen_suministro'); // URL de la imagen
+            grupos_id = $(this).data('grupos');
+            acreedor_id = $(this).data('acreedores');
+
+            // Si existe una imagen, mostrarla
+            if (imagen) {
+                $('#imagenActual').attr('src', imagen).show();  // Mostrar la imagen en el contenedor
+                $('#no_imagen').hide();  // Ocultar el mensaje de "No imagen"
+            } else {
+                $('#imagenActual').hide();  // Si no hay imagen, ocultarla
+                $('#no_imagen').show();  // Mostrar el mensaje de "No se ha seleccionado una imagen"
+            }
+
+            // Asignar los valores a los campos del formulario
+            $('#nombre_sum').val(nombre_sum);
+            $('#descripcion').val(descripcion);
+            $('#almacen_suministro').val(id_almacen_seleccionado).change();
+            $('#categoria').val(categoria_id).change();
+            $('#cantidad_inicial').val(cantidad_inicial);
+            $('#cantidad_stock').val(cantidad_stock);
+            $('#cantidad_minima').val(cantidad_minima);
+            $('#precio_unitario').val(precio_unitario);
+            $('#area').val(grupos_id).change();
+            $('#acreedor').val(acreedor_id).change();
+            $('#imagen_actual').val(imagen);
+
+
+            // Actualizar el estado del almacén a "Editado" (suponiendo que el estado es 2 para editar)
+            cambiar_estado_actual = 2;
+
+            $.ajax({
+                url: "{% url 'actualizar_estado_sum' %}",  // URL para actualizar el estado a 'Editado'
+                type: "POST",
+                data: {
+                    id_suministros: id_suministros,
+                    estado: cambiar_estado_actual,  // Estado Editado
+                    csrfmiddlewaretoken: csrfToken
+                },
+                success: function (response) {
+                    // Aquí puedes manejar la respuesta, como mostrar un mensaje de éxito
+                    console.log("Estado actualizado correctamente");
+                },
+                error: function (xhr, status, error) {
+                    // Aquí puedes manejar errores, como mostrar un mensaje de error
+                    console.error("Hubo un problema al actualizar el estado:", error);
+                }
+            });
+
+            // Mostrar el modal con el título adecuado
+            $('#modalSuministroLabel').html('<strong>Editar Suministro #' + id_suministros + '</strong>');
+            $('#modalSuministro').modal('show');
+
+
+            // Limpieza del modal al cerrarlo
+            $('#modalSuministro').on('hidden.bs.modal', function () {
+                // Deshabilitar el campo "cantidad_stock"
+                $('#cantidad_stock').prop('disabled', false);
+            });
+
+        });
+
+
+        // AGREGAR NUEVO SUMINISTRO
+        $('#formSuministro').submit(function (e) {
+            e.preventDefault();
+
+            // Deshabilitar la cantidad_stock
+            $('#cantidad_stock').prop('disabled', false);
+
+            // Recoger valores de los campos del formulario
+            var nombre_sum = $('#nombre_sum').val();
+            var descripcion = $('#descripcion').val();
+            var id_categoria = $('#categoria').val();
+            var cantidad_inicial = $('#cantidad_inicial').val();
+            var cantidad_stock = $('#cantidad_stock').val();
+            var cantidad_minima = $('#cantidad_minima').val();
+            var precio_unitario = $('#precio_unitario').val();
+            var fecha_adquisicion = $('#fecha_adquisicion').val();
+            var acreedor = $('#acreedor').val();
+            var almacen = $('#almacen_suministro').val();
+            var imagen_suministro = $('#imagen_suministro')[0].files[0]; // Obtener la imagen seleccionada
+            var grupo = $('#area').val();
+            // Validación básica de campos
+            if (!nombre_sum || id_categoria == '#' || acreedor == '#' || almacen == '#' || grupo == '#') {
+                Swal.fire("", "Debes llenar todos los campos!", "warning");
+            } else {
+                var formData = new FormData();
+                formData.append('nombre_sum', nombre_sum);
+                formData.append('descripcion', descripcion);
+                formData.append('categoria', id_categoria);
+                formData.append('cantidad_inicial', cantidad_inicial);
+                formData.append('cantidad_stock', cantidad_stock);
+                formData.append('cantidad_minima', cantidad_minima);
+                formData.append('precio_unitario', precio_unitario);
+                formData.append('fecha_adquisicion', fecha_adquisicion);
+                formData.append('almacen', almacen);
+                formData.append('imagen_suministro', imagen_suministro); // Añadir la imagen al FormData
+                formData.append('fkgrupo', grupo);
+                formData.append('id_proveedor', acreedor);
+
+                formData.append('csrfmiddlewaretoken', csrfToken); // Añadir el token CSRF al FormData
+
+                if (opcion == 2) {
+                    formData.append('id_suministros', id_suministros);  // Si es edición, añadir el ID del suministro
+                }
+                $.ajax({
+                    url: "{% url 'insertar_actualizar_suministro' %}",
+                    type: "POST",
+                    data: formData,
+                    processData: false,  // No procesar los datos
+                    contentType: false,  // No establecer un tipo de contenido
+                    success: function (data) {
+                        if (data.save == 1) {
+                            if (opcion == 1) {
+                                if (data.existe == 0) {
+                                    $('#modalSuministro').modal('hide');
+                                    toastMixin.fire({
+                                        animation: true,
+                                        title: 'Suministro Creado!'
+                                    });
+                                } else {
+                                    Swal.fire("", "Este suministro ya existe!", "warning");
+                                }
+                            } else {
+                                if (data.existe == 2) {
+                                    $('#modalSuministro').modal('hide');
+                                    toastMixin.fire({
+                                        animation: true,
+                                        title: 'Suministro Editado!'
+                                    });
+                                } else {
+                                    Swal.fire("", "Error al editar!", "error");
+                                }
+                            }
+
+                            // Recargar la tabla
+                            Tabla_Suministros.ajax.reload(null, false);
+                        } else {
+                            Swal.fire("", "Error D: " + data.error, "error");
+                        }
+                    },
+                    error: function () {
+                        Swal.fire("", "Ocurrió un error al guardar los datos.", "error");
+                    }
+                });
+            }
+        });
+
+        // Limpieza del modal al cerrarlo
+        $('#modalSuministro').on('hidden.bs.modal', function () {
+            // Deshabilitar el campo "cantidad_stock"
+            $('#cantidad_stock').prop('disabled', true);
+        });
+
+        // ---------------------------------------------------------------------------------------------------- //
+
+        $('#Filtro').change(function (e) {
+            e.preventDefault();
+
+
+            select_estado_suministro = $("#Filtro").val();
+            fillSuministro();
+        });
+
+        // ---------------------------------------------------------------------------------------------------- //
+
+        // CAMBIAR ESTADO DEL SUMINISTRO (DESHABILITAR O ACTIVAR)
+        $(document).on('click', '.anularSuministro', function () {
+            var SuministroRow = $(this).closest('tr');  // Obtiene la fila más cercana
+            var rowData = Tabla_Suministros.row(SuministroRow).data();  // Obtiene los datos de la fila desde DataTables
+
+            var id_suministros = $(this).data('id');
+            var nombre_suministros = $(this).data('name');
+            var estado_actual = $(this).data('estado');
+
+            $("#hidden_suministro_id").val(id_suministros);
+            $("#hidden_suministro_name").val(nombre_suministros);
+
+            // Definir mensaje y acción según el estado actual
+            var mensaje = estado_actual == 3
+                ? '¿Estás seguro de que quieres activar el suministro?'
+                : '¿Estás seguro de que quieres deshabilitar el suministro?';
+            var confirmButtonText = estado_actual == 3
+                ? 'Sí, activar'
+                : 'Sí, deshabilitar';
+            var action = estado_actual == 3
+                ? 1  // Activar
+                : 3;  // Deshabilitar
+
+            Swal.fire({
+                title: estado_actual == 3 ? 'Activar Suministro' : 'Deshabilitar Suministro',
+                text: mensaje,
+                icon: 'warning',
+                showCancelButton: true,
+                confirmButtonText: confirmButtonText,
+                cancelButtonText: 'Cancelar'
+            }).then((result) => {
+                if (result.isConfirmed) {
+
+                    // PASAR VALOR, SI VA A HABILITAR PASA EL 1, SI VA A DESHABILITAR PASA EL 3
+                    tokenAplicarDeshabilitarSuministro(action);
+
+                }
+            });
+        });
+
+        $(document).on('click', '.historialSuministro', function () {
+            // Obtener el ID del suministro desde el atributo data-id
+            var suministro_id = $(this).data('id');
+
+            // Asegurarse de que el suministro_id esté presente
+            if (!suministro_id) {
+                alert('ID del suministro no encontrado.');
+                return;
+            }
+
+            // Hacer la llamada AJAX
+            $.ajax({
+                url: "{% url 'obtener_movimientos_x_suministro' %}",  // Asegúrate de que esta URL sea correcta
+                type: 'POST',
+                data: {
+                    suministro_id: suministro_id,
+                    csrfmiddlewaretoken: csrfToken  // Asegúrate de tener el CSRF token
+                },
+                success: function (response) {
+                    if (response.success) {
+                        // Limpiar la tabla del modal
+                        $('#tabla-movimientos').empty();
+
+                        // Agregar los movimientos al modal
+                        response.data.forEach(function (movimiento) {
+                            var fila = `
+                        <tr>
+                            <td>${movimiento.fecha_movimiento}</td>
+                            <td>${movimiento.tipo_movimiento}</td>
+                            <td>${movimiento.entrada}</td>
+                            <td>${movimiento.salida}</td>
+                            <td>${movimiento.precio_unitario}</td>
+                            <td>${dollarUSLocale.format(movimiento.total)}</td>
+                            <td>${movimiento.detalle_movimiento}</td>
+                            <td>${movimiento.creado_por}</td>
+                        </tr>
+                    `;
+                            $('#tabla-movimientos').append(fila);
+                        });
+
+                        $('#modalHistorialLabel').html('<strong>Historial de Suministro #' + suministro_id + '</strong>');
+                        // Mostrar el modal
+                        $('#modalHistorial').modal('show');
+                    } else {
+                        Swal.fire({
+                            icon: 'info',
+                            title: 'Sin movimientos',
+                            text: 'No se encontraron movimientos para este suministro.',
+                            confirmButtonText: 'Aceptar'
+                        });
+                    }
+                },
+                error: function () {
+                    alert('Hubo un error al obtener los movimientos.');
+                }
+            });
+        });
+
+        // ---------------------------------------------------------------------------------------------------- //
+        function tokenAplicarDeshabilitarSuministro(status) {
+            id_suministros = $('#hidden_suministro_id').val();
+            nombre_sum = $('#hidden_suministro_name').val();
+            // tipo_planilla = $('#tipo-planillas option:selected').text();
+            // empresa = $('#empresa-planillas').val();
+            // fecha_aplicar = $('#fecha_aplicar').val();
+            // totalPagar = $('#totalPagar').text();
+
+            // REEMPLAZAR
+            sucursal = 2;
+            num_documento = id_suministros; // ID SUMINISTRO
+            id_tipo_token = 16; // 16
+            id_modulo = 21; // MODULO 21
+            usuario = '{{ userName }}';
+            tabla = 'suministros'; // NOMBRE TABLA
+
+            let assignedDetalle = '';
+
+            // PUEDE PONER 3 PARA ELIMINAR Y 1 PARA HABILITAR</input>
+            if (status == 1) {
+
+                assignedDetalle = [
+                    {
+                        mov_original: id_suministros,  // ID SUMINISTRO
+                        documento: nombre_sum, // NOMBRE SUMINISTRO
+                        cantidad: 1, // MISMO VALOR
+                        descripcion: `Se quiere habilitar el suministro de ${nombre_sum}.`,
+                        valor: 'habilitar',
+                        observacion: `Estado Anterior: Deshabilitado. Estado Nuevo: Habilitado` // DESHABILITADO, NUEVO: HABILITADO
+                    }
+                ];
+            } else {
+
+                assignedDetalle = [
+                    {
+                        mov_original: id_suministros,
+                        documento: nombre_sum,
+                        cantidad: 1,
+                        descripcion: `Se quiere deshabilitar el suministro de ${nombre_sum}.`,
+                        valor: 'deshabilitar',
+                        observacion: `Estado Anterior: Habilitado. Estado Nuevo: Deshabilitado`
+                    }
+                ];
+            }
+
+
+
+            $.ajax({
+                url: "http://3.230.160.184:81/API/token/validar/solicitud",
+                type: "POST",
+                data: {
+                    sucursal: sucursal,
+                    num_documento: num_documento,
+                    id_tipo_token: id_tipo_token,
+                    id_modulo: id_modulo,
+                    usuario: usuario,
+                    tabla: tabla,
+                    assignedDetalle: JSON.stringify(assignedDetalle),
+                    csrfmiddlewaretoken: "{{ csrf_token }}"
+                },
+                success: function (data) {
+                    if (data.save == 1) {
+                        Swal.close();
+
+
+                        if (data.estado == 'NO EXISTE' || data.estado == 'CANCELADO' || data.estado == 'RECHAZADO' || data.estado == 'APLICADO') {
+                            console.log('Crear Solicitud');
+
+                            tokenGenerarSolicitud(sucursal, num_documento, id_tipo_token, id_modulo, usuario, tabla, assignedDetalle);
+                        }
+                        else if (data.estado == 'SOLICITADO') {
+                            console.log('Ver msj cancelar o dejar ahi!');
+
+                            Swal.fire({
+                                title: "Ya Existe una Solicitud de Token Pendiente!",
+                                text: "¿Deseas Esperar que sea Gestionada o Cancelar la Solicitud Previa?",
+                                icon: "warning",
+                                showCancelButton: true,
+                                confirmButtonText: "No Realizar Ninguna Accion",
+                                cancelButtonText: "Cancelar Solicitud Anterior",
+                                reverseButtons: true
+                            }).then((result) => {
+                                if (result.isConfirmed) {
+                                    console.log('No se cancela el token, sigue en lista de espera!');
+                                } else {
+                                    tokenCancelarSolicitud(sucursal, num_documento, id_tipo_token, id_modulo, usuario, tabla, 'El usuario decidio cancelar esta solicitud!');
+                                }
+                            });
+
+                        }
+                        else {
+                            console.log('Proceder a Cambiar el Estado');
+                            // ACA NOMBREAR LA FUNCION 
+                            aplicarcambio_estado_suministroTokenAutorizado(id_suministros, num_documento, id_tipo_token, id_modulo, usuario, status);
+                        }
+                    } else {
+                        Swal.fire({
+                            icon: 'error',
+                            title: 'Error',
+                            text: 'Error!' + data.error
+                        });
+                    }
+                }
+
+            });
+        }
+
+        function tokenMarcarComoUtilizado(num_documento, id_tipo_token, id_modulo, usuario) {
+            $.ajax({
+                url: "http://3.230.160.184:81/API/token/v2/verify", // Cambia esto a tu endpoint Django
+                type: "POST",
+                data: {
+                    num_documento: num_documento,
+                    id_tipo_token: id_tipo_token,
+                    id_modulo: id_modulo,
+                    usuario: usuario,
+                    csrfmiddlewaretoken: "{{ csrf_token }}"
+                },
+                success: function (data) {
+                    if (data.save == 1) {
+                        console.log('Token Aplicado!');
+                    } else {
+                        Swal.fire({
+                            icon: 'error',
+                            title: 'Error',
+                            text: 'Error!' + data.error
+                        });
+                    }
+                }
+            });
+        }
+
+        function tokenGenerarSolicitud(sucursal, num_documento, id_tipo_token, id_modulo, usuario, tabla, assignedDetalle) {
+            $.ajax({
+                url: "http://3.230.160.184:81/API/token/generar/solicitud", // Cambia esto a tu endpoint Django
+                type: "POST",
+                data: {
+                    sucursal: sucursal,
+                    num_documento: num_documento,
+                    id_tipo_token: id_tipo_token,
+                    id_modulo: id_modulo,
+                    usuario: usuario,
+                    tabla: tabla,
+                    assignedDetalle: JSON.stringify(assignedDetalle),
+                    csrfmiddlewaretoken: "{{ csrf_token }}"
+                },
+                success: function (data) {
+                    if (data.save == 1) {
+                        Swal.fire("", "Solicitud de Token Enviada!", "success");
+                    } else {
+                        Swal.fire({
+                            icon: 'error',
+                            title: 'Error',
+                            text: 'Error!' + data.error
+                        });
+                    }
+                }
+
+            });
+        }
+
+        function tokenCancelarSolicitud(sucursal, num_documento, id_tipo_token, id_modulo, usuario, tabla, comentario) {
+            $.ajax({
+                url: "http://3.230.160.184:81/API/token/cancelar/solicitud", // Cambia esto a tu endpoint Django
+                type: "POST",
+                data: {
+                    sucursal: sucursal,
+                    num_documento: num_documento,
+                    id_tipo_token: id_tipo_token,
+                    id_modulo: id_modulo,
+                    usuario: usuario,
+                    tabla: tabla,
+                    comentario: comentario,
+                    csrfmiddlewaretoken: "{{ csrf_token }}"
+                },
+                success: function (data) {
+                    if (data.save == 1) {
+                        Swal.fire("", "Solicitud de Token Cancelada!", "success");
+                    } else {
+                        Swal.fire({
+                            icon: 'error',
+                            title: 'Error',
+                            text: 'Error!' + data.error
+                        });
+                    }
+                }
+
+            });
+        }
+
+
+        function aplicarcambio_estado_suministroTokenAutorizado(id_suministros, num_documento, id_tipo_token, id_modulo, usuario, status) {
+            // RECIBE EL VALOR DEL NUEVO ESTADO
+            showLoadingScreen('Token Autorizado: Cambio de Estado del Suministro!');
+            // Enviar los datos al backend como JSON puro
+            // REEMPLAZAR POR LA DE CAMBIO DE ESTADO
+            $.ajax({
+                url: "{% url 'actualizar_estado_sum' %}", // URL de tu vista
+                type: "POST",
+                data: {
+                    id_suministros: id_suministros,
+                    estado: status,  // El estado que corresponde según la acción (activar o deshabilitar)
+                    csrfmiddlewaretoken: csrfToken
+                },
+                success: function (data) {
+                    if (data.success) {
+                        tokenMarcarComoUtilizado(num_documento, id_tipo_token, id_modulo, usuario); // METER ESTA DENTRO DEL SUCCESS Y SEGUIR EL LFUJO NORMAL
+
+                        var mensajeExito = status == 3
+                            ? 'El suministro ha sido activada.'
+                            : 'El suministro ha sido deshabilitada.';
+                        Swal.fire(status == 3 ? 'Deshabilitado!' : 'Activado!', mensajeExito, 'success');
+
+                        // Actualizar el estado de la requisición en la interfaz
+                        var row = $('tr[data-id="' + id_suministros + '"]');
+                        row.find('.estado').html(
+                            status == 3
+                                ? '<span class="badge badge-pill bg-success">ACTIVO</span>'
+                                : '<span class="badge badge-pill bg-danger">DESHABILITADO</span>'
+                        );
+                        // Recargar la tabla de requisiciones después de actualizar el estado
+                        Tabla_Suministros.ajax.reload(null, false);
+                    } else {
+                        Swal.fire('Error!', data.error || 'No se pudo actualizar el estado del suministro.', 'error');
+                    }
+                },
+                error: function () {
+                    Swal.fire('Error!', 'Ocurrió un error al intentar cambiar el estado del suministro.', 'error');
+                }
+            });
+
+        }
+        // ---------------------------------------------------------------------------------------------------- //
+
+        $.ajax({
+            url: '{% url "get_grupos_por_usuario" %}',  // URL de la vista para obtener los grupos
+            type: 'GET',  // Usamos GET ya que no estamos enviando datos adicionales
+            dataType: 'json',  // Aseguramos que la respuesta sea en formato JSON
+            success: function (response) {
+                console.log("Respuesta del servidor:", response);  // Verifica lo que estás recibiendo
+
+                if (response.data && response.data.length > 0) {
+                    // Limpiamos las opciones del select antes de agregar las nuevas
+                    $('#area').empty();
+                    $('#area').append('<option value="#">Seleccione el área:</option>'); // Opción por defecto
+
+                    // Agregamos las opciones de los grupos al select
+                    $.each(response.data, function (index, grupo) {
+                        $('#area').append('<option value="' + grupo.PKgrupo + '">' + grupo.GrupoNombre + '</option>');
+                    });
+                } else {
+                    // Si no hay grupos, podemos agregar un mensaje
+                    $('#area').empty();
+                    $('#area').append('<option value="#">No hay grupos disponibles</option>');
+                }
+            },
+            error: function (xhr, status, error) {
+                console.error('Error al cargar los grupos: ', error);
+                // Opcional: Mostrar un mensaje de error en el select
+                $('#area').empty();
+                $('#area').append('<option value="#">Error al cargar los grupos</option>');
+            }
+        });
+
+        $.ajax({
+            url: '{% url "get_almacenes_por_usuario" %}',  // URL de la vista para obtener los almacenes
+            type: 'GET',  // Usamos GET ya que no estamos enviando datos adicionales
+            dataType: 'json',  // Aseguramos que la respuesta sea en formato JSON
+            success: function (response) {
+                console.log("Respuesta del servidor:", response);  // Verifica lo que estás recibiendo
+
+                if (response.data && response.data.length > 0) {
+                    // Limpiamos las opciones del select antes de agregar las nuevas
+                    $('#almacen_suministro').empty();
+                    $('#almacen_suministro').append('<option value="#">Seleccione el almacén:</option>'); // Opción por defecto
+
+                    // Agregamos las opciones de los almacenes al select
+                    $.each(response.data, function (index, almacen) {
+                        $('#almacen_suministro').append('<option value="' + almacen.id_almacen + '">' + almacen.NombreAlmacen + '</option>');
+                    });
+                    if (id_almacen_seleccionado != null) {
+                        $('#almacen_suministro').val(id_almacen_seleccionado).change();
+                    }
+                } else {
+                    // Si no hay almacenes, podemos agregar un mensaje
+                    $('#almacen_suministro').empty();
+                    $('#almacen_suministro').append('<option value="#">No hay almacenes disponibles</option>');
+                }
+            },
+            error: function (xhr, status, error) {
+                console.error('Error al cargar los almacenes: ', error);
+                // Opcional: Mostrar un mensaje de error en el select
+                $('#almacen_suministro').empty();
+                $('#almacen_suministro').append('<option value="#">Error al cargar los almacenes</option>');
+            }
+        });
+
+        $.ajax({
+            url: '{% url "obtener_acreedores" %}',  // La URL de la vista en Django
+            type: 'GET',
+            dataType: 'json',
+            success: function (data) {
+                if (data.acreedores && data.acreedores.length > 0) {
+                    // Limpiar el select antes de llenarlo con los nuevos datos
+                    $('#acreedor').empty();
+                    $('#acreedor').append('<option value="#">Seleccione el acreedor:</option>');  // Opción por defecto
+
+                    // Iteramos sobre los acreedores y agregamos cada uno al select
+                    data.acreedores.forEach(function (acreedor) {
+                        $('#acreedor').append('<option value="' + acreedor.id_proveedor + '">' + acreedor.nombre_proveedor + '</option>');
+                    });
+                } else {
+                    // Si no hay acreedores, mostrar un mensaje
+                    $('#acreedor').append('<option value="#">No hay acreedores disponibles</option>');
+                }
+            },
+            error: function (xhr, status, error) {
+                console.error('Error al obtener los acreedores:', error);
+            }
+        });
+
+    });
+</script>
+{% endblock %}

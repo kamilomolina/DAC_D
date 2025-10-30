@@ -1,0 +1,81 @@
+<!-- productos.html -->
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>Lista de Productos</title>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Chosen Filters</title>
+    <link rel="stylesheet" href="https://stackpath.bootstrapcdn.com/bootstrap/4.3.1/css/bootstrap.min.css">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/chosen/1.8.7/chosen.min.css">
+    <style>
+        /* Additional CSS */
+        .chosen-container {
+            width: 100% !important;
+        }
+        .filter-section {
+            margin-bottom: 20px;
+        }
+        /* Animation styles */
+        @keyframes buttonAnimation {
+            0% { transform: scale(1); }
+            50% { transform: scale(0.95); }
+            100% { transform: scale(1); }
+        }
+        .animated-button {
+            animation: buttonAnimation 0.4s ease-in-out;
+        }
+    </style>
+</head>
+<body>
+    <h1>Productos</h1>
+    <!-- Renderiza el HTML del DataFrame directamente en la plantilla -->
+    <div class="container">
+        <div class="row filter-section">
+            <div class="col-md-3">
+                <select class="chosen-select" id="month-filter">
+                    <!-- Month options will go here -->
+                </select>
+            </div>
+            <div class="col-md-3">
+                <select class="chosen-select" id="year-filter">
+                    <!-- Year options will go here -->
+                </select>
+            </div>
+            <div class="col-md-3">
+                <select class="chosen-select" id="warehouse-filter">
+                    <!-- Warehouse options will go here -->
+                </select>
+            </div>
+            <div class="col-md-3">
+                <select class="chosen-select" id="product-filter">
+                    <!-- Product options will go here -->
+                </select>
+            </div>
+        </div>
+        <button id="generate-button" class="btn btn-primary">Generate</button>
+    </div>
+    <div>
+        {{ df_head_html|safe }}
+    </div>
+
+     <script src="https://code.jquery.com/jquery-3.3.1.min.js"></script>
+    <script src="https://stackpath.bootstrapcdn.com/bootstrap/4.3.1/js/bootstrap.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/chosen/1.8.7/chosen.jquery.min.js"></script>
+    <script>
+        $(document).ready(function() {
+            $('.chosen-select').chosen();
+
+            $('#generate-button').on('click', function() {
+                $(this).addClass('animated-button');
+
+                // Remove the animation class after it completes
+                setTimeout(() => {
+                    $(this).removeClass('animated-button');
+                }, 400);
+            });
+        });
+    </script>
+</body>
+</html>

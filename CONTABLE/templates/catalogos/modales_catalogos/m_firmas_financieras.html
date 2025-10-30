@@ -1,0 +1,57 @@
+<div class="modal fade" id="modalFirmasFF" tabindex="-1" aria-labelledby="modalFirmasFFLabel" aria-hidden="true"
+    data-bs-keyboard="false" data-bs-backdrop="static">
+    <div class="modal-dialog modal-lg">
+        <div class="modal-content">
+            <div class="modal-header" style="background-color: #304458; color: white;">
+                <h5 class="modal-title modalFirmasFFLabel" id="modalFirmasFFLabel">
+                    <i class="material-icons me-2 text-gray">list</i>
+                </h5>
+
+                <button type="button" class="close" data-bs-dismiss="modal" aria-label="Close"><span
+                        aria-hidden="true">&times;</span></button>
+
+            </div>
+
+            <form id="formFirmas">
+                <div class="modal-body">
+
+                    <div class="row">
+
+
+                        <div class="col-lg-8">
+                            <div class="form-group">
+                                <label for="">Encargado/Puesto Firma:</label>
+                                <select id="firma_empleado" class="form-select form-select-sm" name="firma_empleado">
+                                    <option value="#">Seleccione un Empleado</option>
+                                    {% for e in empleadosData %}
+                                    <option value="{{ e.id_empleado }}">{{ e.nombre_con_cargo }}</option>
+                                    {% endfor %}
+                                </select>
+                            </div>
+                        </div>
+                        
+                        <div class="col-lg-4">
+                            <div class="form-group">
+                                <label for="">Tipo Firma:</label>
+                                <select id="firma_tipo_firma" class="form-select form-select-sm" name="firma_tipo_firma">
+                                    <option value="#">Seleccione un Tipo de Firma</option>
+                                    <option value="new">--- CREAR NUEVA SECUENCIA FIRMA ---</option>
+                                </select>
+                            </div>
+                        </div>
+
+
+                    </div>
+
+                </div>
+
+                <div class="modal-footer">
+                    <button type="submit" class="btn btn-success btn-sm">Guardar</button>
+                    <button type="button" class="btn btn-danger btn-sm" data-bs-dismiss="modal">Cerrar</button>
+                </div>
+
+            </form>
+
+        </div>
+    </div>
+</div>

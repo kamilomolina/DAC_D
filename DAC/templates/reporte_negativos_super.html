@@ -1,0 +1,443 @@
+{% extends 'DAC_MAIN.html' %}
+
+
+{% block title %} REPORTE NEGATIVOS SUPER {% endblock %}
+
+{% block body %}
+
+{% include 'complementos/btnBack.html' %}
+
+<div class="container-margin p-3">
+
+    <div class="row">
+        <h4 class=""> <i class="material-icons nav__icon">inventory_2</i>
+            SALDOS NEGATIVOS PRODUCTOS SUPERMERCADO
+        </h4>
+
+        <input type="hidden" id="user_id" value="{{id}}">
+        <input type="hidden" id="user_name" value="{{username}}">
+
+        <div class="col-sm p-2 shadow-lg border m-2 rounded-4">
+
+            <div class="row d-flex justify-content-start">
+
+                <div class="col-lg-1 m-1">
+                    <label>Desde</label>
+                    <input type="date" id="periodoInicio" class="form-control form-control-sm pickedDate"
+                        value="{{ date1 }}">
+                </div>
+                <div class="col-lg-1 m-1">
+                    <label>Hasta</label>
+                    <input type="date" id="periodoFinal" class="form-control form-control-sm pickedDate"
+                        value="{{ date2 }}">
+                </div>
+
+            </div>
+
+
+            <br>
+            <div class="row p-2">
+
+                <div class="row d-flex justify-content-end">
+
+                    <span><b>Filtros Rápidos</b></span>
+
+                    <div class="mainFilters">
+
+                        <div class="row f-flex justify-content-end">
+
+
+                            <div class="col-sm">
+                                <label for="">Codigo Producto</label>
+                                <input type="text" class="form-control form-control-sm tableMainFilters"
+                                    id="filterIDProductoTable" placeholder="Producto">
+                            </div>
+                            <div class="col-sm">
+                                <label for="">Producto</label>
+                                <input type="text" class="form-control form-control-sm tableMainFilters"
+                                    id="filterProductoTable" placeholder="Producto">
+                            </div>
+
+                            <div class="col-sm">
+                                <label for="">Bodega</label>
+                                <select class="form-select form-select-sm filterStyle text-nowrap"
+                                    name="filterBodegaTable" id="filterBodegaTable">
+                                    <option value="">TODOS</option>
+                                    {% for bodega in bodegas %}
+                                    <option value="{{ bodega.PKbodega }}">
+                                        {{bodega.Bodega }}</option>
+                                    {% endfor %}
+                                </select>
+                            </div>
+
+                            <div class="col-sm">
+                                <label for="">Categoria</label>
+                                <input type="text" class="form-control form-control-sm tableMainFilters"
+                                    id="filterCategoriaTable" placeholder="Categoria">
+                            </div>
+                            <div class="col-sm">
+                                <label for="">Grupo</label>
+                                <input type="text" class="form-control form-control-sm tableMainFilters"
+                                    id="filterGrupoTable" placeholder="Grupo">
+                            </div>
+                            <div class="col-sm">
+                                <label for="">Subgrupo</label>
+                                <input type="text" class="form-control form-control-sm tableMainFilters"
+                                    id="filterSubgrupoTable" placeholder="Subgrupo">
+                            </div>
+
+                        </div>
+
+                    </div>
+                </div>
+
+            </div>
+
+
+
+            <br>
+
+            <div class="row p-2">
+
+                <div class="table-responsive">
+                    <table id="productos_Negativos"
+                        class="table rounded-4 table-sm table-bordered table-striped align-middle mb-0 table-principal"
+                        style="width:100%">
+
+                        <thead class="bg-light">
+                            <tr>
+                                <th class="text-center">Fecha Registrado</th>
+                                <th class="text-center">Fecha Inicio Negativo</th>
+                                <th class="text-center">Dias Transcurridos a Fecha Inicio Negativo</th>
+                                <th class="text-center">ID Producto</th>
+                                <th class="text-center">Codigo Artículo</th>
+                                <th class="text-center">Producto</th>
+                                <th class="text-center">Presentacion</th>
+                                <th class="text-center">Saldo</th>
+                                <th class="text-center">ID Bodega</th>
+                                <th class="text-center">Bodega</th>
+
+                                <th class="text-center">Cod. Categoría</th>
+                                <th class="text-center">Categoría</th>
+                                <th class="text-center">Cod. Grupo</th>
+                                <th class="text-center">Grupo</th>
+                                <th class="text-center">Cod. Subgrupo</th>
+                                <th class="text-center">Subgrupo</th>
+
+                                <th class="text-center">Acciones</th>
+                            </tr>
+                        </thead>
+
+                        <tbody>
+
+                        </tbody>
+
+                    </table>
+                </div>
+
+            </div>
+
+
+
+
+        </div>
+    </div>
+</div>
+
+
+{% include 'modales/modalSaldoActual.html' %}
+
+{% endblock %}
+
+
+
+{% block scripts %}
+
+
+<script>
+    $(document).ready(function () {
+        var buttons = "Bfrtlip";
+
+        var csrfToken = "{{ csrf_token }}";
+
+        function listProductosNegativos() {
+
+            date1 = $('#periodoInicio').val();
+            date2 = $('#periodoFinal').val();
+
+            $("#productos_Negativos").DataTable().clear().destroy();
+
+            productos_Negativos = $("#productos_Negativos").DataTable({
+                scrollX: true,
+                scrollCollapse: true,
+                scrollY: '400px',
+                pageLength: 50,
+                initComplete: function () {
+
+                },
+                ajax: {
+                    beforeSend: function (xhr, type) {
+                        if (!type.crossDomain) {
+                            xhr.setRequestHeader(
+                                'X-CSRF-Token',
+                                $(
+                                    'meta[name="csrf-token"]'
+                                ).attr('content'));
+                        }
+                    },
+                    url: `{% url 'listNegativosSuperSaldo' %}`,
+                    type: "POST",
+                    dataScr: 'data',
+                    data: {
+                        date1: date1,
+                        date2: date2,
+                        csrfmiddlewaretoken: csrfToken
+                    },
+                },
+                dom: buttons,
+                language: {
+                    url: "//cdn.datatables.net/plug-ins/1.11.5/i18n/es-ES.json",
+                },
+                colReorder: {
+                    realtime: false,
+                },
+                buttons: [{
+                    extend: 'excel',
+                    text: '<i class="fas fa-file-excel"></i>',
+                    titleAttr: 'Excel',
+                    className: 'btn btn-success',
+                },
+                {
+                    extend: 'pdf',
+                    text: '<i class="fas fa-file-pdf"></i>',
+                    titleAttr: 'PDF',
+                    className: 'btn btn-danger',
+                },
+                {
+                    extend: 'print',
+                    text: '<i class="fas fa-print"></i>',
+                    titleAttr: 'Imprimir',
+                    className: 'btn btn-null',
+                    orientation: 'landscape'
+                }
+                ],
+                columns: [
+                    {
+                        data: 'fecha_formatted'
+                    },
+                    {
+                        data: 'fecha_negativo_formatted'
+                    },
+                    {
+                        data: 'DiasNegativos',
+                        className: 'averages'
+                    },
+                    {
+                        data: 'PKArticulo'
+                    },
+                    {
+                        data: 'CodigoArticulo',
+                        className: 'text-center'
+                    },
+                    {
+                        data: 'Descripcion',
+                        className: 'text-center'
+                    },
+                    {
+                        data: 'Presentacion'
+                    },
+
+                    {
+                        data: 'Saldo',
+                        className: 'currency',
+                        render: $.fn.dataTable.render.number(',', '.', 2)
+                    },
+                    {
+                        data: 'Bodega'
+                    },
+                    {
+                        data: 'BodegaText'
+                    },
+
+                    {
+                        data: 'CodigoCategoria'
+                    },
+                    {
+                        data: 'NombreCategoria'
+                    },
+                    {
+                        data: 'CodigoGrupo'
+                    },
+                    {
+                        data: 'Grupo'
+                    },
+                    {
+                        data: 'CodigoSubgrupo'
+                    },
+                    {
+                        data: 'SubGrupo'
+                    },
+                    {
+                        defaultContent: "<div class='text-center'><div class='btn-group'><button class='btn btn-sm btnViewActual btnView' title='Saldo Actual'><i class='material-icons'>visibility</i></button></div></div>",
+                    }
+                ],
+            });
+
+            $('#filterIDProductoTable').keyup(function () {
+                productos_Negativos.column(4).search(this.value).draw();
+            });
+            $('#filterProductoTable').keyup(function () {
+                productos_Negativos.column(5).search(this.value).draw();
+            });
+            $('#filterBodegaTable').change(function () {
+                productos_Negativos.column(8).search(this.value).draw();
+            });
+            $('#filterCategoriaTable').keyup(function () {
+                productos_Negativos.column(11).search(this.value).draw();
+            });
+            $('#filterGrupoTable').keyup(function () {
+                productos_Negativos.column(13).search(this.value).draw();
+            });
+            $('#filterSubgrupoTable').keyup(function () {
+                productos_Negativos.column(15).search(this.value).draw();
+            });
+
+
+        }
+
+
+        $('.pickedDate').change(function (e) {
+            e.preventDefault();
+
+            listProductosNegativos();
+        });
+
+        listProductosNegativos();
+
+
+        $(document).on('click', '.btnViewActual', function () {
+            fila = $(this).closest('tr');
+
+            codigo = fila.find("td:eq(4)").text();
+            articulo = fila.find("td:eq(5)").text();
+            bodega = fila.find("td:eq(8)").text();
+            bodegaText = fila.find("td:eq(9)").text();
+
+
+            $("#modalSaldoActualLabel").text('SALDO ACTUAL DEL ARTICULO ' + articulo);
+
+            $("#saldo_actual_table").DataTable().clear().destroy();
+
+            saldo_actual_table = $("#saldo_actual_table").DataTable({
+                initComplete: function () {
+
+                },
+                drawCallback: function () {
+                    let dollarUSLocale = Intl.NumberFormat("en-US", {
+                        minimumFractionDigits: 2,
+                        maximumFractionDigits: 2
+                    });
+
+                    let intergerLocale = Intl.NumberFormat("en-US", {
+                        minimumFractionDigits: 0,
+                        maximumFractionDigits: 0
+                    });
+
+                    var api = this.api();
+
+                    // Función para limpiar los valores y convertirlos a float.
+                    function cleanNumber(item) {
+                        if (typeof item === 'string') {
+                            // Eliminar cualquier caracter no numérico excepto el punto decimal
+                            item = item.replace(/[^\d.-]/g, '');
+                        }
+                        return parseFloat(item) || 0; // Convertir a número flotante, si no es posible, devolver 0
+                    }
+
+                    var saldo = api.column(1, {
+                        search: 'applied'
+                    }).data().map(cleanNumber) // Limpiar y convertir cada valor a número
+                        .reduce(function (a, b) {
+                            return a + b; // Sumar los valores
+                        }, 0);
+
+                    console.log(saldo);
+
+
+                    $('#saldo_total_bodegas').text(dollarUSLocale.format(saldo));
+                },
+                ajax: {
+                    beforeSend: function (xhr, type) {
+                        if (!type.crossDomain) {
+                            xhr.setRequestHeader(
+                                'X-CSRF-Token',
+                                $(
+                                    'meta[name="csrf-token"]'
+                                ).attr('content'));
+                        }
+                    },
+                    url: `{% url 'getSaldoActualArticulo' %}`,
+                    type: "POST",
+                    dataScr: 'data',
+                    data: {
+                        codigo: codigo,
+                        bodega: bodega,
+                        csrfmiddlewaretoken: csrfToken
+                    },
+                },
+                dom: buttons,
+                language: {
+                    url: "//cdn.datatables.net/plug-ins/1.11.5/i18n/es-ES.json",
+                },
+                colReorder: {
+                    realtime: false,
+                },
+                buttons: [{
+                    extend: 'excel',
+                    text: '<i class="fas fa-file-excel"></i>',
+                    titleAttr: 'Excel',
+                    className: 'btn btn-success',
+                },
+                {
+                    extend: 'pdf',
+                    text: '<i class="fas fa-file-pdf"></i>',
+                    titleAttr: 'PDF',
+                    className: 'btn btn-danger',
+                },
+                {
+                    extend: 'print',
+                    text: '<i class="fas fa-print"></i>',
+                    titleAttr: 'Imprimir',
+                    className: 'btn btn-null',
+                    orientation: 'landscape'
+                }
+                ],
+                columns: [
+                    {
+                        data: 'Bodega',
+                        className: 'currency',
+                        render: $.fn.dataTable.render.number(',', '.', 2)
+                    },
+                    {
+                        data: 'Saldo',
+                        className: 'currency',
+                        render: $.fn.dataTable.render.number(',', '.', 2)
+                    },
+                ],
+                order: [[1, "desc"]]
+            });
+
+
+
+            $('#modalSaldoActual').modal('show');
+        });
+
+
+
+
+    });
+</script>
+
+
+
+{% endblock %}

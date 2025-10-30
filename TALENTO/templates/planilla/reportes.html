@@ -1,0 +1,262 @@
+{% extends 'menu_nomina.html' %}
+{% load static %}
+
+{% block title %}
+{% if parametro == 'new' %}
+CREAR DEDUCCIONES
+{% else %}
+{{ id_empleado }} REPORTES DEDUCCIONES
+{% endif %}
+{% endblock %}
+
+{% block body %}
+
+<body>
+    <div class="card p-3 crear-container">
+        <h4 class="card-title text-primary">
+            <i class="fas fa-table"></i> Reportes Deducciones
+        </h4>
+
+        <div id="detallePlanillasContenido" class="col-md-12 mt-4">
+            <div class="card">
+                <div class="card-body" style="background-color: #f4f6f9;">
+                    <div class="p-3 border rounded bg-light">
+                        <div class="row align-items-center g-3">
+
+                            <div class="col-md-2">
+                                <label for="periodoInicio" class="form-label mb-0 align-middle">Desde</label>
+                                <input type="date" id="periodoInicio" class="form-control form-control-sm"
+                                    style="height: 38px; margin-top: 4px;">
+                            </div>
+
+                            <div class="col-md-2">
+                                <label for="periodoFinal" class="form-label mb-0 align-middle">Hasta</label>
+                                <input type="date" id="periodoFinal" class="form-control form-control-sm"
+                                    style="height: 38px; margin-top: 4px;">
+                            </div>
+
+                            <div class="col-md-2 mb-2">
+                                <label for="formato" class="form-label mb-0">Filtro</label>
+                                <select id="formato" class="form-select form-select-sm" style="height: 38px;">
+                                    <option value="RANGO">Rango</option>
+                                    <option value="PLANILLA">Planilla</option>
+                                    <option value="EMPLEADO">EMPLEADO</option>
+                                </select>
+                            </div>
+                            <div class="col-md-3" id="empleado-div" style="display: none; margin-bottom: -3px;">
+                                <label for="idEmpleadoReporte" class="form-label mb-0">Empleado</label>
+                                <select id="idEmpleadoReporte" class="form-control chosen-select" style="height: 35px;">
+                                    {% for empleado in empleados_empresa %}
+                                    <option value="{{ empleado.0 }}">{{ empleado.1 }}</option>
+                                    {% endfor %}
+                                </select>
+                            </div>
+                            <div class="col-md-2 mb-2">
+                                <label for="idplanilla" class="form-label mb-0">Planilla</label>
+                                <select id="idplanilla" class="form-select form-select-sm" style="height: 38px;">
+                                    {% for reporte in planilla_reporte %}
+                                    <option value="{{ reporte.0 }}">{{ reporte.1 }}</option>
+                                    {% endfor %}
+                                </select>
+                            </div>
+
+                            <div class="col-md-1 mb-3">
+                                <label class="form-label d-block">&nbsp;</label>
+                                <button class="btn btn-success btn-sm w-100" style="height: 38px;"
+                                    id="btn-cargar">Cargar</button>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="table-responsive">
+                        <table id="reporte-deducciones-table"
+                            class="table table-striped table-bordered table-top-border" style="width:100%">
+                            <thead>
+                                <tr>
+                                    <th class="text-center">Planilla</th>
+                                    <th class="text-center">Identidad</th>
+                                    <th class="text-center">Nombre Empleado</th>
+                                    <th class="text-center">Deducciones</th>
+                                    <th class="text-center">Valor</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                            </tbody>
+                            <tfoot>
+                                <tr>
+                                    <th>-</th>
+                                    <th>-</th>
+                                    <th>-</th>
+                                    <th>-</th>
+                                    <th>-</th>
+
+                                </tr>
+                            </tfoot>
+                        </table>
+
+                    </div>
+                </div>
+            </div>
+        </div>
+
+    </div>
+
+</body>
+{% endblock %}
+
+{% block scripts %}
+
+<script>
+    function setPeriodDates(startSelector, endSelector) {
+        const today = new Date();
+        const currentYear = today.getFullYear();
+        const currentMonth = today.getMonth();
+
+
+        const firstDayOfMonth = new Date(currentYear, currentMonth, 1);
+        const formattedFirstDay = firstDayOfMonth.toISOString().split('T')[0];
+
+
+        const formattedToday = today.toISOString().split('T')[0];
+
+
+        $(startSelector).val(formattedFirstDay);
+        $(endSelector).val(formattedToday);
+    }
+
+    // Llama a la función
+    setPeriodDates('#periodoInicio', '#periodoFinal');
+    var tableReporteDeduccion;
+    $(document).ready(function () {
+        // Inicializar Chosen en todos los select con clase .chosen-select
+        $(".chosen-select").chosen({
+            width: "100%"
+        });
+
+        $('#idEmpleadoReporte').chosen({
+            width: '100%' // Asegúrate de que el ancho esté ajustado
+        });
+
+        // Ajustar la altura dinámicamente después de inicializar Chosen
+        $('.chosen-container').css({
+            height: '37px'
+        });
+        $('.chosen-container .chosen-single').css({
+            height: '37px',
+            'line-height': '37px'
+        });
+
+        $('#formato').val('RANGO');
+        $('#formato').on('change', function () {
+            const selectedFilter = $(this).val();
+            if (selectedFilter === 'EMPLEADO') {
+                $('#empleado-div').show();
+                $('#idplanilla').prop('required', true);
+            } else {
+                $('#empleado-div').hide();
+                $('#idplanilla').prop('required', false);
+            }
+        });
+
+        $('#btn-cargar').on('click', function () {
+            const selectedFilter = $('#formato').val();
+            const idEmpleado = $('#idEmpleadoReporte').val();
+
+
+            if (selectedFilter === 'EMPLEADO' && (!idEmpleado || idEmpleado === '')) {
+                Swal.fire({
+                    icon: 'warning',
+                    title: 'Falta información',
+                    text: 'Debe seleccionar un empleado para usar el filtro "EMPLEADO".',
+                    confirmButtonText: 'Aceptar'
+                });
+                return; // Detener la ejecución si no se seleccionó un empleado
+            }
+
+            console.log("Datos enviados antes de recargar la tabla:", {
+                id_planilla: $('#idplanilla').val(),
+                fecha_inicio: $('#periodoInicio').val(),
+                fecha_final: $('#periodoFinal').val(),
+                filtro: selectedFilter,
+                id_empleado: selectedFilter === 'EMPLEADO' ? idEmpleado : null,
+            });
+
+            // Configurar y recargar la tabla con DataTables
+            tableReporteDeduccion = $('#reporte-deducciones-table').DataTable({
+                destroy: true,
+                scrollX: true,
+                scrollCollapse: true,
+                scrollY: '450px',
+                pageLength: 50,
+                dom: 'Bfrtip',
+                initComplete: function () {
+                    tableReporteDeduccion.columns.adjust().draw();
+                },
+                language: {
+                    url: "{% static 'app/th/json/es-ES.json' %}",
+                },
+                buttons: [
+                    { extend: 'excel', text: '<i class="fas fa-file-excel"></i>', titleAttr: 'Exportar a Excel', className: 'btn btn-success' },
+                    { extend: 'pdf', text: '<i class="fas fa-file-pdf"></i>', titleAttr: 'Exportar a PDF', className: 'btn btn-danger' },
+                    { extend: 'print', text: '<i class="fas fa-print"></i>', titleAttr: 'Imprimir', className: 'btn btn-primary', orientation: 'landscape' },
+                ],
+                ajax: {
+                    url: '{% url "reporte_deducciones" %}',
+                    type: 'POST',
+                    headers: {
+                        'X-CSRFToken': csrfToken,
+                    },
+                    data: function (d) {
+                        d.id_planilla = $('#idplanilla').val();
+                        d.fecha_inicio = $('#periodoInicio').val();
+                        d.fecha_final = $('#periodoFinal').val();
+                        d.filtro = selectedFilter;
+                        d.id_empleado = selectedFilter === 'EMPLEADO' ? idEmpleado : null;
+                    },
+                    dataSrc: function (json) {
+                        console.log("Datos recibidos del servidor (DataSrc):", json);
+                        return json.reporte || []; // Devuelve los datos o un arreglo vacío
+                    },
+                    error: function (xhr, status, error) {
+                        console.error("Error al enviar/recibir datos:", error, xhr.responseText);
+                    }
+                },
+                columns: [
+                    { data: 'id_planilla' },
+                    { data: 'identidad' },
+                    { data: 'nombre_completo' },
+                    { data: 'tipo_registro' },
+                    {
+                        data: 'valor',
+                        className: 'text-right',
+                        render: $.fn.dataTable.render.number(',', '.', 2)
+                    },
+                ],
+                order: [[1, "asc"]],
+                footerCallback: function (row, data, start, end, display) {
+                    var api = this.api();
+
+                    // Función para sumar valores de una columna
+                    var sumColumn = function (index) {
+                        return api
+                            .column(index, { page: 'current' })
+                            .data()
+                            .reduce(function (a, b) {
+                                return (parseFloat(a) || 0) + (parseFloat(b) || 0);
+                            }, 0);
+                    };
+
+                    // Índice de la columna "Valor" a sumar
+                    var valorTotal = sumColumn(4); // Índice de la columna 'valor'
+
+                    // Actualizar el footer de la columna 'Valor'
+                    $(api.column(4).footer()).html(
+                        'Total: ' + $.fn.dataTable.render.number(',', '.', 2).display(valorTotal)
+                    ).css('text-align', 'right');
+                }
+            });
+        });
+    });
+
+</script>
+{% endblock %}

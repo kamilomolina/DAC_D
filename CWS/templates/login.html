@@ -1,0 +1,137 @@
+{% load static %}
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>CWS</title>
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/5.15.3/css/all.min.css" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css2?family=Roboto:wght@400;500;700&display=swap" rel="stylesheet">
+    <link href="https://stackpath.bootstrapcdn.com/bootstrap/4.5.2/css/bootstrap.min.css" rel="stylesheet">
+    <link rel="stylesheet" href="{% static 'app/css/CWS_LOGIN.css' %}">
+
+    <link rel="icon" href="{% static 'app/cws/images/favicon.ico' %}" type="image/x-icon">
+    <link rel="apple-touch-icon" sizes="180x180" href="{% static 'app/cws/images/apple-touch-icon.png' %}">
+    <link rel="icon" type="image/png" sizes="32x32" href="{% static 'app/cws/images/favicon-32x32.png' %}">
+    <link rel="icon" type="image/png" sizes="16x16" href="{% static 'app/cws/images/favicon-16x16.png' %}">
+    <link rel="manifest" href="{% static 'app/cws/images/site.webmanifest' %}">
+    <meta name="theme-color" content="#000000">
+    <meta name="application-name" content="CWS" />
+
+</head>
+
+<body>
+    <div class="container d-flex justify-content-center align-items-center vh-100">
+        <div class="login-box p-4 bg-white rounded shadow">
+            <div class="text-center mb-4">
+                <div class="img-container">
+                    <img class="card-img-top" style="height: 25%; width: 25%; margin: 2%;"
+                        src="{% static 'app/cws/images/letra.png' %}" alt="CWS Logo">
+                </div>
+                <h2 class="h5">CARBAJAL WEB SERVICE</h2>
+            </div>
+
+            <form id="loginForm" method="POST" class="sign-in-form">
+                {% csrf_token %}
+                <div class="form-group">
+                    <label for="username"><b>Usuario</b></label>
+                    <input type="text" class="form-control" id="username" name="username" placeholder="" required
+                        autocomplete="off" autofocus onkeyup="return forceLower(this);">
+                </div>
+                <div class="form-group">
+                    <label for="password"><b>Contraseña</b></label>
+                    <input type="text" class="form-control" id="password" name="password" required autocomplete="off"
+                        onkeyup="return forceLower(this);">
+                </div>
+                <div class="mb-3">
+                    <select class="form-control" id="empresa" name="empresa">
+                        
+                        {% for empresa in empresas %}
+                            <option value="{{ empresa.id }}">{{ empresa.nombre }}</option>
+                        {% endfor %}
+                    </select>
+                </div>
+                <button type="submit" class="btn btn-primary btn-block">Ingresar</button>
+            </form>
+
+            <div class="text-center mt-4">
+                <p>Ahora puedes acceder a TODAS tus aplicaciones desde un mismo sitio.</p>
+            </div>
+
+        </div>
+    </div>
+    <script src="https://code.jquery.com/jquery-3.6.0.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
+    <script src="https://cdn.jsdelivr.net/npm/@popperjs/core@2.9.3/dist/umd/popper.min.js"></script>
+    <script src="https://stackpath.bootstrapcdn.com/bootstrap/4.5.2/js/bootstrap.min.js"></script>
+
+
+    <script>
+        function forceLower(strInput) {
+            strInput.value = strInput.value.toLowerCase();
+        }
+    </script>
+    <script>
+        $(document).ready(function () {
+            var buttons = "Bfrtlip";
+
+            var csrfToken = "{{ csrf_token }}";
+         
+            token = localStorage.setItem('jwtToken', '');
+
+            console.log(token);
+
+            $('#loginForm').submit(function (e) {
+                e.preventDefault();
+
+                var username = $('#username').val();
+                var password = $('#password').val();
+
+                Swal.fire({
+                    title: '',
+                    html: '<b>Validando Credenciales</b>',
+                    didOpen: () => {
+                        Swal.showLoading()
+                    },
+                    allowOutsideClick: false,
+                    showConfirmButton: false
+                });
+
+                $.ajax({
+                    url: `{% url 'loginRequest' %}`,
+                    type: "POST",
+                    dataScr: 'data',
+                    data: {
+                        username: username,
+                        password: password,
+                        csrfmiddlewaretoken: csrfToken
+                    },
+                    dataType: "json",
+                    success: function (data) {
+                        Swal.close();
+
+                        if (data.save == 1) {
+                            if (data.account == 1) {
+                                if (data.module == 1) {
+                                    Swal.fire("", "Ingresando al Sistema!", "success");
+
+                                    window.location = "http://127.0.0.1:8000/CWS/modulos";
+                                } else {
+                                    Swal.fire("", "No tienes acceso al Sistema!", "warning");
+                                }
+                            } else {
+                                Swal.fire("", "Usuario y/o Contraseña Incorrecta!", "warning");
+                            }
+
+                        } else {
+                            Swal.fire("", "Error D: " + data.error, "error");
+                        }
+                    }
+                });
+            });
+        });
+    </script>
+</body>
+
+</html>

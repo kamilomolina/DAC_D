@@ -1,0 +1,16 @@
+Ventas
+
+*FT_FACTURAS, (facturas)
+*FT_DETALES,  (facturas_detalle)
+*FT_TIPO_FACTURAS, (tipo_facturas)
+*FT_FORMAS_DE_PAGO,(formas_pago)
+*FT_CANAL_DE_VENTA,(canal_venta)
+*FT_NOTAS_DE_CREDITO_A_FACTURA,(notas_credito)
+*FT_NOTAS_DE_CREDITO_X_DEVOLUCION,(notas_credito_devolucion)
+*FR_NOTAS_DE_CREDITO_X_DESCUENTO_DETALLE(notas_credito_descuento)
+*IV_PRODUCTOS_X_CATEGORIA,(productos_categoria)
+*IV_UNIDADES_EQUIVALENCIA_X_CATEGORIA,(unidades_equivalencia)
+*IV_UNIDADES,(unidades)
+*MG_CLIENTES,(clientes)
+*MG_RUTAS,(rutas)
+*MG_TIPO_CLIENTE,(tipo_cliente)

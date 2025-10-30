@@ -1,0 +1,38 @@
+{
+  "version": "2.0.0",
+  "tasks": [
+    {
+      "label": "Run Django Server",
+      "type": "shell",
+      "command": "cmd",
+      "args": [
+        "/c",
+        "C:\\Users\\DELL\\Downloads\\venv\\Scripts\\activate && python manage.py runserver"
+      ],
+      "group": {
+        "kind": "build",
+        "isDefault": true
+      },
+      "problemMatcher": [],
+      "detail": "Run the Django development server",
+      "options": {
+        "cwd": "C:/xampp/htdocs/DAC_D"
+      }
+    },
+    {
+      "label": "Apply Migrations",
+      "type": "shell",
+      "command": "cmd",
+      "args": [
+        "/c",
+        "C:\\Users\\DELL\\Downloads\\venv\\Scripts\\activate && python manage.py migrate"
+      ],
+      "group": "build",
+      "problemMatcher": [],
+      "detail": "Apply migrations to the database",
+      "options": {
+        "cwd": "C:/xampp/htdocs/DAC_D"
+      }
+    }
+  ]
+}

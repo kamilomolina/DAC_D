@@ -1,0 +1,101 @@
+<div class="modal fade" id="gestionPlanesModal" tabindex="-1" aria-labelledby="modalTitle" aria-hidden="true"
+    data-bs-keyboard="false" data-bs-backdrop="static">
+
+    <div class="modal-dialog modal-lg">
+        <div class="modal-content">
+            <div class="modal-header" style="background-color: rgb(86, 97, 87);">
+                <h5 class="modal-title" style="font-weight: 900; color: #ebebeb;" id="modalTitle">GESTION DE
+                    PLANES
+                </h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal" style="font-weight: 900; color: white;"
+                    aria-label="Close"></button>
+            </div>
+
+            <div class="modal-body">
+
+                <form id="formPlanes" method="POST">
+
+                    <div class="row">
+                        <div class="col-lg-4">
+                            <div class="form-group">
+                                <label for="nombre">Plan:</label>
+                                <input type="text" class="form-control form-control-sm" id="nombre_plan" disabled
+                                    name="nombre_plan" autofocus>
+                            </div>
+                        </div>
+                        <div class="col-lg-4">
+                            <div class="form-group">
+                                <label for="tipo_plan">Tipo Plan:</label>
+                                <select class="form-select form-select-sm" id="tipo_plan" name="tipo_plan" disabled>
+                                    <option value="0">Seleccione un Tipo</option>
+                                    {% for tipo in tipo_planes %}
+                                    <option value="{{ tipo.0 }}">{{ tipo.1 }}</option>
+                                    {% endfor %}
+
+                                </select>
+                            </div>
+                        </div>
+                        <div class="col-lg-4">
+                            <div class="form-group">
+                                <label for="tipo_plan">Area:</label>
+                                <select class="form-select form-select-sm" id="area_plan" name="area_plan" disabled>
+                                    <option value="0">Seleccione un Area</option>
+                                    {% for tipo in grupos %}
+                                    <option value="{{ tipo.0 }}">{{ tipo.1 }}</option>
+                                    {% endfor %}
+                                </select>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="row">
+                        <div class="col-lg-6">
+                            <div class="form-group">
+                                <label for="fecha_inicio">Fecha de Inicio</label>
+                                <input type="date" class="form-control form-control-sm" id="fecha_inicio" disabled
+                                    name="fecha_inicio" value="">
+                            </div>
+                        </div>
+                        <div class="col-lg-6">
+                            <div class="form-group">
+                                <label for="fecha_final">Fecha de Final</label>
+                                <input type="date" class="form-control form-control-sm" id="fecha_final" disabled
+                                    name="fecha_final" value="">
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="row">
+                        <div class="form-group">
+                            <label for="descripcion">Descripción:</label>
+                            <textarea class="form-control form-control-sm" id="descripcion_plan" name="descripcion_plan" disabled
+                                rows="3"></textarea>
+                        </div>
+                    </div>
+
+                    <div class="row" id="main_plan_hidden_section">
+                        <div class="col-lg-6">
+                            <div class="form-group">
+                                <label for="descripcion">Comentario Pausa:</label>
+                                <textarea class="form-control form-control-sm" id="comentario_pausa" disabled
+                                    name="comentario_pausa" rows="3"></textarea>
+                            </div>
+                        </div>
+                        <div class="col-lg-6">
+                            <div class="form-group">
+                                <label for="descripcion">Comentario Final:</label>
+                                <textarea class="form-control form-control-sm" id="comentario_final" disabled
+                                    name="comentario_final" rows="3"></textarea>
+                            </div>
+                        </div>
+                    </div>
+
+                    <br>
+                </form>
+
+            </div>
+
+        </div>
+    </div>
+
+</div>

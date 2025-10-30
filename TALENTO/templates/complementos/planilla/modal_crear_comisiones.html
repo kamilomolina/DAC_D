@@ -1,0 +1,70 @@
+   <!-- Modal para crear un nuevo cargo -->
+   <div class="modal fade" id="modalCrearComisiones" tabindex="-1" role="dialog"
+   aria-labelledby="exampleModalLabel" data-bs-keyboard="false" data-bs-backdrop="static" aria-hidden="true">
+   <div class="modal-dialog modal-lg" role="document">
+       <div class="modal-content">
+           <div class="modal-header" style="background-color: #304458; color:white">
+               <h5 class="modal-title" id="exampleModalLabelComision">Crear tipo de Comisiones</h5>
+               <button type="button" class="close-tipo-Comisiones" data-bs-dismiss="modal" aria-label="Close">
+                   <span aria-hidden="true">&times;</span>
+               </button>
+           </div>
+           <div class="modal-body">
+               <form id="formCrearTipoComisiones">
+                   {% csrf_token %}
+                   <div class="row">
+                       <!-- Campo oculto para id_Comision -->
+                       <input type="hidden" id="id-comision" name="id_comision">
+
+                       <!-- Categoría -->
+                       <div class="col-md-6 mb-3">
+                           <label for="descripcion-Comisiones"><span style="color: red;">*</span> Comisión:</label>
+                           <input type="text" class="form-control" id="descripcion-Comision" placeholder="Nombre Comisión"
+                           name="descripcion_Comision">
+                       </div>
+
+                       <!-- Descripción -->
+                       <div class="col-md-6 mb-3">
+                           <label for="Comision-nombre">Descripción:</label>
+                           <input type="text" class="form-control" id="Comision-nombre" placeholder="Descripción Comisión"
+                               name="Comision_nombre">
+                       </div>
+
+                       <!-- Forma -->
+                       <div class="col-md-6 mb-3">
+                           <label for="forma-Comision"><span style="color: red;">*</span> Forma:</label>
+                           <input type="text" class="form-control" id="forma-Comision" value="EXCEL"
+                               name="forma_Comision">
+                       </div>
+
+                       <!-- Automatización -->
+                       <div class="col-md-6 mb-3">
+                           <label for="automatizacion-Comision"><span style="color: red;">*</span>
+                               Automatización:</label>
+
+                           <select class="form-control " id="automatizacion-Comision"
+                               name="automatizacion_Comision">
+                               <option value="1">Si</option>
+                               <option value="0">No</option>
+
+                           </select>
+
+
+                       </div>
+                   </div>
+
+                   <input type="hidden" name="csrfmiddlewaretoken" value="{{ csrf_token }}">
+
+                   <div class="modal-footer">
+                       <button type="submit" id="guardar-editar-Comisiones"
+                           class="btn btn-success animate__animated animate__pulse animate__slow animate__infinite">Guardar</button>
+                       <button type="button" class="btn btn-danger close-tipo-Comisiones"
+                           data-bs-dismiss="modal">Cerrar</button>
+                   </div>
+               </form>
+
+
+           </div>
+       </div>
+   </div>
+</div>

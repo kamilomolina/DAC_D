@@ -1,0 +1,35 @@
+    <!-- Modal para crear Bonificaciones -->
+    <div class="modal fade" id="modalCrearBonificacionTipo" tabindex="-1" role="dialog"
+        aria-labelledby="modalCrearBonificacionLabel" data-bs-keyboard="false" data-bs-backdrop="static"
+        aria-hidden="true">
+        <div class="modal-dialog" role="document">
+            <div class="modal-content">
+                <!-- Encabezado del Modal -->
+                <div class="modal-header" style="background-color: #304458; color:white">
+                    <h5 class="modal-title" id="modalCrearBonificacionLabel">Crear Nueva Bonificación</h5>
+                    <button type="button" class="close-nueva-bonificacion" data-dismiss="modal"
+                        aria-label="close-modal">
+                        <span aria-hidden="true">&times;</span>
+                    </button>
+                </div>
+
+                <!-- Cuerpo del Modal -->
+                <div class="modal-body">
+                    <!-- Contenido del formulario para crear la bonificación -->
+                    <form id="formCrearBonificacionTipo">
+                        <div class="form-group">
+                            <label for="descripcion-bonificacion">Nombre de la Bonificación:</label>
+                            <input type="text" class="form-control" id="descripcion-bonificacion" >
+                        </div>
+                     
+                        <div class="modal-footer">
+                            <button type="submit"
+                                class="btn btn-success animate__animated animate__pulse animate__slow animate__infinite">Guardar</button>
+                            <button type="button" class="btn btn-danger close-nueva-bonificacion"
+                                data-dismiss="modal">Cerrar</button>
+                        </div>
+                    </form>
+                </div>
+            </div>
+        </div>
+    </div>

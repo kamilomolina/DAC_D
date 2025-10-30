@@ -1,0 +1,54 @@
+<div class="modal fade" id="modalComprobantePago" tabindex="-1" aria-labelledby="modalListadoTurnosLabel"
+    aria-hidden="true" data-bs-keyboard="false" data-bs-backdrop="static">
+    <div class="modal-dialog modal-fullscreen modal-dialog-centered"> <!-- Centrar el modal -->
+        <div class="modal-content">
+            <div class="modal-header" style="background-color: #304458; color: white;">
+                <h5 class="modal-title modalListadoTurnosLabel" id="modalListadoTurnosLabel">
+                    <i class="material-icons me-2 text-gray">list</i> Comprobante de Banco
+                </h5>
+
+                <button type="button" class="close" data-bs-dismiss="modal" aria-label="Close"><span
+                        aria-hidden="true">&times;</span></button>
+
+            </div>
+
+            <div class="modal-body" style="background-color: #f4f6f9;">
+                <div class="d-flex justify-content-between mb-3">
+      
+                    <div class="col-md-6 mb-3">
+                        <label for="id-banco-comprobante"><span style="color: red;">*</span> Bancos:</label>
+                        <select class="form-control chosen-select" id="id-banco-comprobante" name="id-banco-comprobante">
+                            <option value="">Seleccione una opción</option>
+                            <option value="BAC CREDOMATIC">BAC CREDOMATIC</option>
+                            <option value="BANCO FICOHSA">BANCO FICOHSA</option>
+                        </select>
+                        
+                    </div>
+                </div>
+
+                <div class="table-responsive">
+                    <table id="comprobante-bancos-table" class="table table-striped table-bordered table-top-border"
+                        style="width:100%">
+                        <thead>
+                            <tr>
+                       
+                                <th class="text-center">Identidad</th>
+                                <th class="text-center">Nombre Empleado</th>
+                                <th class="text-center">Numero Cuenta</th>
+                                <th class="text-center">Banco</th>
+                                <th class="text-center">Total a Pagar</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+
+            <div class="modal-footer">
+                <button type="button" class="btn btn-success btn-sm" id="guardarDiaLibres">Guardar</button>
+                <button type="button" class="btn btn-danger btn-sm" data-bs-dismiss="modal">Cerrar</button>
+            </div>
+        </div>
+    </div>
+</div>

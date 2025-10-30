@@ -1,0 +1,43 @@
+<div class="modal fade" id="modalCrearUsuario" tabindex="-1" role="dialog" aria-labelledby="exampleModalLabel" data-bs-keyboard="false" data-bs-backdrop="static"
+    aria-hidden="true">
+    <div class="modal-dialog modal-lg" role="document">
+        <div class="modal-content">
+            <div class="modal-header" style="background-color: #304458; color:white">
+
+                <h5 class="modal-title" id="exampleModalLabel" style="color: #ffffff;">
+                    <i class="material-icons me-2 text-gray">group</i> Ingresar Usuario
+                </h5>
+                <button type="button" class="close" data-dismiss="modal" aria-label="Close">
+                    <span aria-hidden="true">&times;</span>
+                </button>
+            </div>
+            <div class="modal-body">
+                <form id="formCrearUsuarios">
+                    <div class="row mb-2">
+                        <div class="col-md-12">
+                            <label for="nombre" class="form-label">Nombre:</label>
+                            <input type="text" id="nombre" class="form-control input-underline">
+                        </div>
+                    </div>
+                    <div class="row mb-2">
+                        <div class="col-md-6">
+                            <label for="nuevo-usuario" class="form-label">Usuario:</label>
+                            <input type="text" id="nuevo-usuario" class="form-control input-underline">
+                        </div>
+                        <div class="col-md-6">
+                            <label for="contrasena" class="form-label">Contraseña:</label>
+                            <input type="password" id="contrasena" class="form-control input-underline">
+                        </div>
+                    </div>
+
+                    <input type="hidden" id="estado" name="estado" value="1"> <!-- Estado por defecto -->
+                    <div class="modal-footer">
+                        <button type="submit" class="btn btn-success animate__animated animate__pulse animate__slow animate__infinite">Guardar</button>
+                        <button type="button" class="btn btn-danger close" data-dismiss="modal">Cerrar</button>
+                    </div>
+                </form>
+            </div>
+
+        </div>
+    </div>
+</div>
