@@ -45,9 +45,10 @@ def loginRequest(request):
     module = 0
     token = ''
 
-    user_id = 0
-    fullName = ''
-    userName = ''
+    user_id = 480
+    fullName = 'KAMILO ALEJANDRO MOLINA COREA'
+    userName = 'KAMILO'
+    account = 1
 
     section = 0
 
