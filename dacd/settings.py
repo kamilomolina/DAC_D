@@ -192,11 +192,11 @@ DATABASES = {
     # CONEXION DE CONTROL SUMINISTROS
     'ctrlSum': {
         'ENGINE': "django.db.backends.mysql",
-        'NAME': os.getenv("DB_NAME_CTRL_SUM"),
-        'USER': os.getenv("DB_USER_CTRL_SUM"),
-        'PASSWORD': os.getenv("DB_PASSWORD_CTRL_SUM"),
-        'HOST': os.getenv("DB_HOST_CTRL_SUM"),
-        'PORT': os.getenv("DB_PORT_CTRL_SUM"),
+        'NAME': os.getenv("DB_NAME_CTRL_SUM_TESTING"),
+        'USER': os.getenv("DB_USER_CTRL_SUM_TESTING"),
+        'PASSWORD': os.getenv("DB_PASSWORD_CTRL_SUM_TESTING"),
+        'HOST': os.getenv("DB_HOST_CTRL_SUM_TESTING"),
+        'PORT': os.getenv("DB_PORT_CTRL_SUM_TESTING"),
     },
     'super': {
         'ENGINE': "django.db.backends.mysql",

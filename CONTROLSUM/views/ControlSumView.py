@@ -63,7 +63,7 @@ def dashboard(request):
 
     udcConn = connections['ctrlSum']
     with udcConn.cursor() as cursor:
-        cursor.callproc('universal_data_core.SUM_GET_ESTADISTICAS',  [id_usuario])
+        cursor.callproc('kamilo_testing.SUM_GET_ESTADISTICAS',  [id_usuario])
 
         # Total de suministros
         total_suministros = cursor.fetchone()[0]
@@ -343,7 +343,7 @@ def obtener_acreedores(request):
             # Ejecutamos la consulta SQL para obtener los acreedores
             cursor.execute("""
                 SELECT * 
-                FROM universal_data_core.ct_proveedores cp
+                FROM kamilo_testing.ct_proveedores cp
                 WHERE cp.acreedor = 1;
             """)
             
@@ -586,7 +586,7 @@ def get_almacenes_por_usuario(request):
             FROM global_security.usuarios_grupo ug
             INNER JOIN global_security.grupos g
                 ON ug.fkGrupo = g.PKgrupo
-            INNER JOIN universal_data_core.almacen a
+            INNER JOIN kamilo_testing.almacen a
                 ON ug.fkGrupo = a.fkgrupo
             INNER JOIN global_security.usuarios u
                 ON u.PKUsuario = ug.fkUsuario
@@ -1075,7 +1075,7 @@ def ejecutar_procedimiento(requisicion_id):
         udcConn = connections['ctrlSum']
         with udcConn.cursor() as cursor:
             # Llamar al procedimiento almacenado 'CAMBIAR_ESTADO_REQUISICION'
-            cursor.callproc('universal_data_core.CAMBIAR_ESTADO_REQUISICION', [requisicion_id])
+            cursor.callproc('kamilo_testing.CAMBIAR_ESTADO_REQUISICION', [requisicion_id])
             # Si deseas capturar el resultado, puedes usar fetchall() o fetchone()
             cursor.fetchall()
     except Exception as e:
@@ -1118,7 +1118,7 @@ def obtener_detalles_data(request):
         udcConn = connections['ctrlSum']
         with udcConn.cursor() as cursor:
             # Verificar si la requisición existe
-            cursor.execute('SELECT COUNT(*) FROM universal_data_core.requisicion WHERE id_requisicion = %s', [id_requisicion])
+            cursor.execute('SELECT COUNT(*) FROM kamilo_testing.requisicion WHERE id_requisicion = %s', [id_requisicion])
             if cursor.fetchone()[0] == 0:
                 return JsonResponse({'error': 'No se encontró la requisición con el ID proporcionado.'})
 
@@ -1213,7 +1213,7 @@ def verificar_detalles_requisicion_data(request):
         # Establece la conexión a la base de datos
         udcConn = connections['ctrlSum']
         with udcConn.cursor() as cursor:
-            cursor.callproc("universal_data_core.GET_DETALLES_REQUISICION", [id_requisicion])
+            cursor.callproc("kamilo_testing.GET_DETALLES_REQUISICION", [id_requisicion])
             detalles = cursor.fetchall()
 
         tiene_detalles = len(detalles) > 0  # Si hay resultados, la requisición tiene detalles
@@ -1722,10 +1722,10 @@ def insertar_actualizar_adquisicion_data(request):
                     0,         # guardado (valor de salida)
                     userName   # userName (valor adicional)
                 ]
-                cursor.callproc('universal_data_core.SUM_INSERT_UPDATE_ADQUISICION', args)
+                cursor.callproc('kamilo_testing.SUM_INSERT_UPDATE_ADQUISICION', args)
 
                 # Obtener el valor del parámetro de salida (guardado)
-                cursor.execute('SELECT @_universal_data_core.SUM_INSERT_UPDATE_ADQUISICION_8')
+                cursor.execute('SELECT @_kamilo_testing.SUM_INSERT_UPDATE_ADQUISICION_8')
                 guardado = cursor.fetchone()[0]
 
                 if guardado == id_adquisicion :
@@ -1856,7 +1856,7 @@ def obtener_detalle_adquisicion(request):
         # Llamada al procedimiento almacenado
         udcConn = connections['ctrlSum']
         with udcConn.cursor() as cursor:
-            cursor.callproc('universal_data_core.OBTENER_DETALLE_ADQUISICION', [id_adquisicion, id_requisicion])
+            cursor.callproc('kamilo_testing.OBTENER_DETALLE_ADQUISICION', [id_adquisicion, id_requisicion])
             result = cursor.fetchall()
 
         # Si no se encuentran resultados, devolver un error
@@ -1949,7 +1949,7 @@ def insertar_actualizar_devolucion_data(request):
         udcConn = connections['ctrlSum']
         with udcConn.cursor() as cursor:
             # Llamar al procedimiento almacenado
-            cursor.callproc('universal_data_core.SUM_INSERT_UPDATE_DEVOLUCION', [
+            cursor.callproc('kamilo_testing.SUM_INSERT_UPDATE_DEVOLUCION', [
                 id_devolucion,
                 IDadquisicion,
                 IDDetalleRequisicion,
@@ -1967,7 +1967,7 @@ def insertar_actualizar_devolucion_data(request):
             ])
 
             # Obtener el valor del parámetro OUT (guardado)
-            cursor.execute('SELECT @_universal_data_core.SUM_INSERT_UPDATE_DEVOLUCION_12')
+            cursor.execute('SELECT @_kamilo_testing.SUM_INSERT_UPDATE_DEVOLUCION_12')
             guardado = cursor.fetchone()[0]
 
             # Definir el estado de la operación
@@ -2126,7 +2126,7 @@ def obtener_movimientos_x_suministro(request):
             udcConn = connections['ctrlSum']
             with udcConn.cursor() as cursor:
                 # Llamada al procedimiento almacenado
-                cursor.callproc('universal_data_core.OBTENER_MOVIMIENTO_X_SUMINISTRO', [suministro_id])
+                cursor.callproc('kamilo_testing.OBTENER_MOVIMIENTO_X_SUMINISTRO', [suministro_id])
                 result = cursor.fetchall()
 
             # Si no hay resultados, devolver mensaje de error
