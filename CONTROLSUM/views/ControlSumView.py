@@ -5,6 +5,9 @@ import json
 from django.db import transaction
 from django.http import HttpResponse, HttpResponseRedirect
 from django.urls import reverse
+from django.core.files.storage import default_storage
+from urllib.parse import urlparse
+import os
 
 # Create your views here.
 from django import forms
@@ -195,9 +198,7 @@ def obtener_precio_unitario_data(request):
     
 # ------------------------------------------------------------------------------------------------------------#
 
-from django.core.files.storage import default_storage
-from urllib.parse import urlparse
-import os
+
 
 def insertar_actualizar_suministro(request):
     try:
