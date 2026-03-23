@@ -1,0 +1,28 @@
+<!-- Modal para Cambiar Nombre -->
+<div class="modal fade" id="modalCambiarNombre" tabindex="-1" role="dialog" aria-labelledby="modalCambiarNombreLabel"
+  aria-hidden="true">
+  <div class="modal-dialog" role="document">
+    <div class="modal-content">
+      <div class="modal-header">
+        <h5 class="modal-title" id="modalCambiarNombreLabel">Cambiar Nombre</h5>
+        <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Cerrar"></button>
+      </div>
+      <div class="modal-body">
+        <form id="formCambiarNombre">
+          <div class="mb-3">
+            <label for="nombreActual" class="form-label">Nombre Actual</label>
+            <input type="text" class="form-control" id="nombreActual" disabled>
+          </div>
+          <div class="mb-3">
+            <label for="nuevoNombre" class="form-label">Nuevo Nombre</label>
+            <input type="text" class="form-control" id="nuevoNombre" required>
+          </div>
+        </form>
+      </div>
+      <div class="modal-footer">
+        <button type="button" class="btn btn-primary" id="guardarNombre">Guardar</button>
+        <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancelar</button>
+      </div>
+    </div>
+  </div>
+</div>

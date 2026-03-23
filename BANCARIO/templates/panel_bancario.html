@@ -1,0 +1,228 @@
+{% extends 'componentes/menu_bancario.html' %}
+{% load static %}
+
+{% block title %}
+PANEL BANCARIO
+{% endblock %}
+
+{% block body %}
+
+<style>
+    .bk-panel-header {
+        display: flex;
+        align-items: center;
+        gap: 12px;
+        padding: 8px 0 16px;
+        border-bottom: 1px solid var(--bk-border);
+        margin-bottom: 24px;
+    }
+
+    .bk-welcome-card {
+        background: linear-gradient(135deg, rgba(0, 180, 216, 0.08), rgba(212, 168, 85, 0.06));
+        border: 1px solid var(--bk-border);
+        border-radius: 16px;
+        padding: 20px 24px;
+        margin-bottom: 20px;
+        position: relative;
+        overflow: hidden;
+    }
+
+    .bk-welcome-card::before {
+        content: '';
+        position: absolute;
+        top: -40px;
+        right: -40px;
+        width: 160px;
+        height: 160px;
+        background: radial-gradient(circle, rgba(0, 180, 216, 0.1), transparent 70%);
+        border-radius: 50%;
+    }
+
+    .bk-welcome-title {
+        font-size: 1.4rem;
+        font-weight: 800;
+        background: linear-gradient(135deg, var(--bk-accent), var(--bk-gold));
+        -webkit-background-clip: text;
+        -webkit-text-fill-color: transparent;
+        background-clip: text;
+        margin-bottom: 2px;
+    }
+
+    .bk-welcome-subtitle {
+        color: var(--bk-text-muted);
+        font-size: 0.85rem;
+        font-weight: 400;
+        margin-bottom: 0;
+    }
+
+    /* Quick Action Cards */
+    .bk-action-card {
+        background: rgba(17, 34, 64, 0.6);
+        border: 1px solid var(--bk-border);
+        border-radius: 16px;
+        padding: 24px;
+        transition: all 0.35s cubic-bezier(0.4, 0, 0.2, 1);
+        position: relative;
+        overflow: hidden;
+        cursor: pointer;
+        text-decoration: none !important;
+        display: block;
+        height: 100%;
+    }
+
+    .bk-action-card::before {
+        content: '';
+        position: absolute;
+        top: 0;
+        left: 0;
+        width: 100%;
+        height: 4px;
+        transition: height 0.3s ease;
+    }
+
+    .bk-action-card:hover {
+        transform: translateY(-6px);
+        box-shadow: 0 16px 40px rgba(0, 0, 0, 0.3);
+        border-color: rgba(0, 180, 216, 0.3);
+    }
+
+    .bk-action-card:hover::before {
+        height: 5px;
+    }
+
+    .bk-action-card .bk-card-icon {
+        width: 48px;
+        height: 48px;
+        border-radius: 14px;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        margin-bottom: 16px;
+        transition: transform 0.3s ease;
+    }
+
+    .bk-action-card:hover .bk-card-icon {
+        transform: scale(1.1);
+    }
+
+    .bk-action-card .bk-card-title {
+        font-size: 1rem;
+        font-weight: 700;
+        color: var(--bk-text);
+        margin-bottom: 6px;
+    }
+
+    .bk-action-card .bk-card-desc {
+        font-size: 0.8rem;
+        color: var(--bk-text-muted);
+        line-height: 1.4;
+    }
+
+    .bk-action-card .bk-card-arrow {
+        position: absolute;
+        bottom: 16px;
+        right: 16px;
+        color: var(--bk-text-muted);
+        font-size: 20px;
+        transition: all 0.3s ease;
+    }
+
+    .bk-action-card:hover .bk-card-arrow {
+        color: var(--bk-accent);
+        transform: translateX(4px);
+    }
+
+    /* Color variants */
+    .bk-card-teal::before {
+        background: linear-gradient(90deg, #00b4d8, #0077b6);
+    }
+
+    .bk-card-teal .bk-card-icon {
+        background: rgba(0, 180, 216, 0.12);
+        color: #00b4d8;
+    }
+
+    .bk-card-gold::before {
+        background: linear-gradient(90deg, #d4a855, #f0d78c);
+    }
+
+    .bk-card-gold .bk-card-icon {
+        background: rgba(212, 168, 85, 0.12);
+        color: #d4a855;
+    }
+
+    .bk-card-green::before {
+        background: linear-gradient(90deg, #10b981, #34d399);
+    }
+
+    .bk-card-green .bk-card-icon {
+        background: rgba(16, 185, 129, 0.12);
+        color: #10b981;
+    }
+
+    .bk-card-purple::before {
+        background: linear-gradient(90deg, #8b5cf6, #a78bfa);
+    }
+
+    .bk-card-purple .bk-card-icon {
+        background: rgba(139, 92, 246, 0.12);
+        color: #8b5cf6;
+    }
+
+    .bk-card-rose::before {
+        background: linear-gradient(90deg, #f43f5e, #fb7185);
+    }
+
+    .bk-card-rose .bk-card-icon {
+        background: rgba(244, 63, 94, 0.12);
+        color: #f43f5e;
+    }
+
+    .bk-card-sky::before {
+        background: linear-gradient(90deg, #0ea5e9, #38bdf8);
+    }
+
+    .bk-card-sky .bk-card-icon {
+        background: rgba(14, 165, 233, 0.12);
+        color: #0ea5e9;
+    }
+
+    .bk-section-title {
+        font-size: 0.75rem;
+        font-weight: 700;
+        letter-spacing: 2px;
+        text-transform: uppercase;
+        color: var(--bk-text-muted);
+        margin-bottom: 16px;
+        padding-left: 4px;
+    }
+</style>
+
+
+<div class="bk-panel-header">
+    <button id="toggle-sidebar" class="btn btn-sm btnMenu me-2" title="Mostrar/Ocultar menú">
+        <i class="fas fa-bars"></i>
+    </button>
+    <h6 class="page-title mb-0 fs-6 fw-bold">PANEL BANCARIO</h6>
+</div>
+
+<!-- Welcome Card -->
+<div class="bk-welcome-card">
+    <h2 class="bk-welcome-title">Bienvenido al Módulo Bancario</h2>
+    <p class="bk-welcome-subtitle">Gestión de movimientos bancarios, anticipos de clientes y liquidación de caja.</p>
+</div>
+
+
+
+
+{% endblock %}
+
+{% block scripts %}
+<script>
+    $(document).ready(function () {
+        {% if error_msg %}
+        appToast.error("{{ error_msg }}");
+        {% endif %}
+    });
+</script>
+{% endblock %}

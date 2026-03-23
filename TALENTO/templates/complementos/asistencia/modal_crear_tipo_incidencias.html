@@ -1,0 +1,48 @@
+<div class="modal fade" id="modalCrearIncidencias" tabindex="-1" aria-labelledby="modalListadoTurnosLabel"
+    aria-hidden="true" data-bs-keyboard="false" data-bs-backdrop="static">
+    <div class="modal-dialog modal-lg"> <!-- Centrar el modal -->
+        <div class="modal-content">
+            <div class="modal-header" style="background-color: #304458; color: white;">
+                <h5 class="modal-title modalListadoTurnosLabel" id="modalListadoTurnosLabel">
+                    <i class="material-icons me-2 text-gray">list</i> Crear Tipo de Incidencias
+                </h5>
+
+                <button type="button" class="close" data-bs-dismiss="modal" aria-label="Close"><span
+                        aria-hidden="true">&times;</span></button>
+
+            </div>
+            <form id="formCrearTipoincidencia">
+                <div class="modal-body" style="background-color: #f4f6f9;">
+                    <div class="d-flex justify-content-between mb-3">
+                        <input type="hidden" id="incidenciaId">
+                        <div class="form-group col-6 pe-2">
+                            <label for="nombreIncidencia" class="form-label">
+                                <span style="color: red;">*</span>Nombre Incidencia:
+                            </label>
+                            <input id="nombreIncidencia" class="form-control" placeholder="Nombre Incidencia">
+                        </div>
+
+                        <div class="form-group col-6 ps-2">
+                            <label for="descripcionIncidencia" class="form-label">Descripción:</label>
+                            <input id="descripcionIncidencia" class="form-control"
+                                placeholder="Escribe una Descripción...">
+                        </div>
+                    </div>
+                    <div class="form-group col-6 pe-2">
+                        <label for="incidenciaJustificada" class="form-label">Incidencia Justificada:</label>
+                        <select id="incidenciaJustificada" class="form-control">
+                            <option value="0">No</option>
+                            <option value="1">Sí</option>
+                        </select>
+                    </div>
+                </div>
+
+                <div class="modal-footer">
+                    <button type="submit" class="btn btn-success btn-sm" id="guadarTipoIncidencias">Guardar</button>
+                    <button type="button" class="btn btn-danger btn-sm" data-bs-dismiss="modal">Cerrar</button>
+                </div>
+            </form>
+
+        </div>
+    </div>
+</div>

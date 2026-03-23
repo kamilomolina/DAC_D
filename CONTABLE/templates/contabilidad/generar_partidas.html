@@ -1,0 +1,1160 @@
+{% extends 'componentes/menu_contable.html' %}
+{% load static %}
+
+{% block title %}
+GENERAR PARTIDAS
+{% endblock %}
+
+{% block body %}
+
+<style>
+    .card-compact .card-body {
+        padding: .75rem;
+    }
+
+    .card-compact h6 {
+        margin: 0;
+        font-weight: 600;
+    }
+
+    .label-sm {
+        font-size: .8rem;
+        margin-bottom: .15rem;
+    }
+
+    .muted-tight {
+        color: #6c757d;
+        line-height: 1.1;
+        margin-top: .2rem;
+    }
+
+    @media (max-width:576px) {
+        .btn-text {
+            display: none;
+        }
+
+        /* Oculta el texto de los botones en pantallas muy pequeñas */
+    }
+</style>
+
+
+<div class="row align-items-center border-bottom mb-3 py-2 bg-white shadow-sm mx-0">
+    <div class="col d-flex align-items-center px-0">
+        <button id="toggle-sidebar" class="btn btn-primary btn-sm me-3 border-0 rounded-circle btnMenu"
+            style="width: 32px; height: 32px; padding: 0;" title="Mostrar/Ocultar menú">
+            <i class="fas fa-bars"></i>
+        </button>
+        <h6 class="page-title mb-0 fs-5 fw-bold text-dark">
+            <i class="fas fa-cogs text-primary me-2"></i>GENERAR PARTIDAS
+        </h6>
+    </div>
+</div>
+
+<div class="container-fluid px-0 mt-1">
+    <div class="col-12 col-md-4 px-3">
+        <input type="text" id="filtroPartidas" class="form-control form-control-sm"
+            placeholder="Buscar por código o nombre de partida...">
+    </div>
+
+    <hr>
+
+    <div class="row g-2 mx-0">
+        {% for p in partidasAutomaticas %}
+        {% if p.disponibilidad == 1 and p.manual_automatica == 0 and p.generada_por_sistema == 0 %}
+        <div class="col-12 partida-item" data-codigo="{{ p.Codigo|lower }}" data-nombre="{{ p.Nombre|lower }}"
+            data-ult-fecha="{{p.UltimaFechaGenerada}}">
+            <div class="card shadow-sm card-compact">
+                <div class="card-body">
+                    <!-- Encabezado -->
+                    <div class="d-flex flex-wrap align-items-center justify-content-between">
+                        <div class="me-2">
+                            <h6><span class="me-2">{{ p.Codigo }}</span> {{ p.Nombre }}</h6>
+                            <span class="me-2 bg-warning text-dark">Fecha Ult. Partida Generada:
+                                {{p.UltimaFechaGenerada}}</span>
+                            <div class="muted-tight small">{{ p.Notas }}</div>
+                        </div>
+                        {% if p.generada_por_sistema == 1 %}
+                        <span class="badge bg-danger-subtle border border-danger text-danger fw-semibold">
+                            Partida generada desde su respectivo módulo
+                        </span>
+                        {% endif %}
+                    </div>
+
+                    {% if p.generada_por_sistema == 0 %}
+                    <!-- Controles compactos -->
+                    <div class="row align-items-end g-2 mt-2">
+
+                        {% if p.Codigo != '033' %}
+                        <div class="col-6 col-md-2">
+                            <label class="label-sm" for="fechaInicio_{{ forloop.counter }}">Fecha inicio</label>
+                            <input type="date" class="form-control form-control-sm"
+                                id="fechaInicio_{{ forloop.counter }}" value="{{ date1 }}">
+                        </div>
+                        {% endif %}
+
+                        <div class="col-6 col-md-2">
+                            <label class="label-sm" for="fechaFinal_{{ forloop.counter }}">Fecha final</label>
+                            <input type="date" class="form-control form-control-sm"
+                                id="fechaFinal_{{ forloop.counter }}" value="{{ date2 }}">
+                        </div>
+
+                        <div class="col-12 col-md-4 ms-auto d-flex justify-content-end flex-wrap gap-2">
+                            <button class="btn btn-info btn-sm btn-preview-datos" data-opcion="{{ p.Codigo }}"
+                                data-index="{{ forloop.counter }}">
+                                <i class="fas fa-eye me-1"></i><span class="btn-text">Vista previa</span>
+                            </button>
+
+                            <button class="btn btn-success btn-sm btn-generar-partida" data-codigo="{{ p.Codigo }}"
+                                data-endpoint="{{p.endpoint}}" data-index="{{ forloop.counter }}">
+                                <i class="fas fa-cogs me-1"></i><span class="btn-text">Generar partida</span>
+                            </button>
+                        </div>
+                    </div>
+                    {% endif %}
+                </div>
+            </div>
+        </div>
+        {% endif %}
+        {% endfor %}
+    </div>
+</div>
+
+
+<a href="{% url 'panel_contabilidad' %}">
+    <button class="btn btn-sm btn-danger" id="btnCerrar" title="Cerrar"
+        style="position: fixed; bottom: 20px; right: 20px;">
+        <i class="fa fa-times"></i> Cerrar
+    </button>
+</a>
+
+{% include 'contabilidad/modales_contabilidad/m_preview_data.html' %}
+
+{% endblock %}
+
+
+{% block scripts %}
+
+<script>
+    document.addEventListener("DOMContentLoaded", function () {
+
+        const input = document.getElementById("filtroPartidas");
+        const items = document.querySelectorAll(".partida-item");
+
+        input.addEventListener("input", function () {
+            const filtro = this.value.trim().toLowerCase();
+
+            items.forEach(function (item) {
+                const codigo = item.getAttribute("data-codigo");
+                const nombre = item.getAttribute("data-nombre");
+                const fecha = item.getAttribute("data-ult-fecha");
+
+                if (filtro === "") {
+                    item.style.display = "";
+                } else {
+                    if (codigo.includes(filtro) || nombre.includes(filtro) || fecha.includes(filtro)) {
+                        item.style.display = "";
+                    } else {
+                        item.style.display = "none";
+                    }
+                }
+            });
+        });
+
+    });
+</script>
+
+
+<script>
+    $(document).ready(function () {
+        var csrfToken = "{{ csrf_token }}";
+        var buttons = "Bfrtlip";
+
+        var tiposPartidas_Table, partida_id, opcion, detalle_id, opcion_detalle;
+
+        var ordenesComprasIngresadasTable, facturasVentasTable;
+
+        var windowSize = $(window).width();
+
+        var cardHeight = $(".card-expanded").height();
+        var tableHeight = cardHeight * 0.5;
+
+        let dollarUSLocale = Intl.NumberFormat("en-US", {
+            minimumFractionDigits: 2,
+            maximumFractionDigits: 2
+        });
+
+        let intergerLocale = Intl.NumberFormat("en-US", {
+            minimumFractionDigits: 0,
+            maximumFractionDigits: 0
+        });
+
+        var toastMixin = Swal.mixin({
+            toast: true,
+            icon: 'success',
+            title: 'General Title',
+            animation: false,
+            position: 'top-right',
+            showConfirmButton: false,
+            timer: 2000,
+            timerProgressBar: true,
+            didOpen: (toast) => {
+                toast.addEventListener('mouseenter', Swal.stopTimer);
+                toast.addEventListener('mouseleave', Swal.resumeTimer);
+            }
+        });
+
+        function showLoadingScreen(text = '') {
+            Swal.fire({
+                title: '',
+                html: `<b>${text}</b>`,
+                didOpen: () => {
+                    Swal.showLoading();
+                },
+                allowOutsideClick: false,
+                showConfirmButton: false
+            });
+        }
+
+
+        $(document).on('click', '.btn-generar-partida', function () {
+
+            const codigo = $(this).data('codigo');
+            const index = $(this).data('index');
+
+            let URL_REQUEST = '';
+
+            const fechaInicio = $(`#fechaInicio_${index}`).val();
+            const fechaFinal = $(`#fechaFinal_${index}`).val();
+
+            // ================== MAPA TIPO IN ==================
+            if (['006', '007', '009'].includes(codigo)) {
+
+                URL_REQUEST = "{% url 'generar_partidas_automaticas_compras' %}";
+
+            } else if (['012', '013', '026'].includes(codigo)) {
+
+                URL_REQUEST = "{% url 'generar_partidas_automaticas_costos' %}";
+
+            } else if (['024', '025', '077', '078', '079', '080'].includes(codigo)) {
+
+                URL_REQUEST = "{% url 'generar_partidas_automaticas_ventas' %}";
+
+            } else if (['027', '040', '042', '048', '045', '050', '053', '068', '019', '014', '054', '075', '089', '017', '017'].includes(codigo)) {
+
+                URL_REQUEST = "{% url 'generar_partidas_automaticas_movimientos_bancarios' %}";
+
+            } else if (['055', '056', '061', '065', '090'].includes(codigo)) {
+
+                URL_REQUEST = "{% url 'generar_partidas_automaticas_movimientos_bancarios_detalles' %}";
+
+            } else if (['033'].includes(codigo)) {
+
+                URL_REQUEST = "{% url 'generar_partidas_automaticas_provisionales' %}";
+
+            } else if (['066', '081', '082', '010', '023', '022'].includes(codigo)) {
+
+                URL_REQUEST = "{% url 'generar_partidas_automaticas_devoluciones' %}";
+
+            } else {
+
+                Swal.fire({
+                    icon: 'warning',
+                    title: 'Opción NO Disponible!',
+                    confirmButtonText: 'OK'
+                });
+
+                return;
+            }
+
+            $.ajax({
+                url: URL_REQUEST,
+                type: "POST",
+
+                // 🔥 CLAVE 1: timeout infinito
+                timeout: 0,
+
+                // 🔥 CLAVE 2: evitar que jQuery trate de parsear si llega raro
+                dataType: "json",
+
+                // 🔥 CLAVE 3: mantener conexión viva
+                xhrFields: {
+                    withCredentials: true
+                },
+
+                data: {
+                    codigo: codigo,
+                    fecha_inicio: fechaInicio,
+                    fecha_final: fechaFinal,
+                    csrfmiddlewaretoken: csrfToken
+                },
+
+                beforeSend: function () {
+                    Swal.fire({
+                        title: 'Generando Partidas...',
+                        html: 'Esto puede tardar varios minutos.<br>No cierres la ventana.',
+                        allowOutsideClick: false,
+                        didOpen: () => {
+                            Swal.showLoading();
+                        }
+                    });
+                },
+
+                success: function (data) {
+                    Swal.close();
+
+                    if (data.save == 1) {
+
+                        const totalOk =
+                            (data.resultados || [])
+                                .filter(r => r.status === "OK")
+                                .length;
+
+                        Swal.fire({
+                            icon: 'success',
+                            title: 'Partidas Generadas',
+                            html: ``,
+                        });
+
+                    } else {
+                        Swal.fire({
+                            icon: 'error',
+                            title: 'Error',
+                            text: data.error || 'Error desconocido'
+                        });
+                    }
+                },
+
+                error: function (xhr, status, error) {
+
+                    Swal.close();
+
+                    // 🔥 Capturar timeouts reales
+                    if (status === "timeout") {
+                        Swal.fire({
+                            icon: 'warning',
+                            title: 'Proceso en curso',
+                            text: 'El servidor sigue trabajando. Revisa el estado más tarde.'
+                        });
+                        return;
+                    }
+
+                    Swal.fire({
+                        icon: 'error',
+                        title: 'Error de conexión',
+                        html: `
+                            Status: ${status}<br>
+                            Error: ${error}
+                        `
+                    });
+                }
+            });
+
+
+        });
+
+
+
+
+        $(document).on('click', '.btn-preview-datos', function () {
+
+            const codigo = $(this).data('opcion');
+            const index = $(this).data('index');
+
+            const fechaInicio = $(`#fechaInicio_${index}`).val();
+            const fechaFinal = $(`#fechaFinal_${index}`).val();
+
+            showLoadingScreen("Cargando Datos...");
+
+            // ============ MAPEO TIPO IN ============
+
+            if (['006', '007', '009'].includes(codigo)) {
+
+                getPedidosCompras(fechaInicio, fechaFinal, codigo);
+
+            } else if (['012', '013', '026'].includes(codigo)) {
+
+                getFacturasCosto(fechaInicio, fechaFinal, codigo);
+
+            } else if (['024', '025', '077', '078', '079', '080'].includes(codigo)) {
+
+                getFacturas(fechaInicio, fechaFinal, codigo);
+
+            } else if (['027', '040', '042', '048', '045', '050', '053', '068', '019', '014', '054', '075', '089', '017'].includes(codigo)) {
+
+                getMovimientosBancarios(fechaInicio, fechaFinal, codigo);
+
+            } else if (['055', '056', '061', '065', '090'].includes(codigo)) {
+
+                getMovimientosBancariosDetalles(fechaInicio, fechaFinal, codigo);
+
+            } else if (['033'].includes(codigo)) {
+
+                getProvisionesTodosEmpleados(fechaInicio, fechaFinal, codigo);
+
+            } else if (['066', '081', '082', '010', '023', '022'].includes(codigo)) {
+
+                getDevoluciones(fechaInicio, fechaFinal, codigo);
+
+            } else {
+                return false;
+            }
+
+
+        });
+
+
+
+
+        function getProvisionesTodosEmpleados() {
+
+            showLoadingScreen();
+
+            $('#tableProvisionesEmpleados').DataTable().clear().destroy();
+
+            // Inicializar
+            tableProvisionesEmpleados = $('#tableProvisionesEmpleados').DataTable({
+                autoWidth: false,
+                scrollX: true,
+                scrollY: '350px',
+                scrollCollapse: true,
+                pageLength: 50,
+                dom: 'Bfrtip',
+                fixedColumns: {
+                    left: 2,
+                    right: 1
+                },
+                initComplete: function () {
+                    Swal.close();
+                    tableProvisionesEmpleados.columns.adjust().draw();
+                },
+                drawCallback: function () {
+
+                    let numberFmt = Intl.NumberFormat("en-US", {
+                        minimumFractionDigits: 2,
+                        maximumFractionDigits: 2
+                    });
+
+                    let api = this.api();
+
+                    // Columnas NUMÉRICAS del footer
+                    let cols = [3, 6, 7, 8, 9, 11, 12, 13, 14, 15];
+
+                    cols.forEach(function (colIndex) {
+                        var total = api
+                            .column(colIndex, {
+                                search: 'applied'
+                            })
+                            .data()
+                            .reduce(function (a, b) {
+                                return Number(a) + Number(b);
+                            }, 0);
+
+                        $(api.column(colIndex).footer()).html(numberFmt.format(total));
+                    });
+
+                },
+                language: {
+                    url: "{% static 'app/th/json/es-ES.json' %}",
+                },
+                ajax: {
+                    beforeSend: function (xhr, type) {
+                        if (!type.crossDomain) {
+                            xhr.setRequestHeader(
+                                'X-CSRF-Token',
+                                $('meta[name="csrf-token"]').attr('content')
+                            );
+                        }
+                    },
+                    url: `{% url 'dataProvisionesDetalleEmpresa' %}`,
+                    type: "POST",
+                    dataSrc: 'data',
+                    data: {
+                        empresa: 0,
+                        csrfmiddlewaretoken: csrfToken
+                    }
+                },
+                buttons: [
+                    {
+                        extend: 'excel',
+                        text: '<i class="fas fa-file-excel"></i>',
+                        className: 'btn btn-success btn-sm',
+                    },
+                    {
+                        extend: 'pdf',
+                        text: '<i class="fas fa-file-pdf"></i>',
+                        className: 'btn btn-danger btn-sm',
+                        orientation: 'landscape'
+                    },
+                    {
+                        extend: 'print',
+                        text: '<i class="fas fa-print"></i>',
+                        className: 'btn btn-primary btn-sm',
+                        orientation: 'landscape'
+                    }
+                ],
+                columns: [
+                    { data: "identidad" },
+                    { data: "nombre_completo" },
+                    { data: "nombre_empresa", className: 'text-wrap' },
+                    { data: "salario", className: 'text-end', render: $.fn.dataTable.render.number(',', '.', 2) },
+                    { data: "fecha_ingreso" },
+                    { data: "antiguedad_meses", className: 'text-center' },
+                    { data: "salario_diario", className: 'text-end', render: $.fn.dataTable.render.number(',', '.', 2) },
+
+                    { data: "provision_13vo", className: 'text-end', render: $.fn.dataTable.render.number(',', '.', 2) },
+                    { data: "provision_14vo", className: 'text-end', render: $.fn.dataTable.render.number(',', '.', 2) },
+                    { data: "provision_cesantia", className: 'text-end', render: $.fn.dataTable.render.number(',', '.', 2) },
+
+                    { data: "dias_preaviso", className: 'text-center' },
+                    { data: "provision_preaviso", className: 'text-end', render: $.fn.dataTable.render.number(',', '.', 2) },
+
+                    { data: "dias_vac_totales", className: 'text-center' },
+                    { data: "dias_tomados", className: 'text-center' },
+                    { data: "dias_disponibles", className: 'text-center' },
+
+                    { data: "provision_vacaciones", className: 'text-end', render: $.fn.dataTable.render.number(',', '.', 2) },
+
+                    { data: "centro_empleado" },
+                ],
+                order: [[1, "asc"]],
+            });
+
+            $('#modalProvisionesEmpleados').modal('show');
+        }
+
+        $('#modalProvisionesEmpleados').on('shown.bs.modal', function () {
+            tableProvisionesEmpleados.columns.adjust().draw();
+        });
+
+
+        function getPedidosCompras(fechaInicial, fechaFinal, codigo) {
+
+            $("#ordenesComprasIngresadasTable").DataTable().clear().destroy();
+
+            ordenesComprasIngresadasTable = $("#ordenesComprasIngresadasTable").DataTable({
+                initComplete: function () {
+                    Swal.close();
+                },
+                autoWidth: false,
+                scrollX: true,
+                scrollY: '350px',
+                scrollCollapse: true,
+                pageLength: 50,
+                dom: 'Bfrtlip',
+                language: {
+                    url: "{% static 'app/th/json/es-ES.json' %}",
+                },
+                ajax: {
+                    url: `{% url 'dataOrdenesComprasIngresadas' %}`,
+                    type: "POST",
+                    dataSrc: 'data',
+                    data: {
+                        fechaInicial: fechaInicial,
+                        fechaFinal: fechaFinal,
+                        codigo: codigo,
+                        csrfmiddlewaretoken: csrfToken
+                    },
+                },
+                colReorder: {
+                    realtime: false,
+                },
+                buttons: [
+                    {
+                        extend: 'excel',
+                        text: '<i class="fas fa-file-excel"></i>',
+                        titleAttr: 'Excel',
+                        className: 'btn btn-success',
+                    },
+                    {
+                        extend: 'pdf',
+                        text: '<i class="fas fa-file-pdf"></i>',
+                        titleAttr: 'PDF',
+                        className: 'btn btn-danger',
+                    },
+                    {
+                        extend: 'print',
+                        text: '<i class="fas fa-print"></i>',
+                        titleAttr: 'Imprimir',
+                        className: 'btn btn-info',
+                        orientation: 'landscape'
+                    }
+                ],
+                columns: [
+                    {
+                        data: 'NoPedido'
+                    },
+                    {
+                        data: 'NombreConocido'
+                    },
+                    {
+                        data: 'FechaPedido'
+                    },
+                    {
+                        data: 'FechaIngreso'
+                    },
+                    {
+                        data: 'Ingreso'
+                    },
+                    {
+                        data: 'SubTotal_Neto_I',
+                        className: 'text-right currency',
+                        render: $.fn.dataTable.render.number(',', '.', 2)
+                    },
+                    {
+                        data: 'Bodega'
+                    },
+                    {
+                        data: 'NombreSucursal'
+                    },
+
+                ],
+            });
+
+
+            $('#modalPedidosCompras').modal('show');
+        }
+
+        $('#modalPedidosCompras').on('shown.bs.modal', function () {
+            ordenesComprasIngresadasTable.columns.adjust().draw();
+        });
+
+
+
+        function getFacturasCosto(fechaInicial, fechaFinal, codigo) {
+
+            $("#facturasCostoTable").DataTable().clear().destroy();
+
+            facturasCostoTable = $('#facturasCostoTable').DataTable({
+
+                initComplete: function () {
+                    Swal.close();
+                },
+
+                autoWidth: false,
+                scrollX: true,
+                scrollY: '350px',
+                scrollCollapse: true,
+                pageLength: 50,
+                dom: 'Bfrtlip',
+
+                language: {
+                    url: "{% static 'app/th/json/es-ES.json' %}",
+                },
+
+                ajax: {
+                    url: "{% url 'dataFacturasCosto' %}",
+                    type: "POST",
+                    dataSrc: 'data',
+                    data: {
+                        codigo: codigo,
+                        fechaInicial: fechaInicial,
+                        fechaFinal: fechaFinal,
+                        csrfmiddlewaretoken: csrfToken
+                    }
+                },
+
+                colReorder: {
+                    realtime: false,
+                },
+
+                buttons: [
+                    {
+                        extend: 'excel',
+                        text: '<i class="fas fa-file-excel"></i>',
+                        titleAttr: 'Exportar a Excel',
+                        className: 'btn btn-success btn-sm'
+                    },
+                    {
+                        extend: 'pdf',
+                        text: '<i class="fas fa-file-pdf"></i>',
+                        titleAttr: 'Exportar a PDF',
+                        className: 'btn btn-danger btn-sm',
+                        orientation: 'landscape'
+                    },
+                    {
+                        extend: 'print',
+                        text: '<i class="fas fa-print"></i>',
+                        titleAttr: 'Imprimir',
+                        className: 'btn btn-secondary btn-sm',
+                        orientation: 'landscape'
+                    }
+                ],
+
+                columns: [
+                    { data: 'NoFactura' },
+                    { data: 'NombreCliente' },
+                    { data: 'FechaFactura' },
+
+                    {
+                        data: 'costo_venta_gravada_15',
+                        className: 'text-end',
+                        render: $.fn.dataTable.render.number(',', '.', 2)
+                    },
+                    {
+                        data: 'costo_venta_gravada_18',
+                        className: 'text-end',
+                        render: $.fn.dataTable.render.number(',', '.', 2)
+                    },
+                    {
+                        data: 'costo_venta_exenta',
+                        className: 'text-end',
+                        render: $.fn.dataTable.render.number(',', '.', 2)
+                    },
+                    {
+                        data: 'costo_total',
+                        className: 'text-end fw-bold',
+                        render: $.fn.dataTable.render.number(',', '.', 2)
+                    },
+
+                    { data: 'TipoVenta' },
+                    { data: 'Vendedor' },
+                    { data: 'NombreSucursal' }
+                ]
+            });
+
+            $('#modalFacturasCosto').modal('show');
+        }
+
+        $('#modalFacturasCosto').on('shown.bs.modal', function () {
+            facturasCostoTable.columns.adjust().draw();
+        });
+
+
+        function getFacturas(fechaInicial, fechaFinal, codigo) {
+
+            $("#facturasVentasTable").DataTable().clear().destroy();
+
+            facturasVentasTable = $("#facturasVentasTable").DataTable({
+                initComplete: function () {
+                    Swal.close();
+                },
+                autoWidth: false,
+                scrollX: true,
+                scrollY: '350px',
+                scrollCollapse: true,
+                pageLength: 50,
+                dom: 'Bfrtlip',
+                language: {
+                    url: "{% static 'app/th/json/es-ES.json' %}",
+                },
+                ajax: {
+                    url: `{% url 'dataFacturas' %}`,
+                    type: "POST",
+                    dataSrc: 'data',
+                    data: {
+                        codigo: codigo,
+                        fechaInicial: fechaInicial,
+                        fechaFinal: fechaFinal,
+                        csrfmiddlewaretoken: csrfToken
+                    },
+                },
+                colReorder: {
+                    realtime: false,
+                },
+                buttons: [
+                    {
+                        extend: 'excel',
+                        text: '<i class="fas fa-file-excel"></i>',
+                        titleAttr: 'Excel',
+                        className: 'btn btn-success',
+                    },
+                    {
+                        extend: 'pdf',
+                        text: '<i class="fas fa-file-pdf"></i>',
+                        titleAttr: 'PDF',
+                        className: 'btn btn-danger',
+                    },
+                    {
+                        extend: 'print',
+                        text: '<i class="fas fa-print"></i>',
+                        titleAttr: 'Imprimir',
+                        className: 'btn btn-info',
+                        orientation: 'landscape'
+                    }
+                ],
+                columns: [
+                    {
+                        data: 'NoFactura'
+                    },
+                    {
+                        data: 'NombreCliente'
+                    },
+                    {
+                        data: 'FechaFactura'
+                    },
+                    {
+                        data: 'TotalGravado',
+                        className: 'text-right currency',
+                        render: $.fn.dataTable.render.number(',', '.', 2)
+                    },
+                    {
+                        data: 'TotalExento',
+                        className: 'text-right currency',
+                        render: $.fn.dataTable.render.number(',', '.', 2)
+                    },
+                    {
+                        data: 'venta_exonerada',
+                        className: 'text-right currency',
+                        render: $.fn.dataTable.render.number(',', '.', 2)
+                    },
+                    {
+                        data: 'TotalNeto',
+                        className: 'text-right currency',
+                        render: $.fn.dataTable.render.number(',', '.', 2)
+                    },
+                    {
+                        data: 'TipoVenta'
+                    },
+                    {
+                        data: 'Vendedor'
+                    },
+                    {
+                        data: 'NombreSucursal'
+                    },
+
+                    {
+                        data: 'venta_gravada_15',
+                        className: 'text-right currency',
+                        render: $.fn.dataTable.render.number(',', '.', 2)
+                    },
+                    {
+                        data: 'venta_gravada_18',
+                        className: 'text-right currency',
+                        render: $.fn.dataTable.render.number(',', '.', 2)
+                    },
+                    {
+                        data: 'iva_15',
+                        className: 'text-right currency',
+                        render: $.fn.dataTable.render.number(',', '.', 2)
+                    },
+                    {
+                        data: 'iva_18',
+                        className: 'text-right currency',
+                        render: $.fn.dataTable.render.number(',', '.', 2)
+                    },
+
+                ],
+            });
+
+
+            $('#modalVentasFacturas').modal('show');
+        }
+
+        $('#modalVentasFacturas').on('shown.bs.modal', function () {
+            facturasVentasTable.columns.adjust().draw();
+        });
+
+
+        function getDevoluciones(fechaInicial, fechaFinal, codigo) {
+
+            $("#devolucionesTable").DataTable().clear().destroy();
+
+            devolucionesTable = $("#devolucionesTable").DataTable({
+                initComplete: function () {
+                    Swal.close();
+                },
+                autoWidth: false,
+                scrollX: true,
+                scrollY: '350px',
+                scrollCollapse: true,
+                pageLength: 50,
+                dom: 'Bfrtlip',
+                language: {
+                    url: "{% static 'app/th/json/es-ES.json' %}",
+                },
+                ajax: {
+                    url: `{% url 'dataDevoluciones' %}`,
+                    type: "POST",
+                    dataSrc: 'data',
+                    data: {
+                        codigo: codigo,
+                        fechaInicial: fechaInicial,
+                        fechaFinal: fechaFinal,
+                        csrfmiddlewaretoken: csrfToken
+                    },
+                },
+                colReorder: {
+                    realtime: false,
+                },
+                buttons: [
+                    {
+                        extend: 'excel',
+                        text: '<i class="fas fa-file-excel"></i>',
+                        titleAttr: 'Excel',
+                        className: 'btn btn-success',
+                    },
+                    {
+                        extend: 'pdf',
+                        text: '<i class="fas fa-file-pdf"></i>',
+                        titleAttr: 'PDF',
+                        className: 'btn btn-danger',
+                    },
+                    {
+                        extend: 'print',
+                        text: '<i class="fas fa-print"></i>',
+                        titleAttr: 'Imprimir',
+                        className: 'btn btn-info',
+                        orientation: 'landscape'
+                    }
+                ],
+                columns: [
+                    {
+                        data: 'NoFactura'
+                    },
+                    {
+                        data: 'NombreCliente'
+                    },
+                    {
+                        data: 'FechaFactura'
+                    },
+                    {
+                        data: 'SubTotal_CostoPresent',
+                        className: 'text-right currency',
+                        render: $.fn.dataTable.render.number(',', '.', 2)
+                    },
+                    {
+                        data: 'SubTotal_PrecioNeto',
+                        className: 'text-right currency',
+                        render: $.fn.dataTable.render.number(',', '.', 2)
+                    },
+                    {
+                        data: 'TipoVenta'
+                    },
+                    {
+                        data: 'Vendedor'
+                    },
+                    {
+                        data: 'NombreSucursal'
+                    },
+                    {
+                        data: 'venta_exenta',
+                        className: 'text-right currency',
+                        render: $.fn.dataTable.render.number(',', '.', 2)
+                    },
+                    {
+                        data: 'venta_exonerada',
+                        className: 'text-right currency',
+                        render: $.fn.dataTable.render.number(',', '.', 2)
+                    },
+                    {
+                        data: 'venta_gravada_15',
+                        className: 'text-right currency',
+                        render: $.fn.dataTable.render.number(',', '.', 2)
+                    },
+                    {
+                        data: 'venta_gravada_18',
+                        className: 'text-right currency',
+                        render: $.fn.dataTable.render.number(',', '.', 2)
+                    },
+                    {
+                        data: 'iva_15',
+                        className: 'text-right currency',
+                        render: $.fn.dataTable.render.number(',', '.', 2)
+                    },
+                    {
+                        data: 'iva_18',
+                        className: 'text-right currency',
+                        render: $.fn.dataTable.render.number(',', '.', 2)
+                    },
+                ],
+            });
+
+
+            $('#modalDevoluciones').modal('show');
+        }
+
+        $('#modalDevoluciones').on('shown.bs.modal', function () {
+            devolucionesTable.columns.adjust().draw();
+        });
+
+
+
+        function getMovimientosBancarios(fechaInicial, fechaFinal, codigo) {
+
+            $("#depositosVentaTable").DataTable().clear().destroy();
+
+            depositosVentaTable = $("#depositosVentaTable").DataTable({
+                initComplete: function () {
+                    Swal.close();
+                },
+                autoWidth: false,
+                scrollX: true,
+                scrollY: '350px',
+                scrollCollapse: true,
+                pageLength: 50,
+                dom: 'Bfrtlip',
+                language: {
+                    url: "{% static 'app/th/json/es-ES.json' %}",
+                },
+                ajax: {
+                    url: `{% url 'dataDepositosVentas' %}`,
+                    type: "POST",
+                    dataSrc: 'data',
+                    data: {
+                        codigo: codigo,
+                        fechaInicial: fechaInicial,
+                        fechaFinal: fechaFinal,
+                        csrfmiddlewaretoken: csrfToken
+                    },
+                },
+                colReorder: {
+                    realtime: false,
+                },
+                buttons: [
+                    {
+                        extend: 'excel',
+                        text: '<i class="fas fa-file-excel"></i>',
+                        titleAttr: 'Excel',
+                        className: 'btn btn-success',
+                    },
+                    {
+                        extend: 'pdf',
+                        text: '<i class="fas fa-file-pdf"></i>',
+                        titleAttr: 'PDF',
+                        className: 'btn btn-danger',
+                    },
+                    {
+                        extend: 'print',
+                        text: '<i class="fas fa-print"></i>',
+                        titleAttr: 'Imprimir',
+                        className: 'btn btn-info',
+                        orientation: 'landscape'
+                    }
+                ],
+                columns: [
+                    {
+                        data: 'Numero'
+                    },
+                    {
+                        data: 'FechaMovimiento'
+                    },
+                    {
+                        data: 'Valor',
+                        className: 'text-right currency',
+                        render: $.fn.dataTable.render.number(',', '.', 2)
+                    },
+                    {
+                        data: 'CuentaBancaria'
+                    },
+                    {
+                        data: 'TipoCuenta'
+                    },
+                    {
+                        data: 'Banco'
+                    },
+                    {
+                        data: 'ElaboradoPor'
+                    },
+
+                ],
+            });
+
+
+            $('#modalDepositosBancariosVentas').modal('show');
+        }
+
+        $('#modalDepositosBancariosVentas').on('shown.bs.modal', function () {
+            depositosVentaTable.columns.adjust().draw();
+        });
+
+
+        function getMovimientosBancariosDetalles(fechaInicial, fechaFinal, codigo) {
+
+            $("#movBancariosDetalleTable").DataTable().clear().destroy();
+
+            movBancariosDetalleTable = $("#movBancariosDetalleTable").DataTable({
+                initComplete: function () {
+                    Swal.close();
+                },
+                autoWidth: false,
+                scrollX: true,
+                scrollY: '350px',
+                scrollCollapse: true,
+                pageLength: 50,
+                dom: 'Bfrtlip',
+                language: {
+                    url: "{% static 'app/th/json/es-ES.json' %}",
+                },
+                ajax: {
+                    url: `{% url 'dataMovBancariosDetalles' %}`,
+                    type: "POST",
+                    dataSrc: 'data',
+                    data: {
+                        codigo: codigo,
+                        fechaInicial: fechaInicial,
+                        fechaFinal: fechaFinal,
+                        csrfmiddlewaretoken: csrfToken
+                    },
+                },
+                colReorder: {
+                    realtime: false,
+                },
+                buttons: [
+                    {
+                        extend: 'excel',
+                        text: '<i class="fas fa-file-excel"></i>',
+                        titleAttr: 'Excel',
+                        className: 'btn btn-success',
+                    },
+                    {
+                        extend: 'pdf',
+                        text: '<i class="fas fa-file-pdf"></i>',
+                        titleAttr: 'PDF',
+                        className: 'btn btn-danger',
+                    },
+                    {
+                        extend: 'print',
+                        text: '<i class="fas fa-print"></i>',
+                        titleAttr: 'Imprimir',
+                        className: 'btn btn-info',
+                        orientation: 'landscape'
+                    }
+                ],
+                columns: [
+                    {
+                        data: 'NumeroMovimiento'
+                    },
+                    {
+                        data: 'FechaMovimiento'
+                    },
+                    {
+                        data: 'valor_movimiento',
+                        className: 'text-right currency',
+                        render: $.fn.dataTable.render.number(',', '.', 2)
+                    },
+                    {
+                        data: 'CuentaBancaria'
+                    },
+                    {
+                        data: 'Tipo'
+                    },
+                    {
+                        data: 'Banco'
+                    },
+                    {
+                        data: 'ElaboradoPor'
+                    },
+
+                ],
+            });
+
+
+            $('#modalMovimientosBancariosDetalles').modal('show');
+        }
+
+        $('#modalMovimientosBancariosDetalles').on('shown.bs.modal', function () {
+            movBancariosDetalleTable.columns.adjust().draw();
+        });
+
+
+
+
+
+
+
+
+
+        /*  */
+    });
+</script>
+{% endblock %}

@@ -1,0 +1,37 @@
+<!-- Modal para Agregar Usuario -->
+<div class="modal fade" id="modalAgregarUsuario" tabindex="-1" role="dialog" aria-labelledby="modalAgregarUsuarioLabel"
+  aria-hidden="true">
+  <div class="modal-dialog" role="document">
+    <div class="modal-content">
+      <div class="modal-header">
+        <h5 class="modal-title" id="modalAgregarUsuarioLabel">Agregar Nuevo Usuario</h5>
+        <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Cerrar"></button>
+      </div>
+      <div class="modal-body">
+        <form id="formAgregarUsuario">
+          <div class="mb-3">
+            <label for="nombreCompleto" class="form-label">Nombre</label>
+            <select type="text" class="form-control" id="selectNombreCompleto" required>              
+            </select>
+          </div>
+          <div class="mb-3">
+            <label for="nuevoUsuarioAgregar" class="form-label">Usuario</label>
+            <input type="text" class="form-control" id="nuevoUsuarioAgregar" required>
+          </div>
+          <div class="mb-3">
+            <label for="nuevaContrasena" class="form-label">Contraseña</label>
+            <input type="text" class="form-control" id="nuevaContrasena" required>
+          </div>
+          <div class="mb-3">
+            <label for="confirmarContrasena" class="form-label">Confirmar Contraseña</label>
+            <input type="text" class="form-control" id="confirmarContrasena" required>
+          </div>
+        </form>
+      </div>
+      <div class="modal-footer">
+        <button type="button" class="btn btn-primary" id="guardarNuevoUsuario">Guardar</button>
+        <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancelar</button>
+      </div>
+    </div>
+  </div>
+</div>

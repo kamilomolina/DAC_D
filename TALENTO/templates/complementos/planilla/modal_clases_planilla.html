@@ -1,0 +1,90 @@
+<div class="modal fade" id="modalClasesPlanilla" tabindex="-1" aria-hidden="true">
+    <div class="modal-dialog modal-lg">
+        <div class="modal-content">
+            <form id="formClasePlanilla">
+                <div class="modal-header bg-primary text-white">
+                    <h5 class="modal-title" id="modalClasesPlanillaLabel">Nueva clase de planilla</h5>
+                    <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"
+                        aria-label="Close"></button>
+                </div>
+
+                <div class="modal-body">
+                    <input type="hidden" name="opc" value="1">
+                    <input type="hidden" name="id_clase_planilla" value="">
+
+                    <div class="row mb-2">
+                        <div class="col-md-4">
+                            <label class="form-label">Descripción</label>
+                            <input type="text" name="descripcion_cargo_laboral" class="form-control form-control-sm"
+                                required>
+                        </div>
+                        <div class="col-md-4">
+                            <label class="form-label">Valor</label>
+                            <input type="number" name="valor" class="form-control form-control-sm" min="0" step="1"
+                                required>
+                            <small>Valor a Dividir el sueldo en la planilla, Ej: <b>Mensual</b> es valor <b>1</b> porque
+                                es
+                                todo el sueldo, <b>Quincenal</b> su valor es <b>2</b> ya que se divide la mitad del
+                                sueldo por
+                                quincena.</small>
+                        </div>
+                        <div class="col-md-4">
+                            <label class="form-label">Código partida automática</label>
+                            <select name="codigo_partida_automatica" id="codigo_partida_automatica"
+                                class="form-select form-select-sm">
+                                {% for p in partidasAutomaticas %}
+                                <option value="{{p.Codigo}}">{{p.Nombre}}</option>
+                                {% endfor %}
+                            </select>
+                        </div>
+                    </div>
+
+                    <div class="row mb-2">
+                        <div class="col-md-4">
+                            <label class="form-label">Usa cuenta por Empleado</label>
+                            <select name="usa_cuenta_por_empleado" id="usa_cuenta_por_empleado"
+                                class="form-select form-select-sm">
+                                <option value="1">SI APLICA</option>
+                                <option value="0" selected>NO APLICA</option>
+                            </select>
+                        </div>
+                        <div class="col-md-4">
+                            <label class="form-label">Registrar gasto</label>
+                            <select name="registrar_gasto" id="registrar_gasto" class="form-select form-select-sm">
+                                <option value="1">SI APLICA</option>
+                                <option value="0" selected>NO APLICA</option>
+                            </select>
+                        </div>
+                        <div class="col-md-4">
+                            <label class="form-label">Cuenta Contable</label>
+                            <div class="input-group">
+                                <input type="text" id="codigo_cuenta" name="codigo_cuenta"
+                                    class="form-control form-control-sm" readonly required>
+
+                                <button type="button" class="btn btn-outline-primary btnBuscarCuentaGeneral">
+                                    <i class="fas fa-search"></i>
+                                </button>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="row">
+                        <div class="col-md-4">
+                            <label class="form-label">Registra Patronal</label>
+                            <select name="aplica_patronal" id="aplica_patronal" class="form-select form-select-sm">
+                                <option value="0" selected>NO APLICA</option>
+                                <option value="1">SI APLICA</option>
+                            </select>
+                        </div>
+                    </div>
+
+                </div>
+
+                <div class="modal-footer">
+                    <button type="submit" class="btn btn-success btn-sm">Guardar</button>
+                    <button type="button" class="btn btn-secondary btn-sm" data-bs-dismiss="modal">Cerrar</button>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>

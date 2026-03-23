@@ -1,0 +1,300 @@
+<div>
+    <!-- INFORMACIÓN GENERAL -->
+    <div class="row p-2">
+        <span class="text-center"><b>INFORMACIÓN GENERAL</b></span>
+        <hr><br>
+        <h5 class="text-center"><b>CENTRO DE {{ key.nombre_Tcentro }} - {{ key.nombre_centro }}</b></h5>
+        <span class="text-center"><i>{{ key.empresa }}</i></span>
+    </div>
+
+    <br>
+
+    <div class="row">
+        <div class="col-lg-2">
+            <label class="col-form-label">Nombre Centro:</label>
+            <input type="text" class="form-control form-control-sm" value="{{ key.nombre_centro }}" readonly>
+        </div>
+        <div class="col-lg-2">
+            <label class="col-form-label">Formato:</label>
+            <input type="text" class="form-control form-control-sm" value="{{ key.formato }}" readonly>
+        </div>
+        <div class="col-lg-2">
+            <label class="col-form-label">Canal Venta:</label>
+            <input type="text" class="form-control form-control-sm" value="{{ key.canal_venta }}" readonly>
+        </div>
+        <div class="col-lg-2">
+            <label class="col-form-label">Departamento:</label>
+            <input type="text" class="form-control form-control-sm" value="{{ key.nombre_departamento }}" readonly>
+        </div>
+        <div class="col-lg-2">
+            <label class="col-form-label">Sucursal:</label>
+            <input type="text" class="form-control form-control-sm" value="{{ key.nombre_sucursal }}" readonly>
+        </div>
+        <div class="col-lg-2">
+            <label class="col-form-label">Responsable:</label>
+            <input type="text" class="form-control form-control-sm" value="{{ key.ingresado_por }}" readonly>
+        </div>
+    </div>
+
+    <br>
+
+    <div class="row">
+        <div class="col-lg-12">
+            <label class="col-form-label">Descripción:</label>
+            <textarea class="form-control form-control-sm" rows="5" disabled>{{ key.descripcion_centro }}</textarea>
+        </div>
+    </div>
+</div>
+
+<br>
+<hr>
+
+
+
+<div class="row p-2">
+    <div class="row">
+        <div class="col-lg-6">
+            <div class="row">
+                <span class="text-center"><b>PRESUPUESTO</b></span>
+            </div>
+            <br>
+
+            <div class="row">
+                <div class="col-lg-6">
+                    <div class="form-group">
+                        <label class="col-form-label">Presupuesto Proyectado:</label>
+                        <input type="text" class="form-control form-control-sm formattedMoneyInputs"
+                            value="{{ key.valor_proyectado }}" readonly>
+                    </div>
+                </div>
+                <div class="col-lg-6">
+                    <div class="form-group">
+                        <label class="col-form-label">Presupuesto Autorizado:</label>
+                        <input type="text" class="form-control form-control-sm formattedMoneyInputs"
+                            value="{{ key.valor_autorizado }}" readonly>
+                    </div>
+                </div>
+            </div>
+
+            {% if key.id_tipo_centro == 1 %}
+            <div class="row">
+                <div class="col-lg-6">
+                    <div class="form-group">
+                        <label class="col-form-label">Presupuesto Indirecto Solicitado a este Centro:</label>
+                        <input type="text" class="form-control form-control-sm formattedMoneyInputs"
+                            value="{{ key.gasto_indirecto_solicitado_ami }}" readonly>
+                    </div>
+                </div>
+                <div class="col-lg-6">
+                    <div class="form-group">
+                        <label class="col-form-label">Gasto Ingresado :</label>
+                        <input type="text" class="form-control form-control-sm formattedMoneyInputs"
+                            value="{{ key.gastos_ingresados_bancario }}" readonly>
+                    </div>
+                </div>
+            </div>
+
+            <div class="row">
+                <div class="col-lg-6">
+                    <div class="form-group">
+                        <label class="col-form-label">Proyeccion Disponible:</label>
+                        <input type="text" class="form-control form-control-sm formattedMoneyInputs"
+                            value="{{ key.proyeccion_disponible_centro }}" readonly>
+                    </div>
+                </div>
+                <div class="col-lg-6">
+                    <div class="form-group">
+                        <label class="col-form-label">Proyeccion Disponible Porc:</label>
+                        <input type="text" class="form-control form-control-sm formattedMoneyInputs"
+                            value="{{ key.proyeccion_disponible_centro_porc }}" readonly>
+                    </div>
+                </div>
+            </div>
+
+            <div class="row">
+                <div class="col-lg-6">
+                    <div class="form-group">
+                        <label class="col-form-label">Presupuesto de Gasto Disponible:</label>
+                        <input type="text" class="form-control form-control-sm formattedMoneyInputs"
+                            value="{{ key.presupuesto_de_gasto_disponible }}" readonly>
+                    </div>
+                </div>
+                <div class="col-lg-6">
+                    <div class="form-group">
+                        <label class="col-form-label">Presupuesto de Gasto Disponible Porc:</label>
+                        <input type="text" class="form-control form-control-sm formattedMoneyInputs"
+                            value="{{ key.presupuesto_de_gasto_porc }}" readonly>
+                    </div>
+                </div>
+            </div>
+            {% endif %}
+
+            <div class="row">
+                <div class="col-lg-6">
+                    <div class="form-group">
+                        <label class="col-form-label">Otros Ingresos Proyectados:</label>
+                        <input type="text" class="form-control form-control-sm formattedMoneyInputs"
+                            value="{{ key.VALOR_INGRESO_META }}" readonly>
+                    </div>
+                </div>
+                <div class="col-lg-6">
+                    <div class="form-group">
+                        <label class="col-form-label">Otros Ingresos Logrados:</label>
+                        <input type="text" class="form-control form-control-sm formattedMoneyInputs"
+                            value="{{ key.VALOR_INGRESO_LOGRADO }}" readonly>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+
+        {% if key.id_tipo_centro == 2 %}
+        <div class="row" style="visibility: hidden">
+
+            <div class="col-lg-4">
+                <div class="form-group">
+                    <label for="" class="col-form-label">Total Presupuesto Solicitado:</label>
+                    <input type="text"
+                        class="form-control form-control-sm formattedMoneyInputs txt_presupuesto_total"
+                        value="{{ key.presupuesto_cn }}" id="txt_presupuesto_total_main" readonly>
+                </div>
+            </div>
+
+            <div class="col-lg-4">
+                <div class="form-group">
+                    <label for="" class="col-form-label">Presupuesto Disponible:</label>
+                    <input type="text"
+                        class="form-control form-control-sm formattedMoneyInputs txt_presupuesto_disponible"
+                        value="{{ key.presupuesto_disponible_cn }}" id="txt_presupuesto_disponible_main"
+                        readonly>
+                </div>
+            </div>
+
+            <div class="col-lg-4">
+                <div class="form-group">
+                    <label for="" class="col-form-label">Presupuesto Disponible Porc :</label>
+                    <input type="text"
+                        class="form-control form-control-sm formattedMoneyInputs txt_presupuesto_disponible_porc"
+                        value="{{ key.presupuesto_disponible_porc_cn }}"
+                        id="txt_presupuesto_disponible_porc_main" readonly>
+                </div>
+            </div>
+
+        </div>
+        {% endif %}
+
+
+        {% if key.id_tipo_centro == 1 %}
+        <div class="col-lg-6">
+            <div class="row">
+                <span class="text-center"><b>PROYECCIÓN</b></span>
+            </div>
+            <br>
+
+            <div class="row">
+                <div class="col-lg-3">
+                    <label class="col-form-label">Costo Proy.:</label>
+                    <input type="text" class="form-control form-control-sm formattedMoneyInputs" value="{{ key.costo }}"
+                        readonly id="costo_proyectado">
+                </div>
+                <div class="col-lg-3">
+                    <label class="col-form-label">Venta Proy.:</label>
+                    <input type="text" class="form-control form-control-sm formattedMoneyInputs" value="{{ key.venta }}"
+                        readonly id="venta_proyectada">
+                </div>
+                <div class="col-lg-3">
+                    <label class="col-form-label">Utilidad Proy.:</label>
+                    <input type="text" class="form-control form-control-sm formattedMoneyInputs"
+                        value="{{ key.utilidad }}" readonly id="utilidad_proyectada">
+                </div>
+                <div class="col-lg-3">
+                    <label class="col-form-label">Margen Proy.:</label>
+                    <input type="text" class="form-control form-control-sm formattedMoneyInputs"
+                        value="{{ key.margen }}" readonly id="margen_proyectado">
+                </div>
+            </div>
+
+            <div class="row">
+                <div class="col-lg-3">
+                    <label class="col-form-label">Costo Log.:</label>
+                    <input type="text" class="form-control form-control-sm formattedMoneyInputs"
+                        value="{{ key.costo_neto_logrado }}" readonly id="costo_logrado_main">
+                </div>
+                <div class="col-lg-3">
+                    <label class="col-form-label">Venta Log.:</label>
+                    <input type="text" class="form-control form-control-sm formattedMoneyInputs"
+                        value="{{ key.venta_neta_lograda }}" readonly id="venta_logrado_main">
+                </div>
+                <div class="col-lg-3">
+                    <label class="col-form-label">Utilidad Log.:</label>
+                    <input type="text" class="form-control form-control-sm formattedMoneyInputs"
+                        value="{{ key.utilidad_neta_lograda }}" readonly id="utilidad_logrado_main">
+                </div>
+                <div class="col-lg-3">
+                    <label class="col-form-label">Margen Log.:</label>
+                    <input type="text" class="form-control form-control-sm formattedMoneyInputs"
+                        value="{{ key.margen_neto_logrado }}" readonly id="margen_logrado_main">
+                </div>
+            </div>
+
+            <div class="row">
+                <div class="col-lg-3">
+                    <label class="col-form-label">Costo Dif.:</label>
+                    <input type="text" class="form-control form-control-sm formattedMoneyInputs"
+                        value="{{ key.costo_diferencia_logrado }}" readonly id="costo_diferencia_main">
+                </div>
+                <div class="col-lg-3">
+                    <label class="col-form-label">Venta Dif.:</label>
+                    <input type="text" class="form-control form-control-sm formattedMoneyInputs"
+                        value="{{ key.venta_diferencia_logrado }}" readonly id="venta_diferencia_main">
+                </div>
+                <div class="col-lg-3">
+                    <label class="col-form-label">Utilidad Dif.:</label>
+                    <input type="text" class="form-control form-control-sm formattedMoneyInputs"
+                        value="{{ key.utilidad_diferencia_logrado }}" readonly id="utilidad_diferencia_main">
+                </div>
+                <div class="col-lg-3">
+                    <label class="col-form-label">Margen Dif.:</label>
+                    <input type="text" class="form-control form-control-sm formattedMoneyInputs"
+                        value="{{ key.margen_diferencia_logrado }}" readonly id="margen_diferencia_main">
+                </div>
+            </div>
+
+            <div class="row">
+                <div class="col-lg-3">
+                    <label class="col-form-label">Costo Porc. Log:</label>
+                    <input type="text" class="form-control form-control-sm formattedMoneyInputs"
+                        value="{{ key.costo_diferencia_logrado_porc }}" readonly id="costo_porcentaje_main">
+                </div>
+                <div class="col-lg-3">
+                    <label class="col-form-label">Venta Porc. Log:</label>
+                    <input type="text" class="form-control form-control-sm formattedMoneyInputs"
+                        value="{{ key.venta_diferencia_logrado_porc }}" readonly id="venta_porcentaje_main">
+                </div>
+                <div class="col-lg-3">
+                    <label class="col-form-label">Utilidad Porc. Log:</label>
+                    <input type="text" class="form-control form-control-sm formattedMoneyInputs"
+                        value="{{ key.utilidad_diferencia_logrado_porc }}" readonly id="utilidad_porcentaje_main">
+                </div>
+                <div class="col-lg-3">
+                    <label class="col-form-label">Margen Porc. Log:</label>
+                    <input type="text" class="form-control form-control-sm formattedMoneyInputs"
+                        value="{{ key.margen_diferencia_logrado_porc }}" readonly id="margen_porcentaje_main">
+                </div>
+            </div>
+
+            <br>
+            <hr>
+
+            <div class="row">
+                <label class="col-form-label">Util Neta Periodo.:</label>
+                <input type="text" class="form-control form-control-sm formattedMoneyInputs"
+                    value="{{ key.utilidad_neta_del_periodo }}" readonly id="utilidad_neta_periodo">
+                <small>La Utilidad Neta del Periodo se Calcula con la Siguiente fórmula: (Utilidad Lograda + Otros
+                    Ingresos Logrados - Gastos Ingresados - Presupuesto Indirecto Solicitado a este Centro)</small>
+            </div>
+        </div>
+        {% endif %}
+
+    </div>
+</div>

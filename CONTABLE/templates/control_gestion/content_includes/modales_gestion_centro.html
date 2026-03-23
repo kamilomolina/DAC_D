@@ -1,0 +1,1991 @@
+<div class="modal fade" id="modal_create_gasto_directo" tabindex="-1" role="dialog" aria-labelledby="exampleModalLabel"
+    aria-hidden="true" data-bs-keyboard="false" data-bs-backdrop="static">
+    <div class="modal-dialog modal-fullscreen" role="document">
+        <div class="modal-content">
+            <div class="modal-header" style="background-color: rgb(0, 123, 255);">
+                <h5 class="modal-title" id="modal_create_gasto_directoLabel">PRESUPUESTAR GASTOS</h5>
+                <button type="button" class="close_modal_gastos" style="background-color: #FFFFFF00; border: 0px;"
+                    id="btnM_close_gastodirecto"><i class="fas fa-times"></i></button>
+            </div>
+
+            <input type="hidden" id="hidden_centro_id_directo" value="{{ key.id_centro }}">
+            <input type="hidden" id="hidden_centro_id_indirecto" value="0">
+            <input type="hidden" id="hidden_tipo_gasto" value="1">
+            <input type="hidden" id="hidden_validacion_gasto" value="1">
+
+            <div class="modal-body">
+                <div class="row">
+                    <div class="col-md-12">
+                        <b>CENTRO DE {{ key.nombre_Tcentro }} - {{ key.nombre_centro }}</b>
+                    </div>
+                </div>
+
+                <div class="row" id="presupuestoCentroActual">
+                    <div class="row">
+                        {% if key.id_tipo_centro == 1 %}
+                        <div class="col-lg-4">
+                            <div class="form-group">
+                                <label class="col-form-label">Utilidad Disponible para Presupuestar:</label>
+                                <input type="text"
+                                    class="formattedMoneyInputs form-control form-control-sm txt_diferencia_utilidad_disponible_presupuestar"
+                                    readonly value="{{ key.diferencia_utilidad_disponible_presupuestar }}"
+                                    id="proyeccion_ingresada_presp">
+                            </div>
+                        </div>
+                        {% endif %}
+
+                        {% if key.id_tipo_centro == 2 %}
+                        <div class="col-lg-4">
+                            <div class="form-group">
+                                <label class="col-form-label">Utilidad Disponible para Presupuestar:</label>
+                                <input type="text"
+                                    class="formattedMoneyInputs form-control form-control-sm txt_diferencia_utilidad_disponible_para_presupuestar"
+                                    readonly value="{{ key.diferencia_utilidad_disponible_para_presupuestar }}"
+                                    id="utilidad_disponible_para_presupuestar">
+                            </div>
+                        </div>
+                        {% endif %}
+
+                        <div class="col-lg-4">
+                            <div class="form-group">
+                                <label class="col-form-label">Presupuesto Proyectado:</label>
+                                <input type="text" class="formattedMoneyInputs form-control form-control-sm" readonly
+                                    value="0.00" id="presupuesto_proyectado_presp">
+                            </div>
+                        </div>
+
+                        {% if key.id_tipo_centro == 1 %}
+                        <div class="col-lg-4">
+                            <div class="form-group">
+                                <label class="col-form-label">Disponible:</label>
+                                <input type="text"
+                                    class="formattedMoneyInputs form-control form-control-sm txt_diferencia_utilidad_disponible_para_presupuestar"
+                                    readonly value="{{ key.diferencia_utilidad_disponible_para_presupuestar }}"
+                                    id="diferencia_presupuesto_proyectado_ingresado_presp">
+                            </div>
+                        </div>
+                        {% endif %}
+
+                        {% if key.id_tipo_centro == 2 %}
+                        <div class="col-lg-4">
+                            <div class="form-group">
+                                <label class="col-form-label">Diferencia Disponible:</label>
+                                <input type="text"
+                                    class="formattedMoneyInputs form-control form-control-sm txt_diferencia_utilidad_disponible_para_presupuestar"
+                                    readonly value="{{ key.diferencia_utilidad_disponible_para_presupuestar }}"
+                                    id="diferencia_utilidad_disponible_para_presupuestar">
+                            </div>
+                        </div>
+                        {% endif %}
+                    </div>
+                </div>
+
+                <br>
+
+                <div class="row">
+                    <div class="col-lg-12">
+                        <div class="row">
+                            <div class="col-lg-12 shadow-lg">
+                                <br>
+
+                                <div class="row">
+                                    <div class="col-lg-2">
+                                        <div class="form-group">
+                                            <label>Filtrar Presupuestos</label>
+                                            <select class="form-select form-select-sm" name="markedCuentasContables"
+                                                id="markedCuentasContables">
+                                                <option selected value="">VerTodos</option>
+                                                <option value="0">Sin Presupuesto</option>
+                                                <option value="1">Con Presupuesto</option>
+                                            </select>
+                                        </div>
+                                    </div>
+
+                                    <div class="col-lg-2">
+                                        <div class="form-group">
+                                            <label>Filtrar Tipo Cuentas</label>
+                                            <select class="form-select form-select-sm" name="tipoCuenta"
+                                                id="tipoCuenta">
+                                                <option selected value="Gasto">GASTO</option>
+                                                <option value="Ingreso">INGRESO</option>
+                                            </select>
+                                        </div>
+                                    </div>
+                                </div>
+
+                                <br>
+                                <div class="row">
+                                    <span><b>Listado de Cuentas Contables de Gastos</b></span>
+                                    <div class="row">
+                                        <div class="table-responsive">
+                                            <table id="tableCuentasContables"
+                                                class="table rounded-4 table-sm table-bordered table-striped align-middle mb-0 bg-white table-basic"
+                                                style="width:100%">
+                                                <thead class="table-gradient text-dark">
+                                                    <tr>
+                                                        <th class="text-center">#</th>
+                                                        <th class="text-center">Número Cuenta</th>
+                                                        <th class="text-center">Cuenta Contable</th>
+                                                        <th class="text-center">Presupuesto</th>
+                                                        <th class="text-center">Número Cuenta Padre</th>
+                                                        <th class="text-center">Cuenta Padre</th>
+                                                        <th class="text-center">Tipo</th>
+                                                        <th class="text-center">Value 0</th>
+                                                        <th class="text-center">Presupuesto</th>
+                                                    </tr>
+                                                </thead>
+                                                <tbody>
+
+                                                </tbody>
+                                            </table>
+                                        </div>
+                                    </div>
+                                </div>
+                                <br>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="modal-footer">
+                    <button type="submit" id="btnM_save_gasto" class="btn btn-primary btnSubmit">Guardar</button>
+                    <button type="button" class="btn btn-danger btnDelete close_modal_gastos"
+                        id="btnM_cancel_gastodirecto" data-dismiss="modal">Cancelar</button>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+
+
+
+
+<div class="modal fade" id="modalDesgloseVendedores" tabindex="-1" role="dialog" data-bs-keyboard="false"
+    data-bs-backdrop="static" aria-labelledby="modalDesgloseVendedores" aria-hidden="true">
+    <div class="modal-dialog modal-fullscreen">
+        <div class="modal-content">
+            <div class="modal-header" style="background-color: rgb(0, 123, 255);">
+                <h5 class="modal-title" style="font-weight: 900; color: white" id="exampleModalLabel">
+                    PROYECCION DE VENDEDORES {{ key.nombre_centro }}
+                </h5>
+                <button type="button" style="background-color: #FFFFFF00; border: 0px;"
+                    id="btnM_cancel_desglose_vendedores" class="btnM_cancel_desglose_vendedores">
+                    <i class="fas fa-times"></i>
+                </button>
+            </div>
+
+            <div class="modal-body">
+                <div class="row">
+
+                    <div class="col-lg-12">
+                        <div class="row">
+                            <span class="text-center"><b>PROYECCION</b></span>
+                        </div>
+
+                        <br>
+
+                        <div class="row">
+                            <div class="col-lg-3">
+                                <div class="form-group">
+                                    <label class="col-form-label">Costo Total:</label>
+                                    <input type="text" class="formattedMoneyInputs form-control form-control-sm"
+                                        readonly placeholder="0.00" value="0.00" id="costo_proyectado_vendedores_total">
+                                </div>
+                            </div>
+
+                            <div class="col-lg-3">
+                                <div class="form-group">
+                                    <label class="col-form-label">Venta Total:</label>
+                                    <input type="text" class="formattedMoneyInputs form-control form-control-sm"
+                                        readonly placeholder="0.00" value="0.00" id="venta_proyectada_vendedores_total">
+                                </div>
+                            </div>
+
+                            <div class="col-lg-3">
+                                <div class="form-group">
+                                    <label class="col-form-label">Utilidad Total:</label>
+                                    <input type="text" class="formattedMoneyInputs form-control form-control-sm"
+                                        readonly placeholder="0.00" value="0.00"
+                                        id="utilidad_proyectada_vendedores_total">
+                                </div>
+                            </div>
+
+                            <div class="col-lg-3">
+                                <div class="form-group">
+                                    <label class="col-form-label">Margen Total:</label>
+                                    <input type="text" class="formattedMoneyInputs form-control form-control-sm"
+                                        readonly placeholder="0.00" value="0.00"
+                                        id="margen_proyectado_vendedores_total">
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <br>
+                <hr>
+
+                <div class="row">
+                    <span><b>Listado de Vendedores</b></span>
+
+                    <div class="col-lg-12">
+                        <div class="table-responsive">
+                            <table id="tbl_desglose_vendedores"
+                                class="table table-hover table-center table-bordered table-striped table-v1"
+                                style="width:100%">
+                                <thead class="thead-light">
+                                    <tr>
+                                        <th class="text-center col-sm">Nombre del Vendedor</th>
+                                        <th class="text-center col-sm">Costo</th>
+                                        <th class="text-center col-sm">Venta</th>
+                                        <th class="text-center col-sm">Utilidad</th>
+                                        <th class="text-center col-sm bg-warning">Margen</th>
+                                        <th class="text-center col-sm">Meta Recaudación</th>
+                                        <th class="text-center col-sm">Mínimo Compra Cliente</th>
+                                        <th class="text-center col-sm">Meta Clientes</th>
+                                        <th class="text-center col-sm">Aplica Comisión</th>
+                                        <th class="text-center col-sm">Acción</th>
+                                    </tr>
+                                </thead>
+                                <tbody>
+                                    <tr class="desgloseVendedoresSection">
+                                        <td style="width: 30%">
+                                            <select name="desgloce_vendedor" id="desgloce_vendedor"
+                                                class="txt_desglose_vendedor desglose_vendedores desglose_vendedores_select form-select form-select-sm">
+                                                <option value="" selected>Seleccione un Vendedor</option>
+
+                                                {% if aplica_programacion_rutas %}
+                                                {% for vendedor in vendedoresData %}
+                                                <option value="{{ vendedor.nombre_vendedor }}"
+                                                    data-costo="{{ vendedor.costo }}"
+                                                    data-venta="{{ vendedor.volumen }}"
+                                                    data-utilidad="{{ vendedor.utilidad }}"
+                                                    data-margen="{{ vendedor.margen }}">
+                                                    {{ vendedor.nombre_vendedor }}
+                                                </option>
+                                                {% endfor %}
+                                                {% else %}
+                                                {% for vendedor in vendedoresData %}
+                                                <option value="{{ vendedor.nombre_vendedor }}" data-costo="0.00"
+                                                    data-venta="0.00" data-utilidad="0.00" data-margen="0.00">
+                                                    {{ vendedor.nombre_vendedor }}
+                                                </option>
+                                                {% endfor %}
+                                                {% endif %}
+                                            </select>
+                                        </td>
+
+                                        <td>
+                                            <input
+                                                class="form-control-sm form-control txt_desglose_vendedor desglose_vendedores desgloce_costo formattedMoneyInputs"
+                                                id="desgloce_costo" name="desgloce_costo" placeholder="0.00" type="text"
+                                                step="0.01" readonly />
+                                        </td>
+
+                                        <td>
+                                            <input
+                                                class="form-control-sm form-control txt_desglose_vendedor desglose_vendedores desgloce_venta formattedMoneyInputs"
+                                                id="desgloce_venta" name="desgloce_venta" placeholder="0.00" type="text"
+                                                step="0.01" {% if aplica_programacion_rutas == 1 %}readonly{% endif %} />
+                                        </td>
+
+                                        <td>
+                                            <input
+                                                class="form-control-sm form-control txt_desglose_vendedor desglose_vendedores desgloce_utilidad formattedMoneyInputs"
+                                                id="desgloce_utilidad" name="desgloce_utilidad" placeholder="0.00"
+                                                type="text" step="0.01" readonly />
+                                        </td>
+
+                                        <td>
+                                            <input
+                                                class="form-control-sm form-control txt_desglose_vendedor desglose_vendedores desgloce_margen formattedMoneyInputs"
+                                                id="desgloce_margen" name="desgloce_margen" placeholder="0.00"
+                                                type="text" step="0.01" {% if aplica_programacion_rutas == 1 %}readonly{%endif %} />
+                                        </td>
+
+                                        <td>
+                                            <input
+                                                class="form-control-sm form-control txt_desglose_vendedor desglose_vendedores desgloce_recaudacion formattedMoneyInputs"
+                                                id="desgloce_recaudacion" name="desgloce_recaudacion" placeholder="0.00"
+                                                type="text" step="0.01" value="0.00" />
+                                        </td>
+
+                                        <td>
+                                            <input
+                                                class="form-control-sm form-control txt_desglose_vendedor desglose_vendedores desgloce_minimo_cliente formattedMoneyInputs"
+                                                id="desgloce_minimo_cliente" name="desgloce_minimo_cliente"
+                                                placeholder="0.00" type="text" step="0.01" value="0.00" />
+                                        </td>
+
+                                        <td>
+                                            <input
+                                                class="form-control-sm form-control txt_desglose_vendedor desglose_vendedores desgloce_meta_clientes formattedMoneyInputs"
+                                                id="desgloce_meta_clientes" name="desgloce_meta_clientes"
+                                                placeholder="0.00" type="text" step="0.01" value="0.00" />
+                                        </td>
+
+                                        <td class="d-flex justify-content-center">
+                                            <input class="form-check-input aplicaComision checkOptionValue"
+                                                name="aplicaComision" id="checkOption" type="checkbox" value="0">
+                                        </td>
+
+                                        <td></td>
+                                    </tr>
+                                </tbody>
+                            </table>
+                        </div>
+
+                        <button type="button" class="btn bg-success text-white" onclick="addRow()"
+                            id="btn_Add_Vendedor">
+                            <i class="fas fa-arrow-down"></i> Añadir
+                        </button>
+
+                        <br>
+                    </div>
+                </div>
+
+                <br>
+                <span><b>Nota:</b> Para poder Guardar la Proyección de la Suma de los Vendedores debe ser Igual a la
+                    Proyección Establecida!</span>
+                <br>
+
+                <div class="modal-footer">
+                    <button type="submit" id="btnM_guardar_desgloce"
+                        class="btn btn-success btnM_guardar_desgloce">Guardar</button>
+                    <button type="submit" id="btnM_cancel_desglose_vendedores"
+                        class="btn btn-danger btnM_cancel_desglose_vendedores">Cancelar</button>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+
+
+
+
+
+
+<div class="modal fade" id="modal_create_gastoindirecto" tabindex="-1" role="dialog"
+    aria-labelledby="main_title_modal_centro_indirecto" aria-hidden="true">
+    <div class="modal-dialog modal-fullscreen" role="document">
+
+
+        <div class="modal-content">
+            <div class="modal-header" style="background-color: rgb(88, 40, 112);">
+                <h5 class="modal-title" style="font-weight: 900; color: white;" id="main_title_modal_centro_indirecto">
+                </h5>
+                <button type="button" style="background-color: #ffffff00; border: 0px;" id="btnM_close_gastoindirecto"
+                    class="btnM_cancel_gastoindirecto"><i class="fas fa-times"></i></button>
+            </div>
+
+            <div class="modal-body">
+
+
+                <div class="row">
+
+                    <div class="col-sm">
+                        <div class="form-group">
+                            <label for="" class="col-form-label">Presupuesto Proyectado:</label>
+                            <input type="text"
+                                class="form-control form-control-sm txt_presupuesto_p formattedMoneyInputs"
+                                value="{{ key.valor_indirecto_solicitar }}" id="presupuesto_proyectado_inicial"
+                                readonly>
+                        </div>
+                    </div>
+
+                    <div class="col-sm">
+                        <div class="form-group">
+                            <label for="" class="col-form-label">Gastos Indirectos a este Centro:</label>
+                            <input type="text"
+                                class="form-control form-control-sm txt_indirecto_a_este_centro formattedMoneyInputs"
+                                value="{{ key.gasto_indirecto_solicitado_ami }}"
+                                id="presupuesto_gasto_indirecto_a_este_centro" readonly>
+                        </div>
+                    </div>
+
+                    <div class="col-sm">
+                        <div class="form-group">
+                            <label for="" class="col-form-label">Gasto Indirecto
+                                Solicitado:</label>
+                            <input type="text"
+                                class="formattedMoneyInputs form-control form-control-sm txt_indirecto_actual_total"
+                                value="{{ key.gasto_indirecto_sin_autorizar }}" id="gasto_indirecto_solicitado"
+                                readonly>
+                        </div>
+                    </div>
+
+                    <div class="col-sm">
+                        <div class="form-group">
+                            <label for="" class="col-form-label">Balance:</label>
+                            <input type="text"
+                                class="formattedMoneyInputs form-control form-control-sm txt_disponible_proyectado_indirecto_proyectado"
+                                value="{{ key.disponible_proyectado_indirecto_proyectado }}"
+                                id="disponible_proyectado_indirecto_proyectado" readonly>
+                        </div>
+                    </div>
+
+                </div>
+
+                <br><br>
+
+                <div class="row">
+                    <span><b>Nota: </b>Tu balance debe ser menor o igual a 0 al solicitar un gasto indirecto. Ya que
+                        no puedes solicitar más del gasto entre tus gastos presupuestados y las gastos indirectos
+                        solicitados a TU
+                        Centro.</span>
+                </div>
+
+                <br>
+
+                <form id="form_create_gastoindirecto" method="POST">
+
+                    <input type="hidden" name="hidden_centro_indirecto_id_modal" id="hidden_centro_indirecto_id_modal">
+
+                    <div class="row">
+                        <div class="col-lg-12">
+
+                            <div class="row">
+
+                                <div class="col-lg-4 shadow-lg rightBorderStyle">
+
+                                    <br>
+                                    <div class="row">
+                                        <span><b>Información del Gasto</b></span>
+
+                                        <div class="row">
+                                            <div class="col-lg-12">
+                                                <div class="form-group">
+                                                    <label for="" class="col-form-label">Valor
+                                                        del Gasto:</label>
+                                                    <div class="row">
+                                                        <div class="col-md-2">
+                                                            <span><b>LPS. </b></span>
+                                                        </div>
+                                                        <div class="col-md-10">
+                                                            <input type="text"
+                                                                class="formattedMoneyInputs form-control form-control-sm indirectoClean"
+                                                                id="costo_gasto_indirecto_modal"
+                                                                name="costo_gasto_indirecto_modal" placeholder="0.00"
+                                                                step="0.01">
+                                                        </div>
+                                                    </div>
+                                                </div>
+                                            </div>
+                                        </div>
+
+                                        <div class="row">
+                                            <div class="col-lg-12">
+                                                <div class="form-group">
+                                                    <label for="" class="col-form-label">Descripción
+                                                        Gasto:</label>
+
+                                                    <textarea class="form-control form-control-sm indirectoClean"
+                                                        id="txt_descripcion_gasto_indirecto_modal"
+                                                        name="txt_descripcion_gasto_indirecto_modal" cols="30"
+                                                        rows="3"></textarea>
+                                                </div>
+                                            </div>
+                                        </div>
+
+                                    </div>
+                                    <br>
+
+                                </div>
+
+
+                                <div class="col-lg-8 shadow-lg rightBorderStyle">
+
+                                    <br>
+                                    <div class="row">
+                                        <span><b>Detalles del Gasto</b></span>
+
+                                        <div class="col-lg-12">
+                                            <div class="table-responsive">
+                                                <table id="tbl_gastos_indirectos_detalles"
+                                                    class="table table-hover table-center table-bordered table-striped table-v1"
+                                                    style="width:100%">
+                                                    <thead class="thead-light">
+                                                        <tr>
+                                                            <th class="text-center"></th>
+                                                            <th class="text-center">Servicio</th>
+                                                            <th class="text-center col-sm-3">Costo</th>
+                                                            <th class="text-center">Acción</th>
+                                                        </tr>
+                                                    </thead>
+                                                    <tbody>
+                                                        <tr class="gastos_indirectos_section_details">
+                                                            <td>
+
+                                                                <div class="text-center">
+                                                                    <div class="btn-group"> <input type="hidden"
+                                                                            class="hidden_count_servicio"
+                                                                            value=""><button
+                                                                            class="btn btn-info btn-sm btnFillSelect"
+                                                                            type="button" title="Cargar Servicios"
+                                                                            alt="Cargar Servicios" value=""><i
+                                                                                class="material-icons">change_circle</i></button>
+                                                                    </div>
+                                                                </div>
+
+                                                            </td>
+                                                            <td>
+                                                                <select name="gasto_indirecto_detalle"
+                                                                    id="gasto_indirecto_detalle"
+                                                                    class="gasto_indirecto_detalles txtGastoIndirecto form-select form-select-sm indirectoClean">
+                                                                    <option value="#" selected>Seleccione un
+                                                                        Servicio
+                                                                    </option>
+                                                                </select>
+                                                            </td>
+
+                                                            <td>
+                                                                <input
+                                                                    class="form-control-sm form-control formattedMoneyInputs indirectoClean txtGastoIndirecto gasto_indirecto_detalles"
+                                                                    id="gasto_indirecto_costo"
+                                                                    name="gasto_indirecto_costo" type="text"
+                                                                    placeholder="0.00" step="0.01"></input>
+                                                            </td>
+
+                                                            <td>
+
+                                                            </td>
+                                                        </tr>
+                                                    </tbody>
+                                                </table>
+                                            </div>
+
+                                            <button type="button" class="btn bg-success text-white"
+                                                onclick="addRowIndirecto()"><i class="fas fa-arrow-down"></i>
+                                                Añadir</button>
+                                            <br>
+                                        </div>
+
+                                    </div>
+
+
+
+                                </div>
+
+
+                            </div>
+
+                        </div>
+                    </div>
+
+                    <div class="modal-footer">
+                        <button type="submit" id="btnM_save_gastodirecto"
+                            class="btn btn-primary btnSubmit">Guardar</button>
+                        <button type="button" class="btn btn-danger btnDelete btnM_cancel_gastoindirecto"
+                            id="btnM_cancel_gastoindirecto" data-dismiss="modal">Cancelar</button>
+                    </div>
+                </form>
+
+            </div>
+
+
+        </div>
+
+
+
+    </div>
+</div>
+
+
+
+
+
+<div class="modal fade" id="modal_list_detalles_gastos" tabindex="-1" data-bs-keyboard="false" data-bs-backdrop="static"
+    role="dialog" aria-labelledby="detalle_gasto_title" aria-hidden="true">
+    <div class="modal-dialog modal-lg">
+        <div class="modal-content">
+            <div class="modal-header" style="background-color: rgb(22, 129, 16);">
+                <h5 class="modal-title" id="detalle_gasto_title" style="color: #fff"></h5>
+                <button type="button" style="background-color: #ffffff00; border: 0px;" id="btn_close_modal_detalles"><i
+                        class="fas fa-times"></i></button>
+            </div>
+            <div class="modal-body">
+
+                <div class="row">
+                    <div class="table-responsive">
+                        <table id="table_detalle_gastos_list"
+                            class="table rounded-4 table-sm table-bordered table-striped align-middle mb-0 bg-white table-basic"
+                            style="width:100%">
+                            <tfoot class="table-active" style="display: table-header-group;">
+                                <tr class="filtersPanelDetallesGastos">
+                                    <th class="text-center">Servicio</th>
+                                    <th class="text-center"></th>
+                                </tr>
+                            </tfoot>
+                            <thead class="table-gradient text-dark">
+                                <tr>
+                                    <th class="text-center">Servicio</th>
+                                    <th class="text-center">Valor Servicio Solicitado</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-danger btn_close_modal_detalles" id="btn_close_modal_detalles"
+                        data-dismiss="modal">Cerrar</button>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+
+
+
+
+
+
+<div class="modal fade" id="modalAreaASolicitarGasto" tabindex="-1" role="dialog" data-bs-keyboard="false"
+    data-bs-backdrop="static" aria-labelledby="modalAreaASolicitarGasto" aria-hidden="true">
+    <div class="modal-dialog modal-lg">
+        <div class="modal-content">
+            <div class="modal-header" style="background-color: rgb(0, 123, 255);">
+                <h5 class="modal-title" style="font-weight: 900; color: white" id="exampleModalLabel">
+                    CLICK PARA SOLICITAR GASTO INDIRECTO A UN ÁREA
+                </h5>
+                <button type="button" style="background-color: #FFFFFF00; border: 0px;"
+                    id="btnM_close_btnM_cancel_AreaASolicitarGasto" class="btnM_cancel_AreaASolicitarGasto">
+                    <i class="fas fa-times"></i>
+                </button>
+            </div>
+
+            <div class="modal-body">
+                <div class="row">
+                    {% for all in centrosData %}
+                    <div class="col-sm p-2 d-flex centrosAsolicitar hoverCentroIndirecto">
+
+                        <input type="hidden" class="modal_hidden_id_centro_indirecto"
+                            name="modal_hidden_id_centro_indirecto" value="{{ all.id_centro }}">
+
+                        <input type="hidden" class="modal_hidden_centro_nombre_indirecto"
+                            name="modal_hidden_centro_nombre_indirecto" value="{{ all.nombre_centro }}">
+
+                        <input type="hidden" class="modal_hidden_centro_tipo_centro"
+                            name="modal_hidden_centro_tipo_centro" value="{{ all.id_tipo_centro }}">
+
+                        <input type="hidden" class="modal_hidden_finalizado_centro"
+                            name="modal_hidden_finalizado_centro" value="{{ all.finalizado }}">
+
+                        <input type="hidden" class="modal_hidden_cierre_centro" name="modal_hidden_cierre_centro"
+                            value="{{ all.cierre }}">
+
+                        <div class="card bg-comman shadow-lg w-100">
+                            <div class="card-body" style="cursor: pointer;">
+                                <div class="db-widgets d-flex justify-content-between align-items-center">
+                                    <div class="db-info text-center">
+                                        <h6 class="text-center" style="font-weight: 800">
+                                            <b>{{ all.nombre_centro }}</b>
+                                        </h6>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+
+                    </div>
+                    {% endfor %}
+                </div>
+
+                <br>
+                <span><b>Nota: </b>Luego de ingresar el gasto, este debe ser APROBADO por algún responsable del
+                    Centro!</span>
+                <br>
+
+                <div class="modal-footer">
+                    <button type="submit" id="btnM_cancel_AreaASolicitarGasto"
+                        class="btn btn-danger btnM_cancel_AreaASolicitarGasto">Cancelar</button>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+
+
+
+
+
+
+
+
+
+<div class="modal fade" id="modal_gestionar_gasto" tabindex="-1" data-bs-keyboard="false" data-bs-backdrop="static"
+    role="dialog" aria-labelledby="gestion_gasto_title" aria-hidden="true">
+    <div class="modal-dialog modal-fullscreen">
+        <div class="modal-content">
+            <div class="modal-header modal-header-gestion-gasto">
+                <h5 class="modal-title" id="gestion_gasto_title" style="color: #fff"></h5>
+                <button type="button" style="background-color: #ffffff00; border: 0px;"
+                    id="btn_close_modal_validacion_gasto_indirecto"
+                    class="btn_close_modal_validacion_gasto_indirecto"><i class="fas fa-times"></i></button>
+            </div>
+            <div class="modal-body">
+
+                <div class="row">
+                    <span><b>Totales Referencia</b></span>
+                </div>
+
+                <div class="row">
+                    <div class="col-sm">
+                        <div class="form-group">
+                            <label class="col-form-label">Presupuesto Proyectado:</label>
+                            <input type="text"
+                                class="formattedMoneyInputs form-control form-control-sm txt_presupuesto_p"
+                                value="{{ key.valor_proyectado }}" id="txt_presupuesto_p_main" readonly>
+                        </div>
+                    </div>
+
+                    <div class="col-sm">
+                        <div class="form-group">
+                            <label class="col-form-label">Presupuesto Autorizado:</label>
+                            <input type="text"
+                                class="formattedMoneyInputs form-control form-control-sm txt_presupuesto_a"
+                                value="{{ key.valor_autorizado }}" id="txt_presupuesto_a_main" readonly>
+                        </div>
+                    </div>
+
+                    {% if key.id_tipo_centro == 1 %}
+                    <div class="col-sm">
+                        <div class="form-group">
+                            <label class="col-form-label">Gasto Indirecto Solicitado a este Centro:</label>
+                            <input type="text"
+                                class="formattedMoneyInputs form-control form-control-sm txt_indirecto_a_este_centro"
+                                value="{{ key.gasto_indirecto_solicitado_ami }}" id="txt_indirecto_a_este_centro_main"
+                                readonly>
+                        </div>
+                    </div>
+
+                    <div class="col-sm">
+                        <div class="form-group">
+                            <label class="col-form-label">Gasto Ingresado :</label>
+                            <input type="text" class="form-control form-control-sm txt_gasto_ingresado_bancario"
+                                value="{{ key.gastos_ingresados_bancario }}" id="txt_gasto_ingresado_bancario_main"
+                                readonly>
+                        </div>
+                    </div>
+                    {% endif %}
+                </div>
+
+                {% if key.id_tipo_centro == 1 %}
+                <div class="row">
+                    <div class="col-sm">
+                        <div class="form-group">
+                            <label class="col-form-label">Proyeccion Disponible:</label>
+                            <input type="text"
+                                class="formattedMoneyInputs form-control form-control-sm txt_proyeccion_disponible"
+                                value="{{ key.proyeccion_disponible_centro }}" id="txt_proyeccion_disponible_main"
+                                readonly>
+                        </div>
+                    </div>
+
+                    <div class="col-sm">
+                        <div class="form-group">
+                            <label class="col-form-label">Proyeccion Disponible Porc:</label>
+                            <input type="text"
+                                class="formattedMoneyInputs form-control form-control-sm txt_proyeccion_disponible_porc"
+                                value="{{ key.proyeccion_disponible_centro_porc }}"
+                                id="txt_proyeccion_disponible_porc_main" readonly>
+                        </div>
+                    </div>
+
+                    <div class="col-sm">
+                        <div class="form-group">
+                            <label class="col-form-label">Presupuesto de Gasto Disponible:</label>
+                            <input type="text" class="form-control form-control-sm txt_presupuesto_de_gasto_disponible"
+                                value="{{ key.presupuesto_de_gasto_disponible }}"
+                                id="txt_presupuesto_de_gasto_disponible_main" readonly>
+                        </div>
+                    </div>
+
+                    <div class="col-sm">
+                        <div class="form-group">
+                            <label class="col-form-label">Presupuesto de Gasto Disponible Porc:</label>
+                            <input type="text"
+                                class="form-control form-control-sm txt_presupuesto_de_gasto_disponible_porc"
+                                value="{{ key.presupuesto_de_gasto_porc }}"
+                                id="txt_presupuesto_de_gasto_disponible_porc_main" readonly>
+                        </div>
+                    </div>
+                </div>
+                {% endif %}
+
+                {% if key.id_tipo_centro == 2 %}
+                <div class="col-sm">
+                    <div class="form-group">
+                        <label class="col-form-label">Presupuesto Indirecto Solicitado a este Centro:</label>
+                        <input type="text"
+                            class="formattedMoneyInputs form-control form-control-sm txt_indirecto_a_este_centro"
+                            value="{{ key.gasto_indirecto_solicitado_ami }}" id="txt_indirecto_a_este_centro_main"
+                            readonly>
+                    </div>
+                </div>
+
+                <div class="col-sm">
+                    <div class="form-group">
+                        <label class="col-form-label">Gasto Ingresado :</label>
+                        <input type="text"
+                            class="formattedMoneyInputs form-control form-control-sm txt_gasto_ingresado_bancario"
+                            value="{{ key.gastos_ingresados_bancario }}" id="txt_gasto_ingresado_bancario_main"
+                            readonly>
+                    </div>
+                </div>
+                {% endif %}
+            </div>
+
+            {% if key.id_tipo_centro == 2 %}
+            <div class="row">
+                <div class="col-sm">
+                    <div class="form-group">
+                        <label class="col-form-label">Presupuesto Total:</label>
+                        <input type="text"
+                            class="formattedMoneyInputs form-control form-control-sm txt_presupuesto_total"
+                            value="{{ key.presupuesto_cn }}" id="txt_presupuesto_total_main" readonly>
+                    </div>
+                </div>
+
+                <div class="col-sm">
+                    <div class="form-group">
+                        <label class="col-form-label">Presupuesto Disponible:</label>
+                        <input type="text"
+                            class="formattedMoneyInputs form-control form-control-sm txt_presupuesto_disponible"
+                            value="{{ key.presupuesto_disponible_cn }}" id="txt_presupuesto_disponible_main" readonly>
+                    </div>
+                </div>
+
+                <div class="col-sm">
+                    <div class="form-group">
+                        <label class="col-form-label">Presupuesto Disponible Porc :</label>
+                        <input type="text"
+                            class="formattedMoneyInputs form-control form-control-sm txt_presupuesto_disponible_porc"
+                            value="{{ key.presupuesto_disponible_porc_cn }}" id="txt_presupuesto_disponible_porc_main"
+                            readonly>
+                    </div>
+                </div>
+
+                <div class="col-sm">
+                    <div class="form-group">
+                        <label class="col-form-label">Presupuesto de Gasto Disponible:</label>
+                        <input type="text"
+                            class="formattedMoneyInputs form-control form-control-sm txt_presupuesto_de_gasto_disponible"
+                            value="{{ key.presupuesto_de_gasto_disponible }}"
+                            id="txt_presupuesto_de_gasto_disponible_main" readonly>
+                    </div>
+                </div>
+
+                <div class="col-sm">
+                    <div class="form-group">
+                        <label class="col-form-label">Presupuesto de Gasto Disponible Porc:</label>
+                        <input type="text" class="form-control form-control-sm txt_presupuesto_de_gasto_disponible_porc"
+                            value="{{ key.presupuesto_de_gasto_porc }}"
+                            id="txt_presupuesto_de_gasto_disponible_porc_main" readonly>
+                    </div>
+                </div>
+            </div>
+            {% endif %}
+
+        </div>
+
+        <div class="row">
+            <span><b>Gestión</b></span>
+        </div>
+
+        <form action="POST" id="form_gestion_gasto">
+            <input type="hidden" id="opcion_indirectos_o_presupuetos_auto_rechaza"
+                name="opcion_indirectos_o_presupuetos_auto_rechaza"
+                class="opcion_indirectos_o_presupuetos_auto_rechaza">
+
+            <input type="hidden" id="indirecto_presupuesto_id" name="indirecto_presupuesto_id"
+                class="indirecto_presupuesto_id">
+            <input type="hidden" id="indirecto_presupuesto_validacion" name="indirecto_presupuesto_validacion"
+                class="indirecto_presupuesto_validacion">
+
+            <div class="row">
+                <div class="col-lg-6">
+                    <div class="form-group">
+                        <label class="col-form-label">Solicitado:</label>
+                        <input type="text" class="formattedMoneyInputs form-control form-control-sm" readonly
+                            id="valor_indirecto_presupuesto" name="valor_indirecto_presupuesto">
+                    </div>
+                </div>
+                <div class="col-lg-6">
+                    <div class="form-group">
+                        <label class="col-form-label">A Autorizar:</label>
+                        <input type="text" class="formattedMoneyInputs form-control form-control-sm"
+                            id="valor_indirecto_presupuesto_autorizado" name="valor_indirecto_presupuesto_autorizado">
+                    </div>
+                </div>
+            </div>
+
+            <div class="comentarioSectionPresupuestoGasto">
+                <div class="row">
+                    <div class="col-lg-12">
+                        <div class="form-group">
+                            <label class="col-form-label">Comentario:</label>
+                            <textarea type="text" class="form-control form-control-sm" id="gasto_indirecto_comentario"
+                                name="gasto_indirecto_comentario" rows="5"></textarea>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <div class="modal-footer">
+                <button type="submit" class="btn btn-primary btn_submit_validacion" id="btn_submit_validacion"
+                    data-dismiss="modal">Guardar</button>
+                <button type="button" class="btn btn-danger btn_close_modal_validacion_gasto_indirecto"
+                    id="btn_close_modal_validacion_gasto_indirecto" data-dismiss="modal">Cancelar</button>
+            </div>
+        </form>
+    </div>
+</div>
+
+
+
+
+
+
+
+
+
+
+
+
+<div class="modal fade" id="modal_presupuesto_editar" tabindex="-1" data-bs-keyboard="false" data-bs-backdrop="static"
+    role="dialog" aria-labelledby="gestion_presupuesto_title" aria-hidden="true">
+    <div class="modal-dialog modal-lg">
+        <div class="modal-content">
+            <div class="modal-header modal-header-gestion-gasto" style="background-color: rgb(91, 32, 32);">
+                <h5 class="modal-title" id="gestion_presupuesto_title" style="color: #000000">
+                </h5>
+                <button type="button" style="background-color: #ffffff00; border: 0px;"
+                    id="btn_close_modal_validacion_gasto_indirecto"
+                    class="btn_close_modal_validacion_gasto_indirecto"><i class="fas fa-times"></i></button>
+            </div>
+            <div class="modal-body">
+
+                <form action="POST" id="form_gasto_presupuesto">
+
+                    <input type="hidden" id="gasto_presupuesto_id" name="gasto_presupuesto_id"
+                        class="gasto_presupuesto_id">
+
+                    <div class="row">
+                        <div class="col-lg-4">
+                            <div class="form-group">
+                                <label for="" class="col-form-label">Presupuesto
+                                    Proyectado:</label>
+                                <input type="text" class="formattedMoneyInputs form-control form-control-sm" readonly
+                                    id="gasto_presupuesto_valor" name="gasto_presupuesto_valor">
+                            </div>
+                        </div>
+                        <div class="col-lg-4">
+                            <div class="form-group">
+                                <div class="form-group">
+                                    <label for="" class="col-form-label">Nuevo
+                                        Presupuesto:</label>
+                                    <input type="text" class="formattedMoneyInputs form-control form-control-sm"
+                                        id="gasto_presupuesto_nuevo" name="gasto_presupuesto_nuevo">
+                                </div>
+                            </div>
+                        </div>
+                        <div class="col-lg-4">
+                            <div class="form-group">
+                                <div class="form-group">
+                                    <label for="" class="col-form-label">Presupuesto
+                                        Disponible:</label>
+                                    <input type="text" class="formattedMoneyInputs form-control form-control-sm"
+                                        id="gasto_presupuesto_disponible" name="gasto_presupuesto_disponible" readonly>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="modal-footer">
+                        <button type="submit" class="btn btn-primary btn_sbmt_gasto_presupuesto"
+                            id="btn_sbmt_gasto_presupuesto" data-dismiss="modal">Guardar</button>
+                        <button type="button" class="btn btn-danger btn_close_editar_gasto_presupuesto"
+                            id="btn_close_editar_gasto_presupuesto" data-dismiss="modal">Cancelar</button>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+</div>
+
+
+
+
+<div class="modal fade" id="modalReplicarData" tabindex="-1" role="dialog" data-bs-keyboard="false"
+    data-bs-backdrop="static" aria-labelledby="modalReplicarData" aria-hidden="true">
+    <div class="modal-dialog modal-lg">
+        <div class="modal-content">
+            <div class="modal-header" style="background-color: rgb(22, 100, 122);">
+                <h5 class="modal-title modal-title-ingresar-gasto" style="font-weight: 900; color: white"
+                    id="exampleModalLabel">REPLICAR
+                    PRESUPUESTOS A UN NUEVO MES</h5>
+                <button type="button" style="background-color: #FFFFFF00; border: 0px;" id="btn_cancelar_replicar"
+                    class="btn_cancelar_replicar"><i class="fas fa-times"></i></button>
+            </div>
+            <div class="modal-body">
+
+                <form method="POST" id="formReplicarPresupuestos">
+
+                    <div class="row">
+                        <div class="row p-2">
+                            <div class="col-sm-12">
+                                <div class="form-group">
+                                    <label class="col-form-label">Mes a Replicar: </label>
+                                    <select class="form-select form-select-sm filterStyle text-nowrap"
+                                        id="mes_replicar">
+                                        <option value="1">Enero</option>
+                                        <option value="2">Febrero</option>
+                                        <option value="3">Marzo</option>
+                                        <option value="4">Abril</option>
+                                        <option value="5">Mayo</option>
+                                        <option value="6">Junio</option>
+                                        <option value="7">Julio</option>
+                                        <option value="8">Agosto</option>
+                                        <option value="9">Septiembre</option>
+                                        <option value="10">Octubre</option>
+                                        <option value="11">Noviembre</option>
+                                        <option value="12">Diciembre</option>
+                                    </select>
+                                </div>
+                            </div>
+
+                            <div class="col-sm-12">
+                                <div class="form-group">
+                                    <label class="col-form-label">Año a Replicar: </label>
+                                    <select class="form-select form-select-sm filterStyle text-nowrap"
+                                        id="anio_replicar">
+                                    </select>
+                                </div>
+                            </div>
+                        </div>
+
+                        <br>
+
+                        <div class="modal-footer">
+                            <button type="submit" class="btn btn-success btn_asignar"
+                                id="btnGuardarAsignarCentro">Replicar</button>
+                            <button type="button" class="btn btn-danger btn_cancelar_replicar"
+                                id="btn_cancelar_replicar">Cancelar</button>
+                        </div>
+                    </div>
+                </form>
+
+            </div>
+        </div>
+    </div>
+</div>
+
+
+
+
+<div class="modal fade" id="modalEditarProyeccion" tabindex="-1" role="dialog" data-bs-keyboard="false"
+    data-bs-backdrop="static" aria-labelledby="modalEditarProyeccion" aria-hidden="true">
+    <div class="modal-dialog modal-lg">
+        <div class="modal-content">
+            <div class="modal-header" style="background-color: rgb(22, 100, 122);">
+                <h5 class="modal-title modal-title-ingresar-gasto" style="font-weight: 900; color: white"
+                    id="editarProyeccionTitle">EDITAR PROYECCION</h5>
+                <button type="button" style="background-color: #FFFFFF00; border: 0px;" id="btnM_cerrar_edit_vendedor"
+                    class="btnM_cerrar_edit_vendedor"><i class="fas fa-times"></i></button>
+            </div>
+            <div class="modal-body">
+
+                <div class="row">
+                    <div class="mb-3">
+                        <div class="form-group">
+                            <label for="" class="form-label">Vendedor</label>
+                            <select class="form-select form-select-sm" name="edit_vendedor_desglose"
+                                id="edit_vendedor_desglose">
+                                {% for allVendedores in allVendedoresData %}
+                                <option value="{{ allVendedores.nombre_vendedor }}">
+                                    {{ allVendedores.nombre_vendedor }}
+                                </option>
+                                {% endfor %}
+                            </select>
+                        </div>
+                    </div>
+
+                    <div class="row">
+                        <span><b>Proyección Actual</b></span>
+
+                        <div class="col-lg-3">
+                            <div class="form-group">
+                                <label class="col-form-label">Costo Proyectado:</label>
+                                <input type="text" class="form-control form-control-sm formattedMoneyInputs" readonly
+                                    id="costo_proyectado_vendedores_anterior">
+                            </div>
+                        </div>
+
+                        <div class="col-lg-3">
+                            <div class="form-group">
+                                <label class="col-form-label">Venta Proyectada:</label>
+                                <input type="text" class="form-control form-control-sm formattedMoneyInputs" readonly
+                                    id="venta_proyectada_vendedores_anterior">
+                            </div>
+                        </div>
+
+                        <div class="col-lg-3">
+                            <div class="form-group">
+                                <label class="col-form-label">Utilidad Proyectada:</label>
+                                <input type="text" class="form-control form-control-sm formattedMoneyInputs" readonly
+                                    id="utilidad_proyectada_vendedores_anterior">
+                            </div>
+                        </div>
+
+                        <div class="col-lg-3">
+                            <div class="form-group">
+                                <label class="col-form-label">Margen Proyectado:</label>
+                                <input type="text" class="form-control form-control-sm formattedMoneyInputs" readonly
+                                    id="margen_proyectado_vendedores_anterior">
+                            </div>
+                        </div>
+                    </div>
+
+                    <br><br><br>
+
+                    <div class="row">
+                        <form id="editProyeccionVendedor">
+                            <input type="hidden" id="hidden_id_desgloce_vendedor">
+
+                            <div class="row">
+                                <span><b>Proyección Nueva</b></span>
+
+                                <div class="col-lg-3">
+                                    <div class="form-group">
+                                        <label class="col-form-label">Costo Nuevo:</label>
+                                        <input type="text" class="form-control form-control-sm formattedMoneyInputs"
+                                            required step="0.01" id="costo_proyectado_vendedores_nuevo" value="0.00"
+                                            readonly>
+                                    </div>
+                                </div>
+
+                                <div class="col-lg-3">
+                                    <div class="form-group">
+                                        <label class="col-form-label">Venta Nueva:</label>
+                                        <input type="text"
+                                            class="form-control form-control-sm new_proyeccion_keyup formattedMoneyInputs"
+                                            required step="0.01" id="venta_proyectada_vendedores_nuevo" value="0.00">
+                                    </div>
+                                </div>
+
+                                <div class="col-lg-3">
+                                    <div class="form-group">
+                                        <label class="col-form-label">Utilidad Nueva:</label>
+                                        <input type="text"
+                                            class="formattedMoneyInputs form-control form-control-sm formattedMoneyInputs"
+                                            required step="0.01" id="utilidad_proyectada_vendedores_nuevo" value="0.00"
+                                            readonly>
+                                    </div>
+                                </div>
+
+                                <div class="col-lg-3">
+                                    <div class="form-group">
+                                        <label class="col-form-label">Margen Nuevo:</label>
+                                        <input type="text"
+                                            class="formattedMoneyInputs form-control new_proyeccion_keyup form-control-sm formattedMoneyInputs"
+                                            required step="0.01" id="margen_proyectado_vendedores_nuevo" value="0.00">
+                                    </div>
+                                </div>
+                            </div>
+
+                            <br><br>
+
+                            <div class="row">
+                                <span><b>Diferencia Proyección</b></span>
+
+                                <div class="col-lg-3">
+                                    <div class="form-group">
+                                        <label class="col-form-label">Costo Dif:</label>
+                                        <input type="text" class="form-control form-control-sm formattedMoneyInputs"
+                                            readonly id="costo_proyectado_vendedores_dif_edit" value="0.00">
+                                    </div>
+                                </div>
+
+                                <div class="col-lg-3">
+                                    <div class="form-group">
+                                        <label class="col-form-label">Venta Dif:</label>
+                                        <input type="text" class="form-control form-control-sm formattedMoneyInputs"
+                                            readonly id="venta_proyectada_vendedores_dif_edit" value="0.00">
+                                    </div>
+                                </div>
+
+                                <div class="col-lg-3">
+                                    <div class="form-group">
+                                        <label class="col-form-label">Utilidad Dif:</label>
+                                        <input type="text" class="form-control form-control-sm formattedMoneyInputs"
+                                            readonly id="utilidad_proyectada_vendedores_dif_edit" value="0.00">
+                                    </div>
+                                </div>
+
+                                <div class="col-lg-3">
+                                    <div class="form-group">
+                                        <label class="col-form-label">Margen Dif:</label>
+                                        <input type="text" class="form-control form-control-sm formattedMoneyInputs"
+                                            readonly id="margen_proyectado_vendedores_dif_edit" value="0.00">
+                                    </div>
+                                </div>
+                            </div>
+
+                            <br><br>
+
+                            <div class="row">
+                                <div class="col-lg-4">
+                                    <div class="form-group">
+                                        <label class="col-form-label">Meta Recaudacion:</label>
+                                        <input type="text"
+                                            class="formattedMoneyInputs form-control form-control-sm formattedMoneyInputs"
+                                            required step="0.01" id="recaudacion_anterior" value="0.00">
+                                    </div>
+                                </div>
+
+                                <div class="col-lg-4">
+                                    <div class="form-group">
+                                        <label class="col-form-label">Minimo Compra Cliente:</label>
+                                        <input type="text"
+                                            class="formattedMoneyInputs form-control form-control-sm formattedMoneyInputs"
+                                            required step="0.01" id="minimo_cliente_anterior" value="0.00">
+                                    </div>
+                                </div>
+
+                                <div class="col-lg-4">
+                                    <div class="form-group">
+                                        <label class="col-form-label">Meta Clientes:</label>
+                                        <input type="text"
+                                            class="formattedMoneyInputs form-control form-control-sm formattedMoneyInputs"
+                                            required step="0.01" id="meta_clientes" value="0.00">
+                                    </div>
+                                </div>
+
+                                <div class="text-right">
+                                    <input class="form-check-input aplicaComisionEdit checkOptionComision"
+                                        name="aplicaComisionEdit" id="checkOptionComision" type="checkbox" value="0">
+                                    <label class="form-check-label" for="editCheck">
+                                        <b> Aplica Comisión </b>
+                                    </label>
+                                </div>
+                            </div>
+
+                            <br><br>
+
+                            <span><b>Nota:</b> Al Editar la Proyección del Vendedor la Proyección General del Centro se
+                                recalculará de forma AUTOMÁTICA!</span>
+                            <br><br>
+
+                            <div class="modal-footer">
+                                <button type="submit" class="btn btn-success btn_asignar"
+                                    id="btnM_guardarProyeccionVendedor">Guardar</button>
+                                <button type="button" class="btn btn-danger btnM_cerrar_edit_vendedor"
+                                    id="btnM_cerrar_edit_vendedor">Cancelar</button>
+                            </div>
+                        </form>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+
+
+
+
+
+
+
+
+<div class="modal fade" id="modal_editar_presupuesto" tabindex="-1" data-bs-keyboard="false" data-bs-backdrop="static"
+    role="dialog" aria-labelledby="gestion_editar_presupuesto_title" aria-hidden="true">
+    <div class="modal-dialog modal-xl">
+        <div class="modal-content">
+            <div class="modal-header modal-header-gestion-gasto" style="background-color: rgb(122, 105, 22);">
+                <h5 class="modal-title" id="gestion_editar_presupuesto_title" style="color: #fff">EDITAR
+                    PRESUPUESTO
+                </h5>
+                <button type="button" style="background-color: #ffffff; border: 0px;"
+                    id="btnM_close_modal_editar_presupuesto" class="btnM_close_modal_editar_presupuesto"><i
+                        class="fas fa-times"></i></button>
+            </div>
+            <div class="modal-body">
+
+
+                <div class="row">
+                    <span><b>Gestión</b></span>
+                </div>
+
+                <form action="POST" id="form_editar_presupuesto">
+
+                    <input type="hidden" id="opcion_modal_editar_presupuesto" name="opcion_modal_editar_presupuesto"
+                        class="opcion_modal_editar_presupuesto">
+
+                    <input type="hidden" id="presupuesto_id_modal_editar_presupuesto"
+                        name="presupuesto_id_modal_editar_presupuesto" class="presupuesto_id_modal_editar_presupuesto">
+
+                    <div class="row">
+                        <div class="col-lg-6">
+                            <div class="form-group">
+                                <label for="" class="col-form-label">Presupuesto Anterior:</label>
+                                <input type="text" class="form-control form-control-sm" readonly
+                                    id="editar_presupuesto_anterior" name="editar_presupuesto_anterior">
+                            </div>
+                        </div>
+                        <div class="col-lg-6">
+                            <div class="form-group">
+                                <div class="form-group">
+                                    <label for="" class="col-form-label">Presupuesto Nuevo:</label>
+                                    <input type="text" class="formattedMoneyInputs form-control form-control-sm"
+                                        step="0.01" id="editar_presupuesto_nuevo" name="editar_presupuesto_nuevo">
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <br><br>
+
+
+                    <div class="modal-footer">
+                        <button type="submit" class="btn btn-primary btnM_submit_editar_presupuesto"
+                            id="btnM_submit_editar_presupuesto" data-dismiss="modal">Guardar</button>
+                        <button type="button" class="btn btn-danger btnM_close_modal_editar_presupuesto"
+                            id="btnM_close_modal_editar_presupuesto" data-dismiss="modal">Cancelar</button>
+                    </div>
+                </form>
+
+
+            </div>
+        </div>
+    </div>
+</div>
+
+
+<div class="modal fade" id="modalServiciosCentro" aria-labelledby="titleServiciosCentro" aria-hidden="true"
+    tabindex="-1" data-bs-keyboard="false" data-bs-backdrop="static">
+    <div class="modal-dialog modal-lg">
+        <div class="modal-content">
+            <div class="modal-header" style="background-color: #34568B;">
+                <h5 class="modal-title text-white" id="titleServiciosCentro">SERVICIOS CENTRO</h5>
+                <button type="button" class="btn-close btnModalOpenCloseServicios" data-bs-dismiss="modal"
+                    aria-label="Close"></button>
+            </div>
+            <div class="modal-body">
+
+                <form id="formServicioCentro">
+
+                    <input type="hidden" id="id_servicio">
+                    <input type="hidden" id="servicio_opcion">
+
+                    <div class="row">
+                        <div class="col-lg-12">
+                            <div class="form-group">
+                                <label for="">Servicio</label>
+                                <input type="text" class="form-control form-control-sm" id="servicio_name"
+                                    name="servicio_name" placeholder="Servicio">
+                            </div>
+                        </div>
+                    </div>
+
+                    <br>
+
+                    <div class="row">
+                        <div class="col-lg-12">
+                            <div class="form-group">
+                                <label for="">Descripción</label>
+                                <textarea name="servicio_descripcion" id="servicio_descripcion" cols="30" rows="3"
+                                    class="form-control form-control-sm"></textarea>
+                            </div>
+                        </div>
+                    </div>
+
+                    <br>
+
+
+                    <div class="modal-footer">
+                        <button type="submit" class="btn btn-sm btn-primary">Guardar</button>
+                        <button type="button" class="btn btn-sm btn-danger btnModalOpenCloseServicios"
+                            data-bs-dismiss="modal">Cerrar</button>
+                    </div>
+
+
+                </form>
+
+
+            </div>
+
+        </div>
+    </div>
+</div>
+
+
+
+
+
+<div class="modal fade" id="modalAjusteCuentasC" tabindex="-1" data-bs-keyboard="false" data-bs-backdrop="static"
+    aria-labelledby="modalAjusteTitle" aria-hidden="true">
+    <div class="modal-dialog modal-lg">
+        <div class="modal-content">
+            <div class="modal-header" style="background-color: #4CAF50;">
+                <h5 class="modal-title" id="modalAjustTitle">Ajuste de Saldo</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+            </div>
+            <div class="modal-body">
+
+                <div class="row">
+                    <div class="col-lg-6">
+                        <div class="form-group">
+                            <label for="" class="col-form-label">Utilidad Disponible para
+                                Presupuestar:</label>
+                            <input type="text"
+                                class="formattedMoneyInputs form-control form-control-sm txt_diferencia_utilidad_disponible_presupuestar"
+                                readonly value="{{ key.diferencia_utilidad_disponible_para_presupuestar }}"
+                                id="proyeccion_utilidad_ajuste">
+                        </div>
+                    </div>
+                    <div class="col-lg-3">
+                        <div class="form-group">
+                            <label for="" class="col-form-label">Dif. Valor Ajuste:</label>
+                            <input type="text"
+                                class="formattedMoneyInputs form-control form-control-sm txt_ajuste_diferencia" readonly
+                                value="0.00" id="txt_ajuste_diferencia">
+                        </div>
+                    </div>
+                    <div class="col-lg-3">
+                        <div class="form-group">
+                            <label for="" class="col-form-label">Balance:</label>
+                            <input type="text"
+                                class="formattedMoneyInputs form-control form-control-sm txt_diferencia_utilidad_disponible_presupuestar"
+                                readonly value="{{ key.diferencia_utilidad_disponible_para_presupuestar }}"
+                                id="txt_balance_ajuste">
+                        </div>
+                    </div>
+                </div>
+
+                <form id="formAjusteCuentas">
+
+                    <input type="hidden" id="modal_ajuste_opcion">
+
+                    <input type="hidden" id="hidden_presupuesto_ajuste_cuentas">
+
+                    <div class="row">
+
+                        <div class="col-lg-4">
+                            <div class="form-group">
+                                <label for="" class="col-form-label">Nombre Cuenta:</label>
+                                <input type="text" class="form-control form-control-sm" id="ajuste_nombre"
+                                    name="ajuste_nombre" readonly>
+                            </div>
+                        </div>
+
+                        <div class="col-lg-4">
+                            <div class="form-group">
+                                <label for="" class="col-form-label">Valor Anterior:</label>
+                                <input type="text" class="form-control form-control-sm formattedMoneyInputs"
+                                    id="ajuste_anterior" name="ajuste_anterior" readonly>
+                            </div>
+                        </div>
+                        <div class="col-lg-4">
+                            <div class="form-group">
+                                <label for="" class="col-form-label">Valor Nuevo:</label>
+                                <input type="text" class="form-control form-control-sm formattedMoneyInputs"
+                                    id="ajuste_nuevo" name="ajuste_nuevo">
+                            </div>
+                        </div>
+
+                    </div>
+
+
+                    <div class="modal-footer">
+                        <button type="submit" class="btn btn-success">Guardar</button>
+                        <button type="button" class="btn btn-danger" data-bs-dismiss="modal">Cerrar</button>
+                    </div>
+
+                </form>
+            </div>
+
+        </div>
+    </div>
+</div>
+
+
+
+
+
+<div class="modal fade" id="modal_gestion_ajuste" tabindex="-1" data-bs-keyboard="false" data-bs-backdrop="static"
+    role="dialog" aria-labelledby="gestion_ajuste_title" aria-hidden="true">
+    <div class="modal-dialog modal-fullscreen">
+        <div class="modal-content">
+            <div class="modal-header modal-header-gestion-gasto" style="background-color: coral">
+                <h5 class="modal-title" id="gestion_ajuste_title" style="color: #fff"></h5>
+                <button type="button" style="background-color: #ffffff00; border: 0px;"
+                    id="btn_close_modal_validacion_gasto_indirecto"
+                    class="btn_close_modal_validacion_gasto_indirecto"><i class="fas fa-times"></i></button>
+            </div>
+            <div class="modal-body">
+
+                <div class="row"><span><b>Totales Referencia</b></span></div>
+
+                <div class="row">
+                    <div class="col-sm">
+                        <div class="form-group">
+                            <label class="col-form-label">Presupuesto Proyectado:</label>
+                            <input type="text"
+                                class="formattedMoneyInputs form-control form-control-sm txt_presupuesto_p"
+                                value="{{ key.valor_proyectado }}" id="txt_presupuesto_p_main" readonly>
+                        </div>
+                    </div>
+
+                    <div class="col-sm">
+                        <div class="form-group">
+                            <label class="col-form-label">Presupuesto Autorizado:</label>
+                            <input type="text"
+                                class="formattedMoneyInputs form-control form-control-sm txt_presupuesto_a"
+                                value="{{ key.valor_autorizado }}" id="txt_presupuesto_a_main" readonly>
+                        </div>
+                    </div>
+                </div>
+
+                {% if key.id_tipo_centro == 1 %}
+                <div class="row">
+                    <div class="col-sm">
+                        <div class="form-group">
+                            <label class="col-form-label">Gasto Indirecto Solicitado a este Centro:</label>
+                            <input type="text"
+                                class="formattedMoneyInputs form-control form-control-sm txt_indirecto_a_este_centro"
+                                value="{{ key.gasto_indirecto_solicitado_ami }}" id="txt_indirecto_a_este_centro_main"
+                                readonly>
+                        </div>
+                    </div>
+                    <div class="col-sm">
+                        <div class="form-group">
+                            <label class="col-form-label">Gasto Ingresado :</label>
+                            <input type="text" class="form-control form-control-sm txt_gasto_ingresado_bancario"
+                                value="{{ key.gastos_ingresados_bancario }}" id="txt_gasto_ingresado_bancario_main"
+                                readonly>
+                        </div>
+                    </div>
+                </div>
+                <div class="row">
+                    <div class="col-sm">
+                        <div class="form-group">
+                            <label class="col-form-label">Proyeccion Disponible:</label>
+                            <input type="text"
+                                class="formattedMoneyInputs form-control form-control-sm txt_proyeccion_disponible"
+                                value="{{ key.proyeccion_disponible_centro }}" id="txt_proyeccion_disponible_main"
+                                readonly>
+                        </div>
+                    </div>
+                    <div class="col-sm">
+                        <div class="form-group">
+                            <label class="col-form-label">Proyeccion Disponible Porc:</label>
+                            <input type="text"
+                                class="formattedMoneyInputs form-control form-control-sm txt_proyeccion_disponible_porc"
+                                value="{{ key.proyeccion_disponible_centro_porc }}"
+                                id="txt_proyeccion_disponible_porc_main" readonly>
+                        </div>
+                    </div>
+                    <div class="col-sm">
+                        <div class="form-group">
+                            <label class="col-form-label">Presupuesto de Gasto Disponible:</label>
+                            <input type="text" class="form-control form-control-sm txt_presupuesto_de_gasto_disponible"
+                                value="{{ key.presupuesto_de_gasto_disponible }}"
+                                id="txt_presupuesto_de_gasto_disponible_main" readonly>
+                        </div>
+                    </div>
+                    <div class="col-sm">
+                        <div class="form-group">
+                            <label class="col-form-label">Presupuesto de Gasto Disponible Porc:</label>
+                            <input type="text"
+                                class="form-control form-control-sm txt_presupuesto_de_gasto_disponible_porc"
+                                value="{{ key.presupuesto_de_gasto_porc }}"
+                                id="txt_presupuesto_de_gasto_disponible_porc_main" readonly>
+                        </div>
+                    </div>
+                </div>
+                {% endif %}
+
+                {% if key.id_tipo_centro == 2 %}
+                <div class="row">
+                    <div class="col-sm">
+                        <div class="form-group">
+                            <label class="col-form-label">Presupuesto Indirecto Solicitado a este Centro:</label>
+                            <input type="text"
+                                class="formattedMoneyInputs form-control form-control-sm txt_indirecto_a_este_centro"
+                                value="{{ key.gasto_indirecto_solicitado_ami }}" id="txt_indirecto_a_este_centro_main"
+                                readonly>
+                        </div>
+                    </div>
+                    <div class="col-sm">
+                        <div class="form-group">
+                            <label class="col-form-label">Gasto Ingresado :</label>
+                            <input type="text"
+                                class="formattedMoneyInputs form-control form-control-sm txt_gasto_ingresado_bancario"
+                                value="{{ key.gastos_ingresados_bancario }}" id="txt_gasto_ingresado_bancario_main"
+                                readonly>
+                        </div>
+                    </div>
+                </div>
+                <div class="row">
+                    <div class="col-sm">
+                        <div class="form-group">
+                            <label class="col-form-label">Presupuesto Total:</label>
+                            <input type="text"
+                                class="formattedMoneyInputs form-control form-control-sm txt_presupuesto_total"
+                                value="{{ key.presupuesto_cn }}" id="txt_presupuesto_total_main" readonly>
+                        </div>
+                    </div>
+                    <div class="col-sm">
+                        <div class="form-group">
+                            <label class="col-form-label">Presupuesto Disponible:</label>
+                            <input type="text"
+                                class="formattedMoneyInputs form-control form-control-sm txt_presupuesto_disponible"
+                                value="{{ key.presupuesto_disponible_cn }}" id="txt_presupuesto_disponible_main"
+                                readonly>
+                        </div>
+                    </div>
+                    <div class="col-sm">
+                        <div class="form-group">
+                            <label class="col-form-label">Presupuesto Disponible Porc :</label>
+                            <input type="text"
+                                class="formattedMoneyInputs form-control form-control-sm txt_presupuesto_disponible_porc"
+                                value="{{ key.presupuesto_disponible_porc_cn }}"
+                                id="txt_presupuesto_disponible_porc_main" readonly>
+                        </div>
+                    </div>
+                    <div class="col-sm">
+                        <div class="form-group">
+                            <label class="col-form-label">Presupuesto de Gasto Disponible:</label>
+                            <input type="text"
+                                class="formattedMoneyInputs form-control form-control-sm txt_presupuesto_de_gasto_disponible"
+                                value="{{ key.presupuesto_de_gasto_disponible }}"
+                                id="txt_presupuesto_de_gasto_disponible_main" readonly>
+                        </div>
+                    </div>
+                    <div class="col-sm">
+                        <div class="form-group">
+                            <label class="col-form-label">Presupuesto de Gasto Disponible Porc:</label>
+                            <input type="text"
+                                class="form-control form-control-sm txt_presupuesto_de_gasto_disponible_porc"
+                                value="{{ key.presupuesto_de_gasto_porc }}"
+                                id="txt_presupuesto_de_gasto_disponible_porc_main" readonly>
+                        </div>
+                    </div>
+                </div>
+                {% endif %}
+
+                <div class="row"><span><b>Gestión</b></span></div>
+
+                <div class="row">
+                    <div class="col-lg-6">
+                        <div class="form-group">
+                            <label class="col-form-label">Utilidad Disponible para Presupuestar:</label>
+                            <input type="text"
+                                class="formattedMoneyInputs form-control form-control-sm txt_diferencia_utilidad_disponible_presupuestar"
+                                readonly value="{{ key.diferencia_utilidad_disponible_para_presupuestar }}"
+                                id="proyeccion_utilidad_ajuste_autorizar">
+                        </div>
+                    </div>
+                    <div class="col-lg-3">
+                        <div class="form-group">
+                            <label class="col-form-label">Dif. Valor Ajuste:</label>
+                            <input type="text"
+                                class="formattedMoneyInputs form-control form-control-sm txt_ajuste_diferencia" readonly
+                                value="0.00" id="txt_ajuste_diferencia_autorizar">
+                        </div>
+                    </div>
+                    <div class="col-lg-3">
+                        <div class="form-group">
+                            <label class="col-form-label">Balance:</label>
+                            <input type="text"
+                                class="formattedMoneyInputs form-control form-control-sm txt_diferencia_utilidad_disponible_presupuestar"
+                                readonly id="txt_balance_ajuste_autorizar">
+                        </div>
+                    </div>
+                </div>
+
+                <br>
+
+                <form action="POST" id="form_autorizar_ajuste">
+                    <input type="hidden" id="hidden_autorizar_presupuesto_id" name="hidden_autorizar_presupuesto_id"
+                        class="hidden_autorizar_presupuesto_id">
+
+                    <div class="row">
+                        <div class="col-lg-6">
+                            <div class="form-group">
+                                <label class="col-form-label">Valor Anterior:</label>
+                                <input type="text" class="formattedMoneyInputs form-control form-control-sm" readonly
+                                    id="txt_autorizar_valor_anterior" name="txt_autorizar_valor_anterior">
+                            </div>
+                        </div>
+                        <div class="col-lg-6">
+                            <div class="form-group">
+                                <label class="col-form-label">Valor Nuevo:</label>
+                                <input type="text" class="formattedMoneyInputs form-control form-control-sm"
+                                    id="txt_autorizar_valor_nuevo" name="txt_autorizar_valor_nuevo">
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="modal-footer">
+                        <button type="submit" class="btn btn-primary btn_submit_autorizar_ajuste"
+                            id="btn_submit_autorizar_ajuste" data-dismiss="modal">Guardar</button>
+                        <button type="button" class="btn btn-danger btn_close_modal_autorizar_ajuste"
+                            id="btn_close_modal_autorizar_ajuste" data-dismiss="modal">Cancelar</button>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+</div>
+
+
+
+
+
+
+<div class="modal fade" id="modalMesesPresupuestados" tabindex="-1" aria-labelledby="modalMesesPresupuestadosLabel"
+    aria-hidden="true" data-bs-keyboard="false" data-bs-backdrop="static">
+    <div class="modal-dialog modal-lg">
+        <div class="modal-content">
+            <div class="modal-header" style="background-color: #66503d">
+                <h5 class="modal-title" id="modalMesesPresupuestadosLabel" style="color: #fff">MESES
+                    PRESUPUESTADOS
+                </h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+            </div>
+
+
+            <div class="modal-body">
+
+                <div class="row p-1">
+                    <div class="table-responsive">
+
+                        <table id="tableMesesPresupuestados"
+                            class="table rounded-4 table-sm table-bordered table-striped align-middle mb-0 table-principal"
+                            style="width:100%">
+                            <thead class="table-gradient text-dark">
+                                <tr>
+                                    <th class="text-center">#</th>
+                                    <th class="text-center">Meses por Presupuestar</th>
+                                    <th class="text-center">Estado</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+
+                            </tbody>
+                        </table>
+
+                    </div>
+                </div>
+
+
+            </div>
+
+
+            <div class="modal-footer">
+                <button type="button" class="btn btn-disabled" data-bs-dismiss="modal">Cerrar</button>
+            </div>
+        </div>
+    </div>
+</div>
+
+
+
+
+
+
+
+<div class="modal fade" id="modalEditIngreso" tabindex="-1" aria-labelledby="modalEditIngresoLabel" aria-hidden="true"
+    data-bs-keyboard="false" data-bs-backdrop="static">
+    <div class="modal-dialog modal-lg">
+        <div class="modal-content">
+            <div class="modal-header modal-header-vehicles" style="background-color: rgb(220, 20, 170)">
+                <h5 class="modal-title" id="modalEditIngresoLabel" style="color: #fff">EDITAR PRESUPUESTO DE
+                    INGRESO</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+            </div>
+            <div class="modal-body">
+
+                <form id="formIngresos">
+
+                    <input type="hidden" id="ingreso_id">
+
+                    <div class="row">
+                        <div class="col-lg-6">
+                            <div class="form-group">
+                                <label for="" id="new_item_label">Valor Anterior</label>
+                                <input type="text"
+                                    class="form-control form-control-sm formattedMoneyInputs valor_ingreso"
+                                    id="valor_anterior" readonly>
+                            </div>
+                        </div>
+                        <div class="col-lg-6">
+                            <div class="form-group">
+                                <label for="" id="new_item_label">Valor Nuevo</label>
+                                <input type="text"
+                                    class="form-control form-control-sm formattedMoneyInputs valor_ingreso"
+                                    id="valor_nuevo">
+                            </div>
+                        </div>
+                    </div>
+
+                    <br>
+
+                    <div class="modal-footer">
+                        <button type="submit" class="btn btn-secondary">Guardar</button>
+                        <button type="button" class="btn btn-disabled" data-bs-dismiss="modal">Cerrar</button>
+                    </div>
+
+                </form>
+
+            </div>
+
+        </div>
+    </div>
+</div>
+
+
+
+
+
+
+<div class="modal fade" id="modalReplicarPresupuestoIngresos" tabindex="-1"
+    aria-labelledby="modalReplicarPresupuestoIngresosLabel" aria-hidden="true" data-bs-keyboard="false"
+    data-bs-backdrop="static">
+    <div class="modal-dialog modal-fullscreen">
+        <div class="modal-content">
+            <div class="modal-header modal-header-vehicles" style="background-color: rgb(90, 223, 201)">
+                <h5 class="modal-title" id="modalReplicarPresupuestoIngresosLabel" style="color: #fff">REPLICAR
+                    PRESUPUESTO DEL MES SELECCIONADO AL MES ACTUAL</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+            </div>
+            <div class="modal-body">
+
+                <form id="formReplicarMesSeleccionado">
+
+                    <div class="row">
+                        <div class="col-lg-6">
+                            <div class="form-group">
+                                <label class="col-form-label">Mes Replicar: </label>
+                                <select class="form-select form-select-sm filterStyle text-nowrap pickedReplica"
+                                    id="mes_replicar_pre_ingre">
+                                    <option value="1">Enero</option>
+                                    <option value="2">Febrero</option>
+                                    <option value="3">Marzo</option>
+                                    <option value="4">Abril</option>
+                                    <option value="5">Mayo</option>
+                                    <option value="6">Junio</option>
+                                    <option value="7">Julio</option>
+                                    <option value="8">Agosto</option>
+                                    <option value="9">Septiembre</option>
+                                    <option value="10">Octubre</option>
+                                    <option value="11">Noviembre</option>
+                                    <option value="12">Diciembre</option>
+                                </select>
+                            </div>
+
+                        </div>
+                        <div class="col-lg-6">
+                            <div class="form-group">
+                                <label class="col-form-label">Año Replicar: </label>
+                                <select class="form-select form-select-sm filterStyle text-nowrap pickedReplica"
+                                    id="anio_replicar_pre_ingre">
+                                </select>
+                            </div>
+                        </div>
+                    </div>
+
+                    <br>
+
+                    <div class="row">
+                        <div class="table-responsive">
+                            <table id="tableGastosReplicar"
+                                class="table rounded-4 table-sm table-bordered table-striped align-middle mb-0 bg-white table-basic"
+                                style="width:100%">
+                                <tfoot class="table-active" style="display: table-header-group;">
+                                    <tr>
+                                        <th></th>
+                                        <th></th>
+                                        <th></th>
+                                    </tr>
+                                </tfoot>
+                                <thead class="table-gradient text-dark">
+                                    <tr>
+                                        <th class="text-center">Nombre Cuenta</th>
+                                        <th class="text-center">Proyectado</th>
+                                        <th class="text-center">Autorizado</th>
+                                    </tr>
+                                </thead>
+                                <tbody>
+
+                                </tbody>
+                            </table>
+                        </div>
+                    </div>
+
+                    <br>
+
+
+                    <div class="modal-footer">
+                        <button type="submit" class="btn btn-secondary"
+                            id="btn_replicar_mes_presupuestos">Replicar</button>
+                        <button type="button" class="btn btn-disabled" data-bs-dismiss="modal">Cerrar</button>
+                    </div>
+
+                </form>
+
+            </div>
+
+        </div>
+    </div>
+</div>
+
+<div class="modal fade" id="modalListCuentasCentro" tabindex="-1" role="dialog"
+     data-bs-keyboard="false" data-bs-backdrop="static" aria-labelledby="modalListCuentasCentro" aria-hidden="true">
+  <div class="modal-dialog modal-fullscreen">
+    <div class="modal-content">
+      <div class="modal-header" style="background-color: rgb(0, 123, 255);">
+        <h5 class="modal-title" style="font-weight: 900; color: white">
+          CUENTAS CONTABLES {{ key.nombre_centro }}
+        </h5>
+        <button type="button" style="background-color:#FFFFFF00;border:0" id="btn_close_modal_list_cuentas">
+          <i class="fas fa-times"></i>
+        </button>
+      </div>
+
+      <div class="modal-body">
+        <div class="row">
+          <span style="display:block; text-align:center;"><b>Listado de Cuentas</b></span>
+          <div class="col-lg-12">
+            <div class="table-responsive">
+              <table id="tbl_list_cuentas_contables"
+                     class="table table-hover table-center table-bordered table-striped table-v1" style="width:100%">
+                <thead class="thead-light">
+                  <tr>
+                    <th class="text-center col-sm-2">Número Cuenta</th>
+                    <th class="text-center col-sm-4">Nombre</th>
+                    <th class="text-center col-sm-4">Descripción</th>
+                  </tr>
+                </thead>
+                <tbody></tbody>
+              </table>
+            </div>
+            <br>
+          </div>
+        </div>
+      </div>
+
+      <div class="modal-footer">
+        <button type="button" class="btn btn-danger" id="btn_close_modal_list_cuentas_footer">Cerrar</button>
+      </div>
+    </div>
+  </div>
+</div>

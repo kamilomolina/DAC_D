@@ -1,0 +1,88 @@
+<div class="modal fade" id="modalNuevoCurriculo" tabindex="-1" role="dialog" aria-labelledby="exampleModalLabel" data-bs-keyboard="false" data-bs-backdrop="static"
+    aria-hidden="true">
+    <div class="modal-dialog modal-lg" role="document">
+        <div class="modal-content">
+            <div class="modal-header" style="background-color: #304458; color:white">
+                <h5 class="modal-title" id="exampleModalLabel">
+                    <i class="material-icons me-2 text-gray">work</i> Curriculum Empleados
+                </h5>
+
+                <button type="button" class="close" data-dismiss="modal" aria-label="Close">
+                    <span aria-hidden="true">&times;</span>
+                </button>
+            </div>
+            <div class="modal-body">
+                <form id="formCrearCurriculum">
+                    <input type="hidden" id="id-curriculum" name="id_curriculum" value="{{ id_curriculum|default:'' }}">
+
+                    <div class="row mb-2 align-items-center">
+                        <div class="col-md-6 d-flex align-items-center">
+                            <label for="titulo-curriculum" class="form-label">Título:</label>
+                            <input type="text" id="titulo-curriculum" name="titulo"
+                                class="form-control input-underline">
+                        </div>
+                        <div class="col-md-6 d-flex align-items-center">
+                            <label for="nuevo-tipo-curriculum" class="form-label">Tipo de Curriculum:</label>
+                            <select id="nuevo-tipo-curriculum" name="tipo_curriculum" style="width: 100%;"
+                                class="form-control input-underline select2" placeholder="Nivel certificado">
+                                <option value="">Seleccione una opción</option>
+                                <option value="new-tipo-curriculum">Crear un curriculum</option>
+                                {% for cer in curriculos %}
+                                <option value="{{ cer.0 }}">{{ cer.1 }}</option>
+                                {% endfor %}
+                            </select>
+                        </div>
+
+                    </div>
+                    <div class="row mb-2 align-items-center">
+                        <div class="col-md-6 d-flex align-items-center">
+                            <label for="nuevo-estado-curriculum" class="form-label">Estado de Curriculum:</label>
+                            <select id="nuevo-estado-curriculum" name="nuevo-estado-curriculum" style="width: 100%;"
+                                class="form-control input-underline select2" placeholder="Nivel certificado">
+                                <option value="">Seleccione una opción</option>
+                                <!-- <option value="new-estado-curriculum">Crear un nivel certificado</option> -->
+                                {% for cer in estado_curriculum %}
+                                <option value="{{ cer.0 }}">{{ cer.1 }}</option>
+                                {% endfor %}
+                            </select>
+
+
+                        </div>
+
+
+                        <div class="col-md-6 d-flex align-items-center">
+                            <label for="fecha-inicio-curriculum" class="form-label">Fecha de Inicio:</label>
+                            <input type="date" id="fecha-inicio-curriculum" name="fecha_inicio"
+                                class="form-control input-underline">
+                        </div>
+
+
+                    </div>
+                    <div class="row mb-2">
+                        <div class="col-md-6 d-flex align-items-center">
+                            <label for="fecha-fin-curriculum" class="form-label">Fecha de Final:</label>
+                            <input type="date" id="fecha-fin-curriculum" name="fecha_final"
+                                class="form-control input-underline">
+                        </div>
+                    </div>
+
+                    <div class="row mb-2">
+                        <div class="col-md-12">
+                            <label for="descripcion-curriculum" class="form-label">Descripción:</label>
+                            <textarea id="descripcion-curriculum" name="descripcion"
+                                class="form-control input-underline" rows="3"></textarea>
+                        </div>
+                    </div>
+                    <input type="hidden" name="csrfmiddlewaretoken" value="{{ csrf_token }}">
+                    <div class="modal-footer">
+
+                        <button type="submit" id="guardar-curriculum animate__animated animate__pulse animate__slow animate__infinite" class="btn btn-success ">Guardar</button>
+                        <button type="button" class="btn btn-danger close" data-dismiss="modal">Cerrar</button>
+                    </div>
+                </form>
+
+            </div>
+
+        </div>
+    </div>
+</div>

@@ -1,0 +1,162 @@
+{% extends 'componentes/menu_contable.html' %}
+{% load static %}
+
+{% block title %}ANTIGÜEDAD DE SALDOS CLIENTES{% endblock %}
+
+{% block body %}
+
+<div class="row align-items-center border-bottom mb-3 py-2 bg-white shadow-sm mx-0">
+    <div class="col d-flex align-items-center px-0">
+        <button id="toggle-sidebar" class="btn btn-primary btn-sm me-3 border-0 rounded-circle btnMenu"
+            style="width: 32px; height: 32px; padding: 0;">
+            <i class="fas fa-bars"></i>
+        </button>
+        <h6 class="page-title mb-0 fs-5 fw-bold text-dark">
+            <i class="fas fa-users text-primary me-2"></i>ANTIGÜEDAD DE SALDOS CLIENTES
+        </h6>
+    </div>
+</div>
+
+<div class="container-fluid px-0 mt-1">
+    <div class="row g-3 d-flex align-items-end mx-0">
+        <div class="col-12 col-md-3 mb-3">
+            <label>Empresa:</label>
+            <select id="selectEmpresa" class="form-select form-select-sm">
+                {% for e in empresasData %}
+                <option value="{{ e.id }}">{{ e.nombre }}</option>
+                {% endfor %}
+            </select>
+        </div>
+
+        <div class="col-12 col-md-2 mb-3">
+            <label>Fecha Corte:</label>
+            <input type="date" id="fechaCorte" value="{{ date2 }}" class="form-control form-control-sm">
+        </div>
+
+        <div class="col-12 col-md-2 mb-3">
+            <button class="btn btn-sm btn-success" id="btnLoadData">Cargar</button>
+        </div>
+    </div>
+
+    <div class="row mt-1">
+        <div class="table-responsive">
+            <table id="tblAgingClientes"
+                class="table table-striped table-bordered mb-0 table-sm rounded-4 table-hover align-middle"
+                style="width:100%;">
+                <thead class="table-gradient text-dark">
+                    <tr>
+                        <th>Código</th>
+                        <th>Cliente</th>
+                        <th class="text-end">Saldo Total</th>
+                        <th class="text-end">0–30 días</th>
+                        <th class="text-end">31–60 días</th>
+                        <th class="text-end">61–90 días</th>
+                        <th class="text-end">&gt;90 días</th>
+                    </tr>
+                </thead>
+                <tbody></tbody>
+                <tfoot class="table-active">
+                    <tr>
+                        <th colspan="2" class="text-end">Totales:</th>
+                        <th class="text-end"></th>
+                        <th class="text-end"></th>
+                        <th class="text-end"></th>
+                        <th class="text-end"></th>
+                        <th class="text-end"></th>
+                    </tr>
+                </tfoot>
+            </table>
+        </div>
+    </div>
+</div>
+
+<a href="{% url 'panel_contabilidad' %}">
+    <button class="btn btn-sm btn-danger" id="btnCerrar" style="position: fixed; bottom: 20px; right: 20px;">
+        <i class="fa fa-times"></i> Cerrar
+    </button>
+</a>
+
+{% endblock %}
+
+{% block scripts %}
+<script>
+    $(function () {
+        var csrfToken = "{{ csrf_token }}";
+
+        $("#tblAgingClientes").DataTable({
+            language: { url: "{% static 'app/th/json/es-ES.json' %}" }
+        });
+
+        function showLoadingScreen(text = '') {
+            Swal.fire({
+                title: '',
+                html: `<b>${text}</b>`,
+                didOpen: () => {
+                    Swal.showLoading();
+                },
+                allowOutsideClick: false,
+                showConfirmButton: false
+            });
+        }
+
+        function loadAgingClientes(empresa, fechaCorte) {
+            showLoadingScreen();
+
+            $("#tblAgingClientes").DataTable().clear().destroy();
+
+            $('#tblAgingClientes').DataTable({
+                autoWidth: false,
+                scrollX: true,
+                scrollY: '350px',
+                scrollCollapse: true,
+                pageLength: 50,
+                dom: 'Brftip',
+                language: {
+                    url: "{% static 'app/th/json/es-ES.json' %}",
+                },
+                initComplete: function () {
+                    Swal.close();
+                },
+                ajax: {
+                    url: "{% url 'dataAgingClientes' %}",
+                    type: "POST",
+                    dataSrc: "data",
+                    data: {
+                        empresa: empresa,
+                        fechaCorte: fechaCorte,
+                        csrfmiddlewaretoken: csrfToken
+                    }
+                },
+                columns: [
+                    { data: "CodigoCuenta" },
+                    { data: "NombreCuenta" },
+                    { data: "SaldoTotal", className: "text-end", render: $.fn.dataTable.render.number(',', '.', 2) },
+                    { data: "Saldo_0_30", className: "text-end", render: $.fn.dataTable.render.number(',', '.', 2) },
+                    { data: "Saldo_31_60", className: "text-end", render: $.fn.dataTable.render.number(',', '.', 2) },
+                    { data: "Saldo_61_90", className: "text-end", render: $.fn.dataTable.render.number(',', '.', 2) },
+                    { data: "Saldo_mas_90", className: "text-end", render: $.fn.dataTable.render.number(',', '.', 2) }
+                ],
+                buttons: [
+                    { extend: 'excel', className: 'btn btn-success', text: '<i class="fas fa-file-excel"></i>' },
+                    { extend: 'pdf', className: 'btn btn-danger', text: '<i class="fas fa-file-pdf"></i>' },
+                    { extend: 'print', className: 'btn btn-primary', text: '<i class="fas fa-print"></i>', orientation: 'landscape' }
+                ],
+                footerCallback: function (row, data) {
+                    let api = this.api();
+                    [2, 3, 4, 5, 6].forEach(function (i) {
+                        var total = api.column(i, { search: 'applied' }).data()
+                            .reduce((a, b) => Number(a) + Number(b), 0);
+                        $(api.column(i).footer()).html(total.toLocaleString(undefined, { minimumFractionDigits: 2 }));
+                    });
+                }
+            });
+        }
+
+        $('#btnLoadData').on('click', function () {
+            var empresa = $('#selectEmpresa').val();
+            var fechaCorte = $('#fechaCorte').val();
+            loadAgingClientes(empresa, fechaCorte);
+        });
+    });
+</script>
+{% endblock %}

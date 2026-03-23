@@ -1,0 +1,285 @@
+{% load static %}
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <title>Lista de Teléfonos</title>
+    <!-- DataTables CSS para estilos de la tabla -->
+    
+    <link rel="stylesheet" href="{% static 'app/css/style.css' %}">
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap@5.0.2/dist/css/bootstrap.min.css" crossorigin="anonymous">
+    <link rel="stylesheet" href="https://cdn.datatables.net/1.10.24/css/jquery.dataTables.min.css">
+    <!-- Bootstrap para los botones (opcional) -->
+    <link rel="stylesheet" href="https://stackpath.bootstrapcdn.com/bootstrap/4.5.2/css/bootstrap.min.css">
+    <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined" />
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.0.2/dist/css/bootstrap.min.css" rel="stylesheet">
+</head>
+<body>
+</head>
+<body>
+
+<div class="d-flex justify-content-end mb-2">
+    <button type="button" class="btn btn-primary mr-2" data-bs-toggle="modal" data-bs-target="#modalAgregarTelefono">
+        Agregar teléfono
+    </button>
+</div>
+<div class="table-responsive">
+  <table id="tabla_telefonos" class="table table-bordered table-striped" style="width:100%">
+      <thead>
+          <tr>
+              <th>Código Verificación</th>
+              <th>Registrado</th>
+              <th>Nombre del Empleado</th>
+              <th>MAC Address</th>
+              <th>SIM Serial</th>
+              <th>ID Telegram</th>
+              <th>Número de Teléfono</th>
+              <th>Activo</th>
+              <th>Observaciones</th>
+              <th>ID Vendedor</th>
+              <th>ID Supervisor</th>
+              <th>Venta PMA</th>
+              <th>Venta Carbajal</th>
+              <th>Acceso Total</th>
+              <th>Usuario</th>
+              <th>Perfil Empleado</th>
+              <th>Acciones</th>
+              <th></th>
+          </tr>
+      </thead>
+      <tbody>
+          {% for telefono in telefonos %}
+          <tr>
+              <td>{{ telefono.codigo_verificacion }}</td>
+              <td>{{ telefono.get_registrado_display }}</td>
+              <td>{{ telefono.nombre_empleado }}</td>
+              <td>{{ telefono.mac_address }}</td>
+              <td>{{ telefono.imei_1 }}</td>
+              <td>{{ telefono.id_telegram }}</td>
+              <td>{{ telefono.numero_telefono }}</td>
+              <td>{{ telefono.get_activo_display }}</td>
+              <td>{{ telefono.observaciones }}</td>
+              <td>{{ telefono.id_vendedor }}</td>
+              <td>{{ telefono.id_supervisor }}</td>
+              <td>{{ telefono.get_venta_pma_display }}</td>
+              <td>{{ telefono.get_venta_carbajal_display }}</td>
+              <td>{{ telefono.get_acceso_total_display }}</td>
+              <td>{{ telefono.usuario }}</td>
+              <td>{{ telefono.perfil_empleado }}</td>
+              <td>{{ telefono.id }}</td>    
+              <td style="white-space: nowrap;">
+                  <a class="btn btn-sm btn-primary btnEditTelefono" data-telefono-id="{{ telefono.id }}">
+                    <span class="material-symbols-outlined">edit</span>
+                  </a>
+                  <a class="btn btn-sm btn-primary btnDeleteTelefono" data-toggle="modal" data-target="#modalEliminarTelefono"
+                  data-telefono-id="{{ telefono.id }}">
+                  <span class="material-symbols-outlined">delete</span>
+                </a>
+              </td> 
+          </tr>
+          {% endfor %}
+      </tbody>
+  </table>
+</div>
+
+<!-- jQuery -->
+<script src="https://code.jquery.com/jquery-3.5.1.js"></script>
+
+<!-- DataTables JS -->
+<script src="https://cdn.datatables.net/1.10.24/js/jquery.dataTables.min.js"></script>
+
+<!-- Bootstrap JS (opcional) -->
+<script src="https://stackpath.bootstrapcdn.com/bootstrap/4.5.2/js/bootstrap.min.js"></script>
+
+<!-- Bootstrap del MODAL -->
+<script src="https://cdn.jsdelivr.net/npm/bootstrap@5.0.2/dist/js/bootstrap.bundle.min.js"></script>
+
+<script>
+$(document).ready(function() {
+    $('#tabla_telefonos').DataTable({
+        // Personaliza tu inicialización de DataTables aquí
+    });
+});
+</script>
+
+
+ <div class="modal fade" id="modalAgregarTelefono" tabindex="-1" aria-labelledby="modalLabel" aria-hidden="true">
+    <div class="modal-dialog">
+      <div class="modal-content">
+        <div class="modal-header">
+            <h4 class="modal-title">Agregar teléfono</h4>
+            <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+          </div>
+          
+          <!-- Cuerpo del modal -->
+          <div class="modal-body">
+            {% include 'agregar_telefono.html' %}
+            <div id="contenidoModal">
+
+            </div>
+          </div>
+          
+          <!-- Pie del modal -->
+          <div class="modal-footer">
+            <button type="submit" class="btn btn-primary">Agregar</button>
+            <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cerrar</button>
+          </div>
+      </div>
+    </div>
+</div>
+
+  <div class="modal fade" id="modalEditarTelefono" tabindex="-1" aria-labelledby="modalLabel" aria-hidden="true">
+    <div class="modal-dialog">
+      <div class="modal-content">
+        <div class="modal-header">
+            <h4 class="modal-title">Editar teléfono</h4>
+            <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+          </div>
+          
+          <!-- Cuerpo del modal -->
+          <div class="modal-body">
+            {% include 'editar_telefono.html' %}
+            <div id="contenidoModal">
+            </div>
+          </div>
+          
+          <!-- Pie del modal -->
+          <div class="modal-footer">
+            <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cerrar</button>
+          </div>
+      </div>
+    </div>
+  </div>
+
+  <div class="modal fade" id="modalEliminarTelefono" tabindex="-1" role="dialog"
+      aria-labelledby="modalEliminarTelefonoLabel" aria-hidden="true">
+      <div class="modal-dialog" role="document">
+        <div class="modal-content">
+          <!-- Encabezado del modal -->
+          <div class="modal-header">
+            <h5 class="modal-title" id="modalEliminarTelefonoLabel">Confirmación de eliminación</h5>
+            <button type="button" class="close" data-dismiss="modal" aria-label="Close">
+              <span aria-hidden="true">&times;</span>
+            </button>
+          </div>
+          <!-- Cuerpo del modal -->
+          <div class="modal-body">
+            <p>¿Estás seguro de que quieres eliminar este teléfono?</p>
+            <p>Esta acción no se puede deshacer.</p>
+          </div>
+          <!-- Pie del modal con el formulario -->
+          <div class="modal-footer">
+            <form id="formEliminarTelefono" method="POST">
+              {% csrf_token %}
+              <input type="hidden" id="telefono_id" name="telefono_id">
+              <button type="submit" class="btn btn-danger">Eliminar</button>
+              <button type="button" class="btn btn-secondary" data-dismiss="modal">Cancelar</button>
+            </form>
+          </div>
+        </div>
+      </div>
+    </div>
+
+
+  <script>
+    $(document).on("click", ".btnEditTelefono", function() {
+          opcion = 2;
+          fila = $(this).closest("tr");
+         
+
+          // Encuentra el campo oculto dentro de esa fila y obtén su valor
+          //var telefonoId = $(this).data('telefono-id');
+          telefonoId = fila.find("td:eq(0)").text();
+          telefonoId = telefonoId.trim();
+          console.log("ID del teléfono:", telefonoId);
+     
+          codigo_verificacion = fila.find("td:eq(1)").text();
+          nombre_empleado = fila.find("td:eq(4)").text();
+          mac_address = fila.find("td:eq(5)").text();
+          imei_1 = fila.find("td:eq(6)").text();
+          numero_telefono = fila.find("td:eq(7)").text();
+          observaciones = fila.find("td:eq(9)").text();
+          id_vendedor = fila.find("td:eq(10)").text();
+          id_supervisor = fila.find("td:eq(11)").text();
+          usuario = fila.find("td:eq(15)").text();
+          perfil_empleado = fila.find("td:eq(16)").text();
+          
+          resgistrado = fila.find("td:eq(2)").text();
+          activo = fila.find("td:eq(8)").text();
+          venta_pma =fila.find("td:eq(13)").text();
+          venta_carbajal =fila.find("td:eq(14)").text();
+          acceso_total =fila.find("td:eq(15)").text();
+
+          $('#input_telefono_id').val(telefonoId);
+          $('#input_codigo_verificacion').val(codigo_verificacion);
+          $('#input_nombre_empleado').val(nombre_empleado);
+          $('#input_mac_address').val(mac_address);
+          $('#input_imei_1').val(imei_1);
+          $('#input_numero_telefono').val(numero_telefono);
+          $('#input_observaciones').val(observaciones);
+          $('#input_id_vendedor').val(id_vendedor);
+          $('#input_id_supervisor').val(id_supervisor);
+          $('#input_usuario').val(usuario);
+          $('#input_perfil_empleado').val(perfil_empleado);
+          $('#input_telefono_id').val(telefonoId);
+
+          var actionUrl = "editar/" + telefonoId + "/";
+          $('#formEditarTelefono').attr('action', actionUrl);
+          $('#modalEditarTelefono').modal("show");
+
+      
+        
+      });
+     
+      
+        function getCookie(name) {
+          var cookieValue = null;
+          if (document.cookie && document.cookie !== '') {
+              var cookies = document.cookie.split(';');
+              for (var i = 0; i < cookies.length; i++) {
+                  var cookie = cookies[i].trim();
+                  // Obtén el token CSRF si el nombre coincide
+                  if (cookie.substring(0, name.length + 1) === (name + '=')) {
+                      cookieValue = decodeURIComponent(cookie.substring(name.length + 1));
+                      break;
+                  }
+              }
+          }
+          return cookieValue;
+      }
+          $(document).ready(function () {
+            $(".btnDeleteTelefono").on("click", function () {
+                var fila = $(this).closest("tr");
+                var telefonoId = fila.find("td:eq(16)").text().trim();
+                var telefonoId2 = $(this).data('data-telefono-id');
+                $('#formEliminarTelefono #telefono_id').val(telefonoId2);
+            });
+
+            $("#formEliminarTelefono").submit(function (event) {
+                event.preventDefault();
+                var fila = $(this).closest("tr");
+                var telefonoId = $('#telefono_id').val();
+                var url = 'eliminar_telefono/' + telefonoId + '/';
+                var csrftoken = getCookie('csrftoken');
+
+                $.ajax({
+                    url: url,
+                    type: "POST",
+                    headers: {
+                        "X-CSRFToken": csrftoken
+                    },
+                    data: {
+                        telefono_id: telefonoId
+                    },
+                    success: function (response) {
+                        $('#modalEliminarTelefono').modal('hide');
+                    },
+                    error: function (error) {
+                        console.log("Error en la solicitud AJAX:", error);
+                    }
+                });
+            });
+        });
+    </script>
+  </body>
+</html>

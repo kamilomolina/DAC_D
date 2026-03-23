@@ -1,0 +1,917 @@
+<div class="row f-flex-justify-content-center">
+
+    <nav aria-label="breadcrumb" style="scale: 0.85">
+        <ul class="breadcrumb d-flex justify-content-center p-1">
+            {% if key.id_tipo_centro == 1 %}
+            <li class="breadcrumb-item"><b class="menu-item-head" id="proyeccionVendedor"><span
+                        class="badge badge-pill badge-success text-white" style="margin-right: 5px">Proyeccion
+                        Vendedores</span></b></li>
+            {% endif %}
+
+            <li class="breadcrumb-item"><b class="menu-item-head" id="gastosPresupuestados"><span
+                        class="badge badge-pill badge-process text-white" style="margin-right: 5px">Gastos
+                        Presupuestados</span></b></li>
+
+            <li class="breadcrumb-item"><b class="menu-item-head" id="ingresosPresupuestados"><span
+                        class="badge badge-pill badge-orange text-white" style="margin-right: 5px">Otros
+                        Ingresos</span></b></li>
+
+            <li class="breadcrumb-item"><b class="menu-item-head" id="ajustesGastosSection"><span
+                        class="badge badge-pill badge-purple text-white" style="margin-right: 5px">Ajuste de
+                        Cuentas</span></b></li>
+
+            <li class="breadcrumb-item"><b class="menu-item-head" id="gastosIndirectosCentro"><span
+                        class="badge badge-pill badge-null text-white" style="margin-right: 5px">Gastos Indirectos a
+                        ESTE Centro</span></b></li>
+
+            {% if key.id_tipo_centro == 2 %}
+            <li class="breadcrumb-item"><b class="menu-item-head" id="gastosIndirectosOtros"><span
+                        class="badge badge-pill badge-disabled text-white" style="margin-right: 5px">Gastos
+                        Indirectos a OTROS Centros</span></b></li>
+            {% endif %}
+
+            <li class="breadcrumb-item"><b class="menu-item-head" id="gastosPeriodo"><span
+                        class="badge badge-pill badge-danger text-white" style="margin-right: 5px">Gastos
+                        Periodo</span></b></li>
+
+            {% if key.id_tipo_centro == 2 %}
+            <li class="breadcrumb-item"><b class="menu-item-head" id="createServiciosSection"><span
+                        class="badge badge-pill badge-premium text-black" style="margin-right: 5px">Mis
+                        Servicios</span></b></li>
+            {% endif %}
+
+            <li class="breadcrumb-item"><b class="menu-item-head" id="presupuestoAnualSection"><span
+                        class="badge badge-pill badge-pink text-white" style="margin-right: 5px">Presupuesto
+                        Anual</span></b></li>
+        </ul>
+    </nav>
+
+</div>
+
+<br>
+
+<div class="row">
+
+    {% if key.id_tipo_centro == 1 %}
+    <div class="row proyeccionVendedor">
+        <div class="col-lg-12">
+            <div class="row">
+                <span class="text-center"><b>PROYECCION POR VENDEDORES</b></span>
+            </div>
+
+            <br>
+
+            <div class="row">
+
+                <div class="col-lg-12">
+                    <div class="table-responsive">
+                        <table id="tableDesgloseVendedores"
+                            class="table rounded-4 table-sm table-bordered table-striped align-middle mb-0 bg-white table-basic"
+                            style="width:100%">
+                            <tfoot class="table-active" style="display: table-header-group;">
+                                <tr class="filterPanelVendedores">
+                                    <th></th>
+                                    <th>Vendedor</th>
+
+                                    <th></th>
+                                    <th></th>
+                                    <th></th>
+                                    <th></th>
+
+                                    <th></th>
+                                    <th></th>
+                                    <th></th>
+                                    <th></th>
+
+                                    <th></th>
+                                    <th></th>
+                                    <th></th>
+                                    <th></th>
+
+                                    <th></th>
+                                    <th></th>
+                                    <th></th>
+                                    <th></th>
+
+                                    <th></th>
+                                    <th></th>
+                                    <th></th>
+                                    <th></th>
+                                    <th></th>
+                                </tr>
+                            </tfoot>
+
+                            <thead class="table-gradient text-dark">
+                                <tr>
+                                    <th class="text-center">#</th>
+                                    <th class="text-center">Vendedor</th>
+
+                                    <th class="text-center">Costo Proy.</th>
+                                    <th class="text-center">Venta Proy.</th>
+                                    <th class="text-center">Utilidad Proy.</th>
+                                    <th class="text-center bg-warning">Margen Proy.</th>
+
+                                    <th class="text-center">Costo Neto Log.</th>
+                                    <th class="text-center">Venta Neta Log.</th>
+                                    <th class="text-center">Utilidad Neta Log.</th>
+                                    <th class="text-center bg-warning">Margen Neto Log.</th>
+
+                                    <th class="text-center">Costo Neto Dif.</th>
+                                    <th class="text-center">Venta Neta Dif.</th>
+                                    <th class="text-center">Utilidad Neta Dif.</th>
+                                    <th class="text-center bg-warning">Margen Neto Dif.</th>
+
+                                    <th class="text-center">Costo Neto Porc.</th>
+                                    <th class="text-center">Venta Neta Porc.</th>
+                                    <th class="text-center">Utilidad Neta Porc.</th>
+                                    <th class="text-center bg-warning">Margen Neto Porc.</th>
+
+                                    <th class="text-center bg-warning">Aplica Comisión</th>
+                                    <th class="text-center bg-warning">Meta Recaudación</th>
+                                    <th class="text-center bg-warning">Minimo Compra Cliente</th>
+                                    <th class="text-center bg-warning">Meta Clientes</th>
+                                    <th class="text-center bg-warning">Acciones</th>
+                                </tr>
+                            </thead>
+
+                            <tbody>
+
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+
+            </div>
+        </div>
+    </div>
+    {% endif %}
+
+    <div class="row gastosPresupuestados">
+        <div class="col-lg-12">
+            <div class="row">
+                <span class="text-center"><b>GASTOS PRESUPUESTADOS</b></span>
+            </div>
+
+            <br>
+
+            <div class="row">
+                {% if key.presupuesto_ingresados != 1 %}
+                <div class="col-sm-2">
+                    <button type="button" class="btn btn-add" id="btn_finalizar_presupuestos">Finalizar
+                        Ingreso
+                        Presupuestos</button>
+                </div>
+
+                <div class="col-sm-2">
+                    <button type="button" class="btn btn-warning" id="btn_replicar_mes_pasado">Replicar
+                        Presupuestos Pasados</button>
+                </div>
+                {% endif %}
+            </div>
+
+
+            {% if key.id_tipo_centro == 2 %}
+            <div class="row">
+                <div class="col-sm-4">
+                    <div class="form-group">
+                        <label for="" class="col-form-label">Presupuesto Disponible para Gastos
+                            Presupuestados:</label>
+                        <div class="col-lg-6">
+                            <input type="text" id="txt_presupuesto_guardado_hidden"
+                                value="{{ key.presupuesto_disponible_gastos }}"
+                                class="formattedMoneyInputs form-control form-control-sm" readonly>
+                        </div>
+
+                        <small>
+                            Este valor es el disponibe para poder guardar tus gastos presupuestos.
+                        </small>
+                    </div>
+                </div>
+            </div>
+
+            <br><br>
+
+            <div class="row p-2">
+                <span><b>Nota: </b>Para guardar tus presupuestos debes tener tu balance en 0 y todos los gastos
+                    indirectos solicitados a este Centro y los solicitados a otros centros deben estar
+                    gestionados.</span>
+            </div>
+            {% endif %}
+
+            <div class="row">
+
+                <div class="table-responsive">
+                    <table id="tableGastosPresupuestados"
+                        class="table rounded-4 table-sm table-bordered table-striped align-middle mb-0 bg-white table-basic"
+                        style="width:100%">
+                        <tfoot class="table-active" style="display: table-header-group;">
+                            <tr class="filtersPanelGastosPresupuestados">
+                                <th></th>
+                                <th>Número Cuenta</th>
+                                <th>Cuenta Contable</th>
+                                <th></th>
+                                <th></th>
+                                <th></th>
+                                <th></th>
+                                <th></th>
+                                <th>Estado</th>
+                                <th>Autorizado Por</th>
+                                <th></th>
+                                <th></th>
+                            </tr>
+                        </tfoot>
+                        <thead class="table-gradient text-dark">
+                            <tr>
+                                <th class="text-center">#</th>
+                                <th class="text-center">Número Cuenta</th>
+                                <th class="text-center">Cuenta Contable</th>
+                                <th class="text-center">Presupuesto Proyectado en Proforma</th>
+                                <th class="text-center">Autorizado</th>
+
+                                <th class="text-center">Gasto Total</th>
+                                <th class="text-center bg-warning">Disponible</th>
+                                <th class="text-center bg-warning">Porc Gastado</th>
+
+                                <th class="text-center">Estado</th>
+                                <th class="text-center">Autorizado Por</th>
+                                <th class="text-center">Observación</th>
+                                <th class="text-center">Acciones</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+
+                        </tbody>
+                    </table>
+                </div>
+
+            </div>
+
+        </div>
+    </div>
+
+    <div class="row gastosIndirectosCentro">
+        <div class="col-lg-12">
+            <div class="row">
+                <span class="text-center"><b>GASTOS INDIRECTOS SOLICITADOS A MI CENTRO DE
+                        COSTO</b></span>
+            </div>
+
+            <br>
+
+            <div class="row">
+
+                <div class="table-responsive">
+                    <table id="tableGastosIndirectos"
+                        class="table rounded-4 table-sm table-bordered table-striped align-middle mb-0 bg-white table-basic"
+                        style="width:100%">
+                        <tfoot class="table-active" style="display: table-header-group;">
+                            <tr class="filtersPanelGastosIndirectos">
+                                <th></th>
+                                <th>Descripción</th>
+                                <th></th>
+                                <th></th>
+                                <th>Centro Solicita</th>
+                                <th>Solicitado Por</th>
+                                <th></th>
+                                <th>Autorizado Por</th>
+                                <th>Observación</th>
+                                <th></th>
+                            </tr>
+                        </tfoot>
+                        <thead class="table-gradient text-dark">
+                            <tr>
+                            <tr>
+                                <th class="text-center">#</th>
+                                <th class="text-center">Descripción</th>
+                                <th class="text-center">Valor Solicitado</th>
+                                <th class="text-center">Valor Autorizado</th>
+                                <th class="text-center">Centro Solicita</th>
+                                <th class="text-center">Solicitado Por</th>
+                                <th class="text-center">Estado</th>
+                                <th class="text-center">Autorizado Por</th>
+                                <th class="text-center">Observación</th>
+                                <th class="text-center">Acciones</th>
+                            </tr>
+                            </tr>
+                        </thead>
+                        <tbody>
+
+                        </tbody>
+                    </table>
+                </div>
+
+            </div>
+        </div>
+    </div>
+
+
+    {% if key.id_tipo_centro == 2 %}
+    <div class="row gastosIndirectosOtros">
+        <div class="col-lg-12">
+            <div class="row">
+                <span class="text-center"><b>GASTOS INDIRECTOS SOLICITADOS A OTROS CENTROS DE
+                        COSTOS</b></span>
+            </div>
+
+            <br>
+
+            <div class="row">
+
+                <div class="table-responsive">
+                    <table id="tableGastosIndirectosOtros"
+                        class="table rounded-4 table-sm table-bordered table-striped align-middle mb-0 bg-white table-basic"
+                        style="width:100%">
+                        <tfoot class="table-active" style="display: table-header-group;">
+                            <tr class="filtersPanelGastosIndirectosOtros">
+                                <th></th>
+                                <th>Descripción</th>
+                                <th></th>
+                                <th></th>
+                                <th>Centro a Solicitar</th>
+                                <th>Solicitado Por</th>
+                                <th></th>
+                                <th>Autorizado Por</th>
+                                <th>Observación</th>
+                                <th></th>
+                            </tr>
+                        </tfoot>
+                        <thead class="table-gradient text-dark">
+                            <tr>
+                                <th class="text-center">#</th>
+                                <th class="text-center">Descripción</th>
+                                <th class="text-center">Valor Solicitado</th>
+                                <th class="text-center">Valor Autorizado</th>
+                                <th class="text-center">Centro a Solicitar</th>
+                                <th class="text-center">Solicitado Por</th>
+                                <th class="text-center">Estado</th>
+                                <th class="text-center">Autorizado Por</th>
+                                <th class="text-center">Observación</th>
+                                <th class="text-center">Acciones</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+
+                        </tbody>
+                    </table>
+                </div>
+
+            </div>
+        </div>
+    </div>
+    {% endif %}
+
+
+
+    <div class="row gastosPeriodo">
+        <div class="col-lg-12">
+            <div class="row">
+                <span class="text-center"><b>GASTOS EN PERIODO</b></span>
+            </div>
+
+            <br>
+
+            <div class="row">
+
+                <div class="table-responsive">
+                    <table id="tableGastosDirectos"
+                        class="table rounded-4 table-sm table-bordered table-striped align-middle mb-0 bg-white table-basic"
+                        style="width:100%">
+                        <tfoot class="table-active" style="display: table-header-group;">
+                            <tr class="filtersPanelGastosDirectos">
+                                <th></th>
+                                <th></th>
+                                <th>Gasto</th>
+                                <th>Descripción</th>
+                                <th></th>
+                                <th>Registrado por</th>
+                                <th>Revisado por</th>
+                                <th></th>
+                            </tr>
+                        </tfoot>
+                        <thead class="table-gradient text-dark">
+                            <tr>
+                                <th class="text-center">#</th>
+                                <th class="text-center">Fecha</th>
+                                <th class="text-center">Cuenta Contable</th>
+                                <th class="text-center">Descripción</th>
+                                <th class="text-center">Valor</th>
+                                <th class="text-center">Registrado por</th>
+                                <th class="text-center">Revisado Por</th>
+                                <th class="text-center">Acciones</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+
+                        </tbody>
+                    </table>
+                </div>
+
+            </div>
+        </div>
+    </div>
+
+
+    {% if key.id_tipo_centro == 2 %}
+    <div class="row misServiciosSection">
+        <div class="col-lg-12">
+            <div class="row">
+                <span class="text-center"><b>SERVICIOS QUE OFRECE ESTE CENTRO</b></span>
+            </div>
+
+            <br>
+
+            <div class="row">
+                <div class="col-sm-2">
+                    <div class="form-group">
+                        <label for="">Servicio</label>
+                        <input type="text" class="form-control form-control-sm" id="filterServicioCentro"
+                            placeholder="Servicio">
+                    </div>
+                </div>
+                <div class="col-sm-2 p-4">
+
+                    {% if userName == key.ingresado_por %}
+                    <button type="button" class="btn btn-sm btn-null btnOpenCrearServicios btnModalOpenCloseServicios"
+                        id="btnOpenCrearServicios" title="Crear Servicios que Ofrece este Centro" data-bs-toggle="modal"
+                        data-bs-target="#modalServiciosCentro">Crear
+                        Servicio </button>
+                    {% endif %}
+                </div>
+            </div>
+
+            <br>
+
+            <div class="row">
+
+                <div class="table-responsive">
+                    <table id="tableServiciosCentro"
+                        class="table rounded-4 table-sm table-bordered table-striped align-middle mb-0 bg-white table-basic"
+                        style="width:100%">
+                        <tfoot class="table-active" style="display: table-header-group;">
+                            <tr class="filtersServiciosCentro">
+                                <th class="text-center"></th>
+                                <th class="text-center">Servicio</th>
+                                <th class="text-center">Descripción</th>
+                                <th class="text-center"></th>
+                            </tr>
+                        </tfoot>
+                        <thead class="table-gradient text-dark">
+                            <tr>
+                                <th class="text-center">#</th>
+                                <th class="text-center">Servicio</th>
+                                <th class="text-center">Descripción</th>
+                                <th class="text-center">Acciones</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+
+                        </tbody>
+                    </table>
+                </div>
+
+            </div>
+
+        </div>
+
+    </div>
+
+    <br>
+    <hr><br>
+
+    {% endif %}
+
+
+    <div class="row ajustesCuentasSection">
+
+        <div class="col-lg-12">
+
+
+            <div class="row">
+                <span class="text-center"><b>AJUSTES DE PRESUPUESTO DE CUENTAS</b></span>
+            </div>
+
+            <br>
+            <div class="row">
+
+                <div class="table-responsive">
+                    <table id="tableAjusteCuentas"
+                        class="table rounded-4 table-sm table-bordered table-striped align-middle mb-0 bg-white table-basic"
+                        style="width:100%">
+
+
+                        <tfoot class="table-active" style="display: table-header-group;">
+                            <tr class="filtesPanelAjutesCuentas">
+                                <th>#</th>
+                                <th>Número Cuenta</th>
+                                <th>Cuenta Contable</th>
+                                <th></th>
+                                <th></th>
+                                <th></th>
+                                <th>Estado</th>
+                                <th>Autorizado Por</th>
+                                <th></th>
+                            </tr>
+                        </tfoot>
+                        <thead class="table-gradient text-dark">
+                            <tr>
+                                <th class="text-center">#</th>
+                                <th class="text-center">Número Cuenta</th>
+                                <th class="text-center">Cuenta Contable</th>
+                                <th class="text-center">Presupuesto Anterior</th>
+                                <th class="text-center">Presupuesto Nuevo Solicitado</th>
+                                <th class="text-center">Disponible</th>
+                                <th class="text-center">Estado</th>
+                                <th class="text-center">Autorizado Por</th>
+                                <th class="text-center">Acciones</th>
+                            </tr>
+                        </thead>
+
+                        <tbody>
+
+                        </tbody>
+                    </table>
+                </div>
+
+            </div>
+
+
+        </div>
+
+    </div>
+
+
+    <div class="row presupuestoAnualSection">
+
+        <div class="col-lg-12">
+
+
+            <div class="row">
+                <span class="text-center"><b>PRESUPUESTO ANUAL</b></span>
+            </div>
+
+            <br>
+
+            <div class="row d-flex justify-content-end align-items-end">
+                <div class="col-sm-2">
+                    <div class="form-group">
+                        <label class="col-form-label">Año: </label>
+                        <select class="form-select form-select-sm filterStyle text-nowrap anioAnual tableAnual"
+                            id="anioAnual">
+                        </select>
+                        <b class="text-danger text-wrap">Visualiza Comparacion del Año seleccionado con uno
+                            anterior.</b>
+                    </div>
+                </div>
+            </div>
+
+            <br>
+
+            <div class="row">
+
+                <div class="table-responsive">
+
+                    <table id="tablePresupuestoAnual"
+                        class="table rounded-4 table-sm table-bordered table-striped align-middle mb-0 bg-white table-basic"
+                        style="width:100%">
+
+                        <thead class="table-gradient text-dark">
+                            <tr>
+                                <th class="text-center">#</th>
+                                <th class="text-center">Número Cuenta</th>
+                                <th class="text-center">Cuenta Contable</th>
+                                <th class="text-center">Centro</th>
+
+                                <th class="text-center" colspan="8">Enero</th>
+                                <th class="text-center" colspan="8">Febrero</th>
+                                <th class="text-center" colspan="8">Marzo</th>
+                                <th class="text-center" colspan="8">Abril</th>
+                                <th class="text-center" colspan="8">Mayo</th>
+                                <th class="text-center" colspan="8">Junio</th>
+                                <th class="text-center" colspan="8">Julio</th>
+                                <th class="text-center" colspan="8">Agosto</th>
+                                <th class="text-center" colspan="8">Septiembre</th>
+                                <th class="text-center" colspan="8">Octubre</th>
+                                <th class="text-center" colspan="8">Noviembre</th>
+                                <th class="text-center" colspan="8">Diciembre</th>
+
+                            </tr>
+                            <tr>
+                                <th class="text-center">#</th>
+                                <th class="text-center">Número Cuenta</th>
+                                <th class="text-center">Cuenta Contable</th>
+                                <th class="text-center">Centro</th>
+
+                                <th class="text-center">Autorizado Anterior</th>
+                                <th class="text-center">Autorizado Actual</th>
+                                <th class="text-center">Gastado Anterior</th>
+                                <th class="text-center">Gastado Actual</th>
+                                <th class="text-center">Disponible Anterior</th>
+                                <th class="text-center">Disponible Actual</th>
+                                <th class="text-center">Porc. Anterior</th>
+                                <th class="text-center">Porc. Actual</th>
+
+                                <th class="text-center">Autorizado Anterior</th>
+                                <th class="text-center">Autorizado Actual</th>
+                                <th class="text-center">Gastado Anterior</th>
+                                <th class="text-center">Gastado Actual</th>
+                                <th class="text-center">Disponible Anterior</th>
+                                <th class="text-center">Disponible Actual</th>
+                                <th class="text-center">Porc. Anterior</th>
+                                <th class="text-center">Porc. Actual</th>
+
+                                <th class="text-center">Autorizado Anterior</th>
+                                <th class="text-center">Autorizado Actual</th>
+                                <th class="text-center">Gastado Anterior</th>
+                                <th class="text-center">Gastado Actual</th>
+                                <th class="text-center">Disponible Anterior</th>
+                                <th class="text-center">Disponible Actual</th>
+                                <th class="text-center">Porc. Anterior</th>
+                                <th class="text-center">Porc. Actual</th>
+
+                                <th class="text-center">Autorizado Anterior</th>
+                                <th class="text-center">Autorizado Actual</th>
+                                <th class="text-center">Gastado Anterior</th>
+                                <th class="text-center">Gastado Actual</th>
+                                <th class="text-center">Disponible Anterior</th>
+                                <th class="text-center">Disponible Actual</th>
+                                <th class="text-center">Porc. Anterior</th>
+                                <th class="text-center">Porc. Actual</th>
+
+                                <th class="text-center">Autorizado Anterior</th>
+                                <th class="text-center">Autorizado Actual</th>
+                                <th class="text-center">Gastado Anterior</th>
+                                <th class="text-center">Gastado Actual</th>
+                                <th class="text-center">Disponible Anterior</th>
+                                <th class="text-center">Disponible Actual</th>
+                                <th class="text-center">Porc. Anterior</th>
+                                <th class="text-center">Porc. Actual</th>
+
+                                <th class="text-center">Autorizado Anterior</th>
+                                <th class="text-center">Autorizado Actual</th>
+                                <th class="text-center">Gastado Anterior</th>
+                                <th class="text-center">Gastado Actual</th>
+                                <th class="text-center">Disponible Anterior</th>
+                                <th class="text-center">Disponible Actual</th>
+                                <th class="text-center">Porc. Anterior</th>
+                                <th class="text-center">Porc. Actual</th>
+
+                                <th class="text-center">Autorizado Anterior</th>
+                                <th class="text-center">Autorizado Actual</th>
+                                <th class="text-center">Gastado Anterior</th>
+                                <th class="text-center">Gastado Actual</th>
+                                <th class="text-center">Disponible Anterior</th>
+                                <th class="text-center">Disponible Actual</th>
+                                <th class="text-center">Porc. Anterior</th>
+                                <th class="text-center">Porc. Actual</th>
+
+                                <th class="text-center">Autorizado Anterior</th>
+                                <th class="text-center">Autorizado Actual</th>
+                                <th class="text-center">Gastado Anterior</th>
+                                <th class="text-center">Gastado Actual</th>
+                                <th class="text-center">Disponible Anterior</th>
+                                <th class="text-center">Disponible Actual</th>
+                                <th class="text-center">Porc. Anterior</th>
+                                <th class="text-center">Porc. Actual</th>
+
+                                <th class="text-center">Autorizado Anterior</th>
+                                <th class="text-center">Autorizado Actual</th>
+                                <th class="text-center">Gastado Anterior</th>
+                                <th class="text-center">Gastado Actual</th>
+                                <th class="text-center">Disponible Anterior</th>
+                                <th class="text-center">Disponible Actual</th>
+                                <th class="text-center">Porc. Anterior</th>
+                                <th class="text-center">Porc. Actual</th>
+
+                                <th class="text-center">Autorizado Anterior</th>
+                                <th class="text-center">Autorizado Actual</th>
+                                <th class="text-center">Gastado Anterior</th>
+                                <th class="text-center">Gastado Actual</th>
+                                <th class="text-center">Disponible Anterior</th>
+                                <th class="text-center">Disponible Actual</th>
+                                <th class="text-center">Porc. Anterior</th>
+                                <th class="text-center">Porc. Actual</th>
+
+                                <th class="text-center">Autorizado Anterior</th>
+                                <th class="text-center">Autorizado Actual</th>
+                                <th class="text-center">Gastado Anterior</th>
+                                <th class="text-center">Gastado Actual</th>
+                                <th class="text-center">Disponible Anterior</th>
+                                <th class="text-center">Disponible Actual</th>
+                                <th class="text-center">Porc. Anterior</th>
+                                <th class="text-center">Porc. Actual</th>
+
+                                <th class="text-center">Autorizado Anterior</th>
+                                <th class="text-center">Autorizado Actual</th>
+                                <th class="text-center">Gastado Anterior</th>
+                                <th class="text-center">Gastado Actual</th>
+                                <th class="text-center">Disponible Anterior</th>
+                                <th class="text-center">Disponible Actual</th>
+                                <th class="text-center">Porc. Anterior</th>
+                                <th class="text-center">Porc. Actual</th>
+
+                            </tr>
+                        </thead>
+
+                        <tbody>
+
+                        </tbody>
+
+                        <tfoot class="table-active">
+                            <tr>
+                                <th></th>
+                                <th></th>
+                                <th></th>
+                                <th></th>
+
+                                <th></th>
+                                <th></th>
+                                <th></th>
+                                <th></th>
+
+                                <th></th>
+                                <th></th>
+                                <th></th>
+                                <th></th>
+
+                                <th></th>
+                                <th></th>
+                                <th></th>
+                                <th></th>
+
+                                <th></th>
+                                <th></th>
+                                <th></th>
+                                <th></th>
+
+                                <th></th>
+                                <th></th>
+                                <th></th>
+                                <th></th>
+
+                                <th></th>
+                                <th></th>
+                                <th></th>
+                                <th></th>
+
+                                <th></th>
+                                <th></th>
+                                <th></th>
+                                <th></th>
+
+                                <th></th>
+                                <th></th>
+                                <th></th>
+                                <th></th>
+
+                                <th></th>
+                                <th></th>
+                                <th></th>
+                                <th></th>
+
+                                <th></th>
+                                <th></th>
+                                <th></th>
+                                <th></th>
+
+                                <th></th>
+                                <th></th>
+                                <th></th>
+                                <th></th>
+
+                                <th></th>
+                                <th></th>
+                                <th></th>
+                                <th></th>
+
+
+                                <th></th>
+                                <th></th>
+                                <th></th>
+                                <th></th>
+
+                                <th></th>
+                                <th></th>
+                                <th></th>
+                                <th></th>
+
+                                <th></th>
+                                <th></th>
+                                <th></th>
+                                <th></th>
+
+                                <th></th>
+                                <th></th>
+                                <th></th>
+                                <th></th>
+
+                                <th></th>
+                                <th></th>
+                                <th></th>
+                                <th></th>
+
+                                <th></th>
+                                <th></th>
+                                <th></th>
+                                <th></th>
+
+                                <th></th>
+                                <th></th>
+                                <th></th>
+                                <th></th>
+
+                                <th></th>
+                                <th></th>
+                                <th></th>
+                                <th></th>
+
+                                <th></th>
+                                <th></th>
+                                <th></th>
+                                <th></th>
+
+                                <th></th>
+                                <th></th>
+                                <th></th>
+                                <th></th>
+
+                                <th></th>
+                                <th></th>
+                                <th></th>
+                                <th></th>
+
+                                <th></th>
+                                <th></th>
+                                <th></th>
+                                <th></th>
+
+                            </tr>
+                        </tfoot>
+                    </table>
+
+                </div>
+
+            </div>
+
+
+        </div>
+
+    </div>
+
+
+    <div class="row ingresosPresupuestados">
+        <div class="col-lg-12">
+            <div class="row">
+                <span class="text-center"><b>OTROS INGRESOS PRESUPUESTADOS</b></span>
+            </div>
+
+            <br>
+
+            <div class="row">
+
+                <div class="table-responsive">
+                    <table id="tableIngresosPresupuestados"
+                        class="table rounded-4 table-sm table-bordered table-striped align-middle mb-0 bg-white table-basic"
+                        style="width:100%">
+                        <tfoot class="table-active" style="display: table-header-group;">
+                            <tr class="filtersPanelIngresosPresupuestados">
+                                <th>#</th>
+                                <th>Número Cuenta</th>
+                                <th>Cuenta Contable</th>
+                                <th></th>
+                                <th></th>
+                                <th></th>
+                                <th></th>
+                                <th></th>
+                            </tr>
+                        </tfoot>
+                        <thead class="table-gradient text-dark">
+                            <tr>
+                                <th class="text-center">#</th>
+                                <th class="text-center">Número Cuenta</th>
+                                <th class="text-center">Cuenta Contable</th>
+                                <th class="text-center">Presupuesto de Ingreso Proyectado</th>
+                                <th class="text-center">Presupuesto de Ingreso Logrado</th>
+                                <th class="text-center">Diferencia de Ingreso Logrado</th>
+                                <th class="text-center">Porc. de Ingreso Logrado</th>
+                                <th class="text-center">Acciones</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+
+                        </tbody>
+                    </table>
+                </div>
+
+            </div>
+
+        </div>
+    </div>
+
+
+
+
+</div>
+
+<br>
+<hr>
+<br>

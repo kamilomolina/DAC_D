@@ -1,0 +1,556 @@
+{% extends 'componentes/menu_global_security.html' %}
+{% load static %}
+
+{% block title %}
+LISTA DE USUARIOS
+{% endblock %}
+
+{% block body %}
+
+
+<div class="container-fluid mt-1">
+  <div class="card shadow-lg card-expanded">
+
+    <div class="row align-items-center justify-content-between">
+      <div class="row align-items-center">
+        <div class="col d-flex align-items-center">
+          <button id="toggle-sidebar" class="me-3" title="Mostrar/Ocultar Menu"></button>
+          <i class="material-icons d-block">person</i>
+          <h4 class="page-title mb-0">LISTADO DE USUARIOS</h4>
+        </div>
+
+        <div class="col-auto d-flex">
+          <div class="d-flex flex-row align-items-center me-3">
+            <label for="filtroEstado" class="form-label mb-0 me-2">ESTADO</label>
+            <select id="filtroEstado" class="form-select form-select-sm w-auto">
+              <option value="1" selected>Mostrar Habilitados</option>
+              <option value="2">Mostrar Retirados</option>
+              <option value="0">Mostrar Todos</option>
+            </select>
+          </div>
+        </div>
+      </div>
+    </div>
+
+
+    <div class="row ">
+      <div class="row mt-1 justify-content-center">
+
+        <div class="col-12 col-md-9">
+
+          <div class="table-responsive mt-1 shadow bg-blanco" style="display: flex; flex-direction: column;">
+            <button id="btnAgregarUsuario" class="btn btn-info mb-2" title="Agregar Usuario" style="flex-grow: 1;">
+              <i class="fa fa-user-plus"></i>
+            </button>
+            <table id="tableModulosUsuario"
+              class="table table-striped table-bordered mb-0 table-sm rounded-4 table-hover align-middle">
+              <thead class="bg-blanco text-dark">
+                <tr>
+                  <th>Nombre</th>
+                  <th>Usuario</th>
+                  <th>Estado</th>
+                  <th>Gestiones</th>
+                </tr>
+              </thead>
+              <tbody>
+              </tbody>
+            </table>
+          </div>
+        </div>
+
+      </div>
+    </div>
+
+  </div>
+</div>
+
+
+<a href="{% url 'global_main' %}">
+  <button class="btn btn-sm btn-danger" id="btnCerrar" title="Cerrar"
+    style="position: fixed; bottom: 20px; right: 20px;">
+    <i class="fa fa-times"></i> Cerrar
+  </button>
+</a>
+
+{% include 'usuarios/modales_usuarios/m_listado_usuarios_agregar_usuario.html' %}
+{% include 'usuarios/modales_usuarios/m_listado_usuarios_cambiar_contrasenas.html' %}
+{% include 'usuarios/modales_usuarios/m_listado_usuarios_cambiar_usuario.html' %}
+{% include 'usuarios/modales_usuarios/m_listado_usuarios_cambiar_nombre.html' %}
+{% include 'usuarios/modales_usuarios/m_listado_usuarios_ver_password.html' %}
+
+{% endblock %}
+
+{% block scripts %}
+<script>
+  $(document).ready(function () {
+    var csrfToken = "{{ csrf_token }}";
+    var tableFirmas, firma_id;
+
+
+    $('#btnAgregarUsuario').on('click', function () {
+      $('#modalAgregarUsuario').modal('show');
+      getListadoEmpleados();
+    });
+
+    var toastMixin = Swal.mixin({
+      toast: true,
+      icon: 'success',
+      title: 'General Title',
+      animation: false,
+      position: 'top-right',
+      showConfirmButton: false,
+      timer: 2000,
+      timerProgressBar: true,
+      didOpen: (toast) => {
+        toast.addEventListener('mouseenter', Swal.stopTimer);
+        toast.addEventListener('mouseleave', Swal.resumeTimer);
+      }
+    });
+
+    /* MENU ID Y SUBMENU ID */
+    $('#usuariosMenu, #listadoUsuario_submenu').addClass('active');
+
+    selectedUsuarioId = null;
+    selectedEmpleadoId = null;
+
+    $('#filtroEstado').on('change', function () {
+      getUsuarios();
+    });
+
+    $('#selectNombreCompleto').on('change', function () {
+      selectedEmpleadoId = $(this).val();
+    });
+
+
+    getUsuarios()
+
+
+    function getUsuarios() {
+
+      $("#tableModulosUsuario").DataTable().clear().destroy();
+
+      var estadoFiltro = $('#filtroEstado').val();
+
+      var cardHeight = $(".card-expanded").height();
+      var tableHeight = cardHeight * 0.5;
+
+      tableModulosUsuario = $('#tableModulosUsuario').DataTable({
+        autoWidth: false,
+        scrollX: true,
+        scrollY: tableHeight + 'px',
+        scrollCollapse: true,
+        pageLength: 50,
+        dom: 'rftip',
+        language: {
+          url: "{% static 'app/th/json/es-ES.json' %}",
+        },
+        ajax: {
+          url: `{% url 'data_usuarios_especial' %}`,
+          type: "POST",
+          dataSrc: 'data',
+          data: {
+            csrfmiddlewaretoken: csrfToken,
+            estado: estadoFiltro
+          },
+        },
+        colReorder: {
+          realtime: false,
+        },
+        buttons: [
+          {
+            extend: 'excel',
+            text: '<i class="fas fa-file-excel"></i>',
+            titleAttr: 'Exportar a Excel',
+            className: 'btn btn-success',
+          },
+          {
+            extend: 'pdf',
+            text: '<i class="fas fa-file-pdf"></i>',
+            titleAttr: 'Exportar a PDF',
+            className: 'btn btn-danger',
+          },
+          {
+            extend: 'print',
+            text: '<i class="fas fa-print"></i>',
+            titleAttr: 'Imprimir',
+            className: 'btn btn-primary',
+            orientation: 'landscape'
+          }
+        ],
+        columns: [
+          { data: 'Nombre' },
+          { data: 'Usuario' },
+          {
+            data: 'Estado',
+            render: function (data) {
+              return data == '1' ? 'HABILITADO' : 'RETIRADO';
+            }
+          },
+          {
+            data: null,
+            orderable: false,
+            render: function (data, type, row) {
+              let estadoUsuario = row.Estado == '1' ? 'HABILITADO' : 'RETIRADO';
+              let botonEstado = estadoUsuario === 'HABILITADO'
+                ? '<button title="Retirar Usuario" class="btn btn-sm btn-danger btn-estado">' +
+                '<i class="fa fa-ban"></i> Retirar' +
+                '</button>'
+                : '<button title="Habilitar Usuario" class="btn btn-sm btn-success btn-estado">' +
+                '<i class="fa fa-check"></i> Habilitar' +
+                '</button>';
+              return '<button title="Cambiar Contraseña" class="btn btn-sm btn-secondary me-1">' +
+                '<i class="fa fa-key"></i>' +
+                '</button>' +
+                '<button title="Cambiar Usuario" class="btn btn-sm btn-secondary me-1">' +
+                '<i class="fa fa-user"></i>' +
+                '</button>' +
+                '<button title="Cambiar Nombre" class="btn btn-sm btn-secondary me-1">' +
+                '<i class="fa fa-edit"></i>' +
+                '</button>' +
+                // '<button title="Ver Historial Contraseña" class="btn btn-sm btn-secondary me-1">' +
+                // '<i class="fa-solid fa-clock-rotate-left"></i>' +
+                // '</button>' +
+                // '<button title="Ver Contraseña" class="btn btn-sm btn-secondary me-1">' +
+                // '<i class="fa fa-eye"></i>' +
+                '</button>' + botonEstado;
+            }
+          }
+
+        ],
+        order: [[1, "asc"]]
+      });
+    }
+
+
+    $('#tableModulosUsuario tbody').on('click', 'tr', function () {
+      $('#tableModulosUsuario tbody tr').removeClass('selected');
+      $(this).addClass('selected');
+      selectedUsuarioId = tableModulosUsuario.row(this).data().PKUsuario;
+    });
+
+
+    $('#tableModulosUsuario tbody').on('click', 'button', function () {
+      var action = $(this).attr('title');
+      var data = tableModulosUsuario.row($(this).parents('tr')).data();
+      if (action === "Cambiar Contraseña") {
+
+        $('#modalCambiarContrasena').data('usuario', data);
+        $('#modalCambiarContrasena').modal('show');
+
+      } else if (action === "Cambiar Usuario") {
+
+        $('#usuarioActual').val(data.Usuario);
+        $('#modalCambiarUsuario').data('usuario', data);
+        $('#modalCambiarUsuario').modal('show');
+
+      } else if (action === "Ver Contraseña") {
+        showLoadingScreen("Buscando Contraseña");
+        $.ajax({
+          url: `{% url 'obtener_contrasena' %}`,
+          type: "POST",
+          data: {
+            hash: data.Contrasena,
+            csrfmiddlewaretoken: csrfToken
+          },
+          success: function (response) {
+            if (response.contraseña) {
+              toastMixin.fire({
+                animation: true,
+                title: 'Contraseña Encontrada!'
+              });
+              // $('#contrasena').val(response.contraseña);
+              const contrasenasLista = $('#contrasenas-lista');
+              contrasenasLista.empty();
+              contrasenasLista.append('<li class="list-group-item">' + response.contraseña + '</li>');
+              $('#modalVerContrasena').modal('show');
+            } else {
+              Swal.fire('Error', `No se pudo recuperar la contraseña.`, 'error');
+            }
+          },
+          error: function (xhr) {
+            console.error("Error:", xhr.responseText);
+            Swal.fire('Error', `Error al recuperar la contraseña.`, 'error');
+          }
+        });
+
+      } else if (action === "Ver Historial Contraseña") {
+        showLoadingScreen("Buscando Contraseñas");
+        $.ajax({
+          url: `{% url 'obtener_historial_contraseña' %}`,
+          type: "POST",
+          data: {
+            varUsuario: data.PKUsuario,
+            csrfmiddlewaretoken: csrfToken
+          },
+          success: function (response) {
+            if (response.contrasenas_anteriores && response.contrasenas_anteriores.length > 0) {
+              toastMixin.fire({
+                animation: true,
+                title: 'Contraseñas Encontradas!'
+              });
+
+              const contrasenasLista = $('#contrasenas-lista');
+              contrasenasLista.empty();
+
+              response.contrasenas_anteriores.forEach(function (contrasena) {
+                contrasenasLista.append('<li class="list-group-item">' + contrasena + '</li>');
+              });
+
+              $('#modalVerContrasena').modal('show');
+            } else {
+              Swal.fire('Error', `No se encontro el historial de las contraseñas.`, 'error');
+            }
+          },
+          error: function (xhr) {
+            console.error("Error:", xhr.responseText);
+            Swal.fire('Error', `Error al recuperar las contraseñas.`, 'error');
+          }
+        });
+
+      } else if (action === "Cambiar Nombre") {
+
+        $('#nombreActual').val(data.Nombre);
+        $('#modalCambiarNombre').data('usuario', data);
+        $('#modalCambiarNombre').modal('show');
+
+      } else if (action === "Habilitar Usuario" || action === "Retirar Usuario") {
+
+        var data = tableModulosUsuario.row($(this).parents('tr')).data();
+        var nuevoEstado = data.Estado === '1' ? '2' : '1';
+        var accionTexto = nuevoEstado === '1' ? 'habilitar' : 'retirar';
+        var accionTexto2 = nuevoEstado === '1' ? 'habilitado' : 'retirado';
+        Swal.fire({
+          title: `¿Deseas ${accionTexto} a este usuario?`,
+          text: `El usuario será ${accionTexto === 'habilitar' ? 'reintegrado' : 'retirado'}`,
+          icon: 'warning',
+          showCancelButton: true,
+          confirmButtonColor: '#3085d6',
+          cancelButtonColor: '#d33',
+          confirmButtonText: `Sí, ${accionTexto}`
+        }).then((result) => {
+          if (result.isConfirmed) {
+            $.ajax({
+              url: `{% url 'update_estado_usuario' %}`,
+              type: 'POST',
+              data: {
+                usuario: data.Usuario,
+                estado: nuevoEstado,
+                csrfmiddlewaretoken: "{{ csrf_token }}"
+              },
+              success: function (response) {
+                Swal.fire('Éxito', `El usuario ha sido ${accionTexto2} correctamente`, 'success');
+                getUsuarios(); // Recargar la tabla después del cambio
+              },
+              error: function (xhr, status, error) {
+                Swal.fire('Error', `No se pudo ${accionTexto} al usuario`, 'error');
+              }
+            });
+          }
+        });
+      }
+
+    });
+
+
+    $('#guardarContrasenaEditar').on('click', function () {
+
+      var nuevaPass = $('#nuevaContrasenaEditar').val();
+      var confirmarPass = $('#confirmarContrasenaEditar').val();
+      if (nuevaPass !== confirmarPass || nuevaPass.trim() === '') {
+        Swal.fire('Error', 'Las contraseñas no coinciden', 'error');
+        return;
+      }
+
+
+      var usuario = $('#modalCambiarContrasena').data('usuario');
+      var idUsuario = usuario.PKUsuario;
+      var contrasenaAnterior = usuario.Contrasena;
+      $.ajax({
+        url: `{% url 'update_password_usuario' %}`,
+        type: 'POST',
+        data: {
+          id_usuario: idUsuario,
+          password: nuevaPass,
+          password_anterior: contrasenaAnterior,
+          csrfmiddlewaretoken: "{{ csrf_token }}"
+        },
+        success: function (response) {
+          Swal.fire('Éxito', 'La contraseña ha sido actualizada correctamente', 'success');
+          getUsuarios()
+        },
+        error: function (xhr, status, error) {
+          Swal.fire('Error', 'No se pudo actualizar la contraseña', 'error');
+        },
+        complete: function () {
+          $('#modalCambiarContrasena').modal('hide');
+        }
+      });
+    });
+
+
+    $('#guardarUsuario').on('click', function () {
+      var nuevoUsuario = $('#nuevoUsuario').val();
+
+      if (nuevoUsuario.trim() === '') {
+        Swal.fire('Error', 'El nuevo usuario no puede estar vacío', 'error');
+        return;
+      }
+
+      var usuario = $('#modalCambiarUsuario').data('usuario');
+      var nombreUsuarioActual = usuario.Usuario;
+      $.ajax({
+        url: `{% url 'update_usuario_usuario' %}`,
+        type: 'POST',
+        data: {
+          usuarioActual: nombreUsuarioActual,
+          usuarioNuevo: nuevoUsuario,
+          csrfmiddlewaretoken: "{{ csrf_token }}"
+        },
+        success: function (response) {
+          Swal.fire('Éxito', 'El usuario ha sido actualizado correctamente', 'success');
+          getUsuarios()
+        },
+        error: function (xhr, status, error) {
+          Swal.fire('Error', 'No se pudo actualizar el usuario', 'error');
+        },
+        complete: function () {
+          $('#modalCambiarUsuario').modal('hide');
+        }
+      });
+    });
+
+
+    $('#guardarNombre').on('click', function () {
+      var nuevoNombre = $('#nuevoNombre').val();
+
+      if (nuevoNombre.trim() === '') {
+        Swal.fire('Error', 'El nuevo nombre no puede estar vacío', 'error');
+        return;
+      }
+
+      var usuario = $('#modalCambiarNombre').data('usuario');
+      var nombreUsuario = usuario.Usuario;
+      $.ajax({
+        url: `{% url 'update_nombrecompleto_usuario' %}`,
+        type: 'POST',
+        data: {
+          usuario: nombreUsuario,
+          nombre: nuevoNombre,
+          csrfmiddlewaretoken: "{{ csrf_token }}"
+        },
+        success: function (response) {
+          Swal.fire('Éxito', 'El nombre ha sido actualizado correctamente', 'success');
+          getUsuarios()
+        },
+        error: function (xhr, status, error) {
+          Swal.fire('Error', 'No se pudo actualizar el nombre', 'error');
+        },
+        complete: function () {
+          $('#modalCambiarNombre').modal('hide');
+        }
+      });
+    });
+
+
+    $('#guardarNuevoUsuario').on('click', function () {
+
+      var nombreCompleto = $('#selectNombreCompleto option:selected').text();
+      var nuevoUsuario = $('#nuevoUsuarioAgregar').val().trim();
+      var nuevaContrasena = $('#nuevaContrasena').val();
+      var confirmarContrasena = $('#confirmarContrasena').val();
+      var tipoUsuario = $('#tipoUsuario').val();
+      selectedEmpleadoId = $('#selectNombreCompleto').val();
+
+      if (!nombreCompleto || !nuevoUsuario || !nuevaContrasena || !confirmarContrasena || !selectedEmpleadoId) {
+        Swal.fire('Error', 'Todos los campos son obligatorios', 'error');
+        return;
+      }
+
+      if (nuevaContrasena !== confirmarContrasena) {
+        Swal.fire('Error', 'Las contraseñas no coinciden', 'error');
+        return;
+      }
+
+      $.ajax({
+        url: `{% url 'insert_usuario_listado' %}`,
+        type: 'POST',
+        data: {
+          varNombre: nombreCompleto,
+          varUsuario: nuevoUsuario,
+          varEmpleado: selectedEmpleadoId,
+          varPassword: nuevaContrasena,
+          csrfmiddlewaretoken: "{{ csrf_token }}"
+        },
+        success: function (response) {
+          if(response.save == 1){
+            Swal.fire('Éxito', 'Usuario agregado correctamente', 'success');
+            $('#modalAgregarUsuario').modal('hide');
+            getUsuarios();
+          }else{
+            Swal.fire('Error', response.error, 'error');
+          }
+
+        },
+        error: function (xhr, status, error) {
+          Swal.fire('Error', 'No se pudo agregar el usuario', 'error');
+        }
+      });
+    });
+
+
+
+    function getListadoEmpleados() {
+
+
+      $.ajax({
+        url: "{% url 'get_listado_empleados' %}",
+        type: "POST",
+        data: {
+          csrfmiddlewaretoken: csrfToken
+        },
+        success: function (data) {
+          if (data.data.length > 0) {
+            $("#selectNombreCompleto").empty();
+
+            $("#selectNombreCompleto").append('<option value="">Seleccione un empleado</option>');
+
+            data.data.forEach(function (empleado) {
+              $("#selectNombreCompleto").append(
+                `<option value="${empleado.id_ficha}">${empleado.nombre}</option>`
+              );
+            });
+
+            $('#selectNombreCompleto').select2({
+              placeholder: "Seleccione un Empleado",
+              width: "100%",
+              allowClear: true,
+              width: 'resolve',
+              dropdownParent: $('#modalAgregarUsuario')
+            });
+
+          } else {
+            $("#selectNombreCompleto").html('<option value="">No hay usuarios disponibles</option>');
+          }
+        },
+        error: function (xhr, status, error) {
+          console.log("Error al obtener usuarios:", error);
+        }
+      });
+    }
+  });
+
+
+  function showLoadingScreen(text = '') {
+    Swal.fire({
+      title: '',
+      html: `<b>${text}</b>`,
+      didOpen: () => {
+        Swal.showLoading();
+      },
+      allowOutsideClick: false,
+      showConfirmButton: false
+    });
+  }
+
+</script>
+{% endblock %}

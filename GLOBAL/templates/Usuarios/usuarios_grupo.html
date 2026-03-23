@@ -1,0 +1,318 @@
+{% extends 'componentes/menu_global_security.html' %}
+{% load static %}
+
+{% block title %}
+USUARIOS DEL GRUPO
+{% endblock %}
+
+
+{% block body %}
+
+<div class="container-fluid mt-1">
+    <div class="card shadow-lg card-expanded">
+
+        <div class="row align-items-center">
+            <div class="col d-flex align-items-center">
+                <button id="toggle-sidebar" class="me-3" title="Mostrar/Ocultar Menu">
+                </button>
+                <i class="material-icons d-block">person</i>
+                <h4 class="page-title mb-0">USUARIOS DEL GRUPO</h4>
+            </div>
+            <div class="col d-flex justify-content-end">
+                <div class="w-50 d-flex flex-column align-items-right">
+                    <label for="selectModulo" class="me-2">MODULOS</label>
+                    <select id="selectModulo" class="form-select form-select-sm" name="selectModulo">
+                        {% for m in modulos %}
+                        <option value="{{ m.PKmodulo }}">{{ m.Nombre }}</option>
+                        {% endfor %}
+                    </select>
+                </div>
+            </div>
+        </div>
+
+        <div class="container-fluid pt-1">
+
+            <div class="row d-flex align-items-start justify-content-between">
+
+                <div class="col-4">
+                    <label class="me-2">GRUPOS</label>
+                    <div class="table-responsive shadow bg-blanco">
+                        <table id="tableGrupos"
+                            class="table table-striped table-bordered mb-0 table-sm rounded-4 table-hover align-middle">
+                            <thead class="bg-blanco text-dark">
+                                <tr>
+                                    <th>Nombres</th>
+                                    <th>Descripción</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+
+                <div class="col-3">
+                    <label class="me-2">USUARIOS ASIGNADOS</label>
+                    <div class="table-responsive shadow bg-blanco">
+                        <table id="tableUsuariosAsigna"
+                            class="table table-striped table-bordered mb-0 table-sm rounded-4 table-hover align-middle">
+                            <thead class="table-success text-dark ">
+                                <tr>
+                                    <th>Nombres</th>
+                                    <th>Usuario</th>
+                                </tr>
+                            </thead>
+                            <tbody class="table-success text-dark ">
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+
+                <div class="col-1 d-flex flex-column align-items-center my-4">
+                    <button id="BtnAgregar" class="btn btn-success btn-sm mb-2" style="width: 50px; height: 50px;">
+                        <i class="large material-icons">arrow_back</i>
+                    </button>
+                    <button id="BtnQuitar" class="btn btn-danger btn-sm mb-2" style="width: 50px; height: 50px;">
+                        <i class="large material-icons">arrow_forward</i>
+                    </button>
+                </div>
+
+                <div class="col-3">
+                    <label class="me-2">USUARIOS DISPONIBLES</label>
+                    <div class="table-responsive shadow bg-blanco">
+                        <table id="tableUsuariosDisponibles"
+                            class="table table-striped table-bordered mb-0 table-sm rounded-4 table-hover align-middle">
+                            <thead class="table-danger text-dark">
+                                <tr>
+                                    <th>Nombres</th>
+                                    <th>Usuario</th>
+                                </tr>
+                            </thead>
+                            <tbody class="table-danger text-dark">
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+
+<a href="{% url 'global_main' %}">
+    <button class="btn btn-sm btn-danger" id="btnCerrar" title="Cerrar"
+        style="position: fixed; bottom: 20px; right: 20px;">
+        <i class="fa fa-times"></i> Cerrar
+    </button>
+</a>
+
+{% endblock %}
+
+
+
+{% block scripts %}
+<script>
+    $(document).ready(function () {
+        var csrfToken = "{{ csrf_token }}";
+        var selectedGrupoId = null, selectedUsuarioDisponibleId = null, selectedUsuarioAsignadoId = null;
+
+        var id_modulo = null;
+
+        var toastMixin = Swal.mixin({
+            toast: true,
+            icon: 'success',
+            title: 'General Title',
+            position: 'top-right',
+            showConfirmButton: false,
+            timer: 2000,
+            timerProgressBar: true
+        });
+
+        $('#usuariosMenu, #gruposUsuario_submenu').addClass('active');
+
+
+
+        function getUsuariosDisponibles(grupoSeleccionado) {
+            if ($.fn.DataTable.isDataTable("#tableUsuariosDisponibles")) {
+                $('#tableUsuariosDisponibles').DataTable().destroy();
+            }
+            var cardHeight = $(".card-expanded").height();
+            var tableHeight = cardHeight * 0.40;
+            $('#tableUsuariosDisponibles').DataTable({
+                autoWidth: false,
+                scrollX: true,
+
+                scrollY: tableHeight + 'px',
+                pageLength: 50,
+                dom: 'rftip',
+                language: { url: "{% static 'app/th/json/es-ES.json' %}" },
+                ajax: {
+                    url: `{% url 'data_usuario_grupo_disponible' %}`,
+                    type: "POST",
+                    dataSrc: 'data',
+                    data: { grupo_id: grupoSeleccionado, csrfmiddlewaretoken: csrfToken }
+                },
+                columns: [
+                    { data: 'Nombres' },
+                    { data: 'Usuario' },
+                ],
+                order: [[0, "asc"]]
+            });
+        }
+
+        $('#tableUsuariosDisponibles tbody').on('click', 'tr', function () {
+            $('#tableUsuariosDisponibles tbody tr').removeClass('selected');
+            $(this).addClass('selected');
+            selectedUsuarioDisponibleId = $('#tableUsuariosDisponibles').DataTable().row(this).data().fkUsuario;
+        });
+
+        function getUsuariosAsignados(grupoSeleccionado) {
+            if ($.fn.DataTable.isDataTable("#tableUsuariosAsigna")) {
+                $('#tableUsuariosAsigna').DataTable().destroy();
+            }
+            var cardHeight = $(".card-expanded").height();
+            var tableHeight = cardHeight * 0.45;
+            $('#tableUsuariosAsigna').DataTable({
+                autoWidth: false,
+                scrollX: true,
+                scrollY: tableHeight + 'px',
+                pageLength: 50,
+                dom: 'rftip',
+                language: { url: "{% static 'app/th/json/es-ES.json' %}" },
+                ajax: {
+                    url: `{% url 'data_usuario_grupo_asignado' %}`,
+                    type: "POST",
+                    dataSrc: 'data',
+                    data: { grupo_id: grupoSeleccionado, csrfmiddlewaretoken: csrfToken }
+                },
+                columns: [
+                    { data: 'Nombres' },
+                    { data: 'Usuario' }
+                ],
+                order: [[0, "asc"]]
+            });
+        }
+
+        $('#tableUsuariosAsigna tbody').on('click', 'tr', function () {
+            $('#tableUsuariosAsigna tbody tr').removeClass('selected');
+            $(this).addClass('selected');
+            selectedUsuarioAsignadoId = $('#tableUsuariosAsigna').DataTable().row(this).data().fkUsuario;
+        });
+
+        $('#selectModulo').change(function (e) {
+            e.preventDefault();
+
+            id_modulo = $(this).val();
+
+            if (id_modulo != null && id_modulo != "") {
+                getGrupos();
+            }
+
+        });
+
+        id_modulo = $("#selectModulo").val();
+        if (id_modulo != null && id_modulo != "") {
+            getGrupos();
+        }
+
+        function getGrupos() {
+            if ($.fn.DataTable.isDataTable("#tableGrupos")) {
+                $('#tableGrupos').DataTable().destroy();
+            }
+
+            var cardHeight = $(".card-expanded").height();
+            var tableHeight = cardHeight * 0.45;
+            $('#tableGrupos').DataTable({
+                autoWidth: false,
+                scrollX: true,
+                scrollY: tableHeight + 'px',
+                pageLength: 50,
+                dom: 'rftip',
+                language: { url: "{% static 'app/th/json/es-ES.json' %}" },
+                ajax: {
+                    url: `{% url 'obtener_grupos_data' %}`,
+                    type: "POST",
+                    dataSrc: 'data',
+                    data: { csrfmiddlewaretoken: csrfToken, modulo_id: id_modulo }
+                },
+                columns: [
+                    { data: 'Nombre' },
+                    { data: 'Descripcion' }
+                ],
+                order: [[1, "asc"]]
+            });
+        }
+
+        $('#tableGrupos tbody').on('click', 'tr', function () {
+            $('#tableGrupos tbody tr').removeClass('selected');
+            $(this).addClass('selected');
+            selectedGrupoId = $('#tableGrupos').DataTable().row(this).data().PKgrupo;
+            getUsuariosAsignados(selectedGrupoId);
+            getUsuariosDisponibles(selectedGrupoId);
+        });
+
+        $('#BtnAgregar').on('click', function () {
+            asigarUsuario();
+        });
+
+        $('#BtnQuitar').on('click', function () {
+            quitarUsuario();
+        });
+
+        function asigarUsuario() {
+            let usuario_id = selectedUsuarioDisponibleId;
+            let grupo_id = selectedGrupoId;
+            // Validar que se haya seleccionado un modulo
+            if (!selectedUsuarioDisponibleId) {
+                alert("Por favor, seleccione un usuario DISPONIBLE.");
+                return;  // Detener la ejecución si no hay módulo seleccionado
+            }
+            $.post("{% url 'asignar_usuario_grupo' %}", {
+                usuario_id: usuario_id,
+                grupo_id: grupo_id,
+                csrfmiddlewaretoken: "{{ csrf_token }}"
+            }, function (response) {
+                if (response.status === "success") {
+                    toastMixin.fire({
+                        icon: 'success',
+                        title: 'Usuario agregado correctamente.'
+                    });
+                    getUsuariosAsignados(grupo_id);
+                    getUsuariosDisponibles(grupo_id);
+                } else {
+                    alert(response.message);
+                }
+            });
+        }
+
+        function quitarUsuario() {
+            let usuario_id = selectedUsuarioAsignadoId;
+            let grupo_id = selectedGrupoId;
+            // Validar que se haya seleccionado un modulo
+            if (!selectedUsuarioAsignadoId) {
+                alert("Por favor, seleccione un usuario ASIGNADO.");
+                return;  // Detener la ejecución si no hay módulo seleccionado
+            }
+            $.post("{% url 'quitar_usuario_grupo' %}", {
+                usuario_id: usuario_id,
+                grupo_id: grupo_id,
+                csrfmiddlewaretoken: "{{ csrf_token }}"
+            }, function (response) {
+                if (response.status === "success") {
+                    toastMixin.fire({
+                        icon: 'success',
+                        title: 'Usuario quitado correctamente.'
+                    });
+                    getUsuariosDisponibles(grupo_id);
+                    getUsuariosAsignados(grupo_id);
+                } else {
+                    alert(response.message);
+                }
+            });
+        }
+    });
+
+
+</script>
+
+{% endblock %}

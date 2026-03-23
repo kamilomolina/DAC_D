@@ -1,0 +1,488 @@
+{% extends 'componentes/menu_contable.html' %}
+{% load static %}
+
+{% block title %}
+CIERRE DE MES
+{% endblock %}
+
+
+{% block body %}
+
+
+<div class="row align-items-center border-bottom mb-3 py-2 bg-white shadow-sm mx-0">
+    <div class="col d-flex align-items-center px-0">
+        <button id="toggle-sidebar" class="btn btn-primary btn-sm me-3 border-0 rounded-circle btnMenu"
+            style="width: 32px; height: 32px; padding: 0;" title="Mostrar/Ocultar menú">
+            <i class="fas fa-bars"></i>
+        </button>
+        <h6 class="page-title mb-0 fs-5 fw-bold text-dark">
+            <i class="fas fa-lock text-primary me-2"></i>CIERRES DE MES
+        </h6>
+    </div>
+</div>
+
+<div class="container-fluid px-0 mt-1">
+    <div class="card shadow-lg p-4" style="max-width: 600px; width: auto; margin: 0 auto;">
+
+        <div class="row justify-content-start mb-3">
+            <div class="col-lg-12">
+                <label for="selectEmpresa">Empresa:</label>
+                <select id="selectEmpresa" class="form-select form-select-sm" name="selectEmpresa">
+                    {% for e in empresasData %}
+                    <option value="{{ e.id }}">{{ e.nombre }}</option>
+                    {% endfor %}
+                </select>
+            </div>
+        </div>
+
+        <div class="row justify-content-start mb-3">
+            <div class="col-lg-6">
+                <label for="textMes">Mes</label>
+                <input type="text" id="textMes" class="form-control form-control-sm" placeholder="Mes" name="mes"
+                    readonly>
+            </div>
+
+            <div class="col-lg-6">
+                <label for="textAnio">Año</label>
+                <input type="text" id="textAnio" class="form-control form-control-sm" placeholder="Año" name="Año"
+                    readonly>
+            </div>
+        </div>
+
+        <div class="row mt-3">
+            <div class="col-12 d-flex justify-content-end">
+                <button class="btn btn-sm btn-success" id="btnAutorizar" title="Autorizar"><i
+                        class="fa fa-check-square-o"></i> Autorizar</button>
+            </div>
+        </div>
+
+    </div>
+</div>
+
+<a href="{% url 'panel_contabilidad' %}">
+    <button class="btn btn-sm btn-danger" id="btnCerrar" title="Cerrar"
+        style="position: fixed; bottom: 20px; right: 20px;">
+        <i class="fa fa-times"></i> Cerrar
+    </button>
+</a>
+
+{% endblock %}
+
+
+{% block scripts %}
+
+<script>
+    $(document).ready(function () {
+
+        var csrfToken = "{{ csrf_token }}";
+
+        var opc = "{{ opc }}";
+
+        var nombreMes = "", numeroMes = "", anio = "", pkMes = 0;
+
+        var toastMixin = Swal.mixin({
+            toast: true,
+            icon: 'success',
+            title: 'General Title',
+            animation: false,
+            position: 'top-right',
+            showConfirmButton: false,
+            timer: 2000,
+            timerProgressBar: true,
+            didOpen: (toast) => {
+                toast.addEventListener('mouseenter', Swal.stopTimer);
+                toast.addEventListener('mouseleave', Swal.resumeTimer);
+            }
+
+        });
+
+        obtenerUltimoMesAnio(2, opc);
+
+        $('#selectEmpresa').change(function (e) {
+            e.preventDefault();
+
+            $('#textMes').val("");
+            $('#textAnio').val("");
+
+            numeroMes = ""
+            nombreMes = ""
+            anio = ""
+
+            idEmpresa = $(this).val();
+            obtenerUltimoMesAnio(idEmpresa, opc)
+        });
+
+
+        $('#btnAutorizar').click(function (e) {
+            e.preventDefault();
+
+
+            varEmpresa = $('#selectEmpresa').val();
+
+            if (!numeroMes == "" || !anio == "") {
+                if (opc == 0) {
+
+                    var mensage = 'Al cerrar el mes no puede hacer ningún movimiento contable. ¿Está seguro que desea cerrar el mes de ' + nombreMes + ' del año ' + anio + '?';
+
+
+                    Swal.fire({
+                        title: "Cerrar Mes?",
+                        text: mensage,
+                        icon: "warning",
+                        showCancelButton: true,
+                        confirmButtonColor: '#3085d6',
+                        cancelButtonColor: '#d33',
+                        confirmButtonText: 'Confirmar!'
+                    }).then((result) => {
+                        if (result.isConfirmed) {
+                            showLoadingScreen("Cerrando Mes");
+                            autorizarCierreEntregaDeMes(numeroMes, anio, varEmpresa, pkMes, 1)
+                                .then(function () {
+                                    crearDatosCierre(varEmpresa)
+                                })
+                                .catch(function (error) {
+                                    Swal.fire("", "Hubo un error al autorizar el cierre de mes.", "error");
+                                });
+                        } else {
+
+                        }
+                    });
+
+
+                } else {
+
+                    obtenerMesesCerradosEstadoCerrado(varEmpresa);
+
+                    var mensage = 'Al Entregar el mes no puede hacer ningun movimiento contable. ¿Está seguro que desea entregar el mes de ' + nombreMes + ' del año ' + anio + '?';
+
+                    Swal.fire({
+                        title: "Entregar Mes?",
+                        text: mensage,
+                        icon: "warning",
+                        showCancelButton: true,
+                        confirmButtonColor: '#3085d6',
+                        cancelButtonColor: '#d33',
+                        confirmButtonText: 'Confirmar!'
+                    }).then((result) => {
+                        if (result.isConfirmed) {
+                            showLoadingScreen("Entregando Mes");
+                            if (pkMes != 0) {
+                                autorizarCierreEntregaDeMes(numeroMes, anio, varEmpresa, pkMes, 0)
+                                    .then(function () {
+                                        toastMixin.fire({
+                                            animation: true,
+                                            title: 'Mes Entregado Exitosamente!'
+                                        });
+
+                                        obtenerUltimoMesAnio(varEmpresa, opc)
+                                    })
+                                    .catch(function (error) {
+                                        Swal.fire("", "Hubo un error al autorizar el cierre de mes.", "error");
+                                    });
+                            }
+                        } else {
+
+                        }
+                    });
+                }
+            } else {
+                Swal.fire("", "No hay mes y año disponibles para continuar", "error");
+            }
+        });
+
+
+        function obtenerUltimoMesAnio(idEmpresa, estaCerrado) {
+            $.ajax({
+                url: "{%url 'get_ultimo_mes_anio_from_meses_cerrados' %}",
+                type: "POST",
+                data: {
+                    empresa: idEmpresa,
+                    estaCerrado: estaCerrado,
+                    csrfmiddlewaretoken: csrfToken
+                },
+                success: function (data) {
+                    if (data.data.length > 0) {
+                        numeroMes = data.data[0].numeroMes;
+                        anio = data.data[0].Anio;
+
+                        if (estaCerrado == 0) {
+
+                            if (numeroMes == 0) {
+                                numeroMes = 12;
+                            }
+                            if (anio == 0) {
+                                anio = 2020;
+                            }
+
+                            if (numeroMes == 12) {
+                                numeroMes = 1;
+                                anio += 1;
+                            } else {
+                                numeroMes += 1;
+                            }
+                        }
+
+                        obtenerNombreMes(numeroMes);
+                        $('#textAnio').val(anio);
+                    }
+                    else {
+                        if (estaCerrado == 1) {
+
+                        }
+                    }
+                }
+            });
+        }
+
+        function obtenerNombreMes(varNumeroMes) {
+
+            $.ajax({
+                url: "{%url 'obtener_nombre_mes' %}",
+                type: "POST",
+                data: {
+                    mes: varNumeroMes,
+                    csrfmiddlewaretoken: csrfToken
+                },
+                success: function (data) {
+                    nombreMes = data.data[0].nombreMes;
+
+                    $('#textMes').val(nombreMes);
+                }
+            });
+        }
+
+
+        function autorizarCierreEntregaDeMes(varNumeroMes, varAnio, varIdEmpresa, idMes, opcion) {
+            return new Promise((resolve, reject) => {
+                $.ajax({
+                    url: "{%url 'insert_update_meses_cerrados' %}",
+                    type: "POST",
+                    data: {
+                        mes: varNumeroMes,
+                        anio: varAnio,
+                        empresa: varIdEmpresa,
+                        id: idMes,
+                        opc: opcion,
+                        csrfmiddlewaretoken: csrfToken
+                    },
+                    success: function (data) {
+                        if (data.save != 1) {
+                            reject("Error D: " + data.error);
+                        } else {
+                            resolve(data.save);
+                        }
+                    }
+                });
+            });
+        }
+
+        function crearDatosCierre(varIdEmpresa) {
+            mesCorteEmpresa = 1;
+            lastMes = numeroMes - 1;
+            lastAnio = anio;
+
+            if (lastMes == 0) {
+                lastMes = 12;
+                lastAnio -= 1;
+            }
+
+            fecha = calcularFecha(numeroMes, anio);
+
+            $.ajax({
+                url: "{%url 'obtener_datos_para_cierre_mes' %}",
+                type: "POST",
+                data: {
+                    varFecha: fecha,
+                    varEmpresa: varIdEmpresa,
+                    varMaxMes: numeroMes,
+                    varMaxAnio: anio,
+                    varLastMes: lastMes,
+                    varLastAnio: lastAnio,
+                    csrfmiddlewaretoken: csrfToken
+                },
+                success: function (data) {
+                    if (data.data.length > 0) {
+                        let promesas = [];
+
+                        data.data.forEach(function (item) {
+                            codigoCuenta = item.codigocuenta;
+                            debe = item.SDebe;
+                            haber = item.SHaber;
+
+                            debe = parseFloat(debe);
+                            haber = parseFloat(haber);
+
+                            if (debe > 0 || haber > 0) {
+                                saldoInicial = item.SaldoI;
+                                saldoInicial = parseFloat(saldoInicial);
+
+                                if (numeroMes == mesCorteEmpresa) {
+                                    saldoInicial = 0;
+                                }
+
+                                if (codigoCuenta.startsWith("6")) {
+                                    saldoFinal = saldoInicial + debe - haber;
+                                } else {
+                                    saldoFinal = saldoInicial - debe + haber;
+                                }
+
+                                promesas.push(insertarCierreCuentaMes(numeroMes, anio, codigoCuenta, saldoInicial, debe, haber, saldoFinal, 0, 0, 0, 0, varIdEmpresa));
+                            }
+                        });
+
+                        Promise.all(promesas)
+                            .then(() => {
+                                crearDatosCierreMesAnterior(lastMes, lastAnio, numeroMes, anio, varIdEmpresa);
+
+                                toastMixin.fire({
+                                    animation: true,
+                                    title: 'Mes Cerrado Exitosamente!'
+                                });
+
+                                $('#textMes').val("");
+                                $('#textAnio').val("");
+
+                                numeroMes = "";
+                                nombreMes = "";
+                                anio = "";
+                            })
+                            .catch(error => {
+                                Swal.fire("", error, "error");
+                            });
+                    } else {
+                        Swal.fire("", "No se pudieron obtener datos para el cierre de mes", "error");
+                    }
+                }
+            });
+        }
+
+
+        function insertarCierreCuentaMes(varNumeroMes, anio, codigoCuenta, saldoInicial, debe, haber, saldoFinal, saldoIniciaD, debeD, haberD, saldoFinalD, idEmpresa) {
+            return new Promise((resolve, reject) => {
+                $.ajax({
+                    url: "{%url 'insert_cierre_cuenta_mes' %}",
+                    type: "POST",
+                    data: {
+                        mes: varNumeroMes,
+                        anio: anio,
+                        codigoCuenta: codigoCuenta,
+                        saldoInicial: saldoInicial,
+                        debe: debe,
+                        haber: haber,
+                        saldoFinal: saldoFinal,
+                        saldoIniciaD: saldoIniciaD,
+                        debeD: debeD,
+                        haberD: haberD,
+                        saldoFinalD: saldoFinalD,
+                        idEmpresa: idEmpresa,
+                        csrfmiddlewaretoken: csrfToken
+                    },
+                    success: function (data) {
+                        if (data.save != 1) {
+                            reject("Error D: " + data.error);
+                        } else {
+                            resolve(data.save);
+                        }
+                    }
+                });
+            });
+        }
+
+
+        function crearDatosCierreMesAnterior(ultimoMes, ultimoAnio, maxMes, maxAnio, idEmpresa) {
+            $.ajax({
+                url: "{%url 'get_datos_cierre_anterior' %}",
+                type: "POST",
+                data: {
+                    ultimoMes: ultimoMes,
+                    ultimoAnio: ultimoAnio,
+                    mes: maxMes,
+                    anio: maxAnio,
+                    idEmpresa: idEmpresa,
+                    csrfmiddlewaretoken: csrfToken
+                },
+                success: function (data) {
+                    if (data.data.length > 0) {
+                        let promesas = [];
+
+                        // Insertar los datos del mes anterior
+                        data.data.forEach(function (item) {
+                            varMes = item.Mes;
+                            varAnio = item.Anio;
+                            varCuenta = item.Cuenta;
+                            varSaldoF = item.SaldoF;
+                            varSaldoFD = item.SaldoFD;
+                            varEmrpesa = item.fkEmpresa;
+
+                            // Agregar la inserción como una promesa
+                            promesas.push(insertarCierreCuentaMes(maxMes, maxAnio, varCuenta, varSaldoF, 0, 0, varSaldoF, varSaldoFD, 0, 0, varSaldoFD, varEmpresa));
+                        });
+
+                        // Esperar a que todas las inserciones del mes anterior se completen
+                        Promise.all(promesas)
+                            .then(() => {
+                                // Llamar a la función que maneja la finalización después del cierre del mes anterior
+                                console.log("Cierre del mes anterior completado.");
+                            })
+                            .catch(error => {
+                                // Si ocurre un error durante la inserción de datos del mes anterior
+                                Swal.fire("", error, "error");
+                            });
+                    } else {
+                        console.log("No se encontraron datos para el cierre del mes anterior.");
+                    }
+                },
+                error: function (error) {
+                    // Manejar errores en la solicitud Ajax si ocurre algún problema
+                    Swal.fire("", "Error al obtener datos del cierre anterior", "error");
+                }
+            });
+        }
+
+
+        function calcularFecha(selectMaxMes, selectMaxAnio) {
+            var fechaTemporal = new Date(selectMaxAnio, selectMaxMes - 1, 1);
+
+            fechaTemporal.setDate(fechaTemporal.getDate() - 1);
+
+            var fechaDia = ("0" + fechaTemporal.getDate()).slice(-2);
+            var fechaMes = ("0" + (fechaTemporal.getMonth() + 1)).slice(-2);
+            var fechaAnio = fechaTemporal.getFullYear();
+
+            return fechaAnio + "-" + fechaMes + "-" + fechaDia;
+        }
+
+        function obtenerMesesCerradosEstadoCerrado(varIdEmpresa) {
+            $.ajax({
+                url: "{%url 'get_meses_cerrados_estado_cerrado' %}",
+                type: "POST",
+                data: {
+                    empresa: varIdEmpresa,
+                    csrfmiddlewaretoken: csrfToken
+                },
+                success: function (data) {
+                    if (data.data.length > 0) {
+                        pkMes = data.data[0].PkMesCerrado;
+                    }
+                    else {
+                        Swal.fire("", "Error D: " + data.error, "error");
+                    }
+                }
+            });
+        }
+
+        function showLoadingScreen(text = '') {
+            Swal.fire({
+                title: '',
+                html: `<b>${text}</b>`,
+                didOpen: () => {
+                    Swal.showLoading();
+                },
+                allowOutsideClick: false,
+                showConfirmButton: false
+            });
+        }
+
+    });
+</script>
+{% endblock %}

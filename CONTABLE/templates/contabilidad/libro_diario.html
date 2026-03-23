@@ -1,0 +1,2568 @@
+{% extends 'componentes/menu_contable.html' %}
+{% load static %}
+
+{% block title %}
+LIBRO DIARIO
+{% endblock %}
+
+<style>
+    /* ancho SOLO del dropdown */
+    .select2-container--default .select2-dropdown {
+        width: 400px !important;
+        /* ajustá a gusto */
+    }
+
+    /* opcional: texto completo sin cortarse */
+    .select2-results__option {
+        white-space: nowrap;
+    }
+</style>
+
+{% block body %}
+
+<div class="row align-items-center border-bottom mb-3 py-2 bg-white shadow-sm mx-0">
+    <div class="col d-flex align-items-center px-0">
+        <button id="toggle-sidebar" class="btn btn-primary btn-sm me-3 border-0 rounded-circle btnMenu"
+            style="width: 32px; height: 32px; padding: 0;" title="Mostrar/Ocultar menú">
+            <i class="fas fa-bars"></i>
+        </button>
+        <h6 class="page-title mb-0 fs-5 fw-bold text-dark">
+            <i class="fas fa-book text-primary me-2"></i>LIBRO DIARIO
+        </h6>
+    </div>
+</div>
+
+
+<div class="container-fluid px-0 mt-1">
+    <div class="card shadow-sm rounded-4 mb-3 border-0 mx-0">
+        <div class="card-body py-3">
+            <div class="row g-3 d-flex align-items-end mx-0">
+                <div class="col-12 col-md-2 mb-3">
+                    <label for="selectEmpresa">Empresa:</label>
+                    <select id="selectEmpresa" class="form-select form-select-sm" name="selectEmpresa">
+                        {% for e in empresasData %}
+                        <option value="{{ e.id }}">{{ e.nombre }}</option>
+                        {% endfor %}
+                    </select>
+                </div>
+
+                <div class="col-12 col-md-2 mb-3">
+                    <label for="datetimeFechaInicial">Desde:</label>
+                    <input type="date" value="{{ date1 }}" id="datetimeFechaInicial"
+                        class="form-control form-control-sm" name="datetimeFechaInicial">
+                </div>
+
+                <div class="col-12 col-md-2 mb-3">
+                    <label for="datetimeFechaFinal">Hasta:</label>
+                    <input type="date" value="{{ date2 }}" id="datetimeFechaFinal" class="form-control form-control-sm"
+                        name="datetimeFechaFinal">
+                </div>
+
+                <div class="col-12 col-md-2 mb-3">
+                    <label for="selectTipoPartida">Tipo de Partida</label>
+                    <select id="selectTipoPartida" class="form-select form-select-sm" name="selectTipoPartida" multiple>
+
+                        {% for pa in partidasAutomaticas %}
+                        {% if pa.Nombre != '' and pa.disponibilidad == 1 %}
+                        <option value="{{ pa.Codigo }}">
+                            {{ pa.Codigo }} | {{ pa.Nombre }}
+                        </option>
+                        {% endif %}
+                        {% endfor %}
+                    </select>
+                </div>
+
+
+                <div class="col-12 col-md-2 mb-3">
+                    <label for="filtroNumeroPartida">No. Partida</label>
+                    <input type="text" id="filtroNumeroPartida" class="form-control form-control-sm"
+                        placeholder="Numero de Partida" name="filtroNumeroPartida">
+                </div>
+
+                <div class="col-12 col-md-2 mb-3">
+                    <button class="btn btn-sm btn-success" id="btnReload">Cargar</button>
+                    <button class="btn btn-sm btn-info" id="btnDownload">Descargar</button>
+                </div>
+            </div>
+        </div>
+
+        <div class="card shadow-sm rounded-4 border-0 mx-0">
+            <div class="card-body p-2">
+                <div class="row mx-0">
+                    <div class="table-responsive px-0">
+                        <table id="tablePartidasAutomaticas"
+                            class="table table-striped table-bordered mb-0 table-sm rounded-4 table-hover align-middle"
+                            style="width: 100%;">
+
+                            <thead class="table-gradient text-dark">
+                                <tr>
+                                    <th>Fecha Partida</th>
+                                    <th>Npartida</th>
+                                    <th>Tipo Partida</th>
+                                    <th>Sinopsis</th>
+                                    <th>Balance</th>
+                                    <th>Sucursal</th>
+                                    <th>Balance Estado</th>
+                                    <th>Creado Por</th>
+                                    <th>Fecha Creado</th>
+                                    <th>Estado</th>
+                                    <th>Acciones</th>
+                                </tr>
+                            </thead>
+
+                            <tbody>
+                            </tbody>
+
+                            <tfoot class="table-active">
+                                <tr>
+                                    <th></th>
+                                    <th></th>
+                                    <th></th>
+                                    <th></th>
+                                    <th></th>
+                                    <th></th>
+                                    <th></th>
+                                    <th></th>
+                                    <th></th>
+                                    <th></th>
+                                    <th></th>
+                                </tr>
+                            </tfoot>
+
+                        </table>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+
+        <a href="{% url 'panel_contabilidad' %}">
+            <button class="btn btn-sm btn-danger" id="btnCerrar" title="Cerrar"
+                style="position: fixed; bottom: 20px; right: 20px;">
+                <i class="fa fa-times"></i> Cerrar
+            </button>
+        </a>
+
+        {% include 'contabilidad/modales_contabilidad/m_detalle_partidas.html' %}
+        {% include 'contabilidad/modales_contabilidad/m_partida_view.html' %}
+        {% include 'contabilidad/modales_contabilidad/m_detalles_partida_generada.html' %}
+        {% include 'catalogos/modales_catalogos/m_detalles_tipos_partidas.html' %}
+        {% include 'complementos/planilla/modal_aplicar_planilla.html' %}
+
+        {% endblock %}
+
+
+        {% block scripts %}
+
+        <script>
+            function exportarExcel() {
+                const tabla = document.querySelector("#detallePartidaBody").closest("table");
+                const wb = XLSX.utils.table_to_book(tabla, { sheet: "Partida" });
+                XLSX.writeFile(wb, "partida.xlsx");
+            }
+
+            function copiarTabla() {
+                const tabla = document.querySelector("#detallePartidaBody").closest("table");
+                const range = document.createRange();
+                range.selectNode(tabla);
+                window.getSelection().removeAllRanges();
+                window.getSelection().addRange(range);
+                document.execCommand("copy");
+                window.getSelection().removeAllRanges();
+
+                Swal.fire({
+                    icon: "success",
+                    title: "Copiado",
+                    text: "El contenido de la tabla se ha copiado al portapapeles.",
+                    timer: 1500,
+                    showConfirmButton: false
+                });
+            }
+
+
+            $(document).ready(function () {
+
+                $('#formDetallesTipoPartidas').remove();
+
+                $('#selectTipoPartida').select2({
+                    placeholder: "Tipo de partida",
+                    closeOnSelect: false,
+                    width: '100%',
+                    dropdownAutoWidth: true
+                });
+
+                var csrfToken = "{{ csrf_token }}";
+                var tableFirmas, firma_id, TipoDocto = null, NumeroDocto = null;
+
+                var toastMixin = Swal.mixin({
+                    toast: true,
+                    icon: 'success',
+                    title: 'General Title',
+                    animation: false,
+                    position: 'top-right',
+                    showConfirmButton: false,
+                    timer: 2000,
+                    timerProgressBar: true,
+                    didOpen: (toast) => {
+                        toast.addEventListener('mouseenter', Swal.stopTimer);
+                        toast.addEventListener('mouseleave', Swal.resumeTimer);
+                    }
+                });
+
+                let dollarUSLocale = Intl.NumberFormat("en-US", {
+                    minimumFractionDigits: 2,
+                    maximumFractionDigits: 2
+                });
+
+                let intergerLocale = Intl.NumberFormat("en-US", {
+                    minimumFractionDigits: 0,
+                    maximumFractionDigits: 0
+                });
+
+
+                id_empresa = 3;
+                $('#selectEmpresa').val(id_empresa).change();
+
+                $("#tablePartidasAutomaticas").DataTable({
+                    language: {
+                        url: "{% static 'app/th/json/es-ES.json' %}",
+                    },
+                });
+
+                function getPartidasAutomaticas(empresa, fechaInicial, fechaFinal, npartida) {
+                    showLoadingScreen();
+
+                    $("#tablePartidasAutomaticas").DataTable().clear().destroy();
+
+                    var cardHeight = $(".card-expanded").height();
+                    var tableHeight = cardHeight * 0.5;
+
+                    tablePartidasAutomaticas = $('#tablePartidasAutomaticas').DataTable({
+                        initComplete: function () {
+                            Swal.close();
+                        },
+                        autoWidth: false,
+                        scrollX: true,
+                        scrollY: '50vh',
+                        scrollCollapse: true,
+                        pageLength: -1,
+                        dom: 'Brftip',
+                        language: {
+                            url: "{% static 'app/th/json/es-ES.json' %}",
+                        },
+                        drawCallback: function (settings) {
+                            let dollarUSLocale = Intl.NumberFormat("en-US", {
+                                minimumFractionDigits: 2,
+                                maximumFractionDigits: 2
+                            });
+
+                            let intergerLocale = Intl.NumberFormat("en-US", {
+                                minimumFractionDigits: 0,
+                                maximumFractionDigits: 0
+                            });
+
+                            var api = this.api();
+
+                            // Calcular totales para las columnas 3, 4, 5, y 6
+                            [4].forEach(function (colIndex) {
+                                var total = api
+                                    .column(colIndex, {
+                                        search: 'applied'
+                                    })
+                                    .data()
+                                    .reduce(function (a, b) {
+                                        return Number(a) + Number(b);
+                                    }, 0);
+
+                                // Mostrar el total en el pie de página en la columna respectiva
+                                var columnFooter = $(api.column(colIndex).footer());
+                                columnFooter.html(dollarUSLocale.format(total));
+                                columnFooter.css('text-align', 'right');
+                            });
+                        },
+                        ajax: {
+                            url: `{% url 'dataLibroDiario' %}`,
+                            type: "POST",
+                            dataSrc: 'data',
+                            data: {
+                                empresa: empresa,
+                                fechaInicial: fechaInicial,
+                                fechaFinal: fechaFinal,
+                                npartida: npartida.join(','), // 👈 importante
+                                opcion: 0,
+                                csrfmiddlewaretoken: csrfToken
+                            },
+                        },
+                        colReorder: {
+                            realtime: false,
+                        },
+                        buttons: [
+                            {
+                                extend: 'excel',
+                                text: '<i class="fas fa-file-excel"></i>',
+                                titleAttr: 'Exportar a Excel',
+                                className: 'btn btn-success',
+                            },
+                            {
+                                extend: 'pdf',
+                                text: '<i class="fas fa-file-pdf"></i>',
+                                titleAttr: 'Exportar a PDF',
+                                className: 'btn btn-danger',
+                            },
+                            {
+                                extend: 'print',
+                                text: '<i class="fas fa-print"></i>',
+                                titleAttr: 'Imprimir',
+                                className: 'btn btn-primary',
+                                orientation: 'landscape'
+                            }
+                        ],
+                        columns: [
+                            {
+                                data: 'FechaPartida',
+                            },
+                            {
+                                data: 'Npartida',
+                            },
+                            {
+                                data: 'TipoPartida',
+                            },
+                            {
+                                data: 'Sinopsis',
+                            },
+                            {
+                                data: 'Balance', className: 'text-end'
+                            },
+                            {
+                                data: 'NombreSucursal'
+                            },
+                            {
+                                data: 'Balance',
+                                className: 'text-center',
+                                render: function (data, type, row) {
+                                    var badge = "";
+
+                                    if (data == 0) {
+                                        badge +=
+                                            '<span class="badge badge-pill bg-success">Correcto</span>';
+                                    } else {
+                                        badge +=
+                                            '<span class="badge badge-pill bg-danger">Descuadrado</span>';
+                                    }
+
+                                    return badge;
+                                },
+                            },
+                            {
+                                data: 'creado_por',
+                            },
+                            {
+                                data: 'fecha_hora_creado',
+                            },
+                            {
+                                data: 'estado',
+                                className: 'text-center',
+                                render: function (data, type, row) {
+                                    var badge = "";
+                                    if (data == 3) {
+                                        badge +=
+                                            '<span class="badge badge-pill bg-danger">DESHABILITADO</span>';
+                                    } else {
+                                        badge +=
+                                            '<span class="badge badge-pill bg-success">ACTIVO</span>';
+                                    }
+
+                                    return badge;
+                                },
+                            },
+                            {
+                                data: null,
+                                width: '3%',
+                                title: "Acciones",
+                                render: function (data, type, row) {
+                                    return `
+                            <div class="text-center">
+                                <div class="btn-group">
+                                    
+                                    ${(row.manual_automatica == 1 && row.cerrado_mes == 0) ? `<button class="btn btn-warning btn-sm editarPartida" data-id="${row.PkEncPartida}"><i class="fas fa-edit"></i></button>` : ''}
+
+                                    <button class="btn btn-disabled btn-sm statusPartida" data-id="${row.PkEncPartida}" data-sucursal="${row.FkSucursal}" data-name="${row.Npartida + ' ' + row.TipoPartida}" data-estado="${row.estado}"><i class="fas fa-sync-alt"></i></button> 
+
+                                    <button class="btn btn-danger btn-sm partidaView" data-id="${row.PkEncPartida}" data-tipo="${row.TipoDocto}" data-numero="${row.NumeroDocto}"><i class="fas fa-file-pdf"></i></button> 
+                                
+                                </div>
+                            </div>
+                            `;
+                                }
+                            }
+                        ],
+                        order: [[1, "asc"]],
+                    });
+
+
+                    //      <button class="btn btn-info btn-sm detallesPartida" data-id="${row.PkEncPartida}" data-npartida="${row.Npartida}"><i class="fas fa-list"></i></button> 
+                }
+
+
+                $('#btnReload').click(function (e) {
+                    e.preventDefault();
+
+                    id_empresa = $('#selectEmpresa').val();
+                    varFechaInicial = $('#datetimeFechaInicial').val();
+                    varFechaFinal = $('#datetimeFechaFinal').val();
+                    tipoPartida = $('#selectTipoPartida').val();
+
+                    getPartidasAutomaticas(id_empresa, varFechaInicial, varFechaFinal, tipoPartida);
+                });
+
+                $('#btnDownload').click(function (e) {
+                    e.preventDefault();
+
+                    empresa = $('#selectEmpresa').val();
+                    fechaInicial = $('#datetimeFechaInicial').val();
+                    fechaFinal = $('#datetimeFechaFinal').val();
+                    npartida = $('#selectTipoPartida').val();
+
+                    const url = new URL("{% url 'download_data_partidas_libro_diario' %}", window.location.origin);
+
+                    url.searchParams.append('empresa', empresa);
+                    url.searchParams.append('fechaInicial', fechaInicial);
+                    url.searchParams.append('fechaFinal', fechaFinal);
+                    url.searchParams.append('npartida', npartida.join(','));
+                    url.searchParams.append('opcion', 0);
+
+                    // Forzar descarga en nueva ventana
+                    window.open(url.toString(), '_blank');
+                });
+
+
+                function showLoadingScreen(text = '') {
+                    Swal.fire({
+                        title: '',
+                        html: `<b>${text}</b>`,
+                        didOpen: () => {
+                            Swal.showLoading();
+                        },
+                        allowOutsideClick: false,
+                        showConfirmButton: false
+                    });
+                }
+
+
+
+
+
+
+                var pkPartida = null;
+
+                function verPartida(pkPartida) {
+                    $.ajax({
+                        url: "{% url 'obtener_partida_completa' %}",
+                        type: 'POST',
+                        data: {
+                            id_partida: pkPartida,
+                            csrfmiddlewaretoken: csrfToken
+                        },
+                        beforeSend: function () {
+                            Swal.fire({
+                                title: '',
+                                text: '',
+                                allowOutsideClick: false,
+                                showConfirmButton: false,
+                                willOpen: () => {
+                                    Swal.showLoading();
+                                }
+                            });
+                        },
+                        success: function (data) {
+                            if (data.save == 1) {
+                                const enc = data.encabezado;
+
+                                $('#modalNpartida').text(enc.Npartida);
+                                $('#modalSinopsis').text(enc.Sinopsis);
+                                $('#modalFecha').text(enc.FechaPartida);
+                                $('#modalBalance').text(parseFloat(enc.Balance).toFixed(2));
+                                $('#modalUsuario').text(enc.creado_por);
+                                $('#modalSucursal').text(enc.NombreSucursal);
+
+                                if (parseFloat(enc.Balance) != 0) {
+                                    $('#modalBalance').css({
+                                        'color': 'red',
+                                        'font-weight': '700'
+                                    });
+                                } else {
+                                    $('#modalBalance').css({
+                                        'color': 'green',
+                                        'font-weight': '700'
+                                    });
+                                }
+
+                                let html = '';
+                                let totalDebe = 0;
+                                let totalHaber = 0;
+
+
+                                data.detalles.forEach(item => {
+                                    const debe = parseFloat(item.Debe) || 0;
+                                    const haber = parseFloat(item.Haber) || 0;
+
+                                    if (debe != 0 || haber != 0) {
+                                        html += `
+                                    <tr>
+                                        <td class="text-left">${item.CodigoCuenta}</td>
+                                        <td class="text-start ${debe == 0 ? 'ps-5' : 'ps-2'}">${item.ConceptoCuenta}</td>
+                                        <td class="text-center currency">${dollarUSLocale.format(debe)}</td>
+                                        <td class="text-center currency">${dollarUSLocale.format(haber)}</td>
+                                    </tr>`;
+                                    }
+
+                                    totalDebe += debe;
+                                    totalHaber += haber;
+                                });
+
+                                Swal.close();
+
+                                $('#detallePartidaBody').html(html);
+                                $('#totalDebe').text(dollarUSLocale.format(totalDebe));
+                                $('#totalHaber').text(dollarUSLocale.format(totalHaber));
+
+                                $('#modalPartidaView').modal('show');
+                            } else {
+                                Swal.close();
+                                console.log(data.error);
+                            }
+                        }
+                    });
+                }
+
+
+                $(document).on('click', '.partidaView', function () {
+                    pkPartida = $(this).data('id');
+                    TipoDocto = $(this).data('tipo');
+                    NumeroDoctoNoSplit = $(this).data('numero');
+
+                    // Asegurar que sea string
+                    if (typeof NumeroDoctoNoSplit === 'string' && NumeroDoctoNoSplit.includes('|')) {
+                        NumeroDocto = NumeroDoctoNoSplit.split('|')[0].trim();
+                    } else {
+                        NumeroDocto = NumeroDoctoNoSplit; // usarlo tal cual
+                    }
+
+                    verPartida(pkPartida);
+                });
+
+
+                $('#btnDetallesPartida').click(function (e) {
+                    e.preventDefault();
+
+                    if (['006', '007', '009'].includes(TipoDocto)) {
+
+                        detallesComprasIngresadas();
+
+                    } else if (['011', '036', '039'].includes(TipoDocto)) {
+
+                        detallesPlanillaAplicada();
+
+                    } else if (['012', '013', '026'].includes(TipoDocto)) {
+
+                        detallesFacturasCosto();
+
+                    } else if (['024', '025', '077', '078', '079', '080'].includes(TipoDocto)) {
+
+                        detallesFacturas();
+
+                    } else if (['027', '040', '042', '048', '045', '050', '053', '068', '019', '014', '054', '075', '089', '017'].includes(TipoDocto)) {
+
+                        getMovimientosBancarios();
+
+                    } else if (['055', '056', '061', '065', '090'].includes(TipoDocto)) {
+
+                        getMovimientosBancariosDetalles();
+
+                    } else if (['030'].includes(TipoDocto)) {
+
+                        getSolicitudesGastos();
+
+                    } else if (['031'].includes(TipoDocto)) {
+
+                        getSolicitudesIngresos();
+
+                    } else if (['033'].includes(TipoDocto)) {
+
+                        detallesProvisiones();
+
+                    } else if (['066', '081', '082', '010', '023', '022'].includes(TipoDocto)) {
+
+                        detallesDevoluciones();
+
+                    } else {
+
+                        Swal.fire("", "No hay un detalle por Visualizar!", "warning");
+
+                    }
+
+
+                });
+
+
+
+                //  ==============================================================================================================================
+
+                function detallesProvisiones() {
+
+                    showLoadingScreen();
+
+                    $('#tableProvisionesEmpleados').DataTable().clear().destroy();
+
+                    // Inicializar
+                    tableProvisionesEmpleados = $('#tableProvisionesEmpleados').DataTable({
+                        autoWidth: false,
+                        scrollX: true,
+                        scrollY: '350px',
+                        scrollCollapse: true,
+                        pageLength: 50,
+                        dom: 'Bfrtip',
+                        fixedColumns: {
+                            left: 2,
+                            right: 1
+                        },
+                        initComplete: function () {
+                            Swal.close();
+                            tableProvisionesEmpleados.columns.adjust().draw();
+                        },
+                        drawCallback: function () {
+
+                            let numberFmt = Intl.NumberFormat("en-US", {
+                                minimumFractionDigits: 2,
+                                maximumFractionDigits: 2
+                            });
+
+                            let api = this.api();
+
+                            // Columnas NUMÉRICAS del footer
+                            let cols = [3, 6, 7, 8, 9, 11, 12, 13, 14, 15];
+
+                            cols.forEach(function (colIndex) {
+                                var total = api
+                                    .column(colIndex, {
+                                        search: 'applied'
+                                    })
+                                    .data()
+                                    .reduce(function (a, b) {
+                                        return Number(a) + Number(b);
+                                    }, 0);
+
+                                $(api.column(colIndex).footer()).html(numberFmt.format(total));
+                            });
+
+                        },
+                        language: {
+                            url: "{% static 'app/th/json/es-ES.json' %}",
+                        },
+                        ajax: {
+                            beforeSend: function (xhr, type) {
+                                if (!type.crossDomain) {
+                                    xhr.setRequestHeader(
+                                        'X-CSRF-Token',
+                                        $('meta[name="csrf-token"]').attr('content')
+                                    );
+                                }
+                            },
+                            url: `{% url 'dataProvisionesDetalleEmpresa' %}`,
+                            type: "POST",
+                            dataSrc: 'data',
+                            data: {
+                                empresa: NumeroDocto,
+                                csrfmiddlewaretoken: csrfToken
+                            }
+                        },
+                        buttons: [
+                            {
+                                extend: 'excel',
+                                text: '<i class="fas fa-file-excel"></i>',
+                                className: 'btn btn-success btn-sm',
+                            },
+                            {
+                                extend: 'pdf',
+                                text: '<i class="fas fa-file-pdf"></i>',
+                                className: 'btn btn-danger btn-sm',
+                                orientation: 'landscape'
+                            },
+                            {
+                                extend: 'print',
+                                text: '<i class="fas fa-print"></i>',
+                                className: 'btn btn-primary btn-sm',
+                                orientation: 'landscape'
+                            }
+                        ],
+                        columns: [
+                            { data: "identidad" },
+                            { data: "nombre_completo" },
+                            { data: "nombre_empresa", className: 'text-wrap' },
+                            { data: "salario", className: 'text-end', render: $.fn.dataTable.render.number(',', '.', 2) },
+                            { data: "fecha_ingreso" },
+                            { data: "antiguedad_meses", className: 'text-center' },
+                            { data: "salario_diario", className: 'text-end', render: $.fn.dataTable.render.number(',', '.', 2) },
+
+                            { data: "provision_13vo", className: 'text-end', render: $.fn.dataTable.render.number(',', '.', 2) },
+                            { data: "provision_14vo", className: 'text-end', render: $.fn.dataTable.render.number(',', '.', 2) },
+                            { data: "provision_cesantia", className: 'text-end', render: $.fn.dataTable.render.number(',', '.', 2) },
+
+                            { data: "dias_preaviso", className: 'text-center' },
+                            { data: "provision_preaviso", className: 'text-end', render: $.fn.dataTable.render.number(',', '.', 2) },
+
+                            { data: "dias_vac_totales", className: 'text-center' },
+                            { data: "dias_tomados", className: 'text-center' },
+                            { data: "dias_disponibles", className: 'text-center' },
+
+                            { data: "provision_vacaciones", className: 'text-end', render: $.fn.dataTable.render.number(',', '.', 2) },
+
+                            { data: "centro_empleado" },
+                        ],
+                        order: [[1, "asc"]],
+                    });
+
+                    $('#modalProvisionesEmpleados').modal('show');
+                }
+
+                $('#modalProvisionesEmpleados').on('shown.bs.modal', function () {
+                    tableProvisionesEmpleados.columns.adjust().draw();
+                });
+
+
+
+
+                //  ==============================================================================================================================
+
+                function detallesPlanillaAplicada() {
+                    showLoadingScreen();
+
+                    $('#btnAplicarPlanilla').hide();
+
+                    $('#tablePlanillaEmpleados').DataTable().clear().destroy();
+
+                    // Inicializar la tabla de planillas
+                    tablePlanillaEmpleados = $('#tablePlanillaEmpleados').DataTable({
+                        autoWidth: false,
+                        scrollX: true,  // Habilitar scroll horizontal
+                        scrollY: '300px',  // Habilitar scroll vertical con una altura específica
+                        scrollCollapse: true,  // Permitir colapso si hay pocas filas
+                        pageLength: 50,
+                        dom: 'Bfrtip',
+                        fixedColumns: {
+                            left: 3,
+                            right: 1
+                        },
+                        initComplete: function () {
+                            Swal.close();
+                            tablePlanillaEmpleados.columns.adjust().draw();
+                        },
+                        drawCallback: function (settings) {
+                            let dollarUSLocale = Intl.NumberFormat("en-US", {
+                                minimumFractionDigits: 2,
+                                maximumFractionDigits: 2
+                            });
+
+                            let intergerLocale = Intl.NumberFormat("en-US", {
+                                minimumFractionDigits: 0,
+                                maximumFractionDigits: 0
+                            });
+
+                            var api = this.api();
+
+
+                            [9, 11, 12, 13, 14, 15, 16, 17, 18].forEach(function (
+                                colIndex) {
+                                var total = api
+                                    .column(colIndex, {
+                                        search: 'applied'
+                                    })
+                                    .data()
+                                    .reduce(function (a, b) {
+                                        return Number(a) + Number(b);
+                                    }, 0);
+
+
+                                var columnFooter = $(api.column(colIndex).footer());
+                                columnFooter.html(dollarUSLocale.format(total));
+                                columnFooter.css('text-align', 'right');
+                            });
+
+
+                        },
+                        language: {
+                            url: "{% static 'app/th/json/es-ES.json' %}",
+                        },
+                        ajax: {
+                            beforeSend: function (xhr, type) {
+                                if (!type.crossDomain) {
+                                    xhr.setRequestHeader(
+                                        'X-CSRF-Token',
+                                        $(
+                                            'meta[name="csrf-token"]'
+                                        ).attr('content'));
+                                }
+                            },
+                            url: `{% url 'obtener_detalles_planilla_v2' %}`,
+                            type: "POST",
+                            dataScr: 'data',
+                            data: {
+                                id_planilla: NumeroDocto,
+                                modo_agrupacion: 'AGRUPADO',
+                                csrfmiddlewaretoken: csrfToken
+                            },
+                            cache: false,
+                        },
+                        colReorder: {
+                            realtime: false
+                        },
+                        buttons: [
+                            {
+                                extend: 'excel',
+                                text: '<i class="fas fa-file-excel"></i>',
+                                titleAttr: 'Exportar a Excel',
+                                className: 'btn btn-success btn-sm',
+                            },
+                            {
+                                extend: 'pdf',
+                                text: '<i class="fas fa-file-pdf"></i>',
+                                titleAttr: 'Exportar a PDF',
+                                className: 'btn btn-danger btn-sm',
+                            },
+                            {
+                                extend: 'print',
+                                text: '<i class="fas fa-print"></i>',
+                                titleAttr: 'Imprimir',
+                                className: 'btn btn-primary btn-sm',
+                                orientation: 'landscape'
+                            }
+                        ],
+                        columns: [
+
+                            { data: "id_empleado" },
+                            {
+                                data: "identidad"
+                            },
+                            {
+                                data: "nombre_completo",
+                                className: 'text-wrap'
+                            },
+                            {
+                                data: "nombre_centro_empleado",
+                                className: 'text-wrap'
+                            },
+                            {
+                                data: "periodo",
+                                className: 'text-wrap'
+                            },
+                            {
+                                data: "fecha_hora_creado",
+                                className: 'text-wrap'
+                            },
+                            { data: "creado_por" },
+                            {
+                                data: "fecha_hora_modificado",
+                                className: 'text-wrap'
+                            },
+                            { data: "modificado_por" },
+
+                            {
+                                data: "salario_base",
+                                className: 'text-right',
+                                render: $.fn.dataTable.render.number(',', '.', 2)
+                            },
+                            {
+                                data: "dias_trabajados",
+                                className: 'text-center'
+                            },
+                            {
+                                data: "salario_x_dia",
+                                className: 'text-right',
+                                render: $.fn.dataTable.render.number(',', '.', 2)
+                            },
+                            {
+                                data: "salario_esperado_bruto",
+                                className: 'text-right',
+                                render: $.fn.dataTable.render.number(',', '.', 2)
+                            },
+                            {
+                                data: "total_deducciones",
+                                className: 'text-right',
+                                render: $.fn.dataTable.render.number(',', '.', 2)
+                            },
+                            {
+                                data: "saldo_negativo_anterior",
+                                className: 'text-right',
+                                render: $.fn.dataTable.render.number(',', '.', 2)
+                            },
+                            {
+                                data: "salario_bruto_v2",
+                                className: 'text-right',
+                                render: $.fn.dataTable.render.number(',', '.', 2)
+                            },
+                            {
+                                data: "total_bonificaciones",
+                                className: 'text-right',
+                                render: $.fn.dataTable.render.number(',', '.', 2)
+                            },
+                            {
+                                data: "total_comisiones",
+                                className: 'text-right',
+                                render: $.fn.dataTable.render.number(',', '.', 2)
+                            },
+                            {
+                                data: "total_pagar",
+                                className: 'text-right',
+                                render: $.fn.dataTable.render.number(',', '.', 2)
+                            }
+                        ],
+                        order: [[2, "asc"]],
+                    });
+
+
+                    $('#modalAplicarPlanilla').modal('show');
+                }
+
+
+                $('#modalAplicarPlanilla').on('shown.bs.modal', function () {
+                    tablePlanillaEmpleados.columns.adjust().draw();
+                });
+
+
+
+
+                //  ==============================================================================================================================
+
+                function detallesFacturasCosto() {
+                    $('#facturasDetalleCostoTable').DataTable().clear().destroy();
+
+                    facturasDetalleCostoTable = $('#facturasDetalleCostoTable').DataTable({
+
+                        initComplete: function () { },
+
+                        drawCallback: function () {
+
+                            let currency = Intl.NumberFormat("en-US", {
+                                minimumFractionDigits: 2,
+                                maximumFractionDigits: 2
+                            });
+
+                            let api = this.api();
+
+                            // columnas numéricas a totalizar
+                            [3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13].forEach(function (colIndex) {
+
+                                let total = api
+                                    .column(colIndex, { search: 'applied' })
+                                    .data()
+                                    .reduce(function (a, b) {
+                                        return Number(a) + Number(b);
+                                    }, 0);
+
+                                $(api.column(colIndex).footer())
+                                    .html(currency.format(total))
+                                    .css('text-align', 'right');
+                            });
+                        },
+
+                        autoWidth: false,
+                        scrollX: true,
+                        scrollY: '350px',
+                        scrollCollapse: true,
+                        pageLength: 50,
+                        dom: 'Bfrtlip',
+
+                        language: {
+                            url: "{% static 'app/th/json/es-ES.json' %}",
+                        },
+
+                        ajax: {
+                            url: "{% url 'dataFacturasDetallesCosto' %}",
+                            type: "POST",
+                            dataSrc: 'data',
+                            data: {
+                                NoDocto: NumeroDocto,
+                                csrfmiddlewaretoken: csrfToken
+                            },
+                        },
+
+                        colReorder: {
+                            realtime: false,
+                        },
+
+                        buttons: [
+                            {
+                                extend: 'excel',
+                                text: '<i class="fas fa-file-excel"></i>',
+                                className: 'btn btn-success'
+                            },
+                            {
+                                extend: 'pdf',
+                                text: '<i class="fas fa-file-pdf"></i>',
+                                className: 'btn btn-danger',
+                                orientation: 'landscape'
+                            },
+                            {
+                                extend: 'print',
+                                text: '<i class="fas fa-print"></i>',
+                                className: 'btn btn-secondary',
+                                orientation: 'landscape'
+                            }
+                        ],
+
+                        columns: [
+                            { data: 'CodigoArticulo' },
+                            { data: 'Articulo', className: 'text-wrap' },
+                            { data: 'Presentacion', className: 'text-wrap' },
+
+                            {
+                                data: 'CantidadFacturada', className: 'text-end',
+                                render: $.fn.dataTable.render.number(',', '.', 2)
+                            },
+
+                            {
+                                data: 'PrecioNeto_Facturado', className: 'text-end',
+                                render: $.fn.dataTable.render.number(',', '.', 2)
+                            },
+
+                            {
+                                data: 'SubTotal_PrecioNeto', className: 'text-end',
+                                render: $.fn.dataTable.render.number(',', '.', 2)
+                            },
+
+                            {
+                                data: 'ISV_100', className: 'text-end',
+                                render: $.fn.dataTable.render.number(',', '.', 2)
+                            },
+
+                            {
+                                data: 'TotalGrabado_P', className: 'text-end',
+                                render: $.fn.dataTable.render.number(',', '.', 2)
+                            },
+
+                            {
+                                data: 'TotalExento_P', className: 'text-end',
+                                render: $.fn.dataTable.render.number(',', '.', 2)
+                            },
+
+                            {
+                                data: 'TotalISV_P', className: 'text-end',
+                                render: $.fn.dataTable.render.number(',', '.', 2)
+                            },
+
+                            // COSTO
+                            {
+                                data: 'costo_venta_gravada_15', className: 'text-end fw-bold',
+                                render: $.fn.dataTable.render.number(',', '.', 2)
+                            },
+
+                            {
+                                data: 'costo_venta_gravada_18', className: 'text-end fw-bold',
+                                render: $.fn.dataTable.render.number(',', '.', 2)
+                            },
+
+                            {
+                                data: 'costo_venta_exenta', className: 'text-end fw-bold',
+                                render: $.fn.dataTable.render.number(',', '.', 2)
+                            },
+
+                            {
+                                data: 'costo_total', className: 'text-end fw-bold text-danger',
+                                render: $.fn.dataTable.render.number(',', '.', 2)
+                            },
+
+                            { data: 'NombreSucursal' }
+                        ]
+                    });
+
+                    $('#modalFacturasDetalleCosto').modal('show');
+                }
+
+                $('#modalFacturasDetalleCosto').on('shown.bs.modal', function () {
+                    facturasDetalleCostoTable.columns.adjust().draw();
+                });
+
+
+
+
+                //  ==============================================================================================================================
+
+                function detallesDevoluciones() {
+                    $("#devolDetalleTable").DataTable().clear().destroy();
+
+                    devolDetalleTable = $("#devolDetalleTable").DataTable({
+                        initComplete: function () {
+
+                        },
+                        drawCallback: function (settings) {
+                            let dollarUSLocale = Intl.NumberFormat("en-US", {
+                                minimumFractionDigits: 2,
+                                maximumFractionDigits: 2
+                            });
+
+                            let intergerLocale = Intl.NumberFormat("en-US", {
+                                minimumFractionDigits: 0,
+                                maximumFractionDigits: 0
+                            });
+
+                            var api = this.api();
+
+                            // Calcular totales para las columnas 3, 4, 5, y 6
+                            [3, 4, 5, 6, 7, 8, 9, 10, 11].forEach(function (colIndex) {
+                                var total = api
+                                    .column(colIndex, {
+                                        search: 'applied'
+                                    })
+                                    .data()
+                                    .reduce(function (a, b) {
+                                        return Number(a) + Number(b);
+                                    }, 0);
+
+                                // Mostrar el total en el pie de página en la columna respectiva
+                                var columnFooter = $(api.column(colIndex).footer());
+                                columnFooter.html(dollarUSLocale.format(total));
+                                columnFooter.css('text-align', 'right');
+                            });
+                        },
+                        autoWidth: false,
+                        scrollX: true,
+                        scrollY: '350px',
+                        scrollCollapse: true,
+                        pageLength: 50,
+                        dom: 'Bfrtlip',
+                        language: {
+                            url: "{% static 'app/th/json/es-ES.json' %}",
+                        },
+                        ajax: {
+                            url: `{% url 'dataDevolDetalles' %}`,
+                            type: "POST",
+                            dataSrc: 'data',
+                            data: {
+                                NoDocto: NumeroDocto,
+                                csrfmiddlewaretoken: csrfToken
+                            },
+                        },
+                        colReorder: {
+                            realtime: false,
+                        },
+                        buttons: [
+                            {
+                                extend: 'excel',
+                                text: '<i class="fas fa-file-excel"></i>',
+                                titleAttr: 'Excel',
+                                className: 'btn btn-success',
+                            },
+                            {
+                                extend: 'pdf',
+                                text: '<i class="fas fa-file-pdf"></i>',
+                                titleAttr: 'PDF',
+                                className: 'btn btn-danger',
+                            },
+                            {
+                                extend: 'print',
+                                text: '<i class="fas fa-print"></i>',
+                                titleAttr: 'Imprimir',
+                                className: 'btn btn-info',
+                                orientation: 'landscape'
+                            }
+                        ],
+                        columns: [
+                            {
+                                data: 'CodigoArticulo'
+                            },
+                            {
+                                data: 'Articulo',
+                                className: 'text-wrap'
+                            },
+                            {
+                                data: 'Presentacion',
+                                className: 'text-wrap'
+                            },
+                            {
+                                data: 'CantidadFacturada',
+                                className: 'text-right averages',
+                                render: $.fn.dataTable.render.number(',', '.', 2)
+                            },
+                            {
+                                data: 'PrecioCosto_Present',
+                                className: 'text-right currency',
+                                render: $.fn.dataTable.render.number(',', '.', 2)
+                            },
+                            {
+                                data: 'PrecioNeto_Facturado',
+                                className: 'text-right currency',
+                                render: $.fn.dataTable.render.number(',', '.', 2)
+                            },
+                            {
+                                data: 'SubTotal_CostoPresent',
+                                className: 'text-right currency',
+                                render: $.fn.dataTable.render.number(',', '.', 2)
+                            },
+                            {
+                                data: 'SubTotal_PrecioNeto',
+                                className: 'text-right currency',
+                                render: $.fn.dataTable.render.number(',', '.', 2)
+                            },
+                            {
+                                data: 'ISV_100',
+                                className: 'text-right averages',
+                                render: $.fn.dataTable.render.number(',', '.', 2)
+                            },
+                            {
+                                data: 'TotalGrabado_P',
+                                className: 'text-right currency',
+                                render: $.fn.dataTable.render.number(',', '.', 2)
+                            },
+                            {
+                                data: 'TotalExento_P',
+                                className: 'text-right currency',
+                                render: $.fn.dataTable.render.number(',', '.', 2)
+                            },
+                            {
+                                data: 'venta_exonerada',
+                                className: 'text-right currency',
+                                render: $.fn.dataTable.render.number(',', '.', 2)
+                            },
+                            {
+                                data: 'TotalISV_P',
+                                className: 'text-right currency',
+                                render: $.fn.dataTable.render.number(',', '.', 2)
+                            },
+                            {
+                                data: 'NombreSucursal'
+                            },
+
+                        ],
+                    });
+
+
+                    $('#modalDevolDetalle').modal('show');
+                }
+
+
+                $('#modalDevolDetalle').on('shown.bs.modal', function () {
+                    devolDetalleTable.columns.adjust().draw();
+                });
+
+
+
+                //  ==============================================================================================================================
+
+                function detallesFacturas() {
+                    $("#facturasDetalleTable").DataTable().clear().destroy();
+
+                    facturasDetalleTable = $("#facturasDetalleTable").DataTable({
+                        initComplete: function () {
+
+                        },
+                        drawCallback: function (settings) {
+                            let dollarUSLocale = Intl.NumberFormat("en-US", {
+                                minimumFractionDigits: 2,
+                                maximumFractionDigits: 2
+                            });
+
+                            let intergerLocale = Intl.NumberFormat("en-US", {
+                                minimumFractionDigits: 0,
+                                maximumFractionDigits: 0
+                            });
+
+                            var api = this.api();
+
+                            // Calcular totales para las columnas 3, 4, 5, y 6
+                            [3, 4, 5, 6, 7, 8, 9, 10].forEach(function (colIndex) {
+                                var total = api
+                                    .column(colIndex, {
+                                        search: 'applied'
+                                    })
+                                    .data()
+                                    .reduce(function (a, b) {
+                                        return Number(a) + Number(b);
+                                    }, 0);
+
+                                // Mostrar el total en el pie de página en la columna respectiva
+                                var columnFooter = $(api.column(colIndex).footer());
+                                columnFooter.html(dollarUSLocale.format(total));
+                                columnFooter.css('text-align', 'right');
+                            });
+                        },
+                        autoWidth: false,
+                        scrollX: true,
+                        scrollY: '350px',
+                        scrollCollapse: true,
+                        pageLength: 50,
+                        dom: 'Bfrtlip',
+                        language: {
+                            url: "{% static 'app/th/json/es-ES.json' %}",
+                        },
+                        ajax: {
+                            url: `{% url 'dataFacturasDetalles' %}`,
+                            type: "POST",
+                            dataSrc: 'data',
+                            data: {
+                                NoDocto: NumeroDocto,
+                                csrfmiddlewaretoken: csrfToken
+                            },
+                        },
+                        colReorder: {
+                            realtime: false,
+                        },
+                        buttons: [
+                            {
+                                extend: 'excel',
+                                text: '<i class="fas fa-file-excel"></i>',
+                                titleAttr: 'Excel',
+                                className: 'btn btn-success',
+                            },
+                            {
+                                extend: 'pdf',
+                                text: '<i class="fas fa-file-pdf"></i>',
+                                titleAttr: 'PDF',
+                                className: 'btn btn-danger',
+                            },
+                            {
+                                extend: 'print',
+                                text: '<i class="fas fa-print"></i>',
+                                titleAttr: 'Imprimir',
+                                className: 'btn btn-info',
+                                orientation: 'landscape'
+                            }
+                        ],
+                        columns: [
+                            {
+                                data: 'CodigoArticulo'
+                            },
+                            {
+                                data: 'Articulo',
+                                className: 'text-wrap'
+                            },
+                            {
+                                data: 'Presentacion',
+                                className: 'text-wrap'
+                            },
+                            {
+                                data: 'CantidadFacturada',
+                                className: 'text-right averages',
+                                render: $.fn.dataTable.render.number(',', '.', 2)
+                            },
+                            {
+                                data: 'PrecioNeto_Facturado',
+                                className: 'text-right currency',
+                                render: $.fn.dataTable.render.number(',', '.', 2)
+                            },
+                            {
+                                data: 'SubTotal_PrecioNeto',
+                                className: 'text-right currency',
+                                render: $.fn.dataTable.render.number(',', '.', 2)
+                            },
+                            {
+                                data: 'ISV_100',
+                                className: 'text-right averages',
+                                render: $.fn.dataTable.render.number(',', '.', 2)
+                            },
+                            {
+                                data: 'TotalGrabado_P',
+                                className: 'text-right currency',
+                                render: $.fn.dataTable.render.number(',', '.', 2)
+                            },
+                            {
+                                data: 'TotalExento_P',
+                                className: 'text-right currency',
+                                render: $.fn.dataTable.render.number(',', '.', 2)
+                            },
+                            {
+                                data: 'venta_exonerada',
+                                className: 'text-right currency',
+                                render: $.fn.dataTable.render.number(',', '.', 2)
+                            },
+                            {
+                                data: 'TotalISV_P',
+                                className: 'text-right currency',
+                                render: $.fn.dataTable.render.number(',', '.', 2)
+                            },
+                            {
+                                data: 'NombreSucursal'
+                            },
+
+                        ],
+                    });
+
+
+                    $('#modalFacturasDetalle').modal('show');
+                }
+
+                $('#modalFacturasDetalle').on('shown.bs.modal', function () {
+                    facturasDetalleTable.columns.adjust().draw();
+                });
+
+
+
+
+                //  ==============================================================================================================================
+
+                function detallesComprasIngresadas() {
+                    $("#ordenesComprasIngresadasTable").DataTable().clear().destroy();
+
+                    ordenesComprasIngresadasTable = $("#ordenesComprasIngresadasTable").DataTable({
+                        initComplete: function () {
+
+                        },
+                        drawCallback: function (settings) {
+                            let dollarUSLocale = Intl.NumberFormat("en-US", {
+                                minimumFractionDigits: 2,
+                                maximumFractionDigits: 2
+                            });
+
+                            let intergerLocale = Intl.NumberFormat("en-US", {
+                                minimumFractionDigits: 0,
+                                maximumFractionDigits: 0
+                            });
+
+                            var api = this.api();
+
+                            [6].forEach(function (colIndex) {
+                                var total = api
+                                    .column(colIndex, {
+                                        search: 'applied'
+                                    })
+                                    .data()
+                                    .reduce(function (a, b) {
+                                        return Number(a) + Number(b);
+                                    }, 0);
+
+                                // Mostrar el total en el pie de página en la columna respectiva
+                                var columnFooter = $(api.column(colIndex).footer());
+                                columnFooter.html(dollarUSLocale.format(total));
+                                columnFooter.css('text-align', 'right');
+                            });
+                        },
+                        autoWidth: false,
+                        scrollX: true,
+                        scrollY: '350px',
+                        scrollCollapse: true,
+                        pageLength: 50,
+                        dom: 'Bfrtlip',
+                        language: {
+                            url: "{% static 'app/th/json/es-ES.json' %}",
+                        },
+                        ajax: {
+                            url: `{% url 'dataOrdenesComprasDetallesIngresadas' %}`,
+                            type: "POST",
+                            dataSrc: 'data',
+                            data: {
+                                NoDocto: NumeroDocto,
+                                csrfmiddlewaretoken: csrfToken
+                            },
+                        },
+                        colReorder: {
+                            realtime: false,
+                        },
+                        buttons: [
+                            {
+                                extend: 'excel',
+                                text: '<i class="fas fa-file-excel"></i>',
+                                titleAttr: 'Excel',
+                                className: 'btn btn-success',
+                            },
+                            {
+                                extend: 'pdf',
+                                text: '<i class="fas fa-file-pdf"></i>',
+                                titleAttr: 'PDF',
+                                className: 'btn btn-danger',
+                            },
+                            {
+                                extend: 'print',
+                                text: '<i class="fas fa-print"></i>',
+                                titleAttr: 'Imprimir',
+                                className: 'btn btn-info',
+                                orientation: 'landscape'
+                            }
+                        ],
+                        columns: [
+                            {
+                                data: 'CodigoArticulo'
+                            },
+                            {
+                                data: 'Descripcion'
+                            },
+                            {
+                                data: 'Presentacion'
+                            },
+                            {
+                                data: 'MedidaOficial'
+                            },
+                            {
+                                data: 'Cantidad_FF',
+                                className: 'text-right currency',
+                                render: $.fn.dataTable.render.number(',', '.', 2)
+                            },
+                            {
+                                data: 'PrecioNeto_FF',
+                                className: 'text-right currency',
+                                render: $.fn.dataTable.render.number(',', '.', 2)
+                            },
+                            {
+                                data: 'SubTotal_Neto_FF',
+                                className: 'text-right currency',
+                                render: $.fn.dataTable.render.number(',', '.', 2)
+                            },
+                            {
+                                data: 'Bodega'
+                            },
+                            {
+                                data: 'NombreSucursal'
+                            },
+
+                        ],
+                    });
+
+
+                    $('#modalPedidosDetallesCompras').modal('show');
+                }
+
+                $('#modalPedidosDetallesCompras').on('shown.bs.modal', function () {
+                    ordenesComprasIngresadasTable.columns.adjust().draw();
+                });
+
+
+
+
+
+                //  ==============================================================================================================================
+
+                function getMovimientosBancariosDetalles() {
+
+                    $("#movBancariosDetalleTable").DataTable().clear().destroy();
+
+                    movBancariosDetalleTable = $("#movBancariosDetalleTable").DataTable({
+                        initComplete: function () {
+                            Swal.close();
+                        },
+                        drawCallback: function (settings) {
+                            let dollarUSLocale = Intl.NumberFormat("en-US", {
+                                minimumFractionDigits: 2,
+                                maximumFractionDigits: 2
+                            });
+
+                            let intergerLocale = Intl.NumberFormat("en-US", {
+                                minimumFractionDigits: 0,
+                                maximumFractionDigits: 0
+                            });
+
+                            var api = this.api();
+
+                            [2].forEach(function (colIndex) {
+                                var total = api
+                                    .column(colIndex, {
+                                        search: 'applied'
+                                    })
+                                    .data()
+                                    .reduce(function (a, b) {
+                                        return Number(a) + Number(b);
+                                    }, 0);
+
+                                // Mostrar el total en el pie de página en la columna respectiva
+                                var columnFooter = $(api.column(colIndex).footer());
+                                columnFooter.html(dollarUSLocale.format(total));
+                                columnFooter.css('text-align', 'right');
+                            });
+                        },
+                        autoWidth: false,
+                        scrollX: true,
+                        scrollY: '350px',
+                        scrollCollapse: true,
+                        pageLength: 50,
+                        dom: 'Bfrtlip',
+                        language: {
+                            url: "{% static 'app/th/json/es-ES.json' %}",
+                        },
+                        ajax: {
+                            url: `{% url 'dataMovBancariosDetalles' %}`,
+                            type: "POST",
+                            dataSrc: 'data',
+                            data: {
+                                referencia: NumeroDocto,
+                                csrfmiddlewaretoken: csrfToken
+                            },
+                        },
+                        colReorder: {
+                            realtime: false,
+                        },
+                        buttons: [
+                            {
+                                extend: 'excel',
+                                text: '<i class="fas fa-file-excel"></i>',
+                                titleAttr: 'Excel',
+                                className: 'btn btn-success',
+                            },
+                            {
+                                extend: 'pdf',
+                                text: '<i class="fas fa-file-pdf"></i>',
+                                titleAttr: 'PDF',
+                                className: 'btn btn-danger',
+                            },
+                            {
+                                extend: 'print',
+                                text: '<i class="fas fa-print"></i>',
+                                titleAttr: 'Imprimir',
+                                className: 'btn btn-info',
+                                orientation: 'landscape'
+                            }
+                        ],
+                        columns: [
+                            {
+                                data: 'NumeroMovimiento'
+                            },
+                            {
+                                data: 'FechaMovimiento'
+                            },
+                            {
+                                data: 'valor_movimiento',
+                                className: 'text-right currency',
+                                render: $.fn.dataTable.render.number(',', '.', 2)
+                            },
+                            {
+                                data: 'CuentaBancaria'
+                            },
+                            {
+                                data: 'Tipo'
+                            },
+                            {
+                                data: 'Banco'
+                            },
+                            {
+                                data: 'ElaboradoPor'
+                            },
+
+                        ],
+                    });
+
+
+                    $('#modalMovimientosBancariosDetalles').modal('show');
+                }
+
+                $('#modalMovimientosBancariosDetalles').on('shown.bs.modal', function () {
+                    movBancariosDetalleTable.columns.adjust().draw();
+                });
+
+
+                //  ==============================================================================================================================
+
+                function getMovimientosBancarios() {
+
+                    $("#depositosVentaTable").DataTable().clear().destroy();
+
+                    depositosVentaTable = $("#depositosVentaTable").DataTable({
+                        initComplete: function () {
+                            Swal.close();
+                        },
+                        drawCallback: function (settings) {
+                            let dollarUSLocale = Intl.NumberFormat("en-US", {
+                                minimumFractionDigits: 2,
+                                maximumFractionDigits: 2
+                            });
+
+                            let intergerLocale = Intl.NumberFormat("en-US", {
+                                minimumFractionDigits: 0,
+                                maximumFractionDigits: 0
+                            });
+
+                            var api = this.api();
+
+                            [2].forEach(function (colIndex) {
+                                var total = api
+                                    .column(colIndex, {
+                                        search: 'applied'
+                                    })
+                                    .data()
+                                    .reduce(function (a, b) {
+                                        return Number(a) + Number(b);
+                                    }, 0);
+
+                                // Mostrar el total en el pie de página en la columna respectiva
+                                var columnFooter = $(api.column(colIndex).footer());
+                                columnFooter.html(dollarUSLocale.format(total));
+                                columnFooter.css('text-align', 'right');
+                            });
+                        },
+                        autoWidth: false,
+                        scrollX: true,
+                        scrollY: '350px',
+                        scrollCollapse: true,
+                        pageLength: 50,
+                        dom: 'Bfrtlip',
+                        language: {
+                            url: "{% static 'app/th/json/es-ES.json' %}",
+                        },
+                        ajax: {
+                            url: `{% url 'dataDepositosVentas' %}`,
+                            type: "POST",
+                            dataSrc: 'data',
+                            data: {
+                                referencia: NumeroDocto,
+                                csrfmiddlewaretoken: csrfToken
+                            },
+                        },
+                        colReorder: {
+                            realtime: false,
+                        },
+                        buttons: [
+                            {
+                                extend: 'excel',
+                                text: '<i class="fas fa-file-excel"></i>',
+                                titleAttr: 'Excel',
+                                className: 'btn btn-success',
+                            },
+                            {
+                                extend: 'pdf',
+                                text: '<i class="fas fa-file-pdf"></i>',
+                                titleAttr: 'PDF',
+                                className: 'btn btn-danger',
+                            },
+                            {
+                                extend: 'print',
+                                text: '<i class="fas fa-print"></i>',
+                                titleAttr: 'Imprimir',
+                                className: 'btn btn-info',
+                                orientation: 'landscape'
+                            }
+                        ],
+                        columns: [
+                            {
+                                data: 'Numero'
+                            },
+                            {
+                                data: 'FechaMovimiento'
+                            },
+                            {
+                                data: 'Valor',
+                                className: 'text-right currency',
+                                render: $.fn.dataTable.render.number(',', '.', 2)
+                            },
+                            {
+                                data: 'CuentaBancaria'
+                            },
+                            {
+                                data: 'TipoCuenta'
+                            },
+                            {
+                                data: 'Banco'
+                            },
+                            {
+                                data: 'ElaboradoPor'
+                            },
+
+                        ],
+                    });
+
+
+                    $('#modalDepositosBancariosVentas').modal('show');
+                }
+
+                $('#modalDepositosBancariosVentas').on('shown.bs.modal', function () {
+                    depositosVentaTable.columns.adjust().draw();
+                });
+
+
+                //  ==============================================================================================================================
+
+                function getSolicitudesGastos() {
+
+                    $("#solicitudesGastosTable").DataTable().clear().destroy();
+
+                    solicitudesGastosTable = $("#solicitudesGastosTable").DataTable({
+                        initComplete: function () {
+                            Swal.close();
+                        },
+                        drawCallback: function (settings) {
+                            let dollarUSLocale = Intl.NumberFormat("en-US", {
+                                minimumFractionDigits: 2,
+                                maximumFractionDigits: 2
+                            });
+
+                            let intergerLocale = Intl.NumberFormat("en-US", {
+                                minimumFractionDigits: 0,
+                                maximumFractionDigits: 0
+                            });
+
+                            var api = this.api();
+
+                            [1, 2, 3, 4].forEach(function (colIndex) {
+                                var total = api
+                                    .column(colIndex, {
+                                        search: 'applied'
+                                    })
+                                    .data()
+                                    .reduce(function (a, b) {
+                                        return Number(a) + Number(b);
+                                    }, 0);
+
+                                // Mostrar el total en el pie de página en la columna respectiva
+                                var columnFooter = $(api.column(colIndex).footer());
+                                columnFooter.html(dollarUSLocale.format(total));
+                                columnFooter.css('text-align', 'right');
+                            });
+                        },
+                        autoWidth: false,
+                        scrollX: true,
+                        scrollY: '350px',
+                        scrollCollapse: true,
+                        pageLength: 50,
+                        dom: 'Bfrtlip',
+                        language: {
+                            url: "{% static 'app/th/json/es-ES.json' %}",
+                        },
+                        ajax: {
+                            url: `{% url 'dataSolicitudGasto' %}`,
+                            type: "POST",
+                            dataSrc: 'data',
+                            data: {
+                                id_gasto: NumeroDocto,
+                                csrfmiddlewaretoken: csrfToken
+                            },
+                        },
+                        colReorder: {
+                            realtime: false,
+                        },
+                        buttons: [
+                            {
+                                extend: 'excel',
+                                text: '<i class="fas fa-file-excel"></i>',
+                                titleAttr: 'Excel',
+                                className: 'btn btn-success',
+                            },
+                            {
+                                extend: 'pdf',
+                                text: '<i class="fas fa-file-pdf"></i>',
+                                titleAttr: 'PDF',
+                                className: 'btn btn-danger',
+                            },
+                            {
+                                extend: 'print',
+                                text: '<i class="fas fa-print"></i>',
+                                titleAttr: 'Imprimir',
+                                className: 'btn btn-info',
+                                orientation: 'landscape'
+                            }
+                        ],
+                        columns: [
+                            {
+                                data: null,
+                                className: 'text-wrap',
+                                render: function (data, type, row) {
+                                    return `${row.cuenta_contable} | ${row.descripcion_cuenta}`;
+                                }
+                            },
+                            {
+                                data: 'valor_u',
+                                className: 'text-center averages',
+                                render: $.fn.dataTable.render.number(',', '.', 2)
+                            },
+                            {
+                                data: 'sub_total',
+                                className: 'text-right currency',
+                                render: $.fn.dataTable.render.number(',', '.', 2)
+                            },
+                            {
+                                data: 'isv',
+                                className: 'text-right currency',
+                                render: $.fn.dataTable.render.number(',', '.', 2)
+                            },
+                            {
+                                data: 'total',
+                                className: 'text-right currency',
+                                render: $.fn.dataTable.render.number(',', '.', 2)
+                            },
+                            {
+                                data: 'concepto',
+                                className: 'text-wrap'
+                            },
+
+                        ],
+                    });
+
+
+                    $('#modalSolicitudesGastos').modal('show');
+                }
+
+                $('#modalSolicitudesGastos').on('shown.bs.modal', function () {
+                    solicitudesGastosTable.columns.adjust().draw();
+                });
+
+
+
+                //  ==============================================================================================================================
+
+                function getSolicitudesIngresos() {
+
+                    $("#solicitudesIngresosTable").DataTable().clear().destroy();
+
+                    solicitudesIngresosTable = $("#solicitudesIngresosTable").DataTable({
+                        initComplete: function () {
+                            Swal.close();
+                        },
+                        drawCallback: function (settings) {
+                            let dollarUSLocale = Intl.NumberFormat("en-US", {
+                                minimumFractionDigits: 2,
+                                maximumFractionDigits: 2
+                            });
+
+                            let intergerLocale = Intl.NumberFormat("en-US", {
+                                minimumFractionDigits: 0,
+                                maximumFractionDigits: 0
+                            });
+
+                            var api = this.api();
+
+                            [1, 2, 3, 4].forEach(function (colIndex) {
+                                var total = api
+                                    .column(colIndex, {
+                                        search: 'applied'
+                                    })
+                                    .data()
+                                    .reduce(function (a, b) {
+                                        return Number(a) + Number(b);
+                                    }, 0);
+
+                                // Mostrar el total en el pie de página en la columna respectiva
+                                var columnFooter = $(api.column(colIndex).footer());
+                                columnFooter.html(dollarUSLocale.format(total));
+                                columnFooter.css('text-align', 'right');
+                            });
+                        },
+                        autoWidth: false,
+                        scrollX: true,
+                        scrollY: '350px',
+                        scrollCollapse: true,
+                        pageLength: 50,
+                        dom: 'Bfrtlip',
+                        language: {
+                            url: "{% static 'app/th/json/es-ES.json' %}",
+                        },
+                        ajax: {
+                            url: `{% url 'dataSolicitudIngreso' %}`,
+                            type: "POST",
+                            dataSrc: 'data',
+                            data: {
+                                id_gasto: NumeroDocto,
+                                csrfmiddlewaretoken: csrfToken
+                            },
+                        },
+                        colReorder: {
+                            realtime: false,
+                        },
+                        buttons: [
+                            {
+                                extend: 'excel',
+                                text: '<i class="fas fa-file-excel"></i>',
+                                titleAttr: 'Excel',
+                                className: 'btn btn-success',
+                            },
+                            {
+                                extend: 'pdf',
+                                text: '<i class="fas fa-file-pdf"></i>',
+                                titleAttr: 'PDF',
+                                className: 'btn btn-danger',
+                            },
+                            {
+                                extend: 'print',
+                                text: '<i class="fas fa-print"></i>',
+                                titleAttr: 'Imprimir',
+                                className: 'btn btn-info',
+                                orientation: 'landscape'
+                            }
+                        ],
+                        columns: [
+                            {
+                                data: null,
+                                className: 'text-wrap',
+                                render: function (data, type, row) {
+                                    return `${row.cuenta_contable} | ${row.descripcion_cuenta}`;
+                                }
+                            },
+                            {
+                                data: 'valor_u',
+                                className: 'text-center averages',
+                                render: $.fn.dataTable.render.number(',', '.', 2)
+                            },
+                            {
+                                data: 'sub_total',
+                                className: 'text-right currency',
+                                render: $.fn.dataTable.render.number(',', '.', 2)
+                            },
+                            {
+                                data: 'isv',
+                                className: 'text-right currency',
+                                render: $.fn.dataTable.render.number(',', '.', 2)
+                            },
+                            {
+                                data: 'total',
+                                className: 'text-right currency',
+                                render: $.fn.dataTable.render.number(',', '.', 2)
+                            },
+                            {
+                                data: 'concepto',
+                                className: 'text-wrap'
+                            },
+
+                        ],
+                    });
+
+
+                    $('#modalSolicitudesIngresos').modal('show');
+                }
+
+                $('#modalSolicitudesIngresos').on('shown.bs.modal', function () {
+                    solicitudesIngresosTable.columns.adjust().draw();
+                });
+
+
+                //  ==============================================================================================================================
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+                $('#btnReportePartida').click(function (e) {
+                    e.preventDefault();
+
+                    redirectToVoucher(pkPartida);
+                });
+
+                function redirectToVoucher(pkPartida) {
+                    const baseURL = "{% url 'partida_contable_pdf' pk_partida=0 %}";
+                    const redirectURL = baseURL.replace("0", pkPartida);
+
+                    // Abrir en una nueva pestaña
+                    window.open(redirectURL, "_blank");
+                }
+
+
+                $('#filtroNumeroPartida').keyup(function () {
+                    tablePartidasAutomaticas.column(1).search(this.value, true, false).draw();
+                });
+
+                $(document).on('click', '.detallesPartida', function () {
+                    $('#formDetallesPartidas').trigger('reset');
+
+                    partida_id = $(this).data('id');
+                    npartidadetalle = $(this).data('npartida');
+
+                    $("#tableDetallePartidasAutomaticas").DataTable().clear().destroy();
+
+                    $('#modalDetallePartidasLabel').text('Detalles de la partida # ' + npartidadetalle);
+                    $('#modalDetallePartidas').modal('show');
+
+                    getDetallePartidasAutomaticas(id_empresa, varFechaInicial, varFechaFinal, tipoPartida, partida_id)
+                });
+
+
+                var partida_id_token = null, partida_token = null, estado_token = null, sucursal_token = null;
+
+                $(document).on('click', '.statusPartida', function () {
+                    $('#formTiposPartidas').trigger('reset');
+
+                    filaPartidas = $(this).closest('tr');
+                    partida_id_token = $(this).data('id');
+                    partida_token = $(this).data('name');
+                    estado_token = $(this).data('estado');
+                    sucursal_token = $(this).data('sucursal');
+
+                    tokenCambiarEstadoPartida(19);
+
+                });
+
+                $(document).on('click', '.editarPartida', function () {
+                    var replaceText = '' + $(this).data('id') + '/' + id_empresa;
+
+                    var url = "{% url 'conta_new_edit_partida' 0 2 %}".replace('0/2', replaceText);
+                    window.open(url, '_blank');
+                });
+
+
+
+                function getDetallePartidasAutomaticas(empresa, fechaInicial, fechaFinal, npartida, idencpartida) {
+                    tableDetallePartidasAutomaticas = $('#tableDetallePartidasAutomaticas').DataTable({
+                        autoWidth: false,
+                        scrollX: true,
+                        scrollY: '350px',
+                        scrollCollapse: true,
+                        pageLength: 50,
+                        dom: 'Brftip',
+                        language: {
+                            url: "{% static 'app/th/json/es-ES.json' %}",
+                        },
+                        ajax: {
+                            url: `{% url 'dataDetallesPartidasAutomaticas' %}`,
+                            type: "POST",
+                            dataSrc: 'data',
+                            data: {
+                                idencpartida: idencpartida,
+                                csrfmiddlewaretoken: csrfToken
+                            },
+                        },
+                        drawCallback: function (settings) {
+                            let dollarUSLocale = Intl.NumberFormat("en-US", {
+                                minimumFractionDigits: 2,
+                                maximumFractionDigits: 2
+                            });
+
+                            let intergerLocale = Intl.NumberFormat("en-US", {
+                                minimumFractionDigits: 0,
+                                maximumFractionDigits: 0
+                            });
+
+                            var api = this.api();
+
+                            // Variables para almacenar los totales de las columnas 5 y 6
+                            var totalColumn3 = 0;
+                            var totalColumn4 = 0;
+
+                            // Calcular totales para las columnas 3, 4, 5, y 6
+                            [3, 4].forEach(function (colIndex) {
+                                var total = api
+                                    .column(colIndex, {
+                                        search: 'applied'
+                                    })
+                                    .data()
+                                    .reduce(function (a, b) {
+                                        return Number(a) + Number(b);
+                                    }, 0);
+
+                                // Mostrar el total en el pie de página en la columna respectiva
+                                var columnFooter = $(api.column(colIndex).footer());
+                                columnFooter.html(dollarUSLocale.format(total));
+                                columnFooter.css('text-align', 'right');
+                            });
+                        },
+                        colReorder: {
+                            realtime: false,
+                        },
+                        buttons: [
+                            {
+                                extend: 'excel',
+                                text: '<i class="fas fa-file-excel"></i>',
+                                titleAttr: 'Exportar a Excel',
+                                className: 'btn btn-success',
+                            },
+                            {
+                                extend: 'pdf',
+                                text: '<i class="fas fa-file-pdf"></i>',
+                                titleAttr: 'Exportar a PDF',
+                                className: 'btn btn-danger',
+                            },
+                            {
+                                extend: 'print',
+                                text: '<i class="fas fa-print"></i>',
+                                titleAttr: 'Imprimir',
+                                className: 'btn btn-primary',
+                                orientation: 'landscape'
+                            }
+                        ],
+                        columns: [
+                            {
+                                data: 'CodigoCuenta',
+                            },
+                            {
+                                data: 'ConceptoCuenta',
+                            },
+                            {
+                                data: 'Sinopsis',
+                            },
+                            {
+                                data: 'Debe',
+                            },
+                            {
+                                data: 'Haber',
+                            },
+                            {
+                                data: 'estado',
+                                className: 'text-center',
+                                render: function (data, type, row) {
+                                    var badge = "";
+                                    if (data == 3) {
+                                        badge +=
+                                            '<span class="badge badge-pill bg-danger">DESHABILITADO</span>';
+                                    } else {
+                                        badge +=
+                                            '<span class="badge badge-pill bg-success">ACTIVO</span>';
+                                    }
+
+                                    return badge;
+                                },
+                            },
+                        ],
+                        order: [[1, "asc"]],
+                    });
+                }
+
+
+
+
+
+
+                $('#btnEstructuraOriginalPartida').click(function (e) {
+                    e.preventDefault();
+
+
+                    //  TipoDocto;
+
+                    fillTableDetallesTiposPartidas(TipoDocto);
+                    $('#modalDetallesTiposPartidas').modal('show');
+                });
+
+
+                function fillTableDetallesTiposPartidas(TipoDocto) {
+                    $("#detallesTiposPartidas_Table").DataTable().clear().destroy();
+
+                    detallesTiposPartidas_Table = $("#detallesTiposPartidas_Table").DataTable({
+                        ajax: {
+                            url: `{% url 'dataEstructuraTipoPartida' %}`,
+                            type: "POST",
+                            data: {
+                                codigo: TipoDocto,
+                                csrfmiddlewaretoken: csrfToken
+                            },
+                            dataSrc: 'data'
+                        },
+                        dom: 'Brftip',
+                        paging: false,
+                        ordering: false,
+                        searching: false,
+                        info: false,
+                        scrollY: '50vh',
+                        scrollCollapse: true,
+                        autoWidth: false,
+                        language: {
+                            url: "{% static 'app/th/json/es-ES.json' %}",
+                        },
+                        buttons: [
+                            {
+                                extend: 'excel',
+                                text: '<i class="fas fa-file-excel"></i>',
+                                titleAttr: 'Exportar a Excel',
+                                className: 'btn btn-success',
+                            },
+                            {
+                                extend: 'pdf',
+                                text: '<i class="fas fa-file-pdf"></i>',
+                                titleAttr: 'Exportar a PDF',
+                                className: 'btn btn-danger',
+                            },
+                            {
+                                extend: 'print',
+                                text: '<i class="fas fa-print"></i>',
+                                titleAttr: 'Imprimir',
+                                className: 'btn btn-primary',
+                                orientation: 'landscape'
+                            }
+                        ],
+                        columns: [
+                            { data: 'cuenta_contable' },
+                            {
+                                data: 'nombre_cuenta',
+                                className: 'text-start',
+                                render: function (data, type, row) {
+                                    return row.tipo_movimiento === 'HABER' ? `<div class="text-end">${data}</div>` : `<div class="text-start">${data}</div>`;
+                                }
+                            },
+                            { data: 'descripcion', className: 'text-wrap' },
+                            { data: 'tipo_movimiento' },
+                            {
+                                data: 'valor_prueba',
+                                className: 'text-end currency',
+                                render: function (data, type, row) {
+                                    return row.tipo_movimiento === 'DEBE' ? dollarUSLocale.format(parseFloat(data || 0)) : '';
+                                }
+                            },
+                            {
+                                data: 'valor_prueba',
+                                className: 'text-end currency',
+                                render: function (data, type, row) {
+                                    return row.tipo_movimiento === 'HABER' ? dollarUSLocale.format(parseFloat(data || 0)) : '';
+                                }
+                            },
+                            { data: 'formula_monto' },
+                            {
+                                data: 'estado',
+                                className: 'text-center',
+                                render: function (data) {
+                                    return data == 3
+                                        ? '<span class="badge bg-danger">Deshabilitado</span>'
+                                        : '<span class="badge bg-success">Activo</span>';
+                                }
+                            },
+                            {
+                                data: null,
+                                className: 'text-center',
+                                render: function (data, type, row) {
+                                    return ``;
+                                }
+                            }
+                        ],
+                        footerCallback: function (row, data) {
+                            let totalDebe = 0;
+                            let totalHaber = 0;
+
+                            data.forEach(row => {
+                                const valor = parseFloat(row.valor_prueba || 0);
+                                if (row.tipo_movimiento === 'DEBE') totalDebe += valor;
+                                if (row.tipo_movimiento === 'HABER') totalHaber += valor;
+                            });
+
+                            $('#totalDebeContable').text(dollarUSLocale.format(totalDebe));
+                            $('#totalHaberContable').text(dollarUSLocale.format(totalHaber));
+
+                            const balance = totalDebe - totalHaber;
+                            const balanceSpan = $('#balanceContable');
+                            balanceSpan.text(dollarUSLocale.format(balance));
+                            balanceSpan.css('color', balance === 0 ? 'green' : 'red');
+                        }
+                    });
+                }
+
+
+
+
+
+
+
+
+
+                function tokenCambiarEstadoPartida(status) {
+                    sucursal = sucursal_token;
+                    num_documento = partida_id_token;
+                    id_tipo_token = status;
+                    id_modulo = 12;
+                    usuario = '{{ userName }}';
+                    tabla = 'conta_partida_encabezado';
+
+                    let assignedDetalle = '';
+
+                    if (estado_token == 3) {
+
+                        assignedDetalle = [
+                            {
+                                mov_original: partida_id_token,
+                                documento: partida_token,
+                                cantidad: 1,
+                                descripcion: `Se quiere habilitar la Partida ${partida_token}`,
+                                valor: 'Habilitar',
+                                observacion: `Estado Anterior: Deshabilitado. Estado Nuevo: Habilitado`
+                            }
+                        ];
+                    } else {
+
+                        assignedDetalle = [
+                            {
+                                mov_original: partida_id_token,
+                                documento: partida_token,
+                                cantidad: 1,
+                                descripcion: `Se quiere deshabilitar la Partida ${partida_token}`,
+                                valor: 'Deshabilitar',
+                                observacion: `Estado Anterior: Habilitado. Estado Nuevo: Deshabilitado`
+                            }
+                        ];
+                    }
+
+
+
+                    $.ajax({
+                        url: "http://3.230.160.184:81/API/token/validar/solicitud",
+                        type: "POST",
+                        data: {
+                            sucursal: sucursal,
+                            num_documento: num_documento,
+                            id_tipo_token: id_tipo_token,
+                            id_modulo: id_modulo,
+                            usuario: usuario,
+                            tabla: tabla,
+                            assignedDetalle: JSON.stringify(assignedDetalle),
+                            csrfmiddlewaretoken: "{{ csrf_token }}"
+                        },
+                        success: function (data) {
+                            if (data.save == 1) {
+                                Swal.close();
+
+                                console.log(`${data.existe} Estado: ${data.estado}`);
+
+                                if (data.estado == 'NO EXISTE' || data.estado == 'CANCELADO' || data.estado == 'RECHAZADO' || data.estado == 'APLICADO') {
+                                    console.log('Crear Solicitud');
+
+                                    tokenGenerarSolicitud(sucursal, num_documento, id_tipo_token, id_modulo, usuario, tabla, assignedDetalle);
+                                }
+                                else if (data.estado == 'SOLICITADO') {
+                                    console.log('Ver msj cancelar o dejar ahi!');
+
+                                    Swal.fire({
+                                        title: "Ya Existe una Solicitud de Token Pendiente!",
+                                        text: "¿Deseas Esperar que sea Gestionada o Cancelar la Solicitud Previa?",
+                                        icon: "warning",
+                                        showCancelButton: true,
+                                        confirmButtonText: "No Realizar Ninguna Accion",
+                                        cancelButtonText: "Cancelar Solicitud Anterior",
+                                        reverseButtons: true
+                                    }).then((result) => {
+                                        if (result.isConfirmed) {
+                                            console.log('No se cancela el token, sigue en lista de espera!');
+                                        } else {
+                                            tokenCancelarSolicitud(sucursal, num_documento, id_tipo_token, id_modulo, usuario, tabla, 'El usuario decidio cancelar esta solicitud!');
+                                        }
+                                    });
+
+                                }
+                                else {
+                                    console.log('proceder a cambiar estado');
+
+                                    cambiarEstadoPartidaTokenAutorizado(partida_id_token, num_documento, id_tipo_token, id_modulo, usuario, status);
+                                }
+                            } else {
+                                Swal.fire({
+                                    icon: 'error',
+                                    title: 'Error',
+                                    text: 'Error!' + data.error
+                                });
+                            }
+                        }
+
+                    });
+                }
+
+
+                function cambiarEstadoPartidaTokenAutorizado(partida_id, num_documento, id_tipo_token, id_modulo, usuario, status) {
+
+                    showLoadingScreen('Token Autorizado: Cambiando Estado Partida!');
+
+                    $.ajax({
+                        url: "{% url 'update_status_partida' %}",
+                        type: "POST",
+                        data: {
+                            partida_id: partida_id,
+                            csrfmiddlewaretoken: csrfToken
+                        },
+                        success: function (data) {
+                            if (data.save == 1) {
+                                tokenMarcarComoUtilizado(num_documento, id_tipo_token, id_modulo, usuario);
+                                Swal.close();
+
+                                toastMixin.fire({
+                                    animation: true,
+                                    title: 'El estado de la Partida ha sido editado!'
+                                });
+                                tablePartidasAutomaticas.ajax.reload(null, false);
+                            } else {
+                                Swal.fire("", "Error D: " + data.error, "error");
+                            }
+                        }
+                    });
+                }
+
+
+
+
+
+
+
+
+
+
+
+                function tokenMarcarComoUtilizado(num_documento, id_tipo_token, id_modulo, usuario) {
+                    $.ajax({
+                        url: "http://3.230.160.184:81/API/token/v2/verify", // Cambia esto a tu endpoint Django
+                        type: "POST",
+                        data: {
+                            num_documento: num_documento,
+                            id_tipo_token: id_tipo_token,
+                            id_modulo: id_modulo,
+                            usuario: usuario,
+                            csrfmiddlewaretoken: "{{ csrf_token }}"
+                        },
+                        success: function (data) {
+                            if (data.save == 1) {
+                                console.log('Token Aplicado!');
+                            } else {
+                                Swal.fire({
+                                    icon: 'error',
+                                    title: 'Error',
+                                    text: 'Error!' + data.error
+                                });
+                            }
+                        }
+                    });
+                }
+
+                function tokenGenerarSolicitud(sucursal, num_documento, id_tipo_token, id_modulo, usuario, tabla, assignedDetalle) {
+                    $.ajax({
+                        url: "http://3.230.160.184:81/API/token/generar/solicitud", // Cambia esto a tu endpoint Django
+                        type: "POST",
+                        data: {
+                            sucursal: sucursal,
+                            num_documento: num_documento,
+                            id_tipo_token: id_tipo_token,
+                            id_modulo: id_modulo,
+                            usuario: usuario,
+                            tabla: tabla,
+                            assignedDetalle: JSON.stringify(assignedDetalle),
+                            csrfmiddlewaretoken: "{{ csrf_token }}"
+                        },
+                        success: function (data) {
+                            if (data.save == 1) {
+                                Swal.fire("", "Solicitud de Token Enviada!", "success");
+                            } else {
+                                Swal.fire({
+                                    icon: 'error',
+                                    title: 'Error',
+                                    text: 'Error!' + data.error
+                                });
+                            }
+                        }
+
+                    });
+                }
+
+                function tokenCancelarSolicitud(sucursal, num_documento, id_tipo_token, id_modulo, usuario, tabla, comentario) {
+                    $.ajax({
+                        url: "http://3.230.160.184:81/API/token/cancelar/solicitud", // Cambia esto a tu endpoint Django
+                        type: "POST",
+                        data: {
+                            sucursal: sucursal,
+                            num_documento: num_documento,
+                            id_tipo_token: id_tipo_token,
+                            id_modulo: id_modulo,
+                            usuario: usuario,
+                            tabla: tabla,
+                            comentario: comentario,
+                            csrfmiddlewaretoken: "{{ csrf_token }}"
+                        },
+                        success: function (data) {
+                            if (data.save == 1) {
+                                Swal.fire("", "Solicitud de Token Cancelada!", "success");
+                            } else {
+                                Swal.fire({
+                                    icon: 'error',
+                                    title: 'Error',
+                                    text: 'Error!' + data.error
+                                });
+                            }
+                        }
+
+                    });
+                }
+
+
+
+
+
+
+            });
+        </script>
+        {% endblock %}

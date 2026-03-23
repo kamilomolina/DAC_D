@@ -1,0 +1,502 @@
+{% extends 'componentes/menu_contable.html' %}
+{% load static %}
+
+{% block title %}
+BALANCE GENERAL
+{% endblock %}
+
+{% block body %}
+
+<style>
+    .state-green {
+        background-color: #d3ffd3 !important;
+    }
+
+    .state-red {
+        background-color: #f3c7c7 !important;
+    }
+</style>
+
+
+<div class="row align-items-center border-bottom mb-3 py-2 bg-white shadow-sm mx-0">
+    <div class="col d-flex align-items-center px-0">
+        <button id="toggle-sidebar" class="btn btn-primary btn-sm me-3 border-0 rounded-circle btnMenu"
+            style="width: 32px; height: 32px; padding: 0;" title="Mostrar/Ocultar menú">
+            <i class="fas fa-bars"></i>
+        </button>
+        <h6 class="page-title mb-0 fs-5 fw-bold text-dark">
+            <i class="fas fa-balance-scale text-primary me-2"></i>BALANCE GENERAL
+        </h6>
+    </div>
+</div>
+
+
+<div class="container-fluid px-0 mt-1">
+
+    <div class="row g-3 d-flex align-items-end mx-0">
+
+        <div class="col-lg-2">
+            <div class="form-group">
+                <label for="empresaPartida">Empresa:</label>
+                <select id="empresaPartida" class="form-select form-select-sm" name="empresaPartida">
+                    {% for e in empresasData %}
+                    <option value="{{ e.id }}">{{ e.nombre }}</option>
+                    {% endfor %}
+                </select>
+            </div>
+        </div>
+
+        <div class="col-lg-2">
+            <label for="selectMes">Mes:</label>
+            <select id="selectMes" class="form-select form-select-sm">
+                <option value="1">Enero</option>
+                <option value="2">Febrero</option>
+                <option value="3">Marzo</option>
+                <option value="4">Abril</option>
+                <option value="5">Mayo</option>
+                <option value="6">Junio</option>
+                <option value="7">Julio</option>
+                <option value="8">Agosto</option>
+                <option value="9">Septiembre</option>
+                <option value="10">Octubre</option>
+                <option value="11">Noviembre</option>
+                <option value="12">Diciembre</option>
+            </select>
+        </div>
+
+        <div class="col-lg-2">
+            <label for="selectAnio">Año:</label>
+            <select id="selectAnio" class="form-select form-select-sm">
+                <!-- años se llenan con jQuery -->
+            </select>
+        </div>
+
+        <div class="col-lg-2">
+            <label for="">Tipos NIC:</label>
+            <select id="selectTiposNIC" class="form-select form-select-sm" name="selectTiposNIC">
+                {% for t_nic in tiposNICData %}
+                <option value="{{ t_nic.PkNic }}">{{ t_nic.Nic }}
+                </option>
+                {% endfor %}
+            </select>
+        </div>
+
+        <div class="col-6 col-md-2">
+            <div class="form-check mt-4">
+                <input class="form-check-input" type="checkbox" id="chkUtilidad">
+                <label class="form-check-label" for="chkUtilidad">Incluir resultado del período</label>
+            </div>
+        </div>
+
+        <div class="col-lg-2">
+            <button type="button" class="btn btn-success btn-sm" id="btnLoadData">Cargar</button>
+        </div>
+
+    </div>
+
+
+    <br>
+
+    <div class="row mx-0">
+        <!-- Cards Totales -->
+        <div class="row g-2 mt-2" id="cardsTotales"></div>
+
+        <!-- Alerta cuentas sin NIC (si lo activas en el SP) -->
+        <div class="mt-2" id="alertSinNIC" style="display:none;"></div>
+
+        <!-- Resumen (DataTable) -->
+        <div class="card shadow-sm mt-2">
+            <div class="card-body">
+                <h6 class="mb-2">Balance General (Resumen)</h6>
+
+                <div class="col-lg-2 mb-2">
+                    <label for="selectGrado">Grado:</label>
+                    <select id="selectGrado" class="form-select form-select-sm">
+                        <option value="1">Grado 1</option>
+                        <option value="2">Grado 2</option>
+                        <option value="3">Grado 3</option>
+                        <option value="4">Grado 4</option>
+                        <option value="5" selected>Grado 5 (Detalle)</option>
+                    </select>
+                </div>
+
+
+                <table id="tblBGResumen" class="table table-sm table-striped table-hover w-100"></table>
+            </div>
+        </div>
+
+        <!-- Acordeón con detalle por cuenta mayor -->
+        <div class="card shadow-sm mt-2">
+            <div class="card-body">
+                <h6 class="mb-2">Detalle por Cuenta Mayor</h6>
+                <div class="accordion" id="bgAccordion"></div>
+            </div>
+        </div>
+    </div>
+</div>
+
+
+<a href="{% url 'panel_contabilidad' %}">
+    <button class="btn btn-sm btn-danger" id="btnCerrar" title="Cerrar"
+        style="position: fixed; bottom: 20px; right: 20px;">
+        <i class="fa fa-times"></i> Cerrar
+    </button>
+</a>
+
+{% endblock %}
+
+
+
+{% block scripts %}
+
+<script>
+    $(document).ready(function () {
+        var csrfToken = "{{ csrf_token }}";
+        var empresa_id = "{{ empresa }}";
+        var varMonth = "{{ varMonth }}";
+        var varAnio = "{{ varAnio }}";
+
+        $('#empresaPartida').val(empresa_id).change();
+
+        var toastMixin = Swal.mixin({
+            toast: true,
+            icon: 'success',
+            title: 'General Title',
+            animation: false,
+            position: 'top-right',
+            showConfirmButton: false,
+            timer: 2000,
+            timerProgressBar: true,
+            didOpen: (toast) => {
+                toast.addEventListener('mouseenter', Swal.stopTimer);
+                toast.addEventListener('mouseleave', Swal.resumeTimer);
+            }
+        });
+
+        let dollarUSLocale = Intl.NumberFormat("en-US", {
+            minimumFractionDigits: 2,
+            maximumFractionDigits: 2
+        });
+
+        let intergerLocale = Intl.NumberFormat("en-US", {
+            minimumFractionDigits: 0,
+            maximumFractionDigits: 0
+        });
+
+        $('#selectMes').val(varMonth).change();
+
+        function showLoadingScreen(text = '') {
+            Swal.fire({
+                title: '',
+                html: `<b>${text}</b>`,
+                didOpen: () => {
+                    Swal.showLoading();
+                },
+                allowOutsideClick: false,
+                showConfirmButton: false
+            });
+        }
+
+        const anioActual = new Date().getFullYear();
+        const selectAnio = $('#selectAnio');
+
+        for (let i = 0; i <= 5; i++) {
+            const anio = anioActual - i;
+            selectAnio.append(`<option value="${anio}">${anio}</option>`);
+        }
+
+        const cardHeight = $(".card-expanded").height();
+        const tableHeight = cardHeight * 0.5;
+
+        // URL API con querystring (tu preferencia)
+        function apiUrl(empresa, anio, mes, tipoNIC, utilidad) {
+            const base = `{% url 'dataBalanceGeneral' %}?empresa=0&anio=0&mes=0&tipoNIC=0&utilidad=0`;
+            return base
+                .replace('empresa=0', 'empresa=' + encodeURIComponent(empresa))
+                .replace('anio=0', 'anio=' + encodeURIComponent(anio))
+                .replace('mes=0', 'mes=' + encodeURIComponent(mes))
+                .replace('tipoNIC=0', 'tipoNIC=' + encodeURIComponent(tipoNIC))
+                .replace('utilidad=0', 'utilidad=' + encodeURIComponent(utilidad));
+        }
+
+        const fmt = n => (parseFloat(n || 0)).toLocaleString('es-HN', { minimumFractionDigits: 2, maximumFractionDigits: 2 });
+
+
+        function renderCards(resumen, totales) {
+            let t = { 'ACTIVOS': 0, 'PASIVOS': 0, 'CAPITAL': 0 };
+            if (totales && totales.length) {
+                totales.forEach(x => t[x.Rubro] = parseFloat(x.TotalRubro || 0));
+            } else {
+                (resumen || []).forEach(x => { t[x.Rubro] = (t[x.Rubro] || 0) + parseFloat(x.Saldo || 0); });
+            }
+            const dif = t['ACTIVOS'] - (t['PASIVOS'] + t['CAPITAL']);
+
+            console.log(Math.abs(dif));
+
+            const cards = `
+                <div class="col-12 col-sm-6 col-lg-3"><div class="card shadow-sm h-100" style="background-color: #b6e6b6 !important"><div class="card-body p-2">
+                    <div class="small text-muted">Total Activos</div><div class="h5 mb-0">${fmt(t['ACTIVOS'])}</div>
+                </div></div></div>
+                <div class="col-12 col-sm-6 col-lg-3"><div class="card shadow-sm h-100" style="background-color: #f3c7c7 !important"><div class="card-body p-2">
+                    <div class="small text-muted">Total Pasivos</div><div class="h5 mb-0">${fmt(t['PASIVOS'])}</div>
+                </div></div></div>
+                <div class="col-12 col-sm-6 col-lg-3"><div class="card shadow-sm h-100" style="background-color: #f3c7c7 !important"><div class="card-body p-2">
+                    <div class="small text-muted">Total CAPITAL</div><div class="h5 mb-0">${fmt(t['CAPITAL'])}</div>
+                </div></div></div>
+                <div class="col-12 col-sm-6 col-lg-3">
+                    <div class="card shadow-sm h-100 ${Math.abs(dif) == 0 ? 'state-green' : 'state-red'}">
+                    <div class="card-body p-2"><div class="small text-muted">Diferencia A - (P+C)</div><div class="h5 mb-0">${fmt(dif)}</div></div>
+                    </div>
+                </div>`;
+            $("#cardsTotales").html(cards);
+        }
+
+        function renderResumen(resumen) {
+            $('#tblBGResumen').DataTable({
+                destroy: true,
+                data: resumen || [],
+                columns: [
+                    { data: 'Rubro', title: 'Rubro' },
+                    { data: 'Subrubro', title: 'Subrubro' },
+                    { data: 'Saldo', title: 'Saldo', className: 'text-end', render: d => fmt(d) }
+                ],
+                //      order: [[0, 'asc'], [1, 'asc']],
+                ordering: false,
+                pageLength: 50,
+                dom: 'Bfrtip',
+                buttons: [
+                    {
+                        extend: 'excel',
+                        text: '<i class="fas fa-file-excel"></i>',
+                        titleAttr: 'Excel',
+                        className: 'btn btn-success',
+                    },
+                    {
+                        extend: 'pdf',
+                        text: '<i class="fas fa-file-pdf"></i>',
+                        titleAttr: 'PDF',
+                        className: 'btn btn-danger',
+                    },
+                    {
+                        extend: 'print',
+                        text: '<i class="fas fa-print"></i>',
+                        titleAttr: 'Imprimir',
+                        className: 'btn btn-info',
+                        orientation: 'landscape'
+                    }
+                ],
+                language: { url: "{% static 'app/th/json/es-ES.json' %}", }
+            });
+        }
+
+        function renderDetalle(detalle) {
+            const gradoMax = parseInt($('#selectGrado').val(), 10);
+
+            // ⬇️ FILTRO CLAVE
+            detalle = (detalle || []).filter(x => parseInt(x.Grado, 10) <= gradoMax);
+
+
+            const $acc = $('#bgAccordion').empty();
+
+            if (!detalle || !detalle.length) {
+                $acc.html('<div class="text-muted">Sin Detalle para Mostrar.</div>');
+                return;
+            }
+
+            // Agrupar Rubro > Subrubro
+            const groups = {};
+            detalle.forEach(r => {
+                const k = r.Rubro + '||' + r.Subrubro;
+                (groups[k] = groups[k] || []).push(r);
+            });
+
+            let idx = 0, html = '';
+            Object.keys(groups).sort().forEach(k => {
+                const [rubro, sub] = k.split('||');
+                const list = groups[k].sort((a, b) => a.CodigoCuenta.localeCompare(b.CodigoCuenta));
+
+                const rows = list.map(x => {
+                    const isG5 = parseInt(x.Grado, 10) === 5;
+                    const dif = parseFloat(x.Diferencia || 0);
+                    const cls = dif === 0 ? 'state-green' : 'state-red';
+
+                    const inputSaldo = isG5
+                        ? `<input type="text" class="form-control form-control-sm text-end js-saldo-manual"
+                          data-cuenta="${x.CodigoCuenta}"
+                          value="${fmt(x.SaldoManual)}">`
+                        : `<span>${fmt(x.SaldoManual)}</span>`;
+
+                    const btnGuardar = isG5
+                        ? `<button class="btn btn-sm btn-primary ms-1 js-save-saldo"
+                                data-cuenta="${x.CodigoCuenta}">
+                            <i class="fa fa-save"></i>
+                    </button>`
+                        : ``;
+
+                    return `
+                        <tr class="${cls}">
+                            <td class="text-nowrap">${x.CodigoCuenta}</td>
+                            <td>${x.NombreCuenta || ''}</td>
+                            <td class="text-end">${fmt(x.SaldoAuto)}</td>
+                            <td class="text-end">
+                                <div class="d-flex justify-content-end align-items-center">
+                                    ${inputSaldo}
+                                    ${btnGuardar}
+                                </div>
+                            </td>
+                            <td class="text-end fw-bold">${fmt(x.Diferencia)}</td>
+                        </tr>
+                    `;
+                }).join('');
+
+                html += `
+                    <div class="accordion-item">
+                        <h2 class="accordion-header" id="h${idx}">
+                            <button class="accordion-button collapsed" type="button"
+                                data-bs-toggle="collapse" data-bs-target="#c${idx}">
+                                <strong class="me-2">${rubro}</strong> / ${sub}
+                            </button>
+                        </h2>
+                        <div id="c${idx}" class="accordion-collapse collapse" data-bs-parent="#bgAccordion">
+                            <div class="accordion-body p-2">
+                                <div class="table-responsive">
+                                    <table class="table table-sm table-striped">
+                                        <thead>
+                                            <tr>
+                                                <th>Cuenta</th>
+                                                <th>Nombre</th>
+                                                <th class="text-end">Auto</th>
+                                                <th class="text-end">Manual</th>
+                                                <th class="text-end">Dif</th>
+                                            </tr>
+                                        </thead>
+                                        <tbody>${rows}</tbody>
+                                    </table>
+                                </div>
+                            </div>
+                        </div>
+                    </div>`;
+
+                idx++;
+            });
+
+            $acc.html(html);
+        }
+
+
+        function renderSinNIC(sin_map) {
+            const $a = $('#alertSinNIC').empty();
+            if (!sin_map || !sin_map.length) { $a.hide(); return; }
+            const lis = sin_map.map(x => `<li><code>${x.CodigoCuenta}</code> — ${fmt(x.Saldo)}</li>`).join('');
+            $a.html(`<div class="alert alert-warning">
+                <strong>Atención:</strong> Hay cuentas con saldo sin Clasificación NIC.
+                <ul class="mb-0">${lis}</ul></div>`).show();
+        }
+
+        function cargarBG() {
+            const emp = $('#empresaPartida').val();
+            const anio = $('#selectAnio').val();
+            const mes = $('#selectMes').val();
+            const nic = $('#selectTiposNIC').val();
+            const uti = $('#chkUtilidad').is(':checked') ? 1 : 0;
+
+            showLoadingScreen();
+
+
+            $.ajax({
+                url: apiUrl(emp, anio, mes, nic, uti),
+                type: 'GET',
+                success: function (j) {
+                    if (!j.success) {
+                        Swal.fire('', j.error || 'Error', 'error');
+                        return;
+                    }
+
+                    _bgDetalleCache = j.detalle || [];
+
+                    renderCards(j.resumen, j.totales);
+                    renderResumen(j.resumen);
+                    renderDetalle(_bgDetalleCache);
+                    renderSinNIC(j.sin_map);
+
+                    Swal.close();
+                },
+                error: function (xhr) { console.log(xhr.responseText); Swal.fire('', 'Error general', 'error'); }
+            });
+        }
+
+        $('#btnLoadData').on('click', cargarBG);
+
+
+        $('#selectGrado').on('change', function () {
+            renderDetalle(_bgDetalleCache);
+        });
+
+
+        function apiGuardarSaldoManualBG(empresa, anio, mes, cuenta, saldo, obs) {
+            const base = `{% url 'guardarSaldoManualBG' %}?empresa=0&anio=0&mes=0&cuenta=0&saldo=0&obs=0`;
+            return base
+                .replace('empresa=0', 'empresa=' + encodeURIComponent(empresa))
+                .replace('anio=0', 'anio=' + encodeURIComponent(anio))
+                .replace('mes=0', 'mes=' + encodeURIComponent(mes))
+                .replace('cuenta=0', 'cuenta=' + encodeURIComponent(cuenta))
+                .replace('saldo=0', 'saldo=' + encodeURIComponent(saldo))
+                .replace('obs=0', 'obs=' + encodeURIComponent(obs || ''));
+        }
+
+
+        $(document).on('click', '.js-save-saldo', function () {
+            const $btn = $(this);
+            const cuenta = $btn.data('cuenta');
+
+            const $row = $btn.closest('tr');
+            const $inp = $row.find('.js-saldo-manual');
+            const saldoTxt = $inp.val();
+
+            const emp = $('#empresaPartida').val();
+            const anio = $('#selectAnio').val();
+            const mes = $('#selectMes').val();
+
+            const saldo = parseFloat(String(saldoTxt).replace(/,/g, '')) || 0;
+
+            showLoadingScreen('');
+
+            $.ajax({
+                url: apiGuardarSaldoManualBG(emp, anio, mes, cuenta, saldo, ''),
+                type: 'GET',
+                success: function (j) {
+                    if (!j.success) {
+                        Swal.fire('', j.error || 'Error al guardar', 'error');
+                        return;
+                    }
+                    toastMixin.fire({ icon: 'success', title: 'Saldo guardado' });
+                    cargarBG(); // 🔁 recarga todo (simple y seguro)
+                },
+                error: function (xhr) {
+                    console.log(xhr.responseText);
+                    Swal.fire('', 'Error general', 'error');
+                },
+                complete: function () { Swal.close(); }
+            });
+        });
+
+
+        $(document).on('keydown', '.js-saldo-manual', function (e) {
+            if (e.key === 'Enter') {
+                $(this).closest('tr').find('.js-save-saldo').click();
+            }
+        });
+
+
+
+
+
+
+
+
+
+
+        /*  */
+    });
+</script>
+{% endblock %}

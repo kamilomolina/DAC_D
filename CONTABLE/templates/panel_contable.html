@@ -1,0 +1,474 @@
+{% extends 'componentes/menu_contable.html' %}
+{% load static %}
+
+{% block title %}
+PANEL CONTABILIDAD
+{% endblock %}
+
+{% block body %}
+
+<style>
+    .glass-card {
+        min-height: 170px;
+    }
+
+    .glass-card {
+        border: 1px solid rgba(255, 255, 255, 0.4);
+        border-radius: 20px;
+        box-shadow: 0 10px 30px rgba(0, 0, 0, 0.05);
+        transition: all 0.3s cubic-bezier(0.25, 0.8, 0.25, 1);
+        overflow: hidden;
+        position: relative;
+        background: #ffffff;
+    }
+
+    .glass-card:hover {
+        transform: translateY(-5px);
+        box-shadow: 0 15px 35px rgba(0, 0, 0, 0.1);
+    }
+
+    .glass-card::before {
+        content: '';
+        position: absolute;
+        top: 0;
+        left: 0;
+        width: 100%;
+        height: 6px;
+    }
+
+    .card-body-custom {
+        padding: 16px 18px;
+        display: flex;
+        flex-direction: column;
+        height: 100%;
+    }
+
+    .chip-modern {
+        display: inline-flex;
+        align-items: center;
+        gap: 6px;
+        padding: 5px 12px;
+        border-radius: 20px;
+        font-weight: 600;
+        font-size: 0.75rem;
+        background: #f1f5f9;
+        color: #475569;
+        text-transform: uppercase;
+        letter-spacing: 0.5px;
+    }
+
+    .chip-modern i {
+        font-size: 1rem;
+        line-height: 1;
+    }
+
+    .icon-container {
+        width: 40px;
+        height: 40px;
+        border-radius: 14px;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        margin-bottom: 10px;
+    }
+
+    /* Colores por estado (Acentos y Fondos) */
+    .state-green::before {
+        background: linear-gradient(90deg, #10b981, #34d399);
+    }
+
+    .state-green .icon-container {
+        background: #ecfdf5;
+        color: #10b981;
+    }
+
+    .state-yellow::before {
+        background: linear-gradient(90deg, #f59e0b, #fbbf24);
+    }
+
+    .state-yellow .icon-container {
+        background: #fffbeb;
+        color: #f59e0b;
+    }
+
+    .state-red::before {
+        background: linear-gradient(90deg, #ef4444, #f87171);
+    }
+
+    .state-red .icon-container {
+        background: #fef2f2;
+        color: #ef4444;
+    }
+
+    .state-blue::before {
+        background: linear-gradient(90deg, #3b82f6, #60a5fa);
+    }
+
+    .state-blue .icon-container {
+        background: #eff6ff;
+        color: #3b82f6;
+    }
+
+    .state-gray::before {
+        background: linear-gradient(90deg, #64748b, #94a3b8);
+    }
+
+    .state-gray .icon-container {
+        background: #f8fafc;
+        color: #64748b;
+    }
+
+    .state-warning-soft::before {
+        background: linear-gradient(90deg, #f97316, #fb923c);
+    }
+
+    .state-warning-soft .icon-container {
+        background: #fff7ed;
+        color: #f97316;
+    }
+
+    .state-green-soft::before {
+        background: linear-gradient(90deg, #14b8a6, #2dd4bf);
+    }
+
+    .state-green-soft .icon-container {
+        background: #f0fdfa;
+        color: #14b8a6;
+    }
+
+    .title-modern {
+        font-size: 1.1rem;
+        font-weight: 700;
+        color: #1e293b;
+        margin-bottom: 2px;
+    }
+
+    .subtitle-modern {
+        font-size: 0.85rem;
+        color: #64748b;
+        font-weight: 500;
+    }
+
+    .value-modern {
+        font-size: 1.8rem;
+        font-weight: 800;
+        color: #0f172a;
+        line-height: 1.2;
+        margin-top: 6px;
+    }
+
+    .badge-modern {
+        padding: 4px 10px;
+        border-radius: 8px;
+        font-weight: 700;
+        font-size: 0.7rem;
+        letter-spacing: 0.5px;
+    }
+</style>
+
+
+<div class="row align-items-center border-bottom mb-3 py-2">
+    <div class="col d-flex align-items-center">
+        <button id="toggle-sidebar" class="btn btn-warning btn-sm me-2 btnMenu" title="Mostrar/Ocultar menú">
+            <i class="fas fa-bars"></i>
+        </button>
+        <h6 class="page-title mb-0 fs-6 fw-bold">PANTALLA PRINCIPAL</h6>
+    </div>
+</div>
+
+<!-- Welcome Card -->
+<div class="ct-welcome-card">
+    <h2 class="ct-welcome-title">Bienvenido al Módulo Contable</h2>
+    <p class="ct-welcome-subtitle">Gestión financiera, libros contables, cierres de mes y generación de partidas.</p>
+</div>
+
+<div class="row">
+    <div class="col">
+        <div id="dashboardCards" class="row g-4 align-items-stretch"></div>
+    </div>
+</div>
+
+<input type="date" id="fini" value="{{date1}}" hidden>
+<input type="date" id="ffin" value="{{date2}}" hidden>
+
+{% endblock %}
+
+{% block scripts %}
+<script>
+    $(document).ready(function () {
+        var csrfToken = "{{ csrf_token }}";
+        var anio = "{{anio}}";
+
+        const colorClassMap = {
+            green: "state-green",
+            yellow: "state-yellow",
+            red: "state-red",
+            blue: "state-blue",
+            gray: "state-gray"
+        };
+
+        const estadoIcon = (estado) => {
+            if (!estado) return "event";
+            if (estado.startsWith("OPERANDO_")) return "schedule";
+            if (estado === "CERRADO") return "check_circle";
+            if (estado === "RETRASADO") return "error";
+            if (estado === "EN_FECHA") return "calendar_today";
+            if (estado === "NO_DEFINIDO") return "help";
+            return "event";
+        };
+
+        function fmtFecha(s) {
+            if (!s) return "No Definida";
+            try {
+                const d = new Date(s);
+                if (isNaN(d)) return s;
+                return `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}-${String(d.getDate()).padStart(2, '0')}`;
+            } catch { return s; }
+        }
+
+        // Calendario contable
+        function renderCalendarioCards(data) {
+            const $wrap = $("#dashboardCards");
+            const hoy = new Date();
+            const cy = hoy.getFullYear(), cm = hoy.getMonth() + 1;
+
+            const backlog = data.filter(x => x.anio == cy && x.mes < cm);
+            const prevMonth = data.filter(x => !(x.anio == cy && x.mes < cm))
+                .filter(x => !(x.anio == cy && x.mes == cm))
+                .sort((a, b) => a.anio !== b.anio ? a.anio - b.anio : a.mes - b.mes);
+            const current = data.filter(x => x.anio == cy && x.mes == cm);
+
+            [...backlog, ...prevMonth, ...current].forEach(item => {
+                const col = colorClassMap[item.color] || "state-gray";
+                const isActual = (item.anio == cy && item.mes == cm);
+                const fechaTxt = fmtFecha(item.fecha_estimada_cierre);
+                const estadoTxt = item.estado || "NO_DEFINIDO";
+                const icon = estadoIcon(estadoTxt);
+
+                $wrap.append(`
+                    <div class="col-12 col-sm-6 col-lg-3">
+                        <div class="glass-card h-100 ${col}">
+                            <div class="card-body-custom">
+                                <div class="d-flex justify-content-between align-items-center mb-2">
+                                    <div class="icon-container">
+                                        <i class="material-icons" style="font-size: 22px;">${icon}</i>
+                                    </div>
+                                    ${isActual ? `<span class="badge badge-modern bg-dark text-white">OPERANDO</span>` : ``}
+                                </div>
+                                <h6 class="title-modern">${item.nombre_mes} ${item.anio}</h6>
+                                <div class="subtitle-modern mb-3">${estadoTxt.replaceAll('_', ' ')}</div>
+                                
+                                <div class="mt-auto pt-3 border-top w-100 small">
+                                    <div class="d-flex justify-content-between text-muted small mb-1">
+                                        <span>Cierre Estimado:</span>
+                                        <span class="fw-bold text-dark">${fechaTxt}</span>
+                                    </div>
+                                    <div class="d-flex justify-content-between text-muted small">
+                                        <span>Cerrado:</span>
+                                        <span class="fw-bold ${item.cerrado ? 'text-success' : 'text-danger'}">${item.cerrado ? 'Sí' : 'No'}</span>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                `);
+            });
+        }
+
+        // Partidas descuadradas
+        function renderPartidasDescCards(resp) {
+            const $wrap = $("#dashboardCards");
+            const total = (resp?.data?.[0]?.conteo) || 0;
+            $wrap.append(`
+                <div class="col-12 col-sm-6 col-lg-3">
+                    <a href="{% url 'conta_partidas_descuadradas' %}" class="text-decoration-none">
+                        <div class="glass-card h-100 state-red">
+                            <div class="card-body-custom">
+                                <div class="d-flex justify-content-between align-items-start mb-2">
+                                    <div class="icon-container">
+                                        <i class="material-icons" style="font-size: 22px;">rule</i>
+                                    </div>
+                                    <span class="badge badge-modern bg-danger text-white">Control</span>
+                                </div>
+                                <h6 class="title-modern text-muted">Partidas Descuadradas</h6>
+                                <div class="subtitle-modern mb-2">Últimos 5 meses</div>
+                                <div class="value-modern">${total}</div>
+                            </div>
+                        </div>
+                    </a>
+                </div>
+            `);
+        }
+
+        // Tasa de cambio
+        function renderTasaCambioCard(resp) {
+            const $wrap = $("#dashboardCards");
+            const ok = resp?.save === 1 && resp.data;
+            const fecha = ok ? resp.data.fecha : '';
+            const tc = ok ? Number(resp.data.tasa_cambio || 0) : 0;
+            const compra = ok ? Number(resp.data.tasa_compra || 0) : 0;
+            const banco = ok ? Number(resp.data.tasa_banco || 0) : 0;
+
+            const hayTasa = !!(tc > 0 || compra > 0 || banco > 0);
+            const cardClass = hayTasa ? 'state-green-soft' : 'state-warning-soft';
+            const badge = hayTasa ? '<span class="badge badge-modern bg-success text-white">OK</span>'
+                : '<span class="badge badge-modern bg-warning text-dark">Pendiente</span>';
+            const icon = hayTasa ? 'currency_exchange' : 'warning_amber';
+
+            $wrap.append(`
+                <div class="col-12 col-sm-6 col-lg-3">
+                    <a href="{% url 'conta_tasa_cambio' %}" class="text-decoration-none text-dark">
+                        <div class="glass-card h-100 ${cardClass}">
+                            <div class="card-body-custom">
+                                <div class="d-flex justify-content-between align-items-start mb-2">
+                                    <div class="icon-container">
+                                        <i class="material-icons" style="font-size: 22px;">${icon}</i>
+                                    </div>
+                                    ${badge}
+                                </div>
+                                <h6 class="title-modern text-muted">Tasa de Cambio</h6>
+                                <div class="subtitle-modern mb-2">Fecha: ${fecha || '—'}</div>
+                                <div class="value-modern mb-3" style="font-size: 1.8rem;">${tc.toFixed(4)} <span class="fs-6 text-muted fw-normal">HNL/USD</span></div>
+                                <div class="mt-auto pt-3 pb-0">
+                                    <span class="chip-modern w-100 justify-content-center bg-light text-dark shadow-sm">
+                                        Gestionar Tasas <i class="material-icons ms-1" style="font-size:1.1rem">arrow_forward</i>
+                                    </span>
+                                </div>
+                            </div>
+                        </div>
+                    </a>
+                </div>
+            `);
+        }
+
+
+        function renderSecuenciaDashboard(data) {
+            const $wrap = $("#dashboardCards");
+
+            // Totales
+            const totalDup = (data.duplicados || []).length;
+            const totalHuecos = (data.huecos || []).length;
+
+            // Card duplicados
+            $wrap.append(`
+                <div class="col-12 col-sm-6 col-lg-3">
+                    <a href="{% url 'conta_secuencia_partidas' %}" class="text-decoration-none">
+                        <div class="glass-card h-100 state-red">
+                            <div class="card-body-custom">
+                                <div class="d-flex justify-content-between align-items-start mb-2">
+                                    <div class="icon-container">
+                                        <i class="material-icons" style="font-size: 22px;">content_copy</i>
+                                    </div>
+                                    <span class="badge badge-modern bg-danger text-white">Control</span>
+                                </div>
+                                <h6 class="title-modern text-muted">Partidas Duplicadas</h6>
+                                <div class="subtitle-modern mb-2">Problemas de Secuencia</div>
+                                <div class="value-modern">${totalDup}</div>
+                            </div>
+                        </div>
+                    </a>
+                </div>
+            `);
+
+            // Card huecos
+            $wrap.append(`
+                <div class="col-12 col-sm-6 col-lg-3">
+                    <a href="{% url 'conta_secuencia_partidas' %}" class="text-decoration-none">
+                        <div class="glass-card h-100 state-yellow">
+                            <div class="card-body-custom">
+                                <div class="d-flex justify-content-between align-items-start mb-2">
+                                    <div class="icon-container">
+                                        <i class="material-icons" style="font-size: 22px;">format_line_spacing</i>
+                                    </div>
+                                    <span class="badge badge-modern bg-warning text-dark">Control</span>
+                                </div>
+                                <h6 class="title-modern text-muted">Huecos en Partidas</h6>
+                                <div class="subtitle-modern mb-2">Saltos de Secuencia</div>
+                                <div class="value-modern">${totalHuecos}</div>
+                            </div>
+                        </div>
+                    </a>
+                </div>
+            `);
+        }
+
+
+
+        // --- CARGAS ---
+        function cargarTasaCambioDashboard() {
+            return new Promise((resolve, reject) => {
+                $.ajax({
+                    url: "{% url 'get_tasa_cambio_hoy' %}",
+                    type: "POST",
+                    data: { csrfmiddlewaretoken: csrfToken },
+                    success: resp => { renderTasaCambioCard(resp); resolve(); },
+                    error: xhr => { console.log("Error Tasa:", xhr.responseText); reject(xhr); }
+                });
+            });
+        }
+
+        function cargarPartidasDescuadradasDashboard() {
+            return new Promise((resolve, reject) => {
+                $.ajax({
+                    url: "{% url 'get_partidas_descuadradas_dashboard' %}",
+                    type: "POST",
+                    data: { csrfmiddlewaretoken: csrfToken },
+                    success: resp => { renderPartidasDescCards(resp); resolve(); },
+                    error: xhr => { console.log("Error descuadradas:", xhr.responseText); reject(xhr); }
+                });
+            });
+        }
+
+        function cargarCalendarioContableDashboard(empresa_id, anio) {
+            return new Promise((resolve, reject) => {
+                $.ajax({
+                    url: "{% url 'get_estado_calendario_dashboard' %}",
+                    type: "POST",
+                    data: { empresa_id, anio, csrfmiddlewaretoken: csrfToken },
+                    success: d => { renderCalendarioCards(d.data); resolve(); },
+                    error: xhr => { console.log("Error calendario:", xhr.responseText); reject(xhr); }
+                });
+            });
+        }
+
+        function cargarSecuenciaDashboard() {
+            return new Promise((resolve, reject) => {
+                const empresa = 3;
+                const fini = $('#fini').val() || "2025-01-01";
+                const ffin = $('#ffin').val() || "2025-12-31";
+                const tipo = '';
+
+                $.ajax({
+                    url: `{% url 'dataSecuenciaPartidas' %}`,
+                    type: "POST",
+                    data: {
+                        empresa: empresa,
+                        fechaInicial: fini,
+                        fechaFinal: ffin,
+                        tipoDocto: tipo,
+                        csrfmiddlewaretoken: "{{ csrf_token }}"
+                    },
+                    success: function (resp) {
+                        renderSecuenciaDashboard(resp || {});
+                        resolve();
+                    },
+                    error: function (xhr) {
+                        console.log("Error secuencia:", xhr.responseText);
+                    }
+                });
+            });
+        }
+
+
+        // --- Secuencia de ejecución ---
+        cargarCalendarioContableDashboard(3, new Date().getFullYear())
+            .then(() => cargarPartidasDescuadradasDashboard())
+            .then(() => cargarTasaCambioDashboard())
+            .then(() => cargarSecuenciaDashboard())
+            .catch(err => {
+                console.error("Error en la carga secuencial:", err);
+            });
+
+    });
+</script>
+{% endblock %}

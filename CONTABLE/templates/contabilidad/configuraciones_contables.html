@@ -1,0 +1,280 @@
+{% extends 'componentes/menu_contable.html' %}
+{% load static %}
+
+{% block title %}
+CONFIGURACIONES CONTABLES
+{% endblock %}
+
+{% block body %}
+
+<div class="row align-items-center border-bottom mb-3 py-2 bg-white shadow-sm mx-0">
+    <div class="col d-flex align-items-center px-0">
+        <button id="toggle-sidebar" class="btn btn-primary btn-sm me-3 border-0 rounded-circle btnMenu"
+            style="width: 32px; height: 32px; padding: 0;" title="Mostrar/Ocultar menú">
+            <i class="fas fa-bars"></i>
+        </button>
+        <h6 class="page-title mb-0 fs-5 fw-bold text-dark">
+            <i class="fas fa-cogs text-primary me-2"></i>CONFIGURACIONES CONTABLES
+        </h6>
+    </div>
+
+    <div class="col-auto text-end float-end ms-auto download-grp px-0">
+        <button class="btn btn-sm btn-success" id="btnNuevo" title="Crear Nuevo">
+            <i class="fas fa-plus me-2"></i>Nuevo
+        </button>
+    </div>
+</div>
+
+<div class="container-fluid px-0 mt-1">
+    <div class="row mx-0">
+        <div class="table-responsive">
+            <table id="configuracionesTable"
+                class="table table-striped table-bordered mb-0 table-sm rounded-4 table-hover align-middle"
+                style="width: 100%;">
+                <thead class="table-gradient text-dark">
+                    <tr>
+                        <th>#</th>
+                        <th>Configuración</th>
+                        <th>Valor</th>
+                        <th>Estado</th>
+                        <th>Acciones</th>
+                    </tr>
+                </thead>
+                <tbody></tbody>
+            </table>
+        </div>
+    </div>
+</div>
+
+<a href="{% url 'panel_contabilidad' %}">
+    <button class="btn btn-sm btn-danger" id="btnCerrar" title="Cerrar"
+        style="position: fixed; bottom: 20px; right: 20px;">
+        <i class="fa fa-times"></i> Cerrar
+    </button>
+</a>
+
+{% include 'contabilidad/modales_contabilidad/m_configuraciones_contables.html' %}
+
+{% endblock %}
+
+
+{% block scripts %}
+<script>
+    $(document).ready(function () {
+
+        var csrfToken = "{{ csrf_token }}";
+        var tabla, id_configuracion, opcion;
+
+        var toastMixin = Swal.mixin({
+            toast: true,
+            icon: 'success',
+            title: 'General Title',
+            animation: false,
+            position: 'top-right',
+            showConfirmButton: false,
+            timer: 2000,
+            timerProgressBar: true,
+            didOpen: (toast) => {
+                toast.addEventListener('mouseenter', Swal.stopTimer);
+                toast.addEventListener('mouseleave', Swal.resumeTimer);
+            }
+        });
+
+        tabla = $('#configuracionesTable').DataTable({
+            autoWidth: false,
+            scrollX: true,
+            scrollY: "350px",
+            scrollCollapse: true,
+            pageLength: 50,
+            dom: "Brftip",
+            language: {
+                url: "{% static 'app/th/json/es-ES.json' %}",
+            },
+            ajax: {
+                url: `{% url 'dataConfiguraciones' %}`,
+                type: "POST",
+                data: {
+                    csrfmiddlewaretoken: csrfToken
+                },
+                dataSrc: "data"
+            },
+            colReorder: { realtime: false },
+            buttons: [
+                {
+                    extend: "excel",
+                    text: '<i class="fas fa-file-excel"></i>',
+                    titleAttr: "Exportar a Excel",
+                    className: "btn btn-success",
+                },
+                {
+                    extend: "pdf",
+                    text: '<i class="fas fa-file-pdf"></i>',
+                    titleAttr: "Exportar a PDF",
+                    className: "btn btn-danger",
+                },
+                {
+                    extend: "print",
+                    text: '<i class="fas fa-print"></i>',
+                    titleAttr: "Imprimir",
+                    className: "btn btn-primary",
+                    orientation: "landscape"
+                }
+            ],
+            columns: [
+                { data: "id_configuracion" },
+                { data: "configuracion" },
+                { data: "valor" },
+                {
+                    data: "estado",
+                    className: "text-center",
+                    render: function (data) {
+                        if (data == 3) {
+                            return '<span class="badge badge-pill bg-danger">DESHABILITADO</span>';
+                        }
+                        return '<span class="badge badge-pill bg-success">ACTIVO</span>';
+                    }
+                },
+                {
+                    data: null,
+                    render: function (row) {
+                        return `
+                        <div class="text-center">
+                            <div class="btn-group">
+                                <button class="btn btn-info btn-sm historicoConfig" data-id="${row.id_configuracion}">
+                                    <i class="fas fa-history"></i>
+                                </button>
+                                <button class="btn btn-warning btn-sm editConfig" 
+                                    data-id="${row.id_configuracion}"
+                                    data-config="${row.configuracion}"
+                                    data-valor="${row.valor}">
+                                    <i class="fas fa-edit"></i>
+                                </button>
+                                <button class="btn btn-danger btn-sm estadoConfig" data-id="${row.id_configuracion}">
+                                    <i class="fas fa-sync-alt"></i>
+                                </button>
+                            </div>
+                        </div>`;
+                    }
+                }
+            ]
+        });
+
+
+        $(document).on('click', '.historicoConfig', function () {
+
+            let id = $(this).data('id');
+
+            $('#modalHistoricoConfig').modal('show');
+
+            $('#historicoConfigTable').DataTable({
+                destroy: true,
+                autoWidth: false,
+                searching: false,
+                paging: false,
+                ordering: false,
+                info: false,
+                ajax: {
+                    url: `{% url 'dataConfiguracionesHistorico' %}`,
+                    type: "POST",
+                    data: {
+                        csrfmiddlewaretoken: csrfToken,
+                        id_configuracion: id
+                    },
+                    dataSrc: 'data'
+                },
+                columns: [
+                    { data: 'configuracion' },
+                    { data: 'valor' },
+                    { data: 'fecha_texto' }
+                ]
+            });
+
+        });
+
+
+        // NUEVO
+        $('#btnNuevo').click(function () {
+            $('#formConfig').trigger('reset');
+            $('#modalConfigLabel').text('CREAR CONFIGURACIÓN');
+            $('#modalConfig').modal('show');
+            opcion = 1;
+            id_configuracion = null;
+        });
+
+        // EDITAR
+        $(document).on('click', '.editConfig', function () {
+            opcion = 2;
+            id_configuracion = $(this).data('id');
+
+            $('#configuracion').val($(this).data('config'));
+            $('#valor').val($(this).data('valor'));
+
+            $('#modalConfigLabel').text('EDITAR CONFIGURACIÓN');
+            $('#modalConfig').modal('show');
+        });
+
+        // CAMBIAR ESTADO
+        $(document).on('click', '.estadoConfig', function () {
+
+            let id = $(this).data('id');
+
+            $.ajax({
+                url: "{% url 'conta_update_status_configuraciones' %}",
+                type: "POST",
+                data: {
+                    csrfmiddlewaretoken: csrfToken,
+                    id_configuracion: id
+                },
+                success: function (data) {
+                    if (data.save == 1) {
+                        toastMixin.fire({ title: 'Estado Actualizado!' });
+                        tabla.ajax.reload(null, false);
+                    } else {
+                        Swal.fire("", "Error: " + data.error, "error");
+                    }
+                }
+            });
+        });
+
+        // GUARDAR
+        $('#formConfig').submit(function (e) {
+            e.preventDefault();
+
+            let configuracion = $('#configuracion').val();
+            let valor = $('#valor').val();
+
+            if (!configuracion || !valor) {
+                Swal.fire("", "Debes llenar todos los campos!", "warning");
+                return;
+            }
+
+            $.ajax({
+                url: "{% url 'conta_insert_update_configuraciones' %}",
+                type: "POST",
+                data: {
+                    csrfmiddlewaretoken: csrfToken,
+                    opcion: opcion,
+                    id_configuracion: id_configuracion,
+                    configuracion: configuracion,
+                    valor: valor
+                },
+                success: function (data) {
+                    if (data.save == 1) {
+                        $('#modalConfig').modal('hide');
+                        toastMixin.fire({
+                            title: opcion == 1
+                                ? 'Configuración Creada!'
+                                : 'Configuración Editada!'
+                        });
+                        tabla.ajax.reload(null, false);
+                    } else {
+                        Swal.fire("", "Error: " + data.error, "error");
+                    }
+                }
+            });
+        });
+
+    });
+</script>
+
+{% endblock %}

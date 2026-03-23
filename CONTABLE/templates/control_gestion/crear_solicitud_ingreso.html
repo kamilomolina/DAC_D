@@ -1,0 +1,1006 @@
+{% extends 'componentes/menu_contable.html' %}
+{% load static %}
+
+{% block title %}
+CREAR SOLICITUD DE INGRESOS
+{% endblock %}
+
+
+{% block body %}
+
+<div class="row align-items-center border-bottom mb-2 py-1">
+    <div class="col d-flex align-items-center">
+        <button id="toggle-sidebar" class="btn btn-warning btn-sm me-2 btnMenu" title="Mostrar/Ocultar menú">
+            <i class="fas fa-bars"></i>
+        </button>
+        <h6 class="page-title mb-0 fs-6 fw-bold">CREAR SOLICITUD DE INGRESOS</h6>
+    </div>
+</div>
+
+
+<div class="container-fluid mt-1">
+    <div class="row d-flex justify-content-start align-items-end">
+
+        <div class="col-lg-2">
+            <label for="periodoInicio">Desde</label>
+            <input type="date" class="form-control form-control-sm pickedDate" name="periodoInicio" id="periodoInicio"
+                value="{{ date1 }}">
+        </div>
+
+        <div class="col-lg-2">
+            <label for="periodoFinal">Hasta</label>
+            <input type="date" class="form-control form-control-sm pickedDate" name="periodoFinal" id="periodoFinal"
+                value="{{ date }}">
+        </div>
+
+        <div class="col-sm-2">
+            <div class="form-group">
+                <label class="col-form-label" for="mesGastoIngresar">Mes a Ingresar Ingreso: </label>
+                <select class="form-select form-select-sm filterStyle text-nowrap mes_gasto pickedPeriodoIngreso"
+                    id="mesGastoIngresar">
+                    <option value="1">Enero</option>
+                    <option value="2">Febrero</option>
+                    <option value="3">Marzo</option>
+                    <option value="4">Abril</option>
+                    <option value="5">Mayo</option>
+                    <option value="6">Junio</option>
+                    <option value="7">Julio</option>
+                    <option value="8">Agosto</option>
+                    <option value="9">Septiembre</option>
+                    <option value="10">Octubre</option>
+                    <option value="11">Noviembre</option>
+                    <option value="12">Diciembre</option>
+                </select>
+            </div>
+        </div>
+
+        <div class="col-sm-2">
+            <div class="form-group">
+                <label class="col-form-label" for="anioGastoIngresar">Año a Ingresar Ingreso: </label>
+                <select class="form-select form-select-sm filterStyle text-nowrap anio_gasto pickedPeriodoIngreso"
+                    id="anioGastoIngresar">
+                </select>
+            </div>
+        </div>
+
+        <div class="col-sm-2 d-flex justify-content-end">
+            <button type="button" class="btn btn-sm btn-success w-100" id="btnCreateSolicitud">Crear Solicitud
+                Ingreso</button>
+        </div>
+
+    </div>
+
+    <br>
+
+    <div class="row p-2">
+        <div class="row d-flex justify-content-end">
+            <span><b>Filtros Rápidos</b></span>
+            <div class="mainFilters">
+                <div class="row f-flex justify-content-end">
+                    <div class="col-sm">
+                        <label for="CentroFilter">Centro</label>
+                        <input type="text" class="form-control form-control-sm tableMainFilters" id="CentroFilter"
+                            placeholder="Centro">
+                    </div>
+                    <div class="col-sm">
+                        <label for="ConceptoFilter">Concepto</label>
+                        <input type="text" class="form-control form-control-sm tableMainFilters" id="ConceptoFilter"
+                            placeholder="Concepto">
+                    </div>
+                    <div class="col-sm">
+                        <label for="CuentaFilter">Numero Cuenta</label>
+                        <input type="text" class="form-control form-control-sm tableMainFilters" id="CuentaFilter"
+                            placeholder="Numero Cuenta">
+                    </div>
+                    <div class="col-sm">
+                        <label for="NombreCuentaFilter">Nombre Cuenta</label>
+                        <input type="text" class="form-control form-control-sm tableMainFilters" id="NombreCuentaFilter"
+                            placeholder="Nombre Cuenta">
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <br>
+
+    <div class="row p-2">
+        <div class="table-responsive">
+            <table id="tablePagosProveedores"
+                class="table rounded-4 table-sm table-bordered table-striped align-middle mb-0 table-principal"
+                style="width:100%">
+                <thead class="table-gradient text-dark">
+                    <tr>
+                        <th class="text-center">#</th>
+                        <th class="text-center">Centro</th>
+                        <th class="text-center">Fecha Gasto</th>
+                        <th class="text-center">Concepto</th>
+                        <th class="text-center">Numero Cuenta</th>
+                        <th class="text-center">Nombre Cuenta</th>
+                        <th class="text-center">Valor Gasto con ISV</th>
+                        <th class="text-center">ISV</th>
+                        <th class="text-center"># Solicitud</th>
+                        <th class="text-center text-wrap">Gasto Adicional</th>
+                        <th class="text-center">Estado</th>
+                        <th class="text-center">Acciones</th>
+                    </tr>
+                </thead>
+                <tbody></tbody>
+            </table>
+        </div>
+    </div>
+</div>
+
+
+<a href="{% url 'panel_contabilidad' %}">
+    <button class="btn btn-sm btn-danger" id="btnCerrar" title="Cerrar"
+        style="position: fixed; bottom: 20px; right: 20px;">
+        <i class="fa fa-times"></i> Cerrar
+    </button>
+</a>
+
+{% include 'control_gestion/complementos/m_form_solicitud_ingreso.html' %}
+
+{% endblock %}
+
+
+{% block scripts %}
+
+
+<script>
+    var count = 1;
+    const optionsCentros = `{{ optionsCentros|safe }}`;
+
+    function addRow() {
+        const tbody = document.getElementById("tbody_desglose");
+        count += 1;
+
+        const row = tbody.insertRow(-1);
+        row.className = "desgloseSolicitudGasto";
+
+        // celdas
+        const cell0 = row.insertCell(0);
+        const cell1 = row.insertCell(1);
+        const cell2 = row.insertCell(2);
+        const cell3 = row.insertCell(3);
+        const cell4 = row.insertCell(4);
+        const cell5 = row.insertCell(5);
+        const cell6 = row.insertCell(6);
+        const cell7 = row.insertCell(7);
+        const cell8 = row.insertCell(8);
+
+        cell0.style.width = "20%";
+        cell1.style.width = "10%";
+        cell2.style.width = "5%";
+        cell3.style.width = "5%";
+        cell4.style.width = "10%";
+        cell5.style.width = "10%";
+        cell6.style.width = "15%";
+        cell7.style.width = "15%";
+        cell8.style.width = "10%";
+
+        // Concepto
+        const conceptDiv = document.createElement("div");
+        conceptDiv.innerHTML =
+            '<input type="hidden" value="' + count + '" class="hidden_value_desglose" name="hidden_value_desglose">' +
+            '<textarea class="form-control-sm form-control txt_desglose_solicitud desglose_solicitud desglose_concepto" ' +
+            'id="desglose_concepto_' + count + '" name="desglose_concepto" cols="30" rows="3"></textarea>';
+
+        // Valor con ISV (Debe)
+        const inDebe = document.createElement("input");
+        inDebe.type = "text";
+        inDebe.className = "form-control-sm form-control txt_desglose_solicitud desglose_solicitud desglose_valor formattedMoneyInputs";
+        inDebe.id = "desglose_valor_" + count;
+        inDebe.name = "desglose_valor";
+        inDebe.placeholder = "0.00";
+
+        // Haber (vacío a propósito)
+        const haberDiv = document.createElement("div");
+
+        // Checkbox ISV
+        const isvWrap = document.createElement("div");
+        isvWrap.className = "d-flex justify-content-center";
+        isvWrap.innerHTML =
+            "<div class='btn-group'><input type='checkbox' class='isv-checkbox' name='isv-checkbox_" + count + "' id='isv_checkbox_" + count + "'></div>";
+
+        // Valor sin ISV
+        const inSinIsv = document.createElement("input");
+        inSinIsv.type = "text";
+        inSinIsv.className = "form-control-sm form-control txt_desglose_solicitud desglose_solicitud desglose_valor_sin_isv formattedMoneyInputs";
+        inSinIsv.id = "desglose_valor_sin_isv_" + count;
+        inSinIsv.name = "desglose_valor_sin_isv";
+        inSinIsv.placeholder = "0.00";
+        inSinIsv.disabled = true;
+
+        // Valor ISV
+        const inIsv = document.createElement("input");
+        inIsv.type = "text";
+        inIsv.className = "form-control-sm form-control txt_desglose_solicitud desglose_solicitud desglose_valor_isv formattedMoneyInputs";
+        inIsv.id = "desglose_valor_isv_" + count;
+        inIsv.name = "desglose_valor_isv";
+        inIsv.placeholder = "0.00";
+        inIsv.disabled = true;
+
+        // Centro
+        const selCentro = document.createElement("select");
+        selCentro.className = "form-select form-select-sm txt_desglose_solicitud desglose_solicitud desglose_centro";
+        selCentro.id = "desglose_centro_" + count;
+        selCentro.name = "desglose_centro";
+        selCentro.innerHTML = optionsCentros;
+
+        // Cuenta
+        const selCuenta = document.createElement("select");
+        selCuenta.className = "form-select form-select-sm txt_desglose_solicitud desglose_solicitud desglose_cuenta";
+        selCuenta.id = "desglose_cuenta_" + count;
+        selCuenta.name = "desglose_cuenta";
+        selCuenta.innerHTML = '<option value="0" selected>Seleccione una Cuenta</option>';
+
+        // Botón eliminar
+        const delWrap = document.createElement("div");
+        delWrap.className = "d-flex justify-content-center";
+        delWrap.innerHTML =
+            "<div class='btn-group'><button class='btn btn-danger btn-sm btnDeleteGasto' data-aos='fade-in' type='button' title='Quitar Gasto'><i class='material-icons'>delete</i></button></div>";
+
+        // Append
+        cell0.appendChild(conceptDiv);
+        cell1.appendChild(inDebe);
+        cell2.appendChild(haberDiv);
+        cell3.appendChild(isvWrap);
+        cell4.appendChild(inSinIsv);
+        cell5.appendChild(inIsv);
+        cell6.appendChild(selCentro);
+        cell7.appendChild(selCuenta);
+        cell8.appendChild(delWrap);
+
+        // Máscaras (a inputs numéricos, NO al div del checkbox)
+        $(inDebe).inputmask("decimal", {
+            radixPoint: ".",
+            groupSeparator: ",",
+            digits: 2, autoGroup: true, rightAlign: false, removeMaskOnSubmit: true
+        });
+        $(inSinIsv).inputmask("decimal", {
+            radixPoint: ".",
+            groupSeparator: ",",
+            digits: 2, autoGroup: true, rightAlign: false, removeMaskOnSubmit: true
+        });
+        $(inIsv).inputmask("decimal", {
+            radixPoint: ".",
+            groupSeparator: ",",
+            digits: 2, autoGroup: true, rightAlign: false, removeMaskOnSubmit: true
+        });
+
+        // Autoscroll al final para que siempre se vea la fila recién agregada
+        const modalBody = document.querySelector('#solicitudModal .modal-body');
+        if (modalBody) modalBody.scrollTop = modalBody.scrollHeight;
+    }
+
+    // (opcional) delega click en borrar
+    document.addEventListener('click', function (e) {
+        if (e.target.closest('.btnDeleteGasto')) {
+            const tr = e.target.closest('tr.desgloseSolicitudGasto');
+            if (tr) tr.remove();
+        }
+    });
+</script>
+
+
+<script>
+    $(document).ready(function () {
+        var csrfToken = "{{ csrf_token }}";
+        var buttons = "Bfrtlip";
+
+        var monthA = "{{ varMonth }}";
+        var varAnio = "{{ varAnio }}";
+
+        var tablePagosProveedores;
+
+        var windowSize = $(window).width();
+
+        var cardHeight = $(".card-expanded").height();
+        var tableHeight = cardHeight * 0.5;
+
+        let dollarUSLocale = Intl.NumberFormat("en-US", {
+            minimumFractionDigits: 2,
+            maximumFractionDigits: 2
+        });
+
+        let intergerLocale = Intl.NumberFormat("en-US", {
+            minimumFractionDigits: 0,
+            maximumFractionDigits: 0
+        });
+
+        var toastMixin = Swal.mixin({
+            toast: true,
+            icon: 'success',
+            title: 'General Title',
+            animation: false,
+            position: 'top-right',
+            showConfirmButton: false,
+            timer: 2000,
+            timerProgressBar: true,
+            didOpen: (toast) => {
+                toast.addEventListener('mouseenter', Swal.stopTimer);
+                toast.addEventListener('mouseleave', Swal.resumeTimer);
+            }
+        });
+
+        while (monthA.charAt(0) === '0') {
+            monthA = monthA.substring(1);
+        }
+
+
+        $('#mesGastoIngresar').val(monthA).change();
+
+        for (i = new Date().getFullYear() + 1; i >= (new Date().getFullYear() - 5); i--) {
+            $('.anio_gasto').append($('<option />').val(i).html(i));
+            $('.anio_gasto').val(varAnio).change();
+        }
+
+        $('#btnCreateSolicitud').click(function (e) {
+            e.preventDefault();
+
+            $("#formSolicitud").trigger("reset");
+            $("#solicitudModal").modal("show");
+        });
+
+        $('.close_modal_solicitud').click(function (e) {
+            e.preventDefault();
+
+            $("#formSolicitud").trigger("reset");
+            $("#solicitudModal").modal("hide");
+            $('#empresaPartida').val(3).change();
+        });
+
+
+        function fillTableIngresos() {
+            periodoInicio = $('#periodoInicio').val();
+            periodoFinal = $('#periodoFinal').val();
+
+            $("#tablePagosProveedores").DataTable().clear().destroy();
+
+            tablePagosProveedores = $('#tablePagosProveedores').DataTable({
+                orderCellsTop: true,
+                deferRender: true,
+                scrollX: true,
+                scrollY: '290px',
+                scrollCollapse: true,
+                pageLength: 50,
+                fixedColumns: {
+                    left: 2,
+                    right: 1
+                },
+                initComplete: function () {
+                    var api = this.api();
+
+                    tablePagosProveedores.columns.adjust().draw();
+                },
+                language: {
+                    url: "{% static 'app/th/json/es-ES.json' %}",
+                },
+                ordering: true,
+                dom: 'Bfrtlip',
+                buttons: [{
+                    extend: 'excel',
+                    text: '<i class="fas fa-file-excel"></i>',
+                    titleAttr: 'Excel',
+                    className: 'btn btn-success',
+                },
+                {
+                    extend: 'pdf',
+                    text: '<i class="fas fa-file-pdf"></i>',
+                    titleAttr: 'PDF',
+                    className: 'btn btn-danger',
+                },
+                {
+                    extend: 'print',
+                    text: '<i class="fas fa-print"></i>',
+                    titleAttr: 'Imprimir',
+                    className: 'btn btn-info',
+                }
+                ],
+                ajax: {
+                    url: `{% url 'fill_table_solicitudes_ingresos' %}?date1=${encodeURIComponent(periodoInicio)}&date2=${encodeURIComponent(periodoFinal)}`
+                },
+                columns: [{
+                    data: 'id_gasto'
+                },
+                {
+                    data: 'nombre_centro'
+                },
+                {
+                    data: 'fecha_gasto'
+                },
+                {
+                    data: 'descripcion'
+                },
+                {
+                    data: 'cuenta_contable'
+                },
+                {
+                    data: 'descripcion_cuenta'
+                },
+                {
+                    data: 'valor',
+                    className: 'currency',
+                    render: $.fn.dataTable.render.number(',', '.', 2)
+                },
+                {
+                    data: 'aplica_isv',
+                    className: 'text-center',
+                    render: function (data, type, row) {
+                        var badge = "";
+
+                        if (data == 1) {
+                            badge +=
+                                '<span class="badge rounded-pill bg-success">Aplica</span>';
+                        } else if (data == 0) {
+                            badge +=
+                                '<span class="badge rounded-pill bg-danger">NO Aplica</span>';
+                        }
+
+                        return badge;
+                    },
+                },
+                {
+                    data: 'id_encabezado'
+                },
+
+                {
+                    data: 'gasto_adicional',
+                    className: 'text-center',
+                    render: function (data, type, row) {
+                        var badge = "";
+
+                        if (data == 1) {
+                            badge +=
+                                '<span class="badge rounded-pill bg-success">Aplica</span>';
+                        } else if (data == 0) {
+                            badge +=
+                                '<span class="badge rounded-pill bg-danger">NO Aplica</span>';
+                        }
+
+                        return badge;
+                    },
+                },
+
+                {
+                    data: 'validacion_gasto',
+                    className: 'text-center',
+                    render: function (data, type, row) {
+                        var badge = "";
+
+                        if (data == 1) {
+                            badge +=
+                                '<span class="badge rounded-pill bg-success">Autorizado</span>';
+                        } else if (data == 0) {
+                            badge +=
+                                '<span class="badge rounded-pill bg-warning">Pendiente</span>';
+                        }
+
+                        return badge;
+                    },
+                },
+
+                {
+                    data: null,
+                    className: 'text-center',
+                    render: function (data, type, row) {
+                        var badge = "";
+
+                        if (data.cierre_ingreso == 1) {
+                            badge +=
+                                "<div class='text-center'><div class='btn-group'><button class='btn btn-sm btnPDF btn-info' title='Reporte' data-id='" +
+                                data.id_encabezado +
+                                "'><i class='material-icons'>picture_as_pdf</i></button></div></div>";
+                        } else {
+                            if (data.cierre_ingreso == 0 && data.validacion_gasto == 0) {
+
+                                badge +=
+                                    "<div class='text-center'><div class='btn-group'><button type='button' class='btn btn-null btn-sm btnAutorizarSolicitud btn-secondary button-success btnAutoRechazaSolicitud' title='Autorizar' id='btnAutorizarSolicitud' data-adicional='" +
+                                    data.gasto_adicional +
+                                    "'><i class='material-icons'>check</i></button><button type='button' class='btn btn-danger btn-sm btnAnularSolicitud btn-danger btnAutoRechazaSolicitud' title='Anular' id='btnAnularSolicitud' data-adicional='" +
+                                    data.gasto_adicional +
+                                    "'><i class='material-icons'>delete</i></button><button class='btn btn-sm btnPDF btn-info' title='Reporte' data-id='" +
+                                    data.id_encabezado +
+                                    "'><i class='material-icons'>picture_as_pdf</i></button></div></div>";
+
+
+                            } else if (data.cierre_ingreso == 1 && data.validacion_gasto ==
+                                1) {
+                                badge +=
+                                    "<div class='text-center'><div class='btn-group'><button class='btn btn-sm btnPDF btn-info' title='Reporte' data-id='" +
+                                    data.id_encabezado +
+                                    "'><i class='material-icons'>picture_as_pdf</i></button></div></div>";
+                            } else {
+                                badge +=
+                                    "<div class='text-center'><div class='btn-group'><button class='btn btn-sm btnPDF btn-info' title='Reporte' data-id='" +
+                                    data.id_encabezado +
+                                    "'><i class='material-icons'>picture_as_pdf</i></button></div></div>";
+                            }
+                        }
+
+
+
+                        return badge;
+                    },
+                }],
+                order: [0, "desc"]
+
+            });
+
+        }
+
+        $('#CentroFilter').keyup(function () {
+            tablePagosProveedores.column(1).search(this.value).draw();
+        });
+        $('#ConceptoFilter').keyup(function () {
+            tablePagosProveedores.column(3).search(this.value).draw();
+        });
+        $('#CuentaFilter').keyup(function () {
+            tablePagosProveedores.column(4).search(this.value).draw();
+        });
+        $('#NombreCuentaFilter').keyup(function () {
+            tablePagosProveedores.column(5).search(this.value).draw();
+        });
+
+        fillTableIngresos();
+
+        $('.pickedDate').change(function (e) {
+            e.preventDefault();
+
+            fillTableIngresos();
+        });
+
+
+        $(document).on('change', '.desglose_centro', function (e) {
+            e.preventDefault();
+
+            const val = $(this).val();
+            const mes = $('#mesGastoIngresar').val();
+            const anio = $('#anioGastoIngresar').val();
+
+            const hidden_value_desglose = $(this)
+                .closest(".desgloseSolicitudGasto")
+                .find('input[name="hidden_value_desglose"]')
+                .val();
+
+            $.ajax({
+                beforeSend: function (xhr, settings) {
+                    if (!settings.crossDomain) {
+                        xhr.setRequestHeader("X-CSRFToken", csrfToken);
+                    }
+
+                    showLoadingScreen();
+                },
+                type: "POST",
+                url: `{% url 'fill_select_cuentas_ingresos_centro' %}`,
+                data: {
+                    centro_id: val,
+                    mes: mes,
+                    anio: anio,
+                },
+                dataType: "json", // el view retorna un string como JSON
+                success: function (data) {
+                    Swal.close();
+                    // 'data' es el string con los <option>
+                    $('#desglose_cuenta_' + hidden_value_desglose).html(data);
+                },
+                error: function (xhr) {
+                    $('#desglose_cuenta_' + hidden_value_desglose).html('<option value="0">Error Cargando Cuentas</option>');
+                }
+            });
+        });
+
+
+        $(document).on('click', '.isv-checkbox', function () {
+            // Obtener la fila actual donde se encuentra el checkbox
+            var $row = $(this).closest("tr");
+
+            // Obtener los campos necesarios dentro de la fila
+            var $valorConISVField = $row.find(".desglose_valor");
+            var valorConISV = $valorConISVField.val().replace(/,/g, ""); // Eliminar las comas del valor
+
+            var $valorSinISV = $row.find(".desglose_valor_sin_isv");
+            var $valorISV = $row.find(".desglose_valor_isv");
+
+            // Obtener el valor con ISV como número (asegurarse de que sea válido)
+            var valorConISVValue = parseFloat(valorConISV) || 0;
+
+            if ($(this).is(":checked")) {
+                // Si el checkbox está marcado (aplica ISV)
+                var subTotal = parseFloat((valorConISVValue / 1.15).toFixed(2)); // valor / 1.15
+                var isv = parseFloat((valorConISVValue - subTotal).toFixed(2)); // valor - subTotal
+
+                // Asignar los valores calculados a los campos correspondientes
+                $valorSinISV.val(subTotal.toFixed(2));
+                $valorISV.val(isv.toFixed(2));
+            } else {
+                // Si el checkbox no está marcado (no aplica ISV)
+                $valorSinISV.val(valorConISVValue.toFixed(
+                    2)); // Valor sin ISV es igual al valor ingresado
+                $valorISV.val("0.00"); // ISV es 0
+            }
+        });
+
+
+
+        function fx_sum_totales_table_solicitudes() {
+            suma_gasto = 0;
+
+            solicitud_valor = $('#solicitud_valor').val();
+            solicitud_valor = solicitud_valor.replace(/,/g, "");
+            if (!$('#solicitud_valor').val() || solicitud_valor == 0) {
+                solicitud_valor = 0;
+            }
+
+            $('.desglose_valor').each(function () {
+                gasto = $(this).val();
+                gasto = gasto.replace(/,/g, "");
+
+                if (!$(this).val() || gasto == 0) {
+                    suma_gasto += 0;
+                } else {
+                    suma_gasto += parseFloat(gasto);
+                }
+            });
+
+            diferencia = suma_gasto - solicitud_valor;
+
+            $('#solicitud_valor_actual').val(suma_gasto.toFixed(2));
+            $('#solicitud_diferencia').val(diferencia.toFixed(2));
+        }
+
+        $(document).on('keyup', '#solicitud_valor', function () {
+            fx_sum_totales_table_solicitudes();
+        });
+
+        $(document).on('keyup', '.desglose_valor', function () {
+            // Obtener la fila actual donde se encuentra el input
+            var $row = $(this).closest("tr");
+
+            // Obtener los campos necesarios dentro de la fila
+            var $checkbox = $row.find(".isv-checkbox");
+            var $valorSinISV = $row.find(".desglose_valor_sin_isv");
+            var $valorISV = $row.find(".desglose_valor_isv");
+
+            // Obtener el valor ingresado en el campo y eliminar comas
+            var valorConISV = $(this).val().replace(/,/g, "");
+            var valorConISVValue = parseFloat(valorConISV) || 0;
+
+            // Verificar si el checkbox está marcado
+            if ($checkbox.is(":checked")) {
+                // Si el checkbox está marcado (aplica ISV)
+                var subTotal = parseFloat((valorConISVValue / 1.15).toFixed(2)); // valor / 1.15
+                var isv = parseFloat((valorConISVValue - subTotal).toFixed(2)); // valor - subTotal
+
+                // Asignar los valores calculados a los campos correspondientes
+                $valorSinISV.val(subTotal.toFixed(2));
+                $valorISV.val(isv.toFixed(2));
+            } else {
+                // Si el checkbox no está marcado (no aplica ISV)
+                $valorSinISV.val(valorConISVValue.toFixed(
+                    2)); // Valor sin ISV es igual al valor ingresado
+                $valorISV.val("0.00"); // ISV es 0
+            }
+
+            fx_sum_totales_table_solicitudes();
+        });
+
+        $(document).on('click', '.btnDeleteGasto', function () {
+            $(this).closest("tr").remove();
+
+            fx_sum_totales_table_solicitudes();
+        });
+
+
+        function showLoadingScreen(text = '') {
+            Swal.fire({
+                title: '',
+                html: `<b>${text}</b>`,
+                didOpen: () => {
+                    Swal.showLoading();
+                },
+                allowOutsideClick: false,
+                showConfirmButton: false
+            });
+        }
+
+
+        $('#btnGuardarSolicitudIngreso').click(function (e) {
+            e.preventDefault();
+
+            concepto_suma = 0;
+            valor_suma = 0;
+            centro_suma = 0;
+            cuenta_suma = 0;
+            suma_total = 0;
+
+
+            $('.desglose_concepto').each(function () {
+                if (!$(this).val()) {
+                    concepto_suma += 1;
+                }
+            });
+            $('.desglose_valor').each(function () {
+                if (!$(this).val()) {
+                    valor_suma += 1;
+                }
+            });
+            $('.desglose_centro').each(function () {
+                if (!$(this).val() || $(this).val() == "#") {
+                    centro_suma += 1;
+                }
+            });
+            $('.desglose_cuenta').each(function () {
+                if (!$(this).val() || $(this).val() == "0") {
+                    cuenta_suma += 1;
+                }
+            });
+
+
+            suma_total = concepto_suma + valor_suma + centro_suma + cuenta_suma;
+
+            solicitud_valor_actual = $('#solicitud_valor_actual').val();
+            solicitud_valor = $('#solicitud_valor').val();
+
+            solicitud_valor_actual = solicitud_valor_actual.replace(/,/g, "");
+            solicitud_valor = solicitud_valor.replace(/,/g, "");
+
+            if (suma_total != 0 || !$('#solicitud_fecha_doc').val() || !$('#solicitud_fecha_pago')
+                .val() || !$('#solicitud_tipo_doc').val() || !$('#solicitud_valor').val() || !$(
+                    '#concepto_principal').val()) {
+                Swal.fire("", "Debes llenar y/o seleccionar TODOS los Campos!", "warning");
+
+            } else if (dollarUSLocale.format(solicitud_valor_actual) != dollarUSLocale.format(
+                solicitud_valor)) {
+                Swal.fire("", "El gasto total NO es el mismo del gasto ingresado!", "warning");
+
+            } else {
+
+
+
+                Swal.fire({
+                    title: "Estás seguro de guardar la siguiente solicitud de Ingresos?",
+                    text: "Debes esperar al mensaje de confirmación para continuar",
+                    icon: "warning",
+                    showCancelButton: true,
+                    confirmButtonColor: '#3085d6',
+                    cancelButtonColor: '#d33',
+                    confirmButtonText: 'Confirmar!'
+                }).then((result) => {
+                    if (result.isConfirmed) {
+
+                        showLoadingScreen();
+
+                        var assignedSoliGastos = [];
+
+                        function assignSoliGasto(concepto, valor, isv, centro, cuenta, codigo, descripcion) {
+                            return {
+                                concepto: concepto,
+                                valor: valor,
+                                isv: isv,
+                                centro: centro,
+                                cuenta: cuenta,
+                                codigo: codigo,
+                                descripcion: descripcion,
+                            }
+                        }
+
+
+                        $('.desgloseSolicitudGasto').each(function () {
+                            fila = $(this).closest("tr");
+
+                            count += 1;
+
+
+                            concepto = $(this).closest(".desgloseSolicitudGasto").find(
+                                'textarea[name="desglose_concepto"]').val();
+
+                            valor = $(this).closest(".desgloseSolicitudGasto").find(
+                                'input[name="desglose_valor"]').val();
+
+                            isv = $(this).closest(".desgloseSolicitudGasto").find(
+                                'input[name="isv-checkbox"]').prop('checked') ? 1 :
+                                0;
+
+
+                            centro = $(this).closest(".desgloseSolicitudGasto").find(
+                                'select[name="desglose_centro"] option:selected')
+                                .val();
+
+                            cuenta = $(this).closest(".desgloseSolicitudGasto").find(
+                                'select[name="desglose_cuenta"] option:selected')
+                                .val();
+
+
+                            // Obtener texto y valor seleccionados
+                            let $select = $(this).closest(".desgloseSolicitudGasto").find(
+                                'select[name="desglose_cuenta"] option:selected'
+                            );
+
+                            let cuenta_valor = $select.val();      // valor del <option>
+                            let cuenta_texto = $select.text();     // texto del <option>
+
+                            // Separar en código y descripción
+                            let partes = cuenta_texto.split('|');
+                            let codigo = $.trim(partes[0]);      // "2-01"
+                            let descripcion = $.trim(partes[1]); // "NOMBRE CUENTA"
+
+                            valor = valor.replace(/,/g, "");
+
+
+                            assignedSoliGastos.push(assignSoliGasto(concepto, valor,
+                                isv, centro, cuenta, codigo, descripcion));
+
+                        });
+
+
+
+                        solicitud_valor = $('#solicitud_valor').val() || 0.00;
+                        solicitud_valor = solicitud_valor.replace(/,/g, "");
+
+                        cuentaSelectText = $('#cuentaSelect option:selected').text();
+                        parteCuenta = cuentaSelectText.split('|');
+                        cuentaSelectText = $.trim(parteCuenta[1]);
+
+                        $.ajax({
+                            beforeSend: function (xhr, settings) {
+                                if (!settings.crossDomain) {
+                                    xhr.setRequestHeader("X-CSRFToken", csrfToken);
+                                }
+                            },
+                            type: "POST",
+                            url: "{% url 'save_solicitud_ingreso_vaic' %}",
+                            data: {
+                                // encabezado
+                                fecha_doc: $('#solicitud_fecha_doc').val(),
+                                fecha_pago: $('#solicitud_fecha_pago').val(),
+                                tipo_doc: $('#solicitud_tipo_doc').val(),
+                                concepto_principal: $('#concepto_principal').val(),
+                                solicitud_valor: solicitud_valor,
+                                mes: $('#mesGastoIngresar').val(),
+                                anio: $('#anioGastoIngresar').val(),
+
+                                // NUEVOS campos encabezado
+                                empresaPartida: $('#empresaPartida').val(),
+                                sucursalPartida: $('#sucursalPartida').val(),
+                                acreedorSelect: $('#acreedorSelect').val(),
+                                acreedorSelectText: $('#acreedorSelect option:selected').text(),
+                                cuentaSelect: $('#cuentaSelect').val(),
+                                cuentaSelectText: cuentaSelectText,
+
+                                // detalle (serializar si es necesario)
+                                assignedSoliGastos: JSON.stringify(assignedSoliGastos)
+                            },
+                            dataType: "json",
+                            success: function (data) {
+                                if (data.save == 1) {
+                                    Swal.close();
+
+                                    Swal.fire("", "Solicitud de Ingreso Creada!", "success");
+
+                                    setTimeout(() => {
+                                        window.location.reload();
+                                    }, 1000);
+
+                                } else {
+                                    Swal.fire("", "Error L: " + data.error, "error");
+                                }
+                            }
+                        });
+
+
+
+                    }
+                });
+
+
+
+            }
+
+
+
+        });
+
+
+
+
+        $(document).on('click', '.btnPDF', function () {
+            id_encabezado = $(this).data('id');
+
+            window.open('http://3.230.160.184:81/REPORTERIA/reporte/ingresos/pdf/' + id_encabezado, '_blank');
+        });
+
+
+
+        $(document).on('click', '.btnAutoRechazaSolicitud', function () {
+            varID = this.id;
+
+            if (varID == "btnAutorizarSolicitud") {
+                opcion = 1;
+                opc_text = "AUTORIZAR";
+            } else {
+                opcion = 0;
+                opc_text = "RECHAZAR";
+            }
+
+
+            fila = $(this).closest("tr");
+
+            solicitud_id = fila.find("td:eq(0)").text();
+            solicitud_concepto = fila.find("td:eq(1)").text();
+
+            ejecutarSwalConfirmacion(solicitud_id, solicitud_concepto, opcion, opc_text);
+        });
+
+
+        // Función para ejecutar Swal de confirmación
+        function ejecutarSwalConfirmacion(solicitud_id, solicitud_concepto, opcion, opc_text) {
+            Swal.fire({
+                title: "Estás seguro de " + opc_text + " la solicitud " +
+                    solicitud_concepto + "?",
+                text: "",
+                icon: "warning",
+                showCancelButton: true,
+                confirmButtonColor: '#3085d6',
+                cancelButtonColor: '#d33',
+                confirmButtonText: 'Confirmar!'
+            }).then((result) => {
+                if (result.isConfirmed) {
+
+                    try {
+                        $.ajax({
+                            beforeSend: function (xhr, settings) {
+                                if (!settings.crossDomain) {
+                                    xhr.setRequestHeader("X-CSRFToken", csrfToken);
+                                }
+                            },
+                            type: "POST",
+                            url: "{% url 'autorizar_rechazar_solicitud_ingreso' %}",
+                            data: {
+                                solicitud_id: solicitud_id,
+                                opcion: opcion
+                            },
+                            dataType: "json",
+                            success: function (data) {
+                                if (data.save == 1) {
+
+                                    if (opcion == 1) {
+                                        Swal.fire("",
+                                            "Solicitud de Ingreso Autorizada!",
+                                            "success");
+                                    } else {
+                                        Swal.fire("",
+                                            "Solicitud de Ingreso Anulada!",
+                                            "success");
+                                    }
+
+                                    tablePagosAcreedores.ajax.reload(null,
+                                        false);
+
+                                } else {
+                                    Swal.fire("", "Error L: " + data.error,
+                                        "error");
+                                }
+                            }
+                        });
+                    } catch (error) {
+                        Swal.fire("", "Error A: " + error, "error");
+                    }
+
+                }
+            });
+        }
+
+
+
+
+
+
+
+
+
+        /*  */
+    });
+</script>
+{% endblock %}

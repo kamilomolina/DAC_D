@@ -1,0 +1,404 @@
+{% extends 'menu_asistencia.html' %}
+{% load static %}
+
+{% block title %}
+REPORTE ASISTENCIAS
+{% endblock %}
+
+{% block body %}
+
+<style>
+    .fila-verde {
+        background-color: #d4edda !important;
+        /* verde claro */
+    }
+
+    .fila-roja {
+        background-color: #f8d7da !important;
+        /* rojo claro */
+    }
+</style>
+
+
+<div class="card  p-2 crear-container">
+    <div class="col-md-12">
+        <div class="card">
+            <div class="card-body" style="background-color: #f4f6f9;">
+
+                <div class="mb-3 d-flex justify-content-between align-items-center">
+                    <h4 class="card-title text-primary mb-0">Asistencia de Empleados</h4>
+
+                    <div class="d-flex align-items-center gap-2">
+
+                        {% if varAcceso == 0 %}
+                        <select id="deptoSelect" class="form-select form-select-sm" name="deptoSelect">
+                            <option value="0">TODOS LOS DEPARTAMENTOS</option>
+                            {% for d in deptosData %}
+                            <option value="{{ d.id_departamento }}">{{ d.departamento }}</option>
+                            {% endfor %}
+                        </select>
+                        {%else%}
+                        <input type="hidden" id="deptoSelect" name="deptoSelect" value="0">
+                        {% endif %}
+
+                        <!-- Campo Desde -->
+                        <input type="date" id="periodoInicio" class="form-control form-control-sm" value="{{date1}}">
+                        <!-- Campo Hasta -->
+                        <input type="date" id="periodoFinal" class="form-control form-control-sm" value="{{date2}}">
+                        <!-- Botón -->
+                        <button class="btn btn-sm btn-success" id="loadAsistencias">Cargar</button>
+                    </div>
+                </div>
+
+
+
+                <div class="table-responsive">
+                    <table id="asistencia-table" class="table table-striped table-bordered table-top-border"
+                        style="width:100%">
+                        <thead>
+                            <tr>
+                                <th>#</th>
+                                <th>Nombre Empleado</th>
+                                <th>Fecha</th>
+                                <th>Día Semana</th>
+                                <th>Hora Entrada</th>
+                                <th>Hora Salida</th>
+                                <th>Hora Entrada Marcada</th>
+                                <th>Hora Salida Marcada</th>
+                                <th>Minutos Requeridos</th>
+                                <th>Tolerancia</th>
+                                <th>Minutos Trabajados</th>
+                                <th>Justificacion</th>
+                                <th>Fecha Incidencia</th>
+                                <th>Tipo Incidencia</th>
+                                <th>Descripción Incidencia</th>
+                                <th>Tipo Día</th>
+                                <th>Estado General</th>
+                                <th>Cargo</th>
+                                <th>Area</th>
+                                <th>Departamento</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+
+                        </tbody>
+                    </table>
+
+                </div>
+            </div>
+        </div>
+    </div>
+
+</div>
+
+
+{% endblock %}
+
+{% block scripts %}
+<script>
+
+    $(document).ready(function () {
+        var csrfToken = "{{ csrf_token }}";
+
+        var toastMixin = Swal.mixin({
+            toast: true,
+            icon: 'success',
+            title: 'General Title',
+            animation: false,
+            position: 'top-right',
+            showConfirmButton: false,
+            timer: 2000,
+            timerProgressBar: true,
+            didOpen: (toast) => {
+                toast.addEventListener('mouseenter', Swal.stopTimer);
+                toast.addEventListener('mouseleave', Swal.resumeTimer);
+            }
+        });
+
+        let tableAsistencia;
+
+
+        $("#loadAsistencias").click(function (e) {
+            e.preventDefault();
+
+            initializeTableAsistencia();
+        });
+
+        $("#asistencia-table").DataTable();
+
+        function initializeTableAsistencia() {
+            depto = $('#deptoSelect').val();
+            date1 = $('#periodoInicio').val();
+            date2 = $('#periodoFinal').val();
+
+            $("#asistencia-table").DataTable().clear().destroy();
+
+            tableAsistencia = $("#asistencia-table").DataTable({
+                scrollX: true,
+                scrollCollapse: true,
+                scrollY: '450px',
+                pageLength: 50,
+                dom: '<"top"lfB>rt<"bottom"ip>',
+                buttons: [
+                    {
+                        extend: 'excelHtml5',
+                        text: '<i class="fas fa-file-excel"></i>',
+                        titleAttr: 'Exportar a Excel',
+                        className: 'btn btn-success',
+                        customize: function (xlsx) {
+                            const sheet = xlsx.xl.worksheets['sheet1.xml'];
+                            const styles = xlsx.xl['styles.xml'];
+
+                            // 1. Crear un nuevo estilo rojo y verde si no existen
+                            const fills = $('fills', styles);
+                            fills.append('<fill><patternFill patternType="solid"><fgColor rgb="FFF8D7DA"/><bgColor indexed="64"/></patternFill></fill>');
+                            fills.append('<fill><patternFill patternType="solid"><fgColor rgb="FFD4EDDA"/><bgColor indexed="64"/></patternFill></fill>');
+
+                            const newFillRedIndex = fills.children().length - 2;
+                            const newFillGreenIndex = fills.children().length - 1;
+
+                            // 2. Agregar estilos a la lista de celdas con los nuevos fills
+                            const cellXfs = $('cellXfs', styles);
+                            cellXfs.append(`<xf xfId="0" applyFill="1" fillId="${newFillRedIndex}"/>`);
+                            cellXfs.append(`<xf xfId="0" applyFill="1" fillId="${newFillGreenIndex}"/>`);
+
+                            const redStyleIndex = cellXfs.children().length - 2;
+                            const greenStyleIndex = cellXfs.children().length - 1;
+
+                            // 3. Recorrer cada fila del XML del Excel y aplicar color
+                            $('row', sheet).each(function (index, row) {
+                                if (index === 0) return; // Saltar cabecera
+
+                                const c = $('c', row);
+                                const minutosRequeridos = parseInt(c.eq(8).text()); // Columna I
+                                const tolerancia = parseInt(c.eq(9).text());        // Columna J
+                                const minutosTrabajados = parseInt(c.eq(10).text()); // Columna K
+
+                                const totalMinimo = minutosRequeridos > 0 ? minutosRequeridos - tolerancia : 0;
+
+                                const cumple = (minutosRequeridos === 0 || minutosTrabajados >= totalMinimo);
+                                const styleIndex = cumple ? greenStyleIndex : redStyleIndex;
+
+                                c.each(function () {
+                                    $(this).attr('s', styleIndex);
+                                });
+                            });
+                        }
+                    },
+                    {
+                        extend: 'pdf',
+                        text: '<i class="fas fa-file-pdf"></i>',
+                        titleAttr: 'Exportar a PDF',
+                        className: 'btn btn-danger',
+                        orientation: 'landscape'
+                    },
+                    {
+                        text: '<i class="fas fa-copy me-2">Copiar</i>',
+                        titleAttr: 'Copiar tabla completa con Colores',
+                        className: 'btn btn-warning',
+                        action: function () {
+                            var tabla = $('#asistencia-table').DataTable();
+                            tabla.page.len(-1).draw(); // Mostrar todo
+
+                            setTimeout(function () {
+                                const seleccion = document.createRange();
+                                seleccion.selectNodeContents(document
+                                    .querySelector('#asistencia-table'));
+
+                                const sel = window.getSelection();
+                                sel.removeAllRanges();
+                                sel.addRange(seleccion);
+
+                                document.execCommand("copy");
+                                Swal.fire("", "Tabla copiada con Colores. Pega en Excel.", "success");
+                            }, 500);
+                        }
+                    },
+                    {
+                        extend: 'print',
+                        text: '<i class="fas fa-print"></i>',
+                        titleAttr: 'Imprimir',
+                        className: 'btn btn-primary',
+                    }
+                ],
+                lengthMenu: [[10, 25, 50, -1], [10, 25, 50, "Todos"]],
+                fixedColumns: {
+                    left: 3,
+                    right: 0
+                },
+                ajax: {
+                    url: "{% url 'reporte_data_asistencia_marcados' %}",
+                    type: "POST",
+                    data: function (d) {
+                        d.date1 = date1;
+                        d.date2 = date2;
+                        d.depto = depto;
+                        d.csrfmiddlewaretoken = "{{ csrf_token }}";
+                    }
+                },
+                language: {
+                    url: "{% static 'app/th/json/es-ES.json' %}"
+                },
+                columns: [{
+                    data: "id_empleado"
+                },
+                {
+                    data: "nombre_completo",
+                    className: "text-wrap"
+                },
+                {
+                    data: "fecha"
+                },
+                {
+                    data: "dia_semana"
+                },
+                {
+                    data: "hora_inicio"
+                },
+                {
+                    data: "hora_fin"
+                },
+                {
+                    data: "entrada"
+                },
+                {
+                    data: "salida"
+                },
+
+                {
+                    data: "minutos_requeridos"
+                },
+                {
+                    data: "tolerancia_minutos"
+                },
+                {
+                    data: "minutos_trabajados"
+                },
+                {
+                    data: 'justificacion_vacia'
+                },
+                {
+                    data: "fecha_incidencia"
+                },
+                {
+                    data: "tipo_incidencia"
+                },
+                {
+                    data: "descripcion_incidencia"
+                },
+
+                {
+                    data: "estado_dia",
+                    className: 'text-center',
+                    render: function (data, type, row) {
+                        var badge = "";
+                        if (data == "Horario Normal") {
+                            badge +=
+                                '<span class="badge badge-pill badge-success">' + data +
+                                "</span>";
+                        }
+                        else if (data == "Completado") {
+                            badge +=
+                                '<span class="badge badge-pill badge-success">' + data +
+                                "</span>";
+                        }
+                        else if (data == "Día Libre Especial") {
+                            badge += '<span class="badge badge-pill badge-warning">' + data + '</span>';
+                        }
+
+                        else if (data.includes("Incidencia:")) { // Verifica si el texto contiene "Incidencia:"
+                            const parts = data.split(" - "); // Divide el texto para separar el tipo y la descripción
+                            const tipoIncidencia = parts[0].replace("Incidencia: ", "").trim(); // Extrae el tipo de incidencia
+                            const descripcionIncidencia = parts[1] ? parts[1].trim() : ""; // Extrae la descripción si existe
+
+                            badge +=
+                                '<span class="badge badge-pill badge-danger">' +
+                                tipoIncidencia + // Muestra el tipo de incidencia
+                                '</span>' +
+                                '<small class="d-block text-muted">' + // Muestra la descripción en un texto pequeño
+                                descripcionIncidencia +
+                                '</small>';
+                        }
+
+                        else if (data == "Día Libre") {
+                            badge += '<span class="badge badge-pill badge-primary" style="background-color: #007bff; color: #fff;">' + data + '</span>';
+                        }
+                        return badge;
+                    },
+                },
+                {
+                    data: "estado_general",
+                    className: 'text-center',
+                    render: function (data, type, row) {
+                        var badge = "";
+                        if (data == "Incompleto") {
+                            badge +=
+                                '<span class="badge badge-pill badge-danger text-wrap">' +
+                                data +
+                                "</span>";
+                        } else if (data == "Completado") {
+                            badge +=
+                                '<span class="badge badge-pill badge-success text-wrap">' + data +
+                                "</span>";
+                        } else if (data == "Accion Personal Realizada") {
+                            badge +=
+                                '<span class="badge badge-pill badge-info text-wrap">' + data +
+                                " pero Incompleto</span>";
+
+                        }
+
+                        return badge;
+                    },
+                },
+                {
+                    data: 'Cargo'
+                },
+                {
+                    data: 'Area'
+                },
+                {
+                    data: 'Departamento'
+                }
+                ],
+                order: [
+                    [1, "asc"],
+                    [2, "asc"],
+                ],
+                initComplete: function () {
+                    tableAsistencia.columns.adjust().draw();
+                },
+                createdRow: function (row, data, dataIndex) {
+                    const requeridos = parseInt(data.minutos_requeridos);
+                    const tolerancia = parseInt(data.tolerancia_minutos);
+                    const trabajados = parseInt(data.minutos_trabajados);
+
+                    const totalMinimo = requeridos > 0 ? requeridos - tolerancia : 0;
+
+                    if (requeridos === 0 || trabajados >= totalMinimo) {
+                        $('td', row).css({
+                            'background-color': '#d4edda',
+                            'color': 'black',
+                            'border-style': 'solid',
+                            'border-color': '#bdbdbd',
+                        });  // Cumple
+                    } else {
+                        $('td', row).css({
+                            'background-color': '#f8d7da',
+                            'color': 'black',
+                            'border-style': 'solid',
+                            'border-color': '#bdbdbd',
+                        });   // No cumple
+                    }
+
+                },
+
+            });
+        }
+
+
+    });
+
+
+
+</script>
+{% endblock %}

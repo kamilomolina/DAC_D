@@ -1,0 +1,2590 @@
+{% extends 'plantilla_nueva.html' %} <!-- Asegúrate de usar el nombre correcto de tu plantilla base -->
+
+{% block title %}
+Ventas Perdidas
+{% endblock%}
+
+{% block icon %}
+<i class="material-icons">money_off</i>
+{% endblock %}
+
+{% block head %}
+<link href="https://fonts.googleapis.com/icon?family=Material+Icons+Outlined" rel="stylesheet">
+<script src="https://ajax.googleapis.com/ajax/libs/jquery/3.5.1/jquery.min.js"></script>
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/chosen/1.8.7/chosen.min.css">
+<script src="https://cdnjs.cloudflare.com/ajax/libs/jquery/3.5.1/jquery.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/chosen/1.8.7/chosen.jquery.min.js"></script>
+<link rel="stylesheet"
+    href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:opsz,wght,FILL,GRAD@24,400,0,0" />
+<link href="https://fonts.googleapis.com/icon?family=Material+Icons" rel="stylesheet">
+
+
+<style>
+    body {
+        background-color: #ffffff;
+        margin: 0;
+        padding: 0;
+        /* Eliminado el padding para que el body abarque toda la pantalla */
+        height: 100vh;
+        /* Ajuste para que el body use toda la altura de la pantalla */
+        width: 100vw;
+        /* Ajuste para que el body use toda la anchura de la pantalla */
+    }
+
+    .dataTables_filter {
+        float: left !important;
+    }
+
+    .estilo-uniforme {
+        font-size: 16px;
+        /* Tamaño de letra deseado */
+        /* Aquí puedes agregar cualquier otro estilo que desees uniformizar */
+    }
+
+    .header-buttons {
+        display: flex;
+        justify-content: space-between;
+        flex-wrap: wrap;
+        /* Permite que los botones se ajusten según el ancho disponible */
+        margin-bottom: 20px;
+        /* Espacio entre los botones y la tabla */
+    }
+
+    .btn-container {
+        display: flex;
+        justify-content: flex-end;
+        /* Alinea el contenido a la derecha */
+    }
+
+    .dataTables_filter {
+        display: none;
+    }
+
+    .form-control {
+        font-size: 16px;
+        /* Cambia este valor al tamaño de letra que prefieras */
+    }
+
+    .btn-azul-normal {
+        background-color: #007bff;
+        /* Un azul normal */
+        color: white;
+        /* Letra blanca */
+        font-weight: bold;
+        /* Letra en negrita */
+        transition: background-color 0.3s ease;
+        /* Animación suave para el cambio de color */
+    }
+
+    .btn-azul-normal:hover {
+        background-color: #0056b3;
+        /* Un azul un poco más oscuro para el hover */
+    }
+
+    .button {
+        border: none;
+        color: white;
+        padding: 10px 20px;
+        font-size: 16px;
+        cursor: pointer;
+        border-radius: 5px;
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        width: 100%;
+        flex-basis: calc(33.333% - 20px);
+        margin: 10px;
+    }
+
+    .button span {
+        margin-right: 5px;
+        /* Ajusta el espacio entre el texto y el ícono */
+    }
+
+    .button i {
+        margin-left: 20px;
+        /* Espacio adicional entre el texto y el icono */
+    }
+
+    .button:hover {
+        transform: scale(1.05);
+    }
+
+    .btn-competencia {
+        background-color: #333740;
+    }
+
+    .btn-venta-perdida {
+        background-color: #2a3f54;
+    }
+
+    #editarCompetenciaForm input,
+    #editarCompetenciaForm textarea {
+        font-size: 16px;
+        /* Ajusta esto al tamaño de letra deseado */
+    }
+
+    #editarCompetenciaForm input,
+    #editarCompetenciaForm textarea {
+        font-size: 16px;
+        /* Ajusta esto al tamaño de letra deseado */
+    }
+
+    .btn-motivos {
+        background-color: #8b6e0d;
+    }
+
+    .row {
+        display: flex;
+        justify-content: space-between;
+        /* Opcional, dependiendo del diseño deseado */
+        width: 100%;
+    }
+
+    .nombre-competencia {
+        flex: 3;
+        /* Ocupa 3/4 del espacio disponible */
+    }
+
+    .id-competencia {
+        flex: 3;
+        /* Ocupa 3/4 del espacio disponible */
+
+    }
+
+    .nombre-cliente {
+        flex: 3;
+        /* Ocupa 1/4 del espacio disponible */
+    }
+
+    .id-cliente {
+        flex: 1;
+        /* Ocupa 1/4 del espacio disponible */
+    }
+
+    input[type="text"],
+    input[type="number"] {
+        padding: 10px;
+        margin: 10px 0;
+        /* Asegura espaciado vertical entre campos */
+        border: 1px solid #ccc;
+        border-radius: 4px;
+        /* Elimina los márgenes o paddings laterales específicos si los hubiera */
+    }
+
+    .column {
+        flex: 1;
+        /* Hace que cada columna ocupe un espacio equitativo */
+        padding: 0 10px;
+        /* Añade un poco de espacio entre las columnas */
+    }
+
+    input[type="text"],
+    input[type="number"] {
+        width: 100%;
+        /* Asegura que los inputs ocupen todo el ancho de su columna */
+        padding: 10px;
+        margin: 10px 0;
+        /* Espaciado entre inputs */
+        border: 1px solid #ccc;
+        border-radius: 4px;
+    }
+
+    /* Asegura que los elementos de la fila no tengan margen superior extra */
+    .row>div[class^="col-"],
+    .row>[class*=" col-"] {
+        margin-top: 0;
+    }
+
+    /* Ajusta la alineación superior de los elementos de la columna */
+    .form-group {
+        margin-bottom: 0;
+        /* Elimina o reduce el margen inferior si es necesario */
+    }
+
+    /* Si se utiliza un contenedor alrededor del 'row' que necesita un ajuste */
+    .contenedor-personalizado {
+        padding-top: 0;
+        /* Ajusta según el nombre real de tu clase contenedora si la hay */
+    }
+
+    h2 {
+        color: #2a3f54;
+        text-align: center;
+    }
+
+    .form-ventas-perdidas {
+        display: flex;
+        flex-wrap: wrap;
+        justify-content: space-between;
+        /* Espacia las secciones de forma uniforme */
+    }
+
+    .seccion {
+        border: 1px solid #ccc;
+        padding: 20px;
+        margin-bottom: 20px;
+        border-radius: 5px;
+        min-height: 250px;
+        /* Establece un mínimo de altura */
+    }
+
+
+    .seccion2 {
+        border: 1px solid #ccc;
+        padding: 20px;
+        margin-bottom: 20px;
+        border-radius: 5px;
+    }
+
+    .seccion h3 {
+        color: #333740;
+        font-size: 1rem;
+        margin-top: 0;
+    }
+
+    .chosen-select,
+    input[type="text"],
+    input[type="number"],
+    input[type="date"],
+    textarea,
+    select {
+        padding: 10px;
+        margin: 5px 0;
+        font-size: 0.8rem;
+        border: 1px solid #ccc;
+        border-radius: 4px;
+        width: calc(100% - 22px);
+    }
+
+    .input-group {
+        display: flex;
+        flex-direction: column;
+        width: 100%;
+        /* Establece el ancho del grupo de entrada para que coincida con el contenedor */
+    }
+
+    .input-field {
+        width: 100%;
+        /* Establece el ancho de todos los campos de entrada para que coincidan */
+        padding: 10px;
+        margin-bottom: 10px;
+        /* Espacio entre los campos */
+        border: 1px solid #ccc;
+        border-radius: 4px;
+    }
+
+
+    textarea {
+        resize: vertical;
+        height: 80px;
+    }
+
+    .acciones {
+        flex-basis: 100%;
+        /* Asegura que los botones de acción ocupen toda la fila */
+        display: flex;
+        justify-content: center;
+        padding-top: 10px;
+    }
+
+    button {
+        padding: 10px 20px;
+        margin: 0 10px;
+        border: none;
+        border-radius: 4px;
+        cursor: pointer;
+        color: white;
+    }
+
+    nav ul {
+        list-style-type: none;
+        /* Elimina los puntos de las listas */
+        padding: 0;
+        display: flex;
+        justify-content: center;
+    }
+
+    nav ul li a {
+        display: block;
+        padding: 10px 15px;
+        text-decoration: none;
+        /* Elimina el subrayado */
+        color: #333;
+        /* Color del texto */
+        border-radius: 5px;
+        /* Bordes redondeados */
+        transition: background-color 0.3s;
+        /* Transición suave */
+    }
+
+    /* Estilo para pestaña activa */
+    nav ul li a.active {
+        background-color: #8CB9BD;
+        /* Color de fondo de la pestaña activa */
+        color: #FEFBF6;
+        /* Color del texto de la pestaña activa */
+    }
+
+    /* Estilo al pasar el ratón */
+    nav ul li a:hover {
+        background-color: #ECB159;
+        /* Color al pasar el ratón */
+    }
+
+    /* Estilo al hacer clic */
+    nav ul li a:active {
+        background-color: #B67352;
+        /* Color al hacer clic */
+    }
+
+
+    .content-panel .input-field,
+    .content-panel .form-control {
+        width: 100%;
+        /* Asegura que todos los elementos tengan el ancho completo de su contenedor padre */
+        box-sizing: border-box;
+        /* Incluye padding y bordes en el ancho total */
+        padding: 10px;
+        /* Espacio interno para que el texto no esté pegado a los bordes */
+        margin-bottom: 10px;
+        /* Espacio entre los elementos */
+        border: 1px solid #ccc;
+        /* Borde común para todos */
+        border-radius: 4px;
+        /* Bordes redondeados */
+    }
+
+    .content-panel select,
+    .content-panel textarea,
+    .content-panel input[type="text"],
+    .content-panel input[type="date"] {
+        display: block;
+        /* Asegura que el elemento se renderice como un bloque, ocupando el ancho total */
+    }
+
+    .input-field {
+        width: 100%;
+        /* Establece el ancho al 100% del contenedor padre */
+        box-sizing: border-box;
+        /* Asegúrate de que el padding y border estén incluidos en el ancho */
+        margin-bottom: 10px;
+        /* Espacio entre elementos */
+    }
+
+    .input-group {
+        display: flex;
+        flex-direction: column;
+    }
+
+    .input-group .form-control {
+        margin-bottom: 10px;
+        /* espacio entre los elementos */
+    }
+
+    /* Puede que necesites ajustar el ancho y el margen dependiendo de tu diseño exacto */
+    .input-group .form-control {
+        width: calc(100% - 2px);
+        /* Ajusta el 100% si es necesario */
+        margin-right: auto;
+        margin-left: auto;
+    }
+
+    #tabla_programaciones_wrapper .dataTables_filter {
+        float: left;
+        text-align: left;
+    }
+
+    .button-container {
+        position: fixed;
+        top: 0;
+        left: 0;
+        width: 100%;
+        background-color: #fff;
+        z-index: 1000;
+        padding: 10px;
+        box-shadow: 0px 2px 4px rgba(0, 0, 0, 0.1);
+    }
+
+    .toggle-button {
+        margin-right: 20px;
+        padding: 10px 20px;
+        border: none;
+        border-radius: 30px;
+        background-color: transparent;
+        color: #007bff;
+        font-size: 18px;
+        font-weight: bold;
+        cursor: pointer;
+        transition: color 0.3s;
+    }
+
+    .toggle-button:hover {
+        color: #0056b3;
+    }
+
+    .toggle-button i {
+        margin-right: 10px;
+    }
+
+    .content {
+        position: absolute;
+        top: 50px;
+        right: 20px;
+        width: 300px;
+        background-color: #fff;
+        box-shadow: 0px 2px 4px rgba(0, 0, 0, 0.1);
+        border-radius: 10px;
+        padding: 20px;
+        display: none;
+    }
+
+    .content.active {
+        display: block;
+    }
+
+    .content h3 {
+        margin-top: 0;
+    }
+
+    .table-container {
+        margin-top: 70px;
+        /* Espacio para los botones */
+    }
+
+    .estilo-uniforme {
+        font-size: 16px;
+        /* Agrega aquí más estilos si es necesario */
+    }
+
+    #competenciaForm .form-control {
+        font-size: 16px !important;
+    }
+
+    .filter-label {
+        margin-bottom: .25rem;
+        /* Ajusta para reducir el espacio debajo de la etiqueta */
+        font-size: .875rem;
+        /* Opcional: Mantiene el tamaño de la fuente de la etiqueta reducido */
+    }
+
+    /* Mantén las demás reglas CSS como están */
+    .filter-input {
+        padding: .25rem .5rem;
+        /* Reduce el padding interno */
+        height: calc(1.5em + .5rem + 2px);
+        /* Ajusta la altura */
+    }
+
+    .row>[class^="col-"] {
+        padding-right: 5px;
+        padding-left: 5px;
+        /* Reduce el espacio entre columnas */
+    }
+
+
+    /* Resto del CSS */
+</style>
+{% endblock%}
+
+{% block content %}
+<div class="container-margin">
+    <div class="row">
+        <div class="col-lg-3">
+            <button id="btnCompetencia" class="button btn-competencia" data-bs-toggle="modal"
+                data-bs-target="#modalAgregarCompetencia">
+                <span>Empresa Competencia</span><i class="fas fa-building"></i>
+            </button>
+        </div>
+        <div class="col-lg-3">
+            <button id="btnVentaPerdida" class="button btn-venta-perdida" data-bs-toggle="modal"
+                data-bs-target="#modalCrearVentaPerdida" id="btnCrearVentaPerdida">
+                <span>Crear Venta Perdida</span><i class="material-icons strike">money_off</i>
+            </button>
+        </div>
+        <div class="col-lg-3">
+            <button id="btnMotivosVentas" class="button btn-motivos" data-bs-toggle="modal"
+                data-bs-target="#modalMotivosVentas">
+                <span>Motivos ventas perdidas</span><span
+                    class="material-icons-outlined">production_quantity_limits</span>
+            </button>
+        </div>
+    </div>
+</div>
+<hr>
+<div class="row mb-3"> <!-- Agrega un margen inferior (mb-3) para separación -->
+    <div class="row" style="padding-bottom: 10px;">
+        <div class="col-lg-2">
+            <label for="select-grupo">Grupo</label>
+            <select class="form-select" id="select-grupo">
+            </select>
+        </div>
+        <div class="col-lg-2">
+            <label for="select-subgrupo">Subgrupo</label>
+            <select class="form-select" id="select-subgrupo">
+            </select>
+        </div>
+        <div class="col-lg-2">
+            <label for="select-categoria">Categoría</label>
+            <select class="form-select" id="select-categoria">
+            </select>
+        </div>
+        <div class="col-lg-2">
+            <label for="select-marca">Marca</label>
+            <select class="form-select" id="select-marca">
+            </select>
+        </div>
+        <div class="col-lg-2">
+            <label for="select-empresas2">Empresa</label>
+            <select class="form-select" id="select-empresas2">
+                <option value="2">DISTRIBUIDORA</option>
+                <option value="1">SUPERMERCADO</option>
+            </select>
+        </div>
+        <div class="col-lg-2">
+            <button class="btn" id="btnCargarVentasPerdidas"
+                style="background-color: #265073; color: white;">Cargar</button> <!-- Estilo en línea para el color -->
+        </div>
+    </div>
+</div>
+
+<div>
+    <div class="row" style="padding-bottom: 10px;">
+        <div class="row" style="padding-bottom: 10px;">
+            <div class="col-sm">
+                <label for="filterNombreProducto" class="filter-label">Producto</label>
+                <input type="text" class="form-control form-control-sm filter-input" id="filterNombreProducto"
+                    placeholder="Producto">
+            </div>
+            <div class="col-sm">
+                <label for="filterNombreCliente" class="filter-label">Cliente</label>
+                <input type="text" class="form-control form-control-sm filter-input" id="filterNombreCliente"
+                    placeholder="Cliente">
+            </div>
+            <div class="col-sm">
+                <label for="filterNombreMotivo" class="filter-label">Motivo</label>
+                <input type="text" class="form-control form-control-sm filter-input" id="filterNombreMotivo"
+                    placeholder="Motivo">
+            </div>
+            <div class="col-sm">
+                <label for="filterGrupo">Grupo</label>
+                <input type="text" class="form-control form-control-sm filter-input" id="filterGrupo"
+                    placeholder="Grupo">
+            </div>
+            <div class="col-sm">
+                <label for="filterSubGrupo">SubGrupo</label>
+                <input type="text" class="form-control form-control-sm filter-input" id="filterSubGrupo"
+                    placeholder="SubGrupo">
+            </div>
+            <div class="col-sm">
+                <label for="filterCategoria">Categoría</label>
+                <input type="text" class="form-control form-control-sm filter-input" id="filterCategoria"
+                    placeholder="Categoría">
+            </div>
+            <div class="col-sm">
+                <label for="filterMarca">Marca</label>
+                <input type="text" class="form-control form-control-sm filter-input" id="filterMarca"
+                    placeholder="Marca">
+            </div>
+
+        </div>
+    </div>
+    <table id="tabla_ventas_perdidas" class="table table-striped table-bordered">
+        <thead class="thead-dark">
+            <tr>
+                <th>ID</th>
+                <th>Nombre Producto</th>
+                <th>Nombre Cliente</th>
+                <th>Precio</th>
+                <th>Cantidad</th>
+                <th>Presentacion</th>
+                <th>Motivo</th>
+                <th>Nombre Competencia</th>
+                <th>Precio Competencia</th>
+                <th>Grupo</th>
+                <th>SubGrupo</th>
+                <th>Categoria</th>
+                <th>Marca</th>
+                <th>Comentario</th>
+                <th>Fecha</th>
+            </tr>
+        </thead>
+        <tbody>
+            <tr>
+            </tr>
+        </tbody>
+    </table>
+</div>
+<!-- Modal para Empresa Competencia -->
+
+<div class="modal fade" id="modalAgregarCompetencia" tabindex="-1" aria-labelledby="modalAgregarCompetenciaLabel"
+    aria-hidden="true">
+    <!-- Ajustar el tamaño del modal con modal-sm -->
+    <div class="modal-dialog modal-xl"> <!-- Ajustar el tamaño del modal con modal-xl -->
+        <div class="modal-content" style="background-color: #F1FADA; color: #343a40;">
+            <!-- Cambiar la paleta de colores -->
+            <div class="modal-header" style="background-color: #265073;">
+                <!-- Cambiar el color del header -->
+                <h5 class="modal-title text-white"><i class="fas fa-building text-white"></i> Listado de
+                    empresas competencias</h5> <!-- Texto y icono en blanco -->
+                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+            </div>
+            <div class="modal-body">
+                <div class="btn-container">
+                    <button type="button" class="btn" data-bs-toggle="modal"
+                        style="background-color: #2D9596; color: white; margin-bottom: 10px;"
+                        data-bs-target="#modalAgregarCompetencia2">
+                        Nueva empresa competencia
+                    </button>
+
+                </div>
+
+                <table id="tabla_competencias_extendida" class="table table-striped table-bordered" style="width:100%">
+                    <thead class="thead-dark">
+                        <tr>
+                            <th>ID</th>
+                            <th>Nombre Competencia</th>
+                            <th>Descripción</th>
+                            <th>Acciones</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        <tr>
+                        </tr>
+                    </tbody>
+                </table>
+            </div>
+        </div>
+    </div>
+</div>
+<div class="modal fade" id="modalAgregarCompetencia2" tabindex="-1" aria-labelledby="modalAgregarCompetencia2Label"
+    aria-hidden="true">
+    <div class="modal-dialog modal-s">
+        <div class="modal-content" style="background-color: #F1FADA; color: #343a40;">
+            <div class="modal-header" style="background-color: #265073;">
+                <h5 class="modal-title text-white">
+                    <i class="fas fa-building text-white"></i> Agregar Competencias
+                </h5>
+                <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal" aria-label="Close"
+                    style="padding-bottom: 10px;"></button>
+            </div>
+            <div class="modal-body">
+                <form id="competenciaForm">
+                    <input type="hidden" id="id_competencia_nuevo">
+                    <div class="mb-3">
+                        <label for="nombre_competencia_nuevo" class="form-label">Nombre de Competencia</label>
+                        <input type="text" class="form-control form-control-sm" id="nombre_competencia_nuevo">
+                    </div>
+                    <div class="mb-3">
+                        <label for="descripcion_nuevo" class="form-label">Descripción</label>
+                        <textarea class="form-control form-control-sm" id="descripcion_nuevo"></textarea>
+                    </div>
+                </form>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn" id="guardarCompetencia"
+                    style="background-color: #2D9596; color: white;">Guardar</button>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Modal para Editar Empresa Competencia -->
+<div class="modal fade" id="modalEditarCompetencia" tabindex="-1" aria-labelledby="modalEditarCompetenciaLabel"
+    aria-hidden="true">
+    <div class="modal-dialog modal-s">
+        <div class="modal-content">
+            <div class="modal-header btn-competencia" style="background-color: #20354b;">
+                <h5 class="modal-title text-white" id="modalEditarCompetenciaLabel"><i
+                        class="fas fa-edit text-white"></i> Editar Competencia</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+            </div>
+            <div class="modal-body">
+                <form id="editarCompetenciaForm">
+                    <input type="hidden" id="id_competencia_editar">
+                    <div class="mb-3">
+                        <label for="nombre_competencia_editar" class="form-label">Nombre de Competencia</label>
+                        <input type="text" class="form-control" id="nombre_competencia_editar">
+                    </div>
+                    <div class="mb-3">
+                        <label for="descripcion_editar" class="form-label">Descripción</label>
+                        <textarea class="form-control" id="descripcion_editar"></textarea>
+                    </div>
+                </form>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-primary" id="actualizarCompetencia">Actualizar</button>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Modal para Confirmar Eliminación de Empresa Competencia -->
+<div class="modal fade" id="modalEliminarCompetencia" tabindex="-1" aria-labelledby="modalEliminarCompetenciaLabel"
+    aria-hidden="true">
+    <div class="modal-dialog">
+        <div class="modal-content">
+            <div class="modal-header btn-competencia" style="background-color: #20354b;">
+                <h5 class="modal-title text-white" id="modalEliminarCompetenciaLabel"><i
+                        class="fas fa-trash text-white"></i> Eliminar Competencia</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+            </div>
+            <div class="modal-body">
+                <p>¿Estás seguro de que quieres eliminar esta competencia?</p>
+                <input type="hidden" id="id_competencia_eliminar">
+                <button type="button" class="btn btn-danger" id="confirmarEliminarCompetencia">Eliminar</button>
+                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancelar</button>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Modal para Crear Venta Perdida -->
+<div class="modal fade" id="modalCrearVentaPerdida" tabindex="-1" aria-labelledby="modalCrearVentaPerdidaLabel"
+    aria-hidden="true">
+    <div class="modal-dialog modal-xl">
+        <div class="modal-content">
+            <div class="modal-header btn-venta-perdida">
+                <h5 class="modal-title text-white" id="modalCrearVentaPerdidaLabel">Crear Venta Perdida</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+            </div>
+            <div class="modal-body">
+                <div class="row">
+                    <div class="col-lg-12"><!-- Usa row para una fila que contiene todas las columnas -->
+                        <div class="seccion2">
+                            <div class="row">
+                                <!-- Elimina justify-content-start si quieres que empiece desde la izquierda -->
+                                <div class="col-lg-3"> <!-- Ajusta según sea necesario para el ancho -->
+                                    <div class="form-group">
+                                        <label for="formatoSelect" class="col-form-label">Formato:</label>
+                                        <select class="form-control form-control-sm" name="formato_select"
+                                            id="formatoSelect">
+                                            <option value="#">Seleccione un Formato</option>
+                                            <option value="1">SUPERMERCADO</option>
+                                            <option value="2">DISTRIBUIDORA</option>
+                                        </select>
+                                    </div>
+                                </div>
+
+                                <div class="col-lg-3"> <!-- Ajusta según sea necesario para el ancho -->
+                                    <div class="form-group">
+                                        <label for="almacen_select" class="col-form-label">Almacen:</label>
+                                        <select class="form-control form-control-sm" name="almacen_select"
+                                            id="almacen_select">
+                                            <option value="#">Seleccione un almacen</option>
+                                        </select>
+                                    </div>
+                                </div>
+
+                                <div class="col-lg-3"> <!-- Ajusta según sea necesario para el ancho -->
+                                    <div class="form-group">
+                                        <label for="cliente_select" class="col-form-label">Cliente:</label>
+                                        <select class="form-control form-control-sm" name="cliente_select"
+                                            id="cliente_select">
+                                        </select>
+                                    </div>
+                                </div>
+
+                                <div class="col-lg-3 d-flex align-items-end">
+                                    <button type="button" class="btn btn-primary mb-3" id="cargarBtn">Cargar</button>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                <div>
+                    <form class="form-ventas-perdidas">
+                        <div class="row">
+                            <!-- Columna para la primera sección -->
+                            <div class="col-md-6">
+                                <div class="seccion">
+                                    <h3>Información del Producto</h3>
+                                    <div class="input-group">
+                                        <select id="nombre_producto" class="form-control">
+                                        </select>
+                                        <select id="presentacion" class="form-control">
+                                            <!-- Las opciones se cargarán dinámicamente -->
+                                        </select>
+                                        <input type="number" step="any" placeholder="Cantidad" name="cantidad"
+                                            class="form-control">
+                                        <input type="number" step="0.01" placeholder="Precio" name="precio"
+                                            class="form-control">
+                                        <input type="number" step="0.01" placeholder="Precio Mínimo" name="precio_min"
+                                            class="form-control">
+                                    </div>
+                                </div>
+                            </div>
+
+                            <!-- Columna para la segunda sección -->
+                            <div class="col-md-6">
+                                <div class="seccion">
+                                    <h3>Motivos de la venta perdida</h3>
+                                    <div class="container">
+                                        <nav>
+                                            <ul>
+                                                <li><a href="#inventario" id="inventarioTab">Inventario</a></li>
+                                                <li><a href="#precio" id="precioTab">Precio</a></li>
+                                                <li><a href="#servicio" id="servicioTab">Servicio</a></li>
+                                            </ul>
+                                        </nav>
+                                        <div class="content-panel" id="inventario" style="display:block;">
+                                            <textarea placeholder="Comentario" name="comentario"></textarea>
+                                            <input type="date" name="fecha">
+                                        </div>
+                                        <div class="content-panel" id="precio" style="display:none;">
+                                            <h3>Competencia</h3>
+                                            <div class="input-group">
+                                                <select id="select_nombre_competencia_precio" class="input-field"
+                                                    name="select_nombre_competencia_precio">
+                                                    <option value="#">Seleccionar Competencia</option>
+                                                    <!-- Opciones -->
+                                                </select>
+                                                <input type="text" class="input-field" placeholder="Precio Competencia"
+                                                    name="precio_competencia">
+                                                <textarea class="input-field" placeholder="Comentario"
+                                                    name="comentario_precio"></textarea>
+                                                <input type="date" class="input-field" name="fecha_precio">
+                                            </div>
+                                        </div>
+                                        <div class="content-panel" id="servicio" style="display:none;">
+                                            <h3>Competencia</h3>
+                                            <div class="input-group">
+                                                <select id="select_nombre_competencia_servicio" class="input-field"
+                                                    name="select_nombre_competencia_servicio">
+                                                    <option value="#">Seleccionar Competencia</option>
+                                                    <!-- Opciones -->
+                                                </select>
+                                                <input type="text" class="input-field" placeholder="Precio Competencia"
+                                                    name="precio_competencia_servicio">
+                                                <textarea class="input-field" placeholder="Comentario"
+                                                    name="comentario_servicio"></textarea>
+                                                <input type="date" class="input-field" name="fecha_servicio">
+                                                <select id="nombre_motivo" class="input-field" name="nombre_motivo">
+                                                    <option value="">Seleccionar Motivo</option>
+                                                    <!-- Añade más opciones aquí -->
+                                                </select>
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </form>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" id="guardarVentaPerdida" class="btn btn-success">Guardar</button>
+                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cerrar</button>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<div class="modal fade" id="modalEditarVentaPerdida" tabindex="-1" aria-labelledby="modalEditarVentaPerdidaLabel"
+    aria-hidden="true">
+    <div class="modal-dialog modal-xl">
+        <div class="modal-content">
+            <div class="modal-header btn-venta-perdida">
+                <h5 class="modal-title text-white" id="modalEditarVentaPerdidaLabel">Editar Venta Perdida</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+            </div>
+            <div class="modal-body">
+                <form id="formEditarVentaPerdida">
+                    <div class="row">
+                        <div class="col-md-6">
+                            <div class="mb-3">
+                                <label for="editarNombreProducto" class="form-label">Nombre del Producto</label>
+                                <select class="form-select" id="editarNombreProducto">
+                                </select>
+                            </div>
+                            <div class="mb-3">
+                                <label for="editarCantidad" class="form-label">Cantidad</label>
+                                <input type="number" class="form-control" id="editarCantidad">
+                            </div>
+                            <div class="mb-3">
+                                <label for="editarPrecio" class="form-label">Precio</label>
+                                <input type="number" class="form-control" id="editarPrecio">
+                            </div>
+                        </div>
+                        <div class="col-md-6">
+                            <div class="mb-3">
+                                <label for="editarCliente" class="form-label">Cliente</label>
+                                <select class="form-select" id="editarCliente">
+                                </select>
+                            </div>
+                            <div class="mb-3">
+                                <label for="editarMotivo" class="form-label">Motivo de la Venta Perdida</label>
+                                <textarea class="form-control" id="editarMotivo"></textarea>
+                            </div>
+                            <div class="mb-3">
+                                <label for="editarFecha" class="form-label">Fecha</label>
+                                <input type="date" class="form-control" id="editarFecha">
+                            </div>
+                        </div>
+                    </div>
+                </form>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cerrar</button>
+                <button type="button" class="btn btn-success" id="guardarCambiosVentaPerdida">Guardar Cambios</button>
+            </div>
+        </div>
+    </div>
+</div>
+
+
+<!-- Modal para Motivos Ventas Perdidas -->
+<div class="modal fade" id="modalMotivosVentas" tabindex="-1" aria-labelledby="modalMotivosVentasLabel"
+    aria-hidden="true">
+    <div class="modal-dialog modal-xl">
+        <div class="modal-content">
+            <div class="modal-header btn-motivos">
+                <h5 class="modal-title text-white" id="modalMotivosVentasLabel" style="color: white;">Motivos Ventas
+                    Perdidas</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+            </div>
+            <div class="modal-body">
+                <div class="row p-1">
+                    <span class="text-center" style="font-size: 20px;"><b>Listado de motivos de ventas
+                            perdidas</b></span>
+                </div>
+
+                <div class="row d-flex justify-content-end">
+                    <div class="col-sm-2">
+                        <button class="btn btn-sm btn-secondary create__buttons w-100" data-bs-toggle="modal"
+                            data-bs-target="#modal_crear_programacion" id="btnCrearProgramacion" title="Nueva"
+                            style="background-color: #8b6e0d; color: #ffffff;">Nuevo Motivo</button>
+                    </div>
+                </div>
+
+                <hr>
+                <div class="row" style="padding-bottom: 10px;">
+                    <div class="col-sm-4 filter-column">
+                        <label for="filterNombreMotivo">Nombre del motivo</label>
+                        <input type="text" class="form-control form-control-sm" id="filterNombreMotivo"
+                            placeholder="Nombre del motivo">
+                    </div>
+                    <div class="col-sm-4 filter-column">
+                        <label for="filterDescripcionMotivo">Descripción del motivo</label>
+                        <input type="text" class="form-control form-control-sm" id="filterDescripcionMotivo"
+                            placeholder="Descripción del motivo">
+                    </div>
+                    <div class="col-sm-4 filter-column">
+                        <label for="filterBusquedaRapida">Búsqueda Rápida</label>
+                        <input type="text" class="form-control form-control-sm" id="filterBusquedaRapida"
+                            placeholder="Búsqueda rápida">
+                    </div>
+                </div>
+
+
+                <div class="unique-table-container">
+                    <table id="tabla_programaciones"
+                        class="table table-sm table-striped align-middle mb-0 bg-white table-basic custom-table"
+                        style="width:100%">
+                        <thead>
+                            <tr>
+                                <th>Id Motivo</th>
+                                <th>Nombre Motivo</th>
+                                <th>Descripción Motivo</th>
+                                <th>Tipo</th>
+                                <th>Acciones</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            <tr>
+
+                            </tr>
+                        </tbody>
+                    </table>
+                    </button>
+                </div>
+                <div class="bottom-container">
+                    <!-- Contenedores para los elementos que estarán debajo de la tabla -->
+                    <div id="length-changing"></div>
+                    <div id="export-buttons"></div>
+                </div>
+                <div class="row">
+                    <div class="col-sm-12 col-md-5">
+                        <!-- Contenedor para la información de registros mostrados -->
+                        <div id="tabla_programaciones_info" class="dataTables_info" role="status" aria-live="polite">
+                        </div>
+                    </div>
+                    <div class="col-sm-12 col-md-7">
+                        <!-- Contenedor para los botones de exportación -->
+                        <div id="tabla_programaciones_export" class="dataTables_export"></div>
+                        <!-- Contenedor para los controles de paginación -->
+                        <div id="tabla_programaciones_paginate" class="dataTables_paginate paging_simple_numbers">
+                        </div>
+                    </div>
+                </div>
+                <!-- Modal -->
+
+                <div class="modal fade" id="editarMotivo" tabindex="-1" aria-labelledby="modalDjangoContentLabel"
+                    aria-hidden="true">
+                    <div class="modal-dialog modal-lg">
+                        <div class="modal-content">
+                            <div class="modal-header" style="background-color: #3d4b7d">
+                                <h5 class="modal-title" id="modalDjangoContentLabel" style="color: #fff">EDITAR
+                                    MOTIVO
+                                </h5>
+                                <button type="button" class="btn-close" data-bs-dismiss="modal"
+                                    aria-label="Close"></button>
+                            </div>
+                            <div class="modal-body">
+                                <div class="modal-body">
+                                    <form>
+                                        <div class="row">
+                                            <div class="col-md-6" style="display: none;">
+                                                <label for="id_motivo_e" class="col-form-label">ID del motivo
+                                                    (oculto):</label>
+                                                <input type="text" class="form-control form-control-sm" id="id_motivo_e"
+                                                    name="id_motivo_e">
+                                            </div>
+                                            <div class="col-md-6">
+                                                <label for="nombre_motivo_e" class="col-form-label">Nombre del
+                                                    motivo:</label>
+                                                <input type="text" class="form-control form-control-sm"
+                                                    id="nombre_motivo_e" name="nombre_motivo">
+                                            </div>
+                                            <div class="col-md-6">
+                                                <label for="selectCombo2" class="form-label">Tipo:</label>
+                                                <select class="form-select" id="selectCombo2">
+                                                    <option value="1">Seleccionable</option>
+                                                    <option value="2">No seleccionable</option>
+                                                </select>
+                                            </div>
+                                            <div class="col-12"> <!-- Ajuste para que ocupe toda la línea -->
+                                                <label for="descripcion_motivo_e" class="col-form-label">Descripción del
+                                                    motivo:</label>
+                                                <textarea class="form-control form-control-sm" id="descripcion_motivo_e"
+                                                    name="descripcion_motivo_e"></textarea>
+                                            </div>
+                                        </div>
+                                    </form>
+                                </div>
+                            </div>
+                            <div class="modal-footer">
+                                <button type="button" class="btn btn-success" id="btnSaveEdit">Guardar
+                                    Cambios</button>
+                                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cerrar</button>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="modal fade" id="modal_crear_programacion" tabindex="-1"
+                    aria-labelledby="modalDjangoContentLabel" aria-hidden="true">
+                    <div class="modal-dialog modal-lg">
+                        <div class="modal-content">
+                            <div class="modal-header" style="background-color: #3d4b7d">
+                                <h5 class="modal-title" id="modalNewVehiculoLabel" style="color: #fff">NUEVO MOTIVO
+                                </h5>
+                                <button type="button" class="btn-close" data-bs-dismiss="modal"
+                                    aria-label="Close"></button>
+                            </div>
+                            <div class="modal-body">
+                                <form>
+                                    <div class="row">
+                                        <div class="col-md-6"> <!-- Ajusta el tamaño de columna si es necesario -->
+                                            <label for="nombre_motivo" class="col-form-label">Nombre del
+                                                motivo:</label>
+                                            <input type="text" class="form-control form-control-sm" id="nombre_motivo"
+                                                name="nombre_motivo">
+                                        </div>
+                                        <div class="col-md-6"> <!-- Ajusta el tamaño de columna si es necesario -->
+                                            <label for="selectCombo" class="form-label">Tipo:</label>
+                                            <select class="form-select" id="selectCombo">
+                                                <option value="1">Seleccionable</option>
+                                                <option value="2">No seleccionable</option>
+                                            </select>
+                                        </div>
+                                        <div class="col-12"> <!-- Aquí hago que ocupe el ancho completo -->
+                                            <label for="descripcion_motivo" class="col-form-label">Descripción del
+                                                motivo:</label>
+                                            <textarea class="form-control form-control-sm" id="descripcion_motivo"
+                                                name="descripcion_motivo"></textarea> <!-- Cambiado a textarea -->
+                                        </div>
+                                    </div>
+                                </form>
+                            </div>
+                            <div class="modal-footer">
+                                <button type="button" class="btn btn-success" id="guardarCambios">Guardar</button>
+                                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cerrar</button>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="modal fade" id="borrarMotivo" tabindex="-1" aria-labelledby="modalBorrarMotivoLabel"
+                    aria-hidden="true">
+                    <div class="modal-dialog">
+                        <div class="modal-content">
+                            <div class="modal-header" style="background-color: #8b1c1c">
+                                <h5 class="modal-title" id="modalBorrarMotivoLabel" style="color: #fff">BORRAR
+                                    MOTIVO
+                                </h5>
+                                <button type="button" class="btn-close" data-bs-dismiss="modal"
+                                    aria-label="Close"></button>
+                            </div>
+                            <div class="modal-body">
+                                <p>¿Estás seguro de que quieres borrar el motivo seleccionado?</p>
+                                <input type="hidden" id="id_motivo_borrar" value="" name="id_motivo_borrar">
+                            </div>
+                            <div class="modal-footer">
+                                <button type="button" class="btn btn-danger" id="btnConfirmarBorrado">Borrar</button>
+                                <button type="button" class="btn btn-secondary"
+                                    data-bs-dismiss="modal">Cancelar</button>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<script>
+    var productos = new Map(); // Mueve la definición de 'productos' a un ámbito más alto
+    var presentaciones = new Map();
+    let presentacionesMap = new Map();
+
+    document.addEventListener("DOMContentLoaded", function () {
+        function cargarClientesDistribuidora() {
+            $.ajax({
+                url: 'obtener_clientes/', // Asegúrate de reemplazar esto con la ruta correcta a tu función de vista
+                type: 'GET', // Método HTTP utilizado
+                dataType: 'json', // Tipo de datos esperado
+                success: function (response) {
+                    // Elimina las opciones existentes, excepto la primera
+                    $('#cliente_select').find('option:not(:first)').remove();
+
+                    // Itera sobre el arreglo de clientes y los añade al select
+                    $.each(response.clientes, function (i, cliente) {
+                        // Verifica que nombre_cliente y id_cliente existan antes de usarlos
+                        if (cliente.nombre_cliente && cliente.id_cliente) {
+                            $('#cliente_select').append(new Option(cliente.nombre_cliente.trim(), cliente.id_cliente));
+                        }
+                    });
+
+                    // Actualiza el elemento Chosen con los nuevos datos
+                    $('#cliente_select').trigger('chosen:updated');
+                },
+                error: function (xhr, status, error) {
+                    console.error("Error al cargar los clientes: ", error);
+                }
+            });
+        }
+
+        function cargarClientesSuper() {
+            $.ajax({
+                url: 'obtener_clientes_super/', // Asegúrate de reemplazar esto con la ruta correcta a tu función de vista
+                type: 'GET', // Método HTTP utilizado
+                dataType: 'json', // Tipo de datos esperado
+                success: function (response) {
+                    // Elimina las opciones existentes, excepto la primera
+                    $('#cliente_select').find('option:not(:first)').remove();
+
+                    // Itera sobre el arreglo de clientes y los añade al select
+                    $.each(response.clientes, function (i, cliente) {
+                        // Verifica que nombre_cliente y id_cliente existan antes de usarlos
+                        if (cliente.nombre_cliente && cliente.id_cliente) {
+                            $('#cliente_select').append(new Option(cliente.nombre_cliente.trim(), cliente.id_cliente));
+                        }
+                    });
+
+                    // Actualiza el elemento Chosen con los nuevos datos
+                    $('#cliente_select').trigger('chosen:updated');
+                },
+                error: function (xhr, status, error) {
+                    console.error("Error al cargar los clientes: ", error);
+                }
+            });
+        }
+
+        function cargarAlmacenSuper() {
+            $.ajax({
+                url: 'obtener_almacenes/', // Asegúrate de reemplazar esto con la ruta correcta a tu función de vista
+                type: 'GET', // Método HTTP utilizado
+                dataType: 'json', // Tipo de datos esperado
+                success: function (response) {
+                    // Elimina las opciones existentes, excepto la primera
+                    $('#almacen_select').find('option:not(:first)').remove();
+
+                    // Itera sobre el arreglo de clientes y los añade al select
+                    $.each(response.almacen, function (i, almacen) {
+                        // Verifica que nombre_cliente y id_cliente existan antes de usarlos
+                        if (almacen.almacen && almacen.id_almacen) {
+                            $('#almacen_select').append(new Option(almacen.almacen.trim(), almacen.id_almacen));
+                        }
+                    });
+
+                    $('#almacen_select').trigger('chosen:updated');
+                },
+                error: function (xhr, status, error) {
+                    console.error("Error al cargar los motivos: ", error);
+                }
+            });
+        }
+
+        document.getElementById("formatoSelect").addEventListener("change", function () {
+            var selectedOption = this.value;
+            if (selectedOption === "1") {
+                cargarClientesSuper();
+                cargarAlmacenSuper();
+            } else if (selectedOption === "2") {
+                cargarClientesDistribuidora();
+            }
+        });
+    });
+
+    $(document).ready(function () {
+        // Inicializa el elemento Chosen
+        $('#cliente_select').chosen({
+            no_results_text: "Oops, cliente no encontrado!",
+            allow_single_deselect: true,
+            width: "100%"
+        });
+
+        $('#select-categoria').chosen({
+            no_results_text: "Oops, categoria no encontrado!",
+            allow_single_deselect: true,
+            width: "100%"
+        });
+
+        $('#select-grupo').chosen({
+            no_results_text: "Oops, grupo no encontrado!",
+            allow_single_deselect: true,
+            width: "100%"
+        });
+
+        $('#select-subgrupo').chosen({
+            no_results_text: "Oops, subgrupo no encontrado!",
+            allow_single_deselect: true,
+            width: "100%"
+        });
+
+        $('#select-marca').chosen({
+            no_results_text: "Oops, marca no encontrado!",
+            allow_single_deselect: true,
+            width: "100%"
+        });
+
+        $('#select-empresas2').chosen({
+            no_results_text: "Oops, empresa no encontrada!",
+            allow_single_deselect: true,
+            width: "100%"
+        });
+
+        $('#select-segmento').chosen({
+            no_results_text: "Oops, segmento no encontrado!",
+            allow_single_deselect: true,
+            width: "100%"
+        });
+
+        $('#almacen_select').chosen({
+            no_results_text: "Oops, almacen no encontrado!",
+            allow_single_deselect: true,
+            width: "100%"
+        });
+
+        $('#select_nombre_competencia_precio').chosen({
+            no_results_text: "Oops, competencia no encontrada!",
+            allow_single_deselect: true,
+            width: "100%"
+        });
+
+
+        $('#select_nombre_competencia_servicio').chosen({
+            no_results_text: "Oops, competencia no encontrada!",
+            allow_single_deselect: true,
+            width: "100%"
+        });
+
+        $('#nombre_producto').chosen({
+            no_results_text: "Oops, producto no encontrado!",
+            allow_single_deselect: true,
+            width: "100%"
+        });
+
+        $('#presentacion').chosen({
+            no_results_text: "Oops, presentacion no encontrada!",
+            allow_single_deselect: true,
+            width: "100%"
+        });
+
+        $('#nombre_motivo').chosen({
+            no_results_text: "Oops, motivo no encontrado!",
+            allow_single_deselect: true,
+            width: "100%"
+        });
+
+
+        function manejarCambioPresentacion() {
+            var seleccion = $('#formatoSelect').val(); // Obtiene el valor seleccionado
+            var selectedId = $('#presentacion').val(); // ID de la presentación seleccionada
+            var selectedProducto = $('#nombre_producto').val(); // Nombre del producto seleccionado
+            var precioInput = $('input[name="precio"]');
+            var precioMinInput = $('input[name="precio_min"]');
+
+            console.log(productos);
+            // Revisa si el producto seleccionado tiene presentaciones asociadas
+            if (selectedProducto && productos.has(selectedProducto)) {
+                var presentacionesProducto = productos.get(selectedProducto); // Obtén las presentaciones del producto seleccionado
+                var presentacionSeleccionada = presentacionesProducto.find(pres => pres.id.toString() === selectedId);
+
+                // Si se encontró la presentación seleccionada, actualiza los precios
+                if (presentacionSeleccionada) {
+                    // Usar diferentes claves dependiendo si es supermercado o distribuidora
+                    var precio = seleccion === "1" ? presentacionSeleccionada.precio4 : presentacionSeleccionada.precio; // Suponiendo que precio4 es para supermercado
+                    var precioMin = seleccion === "1" ? presentacionSeleccionada.precioMayorista : presentacionSeleccionada.precio_min; // Suponiendo que precioMayorista es para supermercado
+
+                    precioInput.val(parseFloat(precio).toFixed(2));
+                    precioMinInput.val(parseFloat(precioMin).toFixed(2));
+                }
+            }
+        }
+
+
+        $('#presentacion').on('change', manejarCambioPresentacion);
+
+        function cargarMotivos() {
+            $.ajax({
+                url: 'obtener_motivos/', // Asegúrate de reemplazar esto con la ruta correcta a tu función de vista
+                type: 'GET', // Método HTTP utilizado
+                dataType: 'json', // Tipo de datos esperado
+                success: function (response) {
+                    // Elimina las opciones existentes, excepto la primera
+                    $('#nombre_motivo').find('option:not(:first)').remove();
+                    $('#select-motivo').append(new Option("TODOS", "todos"));
+
+                    // Itera sobre el arreglo de clientes y los añade al select
+                    $.each(response.data, function (i, cliente) {
+                        // Verifica que nombre_cliente y id_cliente existan antes de usarlos
+                        if (cliente.nombre_motivo && cliente.id_motivo) {
+                            $('#nombre_motivo').append(new Option(cliente.nombre_motivo.trim(), cliente.id_motivo));
+                        }
+                    });
+
+                    $('#nombre_motivo').trigger('chosen:updated');
+                },
+                error: function (xhr, status, error) {
+                    console.error("Error al cargar los motivos: ", error);
+                }
+            });
+        }
+
+        function cargarCompetencias() {
+            $.ajax({
+                url: 'obtener_empresas_competencias/', // Asegúrate de reemplazar esto con la ruta correcta a tu función de vista
+                type: 'GET', // Método HTTP utilizado
+                dataType: 'json', // Tipo de datos esperado
+                success: function (response) {
+                    // Elimina las opciones existentes, excepto la primera
+                    $('#select_nombre_competencia_precio').find('option:not(:first)').remove();
+                    $('#select_nombre_competencia_servicio').find('option:not(:first)').remove();
+
+
+                    // Itera sobre el arreglo de clientes y los añade al select
+                    $.each(response.data, function (i, competencia) {
+                        // Verifica que nombre_cliente y id_cliente existan antes de usarlos
+                        if (competencia.nombre_competencia && competencia.id_competencia) {
+                            $('#select_nombre_competencia_precio').append(new Option(competencia.nombre_competencia.trim(), competencia.id_competencia));
+                            $('#select_nombre_competencia_servicio').append(new Option(competencia.nombre_competencia.trim(), competencia.id_competencia));
+
+                        }
+                    });
+
+                    $('#select_nombre_competencia_precio').trigger('chosen:updated');
+                    $('#select_nombre_competencia_servicio').trigger('chosen:updated');
+
+                },
+                error: function (xhr, status, error) {
+                    console.error("Error al cargar las competencias: ", error);
+                }
+            });
+        }
+
+        function cargarGrupos() {
+            $.ajax({
+                url: 'obtener_grupos/', // Asegúrate de reemplazar esto con la ruta correcta a tu función de vista
+                type: 'GET', // Método HTTP utilizado
+                dataType: 'json', // Tipo de datos esperado
+                success: function (response) {
+                    // Elimina las opciones existentes, excepto la primera
+                    $('#select-grupo').find('option:not(:first)').remove();
+                    $('#select-grupo').append(new Option("TODOS", "-1"));
+                    // Itera sobre el arreglo de clientes y los añade al select
+                    $.each(response.data, function (i, competencia) {
+                        // Verifica que nombre_cliente y id_cliente existan antes de usarlos
+                        if (competencia.CodigoGrupo && competencia.PKgrupo) {
+                            $('#select-grupo').append(new Option(competencia.NombreGrupo.trim(), competencia.PKgrupo));
+                        }
+                    });
+
+                    $('#select-grupo').trigger('chosen:updated');
+                },
+                error: function (xhr, status, error) {
+                    console.error("Error al cargar las competencias: ", error);
+                }
+            });
+        }
+        function cargarSubGrupos() {
+            $.ajax({
+                url: 'obtener_subgrupos', // Asegúrate de reemplazar esto con la ruta correcta a tu función de vista
+                type: 'GET', // Método HTTP utilizado
+                dataType: 'json', // Tipo de datos esperado
+                success: function (response) {
+                    // Elimina las opciones existentes, excepto la primera
+                    $('#select-subgrupo').find('option:not(:first)').remove();
+                    $('#select-subgrupo').append(new Option("TODOS", "-1"));
+
+                    // Itera sobre el arreglo de clientes y los añade al select
+                    $.each(response.data, function (i, competencia) {
+                        // Verifica que nombre_cliente y id_cliente existan antes de usarlos
+                        if (competencia.NombreSubGrupo && competencia.PKsubgrupo) {
+                            $('#select-subgrupo').append(new Option(competencia.NombreSubGrupo.trim(), competencia.PKsubgrupo));
+                        }
+                    });
+
+                    $('#select-subgrupo').trigger('chosen:updated');
+                },
+                error: function (xhr, status, error) {
+                    console.error("Error al cargar las competencias: ", error);
+                }
+            });
+        }
+        function cargarCategorias() {
+            $.ajax({
+                url: 'obtener_categorias/', // Asegúrate de reemplazar esto con la ruta correcta a tu función de vista
+                type: 'GET', // Método HTTP utilizado
+                dataType: 'json', // Tipo de datos esperado
+                success: function (response) {
+                    // Elimina las opciones existentes, excepto la primera
+                    $('#select-categoria').find('option:not(:first)').remove();
+                    $('#select-categoria').append(new Option("TODOS", "-1"));
+
+                    // Itera sobre el arreglo de clientes y los añade al select
+                    $.each(response.data, function (i, competencia) {
+                        // Verifica que nombre_cliente y id_cliente existan antes de usarlos
+                        if (competencia.CodigoCategoria && competencia.PKcategoria) {
+                            $('#select-categoria').append(new Option(competencia.NombreCategoria.trim(), competencia.PKcategoria));
+                        }
+                    });
+
+                    $('#select-categoria').trigger('chosen:updated');
+                },
+                error: function (xhr, status, error) {
+                    console.error("Error al cargar las categorias: ", error);
+                }
+            });
+        }
+
+        function cargarmarcas() {
+            $.ajax({
+                url: 'obtener_marcas/', // Asegúrate de reemplazar esto con la ruta correcta a tu función de vista
+                type: 'GET', // Método HTTP utilizado
+                dataType: 'json', // Tipo de datos esperado
+                success: function (response) {
+                    // Elimina las opciones existentes, excepto la primera
+                    $('#select-marca').find('option:not(:first)').remove();
+                    $('#select-marca').append(new Option("TODOS", "-1"));
+                    // Itera sobre el arreglo de clientes y los añade al select
+                    $.each(response.data, function (i, competencia) {
+                        // Verifica que nombre_cliente y id_cliente existan antes de usarlos
+                        if (competencia.marca && competencia.id_marca) {
+                            $('#select-marca').append(new Option(competencia.marca.trim(), competencia.id_marca));
+                        }
+                    });
+
+                    $('#select-marca').trigger('chosen:updated');
+                },
+                error: function (xhr, status, error) {
+                    console.error("Error al cargar las competencias: ", error);
+                }
+            });
+        }
+
+        function cargarSegmentos() {
+            $.ajax({
+                url: 'obtener_empresas_segmentos/', // Asegúrate de reemplazar esto con la ruta correcta a tu función de vista
+                type: 'GET', // Método HTTP utilizado
+                dataType: 'json', // Tipo de datos esperado
+                success: function (response) {
+                    // Elimina las opciones existentes, excepto la primera
+                    $('#select-segmento').find('option:not(:first)').remove();
+                    $('#select-segmento').append(new Option("TODOS", "-1"));
+                    // Itera sobre el arreglo de clientes y los añade al select
+                    $.each(response.data, function (i, competencia) {
+                        // Verifica que nombre_cliente y id_cliente existan antes de usarlos
+                        if (competencia.nombre_segmento && competencia.id_segmento) {
+                            $('#select-segmento').append(new Option(competencia.nombre_segmento.trim(), competencia.id_segmento));
+                        }
+                    });
+
+                    $('#select-segmento').trigger('chosen:updated');
+                },
+                error: function (xhr, status, error) {
+                    console.error("Error al cargar las competencias: ", error);
+                }
+            });
+        }
+        // Llama a cargarClientes() para cargar los clientes al iniciar
+        //cargarClientesDistribuidora();
+        cargarMotivos();
+        cargarCompetencias();
+        cargarGrupos();
+        cargarSubGrupos();
+        cargarCategorias();
+        cargarmarcas();
+
+        $('#cargarBtn').click(function () {
+            var seleccion = $('#formatoSelect').val(); // Obtiene el valor seleccionado
+            if (seleccion === "1") {
+                cargarProductosSuper();
+            } else if (seleccion === "2") {
+                cargarProductos();
+            }
+        });
+
+        $(document).ready(function () {
+            $('#btnCargarVentasPerdidas').click(async function () { // Marca la función del evento click como async
+                // Primero, validar que se haya seleccionado un formato válido
+                var empresaSeleccionada = $('#select-empresas2').val();
+                if ($('#select-empresas2').val() == '#') {
+                    alert('Por favor, seleccione un formato válido.');
+                    return; // Detiene la ejecución adicional del script
+                }
+
+                // Preparar los datos a enviar
+                // Definir la URL base
+
+
+                // Preparar los datos a enviar dependiendo del valor de empresaSeleccionada
+                var datos;
+                var url;
+                if (empresaSeleccionada == '2') {
+                    // Caso para empresa 2, usa los valores como están y una URL específica
+                    datos = {
+                        grupo: $('#select-grupo').val(),
+                        subgrupo: $('#select-subgrupo').val(),
+                        categoria: $('#select-categoria').val(),
+                        marca: $('#select-marca').val(),
+                        empresas: empresaSeleccionada
+                    };
+                    url = 'obtener_ventas_filtradas/'; // Ejemplo de URL específica para empresa 2
+
+                    try {
+                        $.ajax({
+                            type: 'POST',
+                            url: url,
+                            contentType: 'application/json',
+                            data: JSON.stringify(datos),
+                            headers: {
+                                'X-CSRFToken': getCookie('csrftoken') // Asegúrate de obtener el token CSRF
+                            },
+                            success: function (response) {
+                                // Aquí manejas la respuesta del servidor
+                                if ($.fn.DataTable.isDataTable('#tabla_ventas_perdidas')) {
+                                    $('#tabla_ventas_perdidas').DataTable().destroy();
+                                }
+                                // Inicializa la DataTable con los datos obtenidos
+                                var table = $('#tabla_ventas_perdidas').DataTable({
+                                    pageLength: 10,
+                                    autoWidth: false,
+                                    scrollX: true,
+                                    cache: false, // Añade esta línea para deshabilitar la caché
+                                    data: response.data, // Usa la respuesta directamente aquí
+                                    dom: "Bfrtip",
+                                    buttons: [{
+                                        extend: 'excel',
+                                        text: '<i class="fas fa-file-excel"></i>',
+                                        titleAttr: 'Excel',
+                                        className: 'btn btn-success',
+                                    },
+                                    {
+                                        extend: 'pdf',
+                                        text: '<i class="fas fa-file-pdf"></i>',
+                                        titleAttr: 'PDF',
+                                        className: 'btn btn-danger',
+                                    },
+                                    {
+                                        extend: 'print',
+                                        text: '<i class="fas fa-print"></i>',
+                                        titleAttr: 'Imprimir',
+                                        className: 'btn btn-null',
+                                    }],
+                                    language: {
+                                        url: "//cdn.datatables.net/plug-ins/1.11.5/i18n/es-ES.json",
+                                    },
+                                    columns: [{
+                                        data: 'id_venta_perdida',
+                                    },
+                                    {
+                                        data: 'nombre_producto',
+                                    },
+                                    {
+                                        data: 'nombre_cliente',
+                                    },
+                                    {
+                                        data: 'precio',
+                                    },
+                                    {
+                                        data: 'cantidad',
+                                    },
+                                    {
+                                        data: 'presentacion',
+                                    },
+                                    {
+                                        data: 'nombre_motivo',
+                                    },
+                                    {
+                                        data: 'nombre_competencia',
+                                    },
+                                    {
+                                        data: 'precio_competencia',
+                                    },
+                                    {
+                                        data: 'NombreGrupo',
+                                    },
+                                    {
+                                        data: 'NombreSubGrupo',
+                                    },
+                                    {
+                                        data: 'NombreCategoria',
+                                    },
+                                    {
+                                        data: 'marca',
+                                    },
+                                    {
+                                        data: 'comentario',
+                                    },
+                                    {
+                                        data: 'fecha',
+                                    },
+
+                                    ],
+                                });
+                                $('#filterNombreProducto').keyup(function () {
+                                    table.column(1).search(this.value).draw();
+                                });
+                                $('#filterNombreCliente').keyup(function () {
+                                    table.column(2).search(this.value).draw();
+                                });
+                                $('#filterGrupo').keyup(function () {
+                                    table.column(9).search(this.value).draw();
+                                });
+                                $('#filterSubGrupo').keyup(function () {
+                                    table.column(10).search(this.value).draw();
+                                });
+                                $('#filterCategoria').keyup(function () {
+                                    table.column(11).search(this.value).draw();
+                                });
+                                $('#filterMarca').keyup(function () {
+                                    table.column(12).search(this.value).draw();
+                                });
+                                $('#filterMotivo').keyup(function () {
+                                    table.column(6).search(this.value).draw();
+                                });
+                            },
+                            error: function (xhr, status, error) {
+                                // Manejo de error
+                                console.error("Error al obtener ventas filtradas: ", error);
+                            }
+                        });
+                    } catch (error) {
+                        // Aquí manejas cualquier error que ocurra durante la solicitud AJAX
+                        console.error(error);
+                    }
+                } else if (empresaSeleccionada == '1') {
+                    // Caso para empresa 1, usa el texto de las opciones seleccionadas y otra URL específica
+                    datos = {
+                        grupo: $('#select-grupo option:selected').text(),
+                        subgrupo: $('#select-subgrupo option:selected').text(),
+                        categoria: $('#select-categoria option:selected').text(),
+                        marca: $('#select-marca option:selected').text(),
+                        empresas: $('#select-empresas2 option:selected').text()
+                    };
+                    url = 'obtener_ventas_filtradas_supermercado/'; // Ejemplo de URL específica para empresa 1
+                    try {
+                        $.ajax({
+                            type: 'POST',
+                            url: url,
+                            contentType: 'application/json',
+                            data: JSON.stringify(datos),
+                            headers: {
+                                'X-CSRFToken': getCookie('csrftoken') // Asegúrate de obtener el token CSRF
+                            },
+                            success: function (response) {
+                                // Aquí manejas la respuesta del servidor
+                                if ($.fn.DataTable.isDataTable('#tabla_ventas_perdidas')) {
+                                    $('#tabla_ventas_perdidas').DataTable().destroy();
+                                }
+                                // Inicializa la DataTable con los datos obtenidos
+                                var table = $('#tabla_ventas_perdidas').DataTable({
+                                    pageLength: 10,
+                                    autoWidth: false,
+                                    scrollX: true,
+                                    cache: false, // Añade esta línea para deshabilitar la caché
+                                    data: response.data, // Usa la respuesta directamente aquí
+                                    dom: "Bfrtip",
+                                    buttons: [{
+                                        extend: 'excel',
+                                        text: '<i class="fas fa-file-excel"></i>',
+                                        titleAttr: 'Excel',
+                                        className: 'btn btn-success',
+                                    },
+                                    {
+                                        extend: 'pdf',
+                                        text: '<i class="fas fa-file-pdf"></i>',
+                                        titleAttr: 'PDF',
+                                        className: 'btn btn-danger',
+                                    },
+                                    {
+                                        extend: 'print',
+                                        text: '<i class="fas fa-print"></i>',
+                                        titleAttr: 'Imprimir',
+                                        className: 'btn btn-null',
+                                    }],
+                                    language: {
+                                        url: "//cdn.datatables.net/plug-ins/1.11.5/i18n/es-ES.json",
+                                    },
+                                    columns: [{
+                                        data: 'id_venta_perdida',
+                                    },
+                                    {
+                                        data: 'nombre_producto',
+                                    },
+                                    {
+                                        data: 'nombre_cliente',
+                                    },
+                                    {
+                                        data: 'precio',
+                                    },
+                                    {
+                                        data: 'cantidad',
+                                    },
+                                    {
+                                        data: 'presentacion',
+                                    },
+                                    {
+                                        data: 'nombre_motivo',
+                                    },
+                                    {
+                                        data: 'nombre_competencia',
+                                    },
+                                    {
+                                        data: 'precio_competencia',
+                                    },
+                                    {
+                                        data: 'grupo',
+                                    },
+                                    {
+                                        data: 'subgrupo',
+                                    },
+                                    {
+                                        data: 'categoria',
+                                    },
+                                    {
+                                        data: 'marca',
+                                    },
+                                    {
+                                        data: 'comentario',
+                                    },
+                                    {
+                                        data: 'fecha',
+                                    },
+
+                                    ],
+                                });
+                                $('#filterNombreProducto').keyup(function () {
+                                    table.column(1).search(this.value).draw();
+                                });
+                                $('#filterNombreCliente').keyup(function () {
+                                    table.column(2).search(this.value).draw();
+                                });
+                                $('#filterGrupo').keyup(function () {
+                                    table.column(9).search(this.value).draw();
+                                });
+                                $('#filterSubGrupo').keyup(function () {
+                                    table.column(10).search(this.value).draw();
+                                });
+                                $('#filterCategoria').keyup(function () {
+                                    table.column(11).search(this.value).draw();
+                                });
+                                $('#filterMarca').keyup(function () {
+                                    table.column(12).search(this.value).draw();
+                                });
+                                $('#filterMotivo').keyup(function () {
+                                    table.column(6).search(this.value).draw();
+                                });
+                            },
+                            error: function (xhr, status, error) {
+                                // Manejo de error
+                                console.error("Error al obtener ventas filtradas: ", error);
+                            }
+                        });
+                    } catch (error) {
+                        // Aquí manejas cualquier error que ocurra durante la solicitud AJAX
+                        console.error(error);
+                    }
+                } else {
+
+                }
+
+                console.log(datos);
+
+            });
+        });
+
+        function cargarProductos() {
+            var idCliente = $('#cliente_select').val();
+            $.ajax({
+                url: 'obtener_productos_distribuidora/' + idCliente + '/',
+                type: 'GET',
+                dataType: 'json',
+                success: function (response) {
+                    if (Array.isArray(response.productos)) {
+                        // Inicializa la estructura para guardar los productos y sus presentaciones
+                        // Cambiamos Set por Map para asociar cada producto con sus presentaciones
+
+                        // Procesa cada producto
+                        response.productos.forEach(function (item) {
+                            // Verifica si el producto ya ha sido agregado
+                            if (!productos.has(item.descripcion_categoria.trim())) {
+                                productos.set(item.descripcion_categoria.trim(), []);
+                            }
+                            // Agrega la presentación al producto correspondiente
+                            productos.get(item.descripcion_categoria.trim()).push({
+                                id: item.id_equivalencia_x_categoria,
+                                presentacion: item.descripcion_unidad.trim(),
+                                precio: item.precio_max,
+                                precio_min: item.precio_min // Asumiendo que quieres usar precio_min aquí
+                                // precio_max, existencia, etc., pueden ser agregados aquí si es necesario
+                            });
+                        });
+
+                        console.log(productos);
+
+                        // Actualizar el select de productos
+                        var nombreProductoSelect = $('#nombre_producto');
+                        nombreProductoSelect.empty().append(new Option("Seleccione un Producto", ""));
+                        productos.forEach(function (presentaciones, producto) {
+                            nombreProductoSelect.append(new Option(producto, producto)); // Usamos el producto como valor
+                        });
+
+                        // Actualizar Chosen para el select de productos
+                        nombreProductoSelect.trigger('chosen:updated');
+
+                        // Manejar el cambio de selección del producto
+                        nombreProductoSelect.on('change', function () {
+                            var selectedProducto = $(this).val();
+                            var presentacionSelect = $('#presentacion');
+                            presentacionSelect.empty().append(new Option("Seleccione una Presentación", ""));
+
+                            // Agregar las presentaciones relacionadas al producto seleccionado
+                            if (selectedProducto && productos.has(selectedProducto)) {
+                                productos.get(selectedProducto).forEach(function (pres) {
+                                    presentacionSelect.append(new Option(pres.presentacion, pres.id));
+                                });
+                            }
+
+                            presentacionSelect.trigger('chosen:updated');
+                        });
+
+
+                        $('#presentacion').on('change', function () {
+                            var selectedId = $(this).val(); // ID de la presentación seleccionada
+                            var selectedProducto = $('#nombre_producto').find(":selected").text(); // Obtiene el texto del producto seleccionado
+
+                            // Asegúrate de que 'presentaciones' se ha definido en un ámbito accesible
+                            if (presentaciones && presentaciones[selectedProducto]) {
+                                var presentacionSeleccionada = presentaciones[selectedProducto].find(function (pres) {
+
+                                    return pres.id.toString() === selectedId;
+                                });
+
+                                if (presentacionSeleccionada) {
+
+                                    // Usar diferentes claves dependiendo si es supermercado o distribuidora
+                                    var precio = seleccion === "1" ? presentacionSeleccionada.precio4 : presentacionSeleccionada.precio; // Suponiendo que precio4 es para supermercado
+                                    var precioMin = seleccion === "1" ? presentacionSeleccionada.precioMayorista : presentacionSeleccionada.precio_min; // Suponiendo que precioMayorista es para supermercado
+
+                                    precioInput.val(parseFloat(precio).toFixed(2));
+                                    precioMinInput.val(parseFloat(precioMin).toFixed(2));
+                                }
+                            } else {
+                                console.log("No se encontraron presentaciones para el producto seleccionado o el producto seleccionado no está definido.");
+                            }
+                        });
+
+                    } else {
+                        console.error('La propiedad "productos" no es un arreglo', response.productos);
+                    }
+                },
+                error: function (xhr, status, error) {
+                    console.error("Error al cargar los productos: ", error);
+                }
+            });
+        }
+
+        function cargarProductosSuper() {
+            var idCliente = $('#cliente_select').val();
+            var idAlmacen = $('#almacen_select').val();
+
+            $.ajax({
+                url: 'obtener_productos_supermercado/' + idCliente + '/' + idAlmacen + '/',
+                type: 'GET',
+                dataType: 'json',
+                success: function (response) {
+                    response.productos.forEach(function (item) {
+                        // Verifica si el producto ya ha sido agregado
+                        if (!productos.has(item.descripcion_categoria.trim())) {
+                            productos.set(item.descripcion_categoria.trim(), []);
+                        }
+                        // Agrega la presentación al producto correspondiente
+                        var presentacionConDatosAdicionales = {
+                            id: item.PKpresentacion,
+                            presentacion: item.Presentacion.trim(),
+                            precio4: item.precio4,
+                            precioMayorista: item.PrecioMayorista,
+                            // Asumiendo que tu respuesta incluye estos datos adicionales:
+                            grupo: item.NombreGrupo,
+                            subGrupo: item.NombreSubGrupo,
+                            categoria: item.NombreCategoria,
+                            marca: item.Marca
+                        };
+                        // Agrega la presentación al producto correspondiente
+                        productos.get(item.descripcion_categoria.trim()).push(presentacionConDatosAdicionales);
+                        presentacionesMap.set(item.PKpresentacion.toString(), presentacionData);
+                    });
+
+
+                    // Actualizar el select de productos
+                    var nombreProductoSelect = $('#nombre_producto');
+                    nombreProductoSelect.empty().append(new Option("Seleccione un Producto", ""));
+                    productos.forEach(function (presentaciones, producto) {
+                        nombreProductoSelect.append(new Option(producto, producto)); // Usamos el producto como valor
+                    });
+
+                    // Actualizar Chosen para el select de productos
+                    nombreProductoSelect.trigger('chosen:updated');
+
+                    // Manejar el cambio de selección del producto
+                    nombreProductoSelect.on('change', function () {
+                        var selectedProducto = $(this).val();
+                        var presentacionSelect = $('#presentacion');
+                        presentacionSelect.empty().append(new Option("Seleccione una Presentación", ""));
+
+                        // Agregar las presentaciones relacionadas al producto seleccionado
+                        if (selectedProducto && productos.has(selectedProducto)) {
+                            presentaciones[selectedProducto] = productos.get(selectedProducto); // Almacenar presentaciones en el objeto
+                            presentaciones[selectedProducto].forEach(function (pres) {
+                                presentacionSelect.append(new Option(pres.presentacion, pres.id));
+                            });
+                        }
+
+                        // Actualizar Chosen para el select de presentaciones
+                        presentacionSelect.trigger('chosen:updated');
+                    });
+                },
+                error: function (xhr, status, error) {
+                    console.error("Error al cargar los productos: ", error);
+                }
+            });
+        }
+
+    });
+    function safeTrim(value) {
+        return value ? value.trim() : '';
+    }
+
+    $('#guardarVentaPerdida').click(function (event) {
+        event.preventDefault(); // Evita el envío tradicional del formulario
+
+        let idMotivo;
+        if ($('#inventario').css('display') !== 'none') {
+            idMotivo = 2; // ID para Inventario
+        } else if ($('#precio').css('display') !== 'none') {
+            idMotivo = 1; // ID para Precio
+        } else if ($('#servicio').css('display') !== 'none') {
+            idMotivo = $('#nombre_motivo').val();
+        }
+        var comentarioNormal = $('textarea[name="comentario"]').val();
+        var comentarioServicio = $('textarea[name="comentario_servicio"]').val();
+        var comentarioPrecio = $('textarea[name="comentario_precio"]').val();
+
+        // Determinar cuál campo de comentario no está vacío y asignarlo a una variable
+        var comentarioFinal = comentarioNormal; // Inicializa con el valor de comentario normal como predeterminado
+
+        if (comentarioServicio !== '') {
+            comentarioFinal = comentarioServicio;
+        } else if (comentarioPrecio !== '') {
+            comentarioFinal = comentarioPrecio;
+        }
+
+        var selectedProductoTexto = $('#nombre_producto option:selected').text();
+        var presentacionId = $('#presentacion').val();
+
+        var presentacionesProducto = productos.get(selectedProductoTexto);
+        var selectedPresentationData = presentacionesProducto ? presentacionesProducto.find(pres => pres.id.toString() === presentacionId) : null;
+
+
+        // Asegúrate de que 'selectedPresentationData' no es undefined antes de acceder a sus propiedades
+        if (selectedPresentationData) {
+            // Ahora puedes acceder a los datos adicionales de 'selectedPresentationData'
+            console.log(selectedPresentationData.grupo); // Accede al grupo
+            console.log(selectedPresentationData.subGrupo); // Accede al subgrupo
+            console.log(selectedPresentationData.categoria); // Accede a la categoría
+            console.log(selectedPresentationData.marca); // Accede a la marca
+        } else {
+            console.error("No se encontró la presentación seleccionada");
+        }
+
+        // Preparar el objeto de datos con lógica condicional para cada campo de select
+        var datosFormulario = {
+            formato_select_id: $('#formatoSelect').val() === '#' ? '0' : $('#formatoSelect').val(),
+            formato_select_text: $('#formatoSelect').val() === '#' ? 'NO APLICA' : $('#formatoSelect option:selected').text(),
+            cliente_select_id: $('#cliente_select').val() === '#' ? '0' : $('#cliente_select').val(),
+            cliente_select_text: $('#cliente_select').val() === '#' ? 'NO APLICA' : $('#cliente_select option:selected').text(),
+            nombre_producto_id: $('#nombre_producto').val() === '#' ? '0' : $('#nombre_producto').val(),
+            nombre_producto_text: $('#nombre_producto').val() === '#' ? 'NO APLICA' : $('#nombre_producto option:selected').text(),
+            presentacion_id: $('#presentacion').val() === '#' ? '0' : $('#presentacion').val(),
+            presentacion_text: $('#presentacion').val() === '#' ? 'NO APLICA' : $('#presentacion option:selected').text(),
+            cantidad: $('input[name="cantidad"]').val(), // Cantidad
+            precio: $('input[name="precio"]').val(), // Precio
+            precio_min: $('input[name="precio_min"]').val(), // Precio mínimo
+            nombre_motivo_id: idMotivo,
+            nombre_motivo_text: $('#nombre_motivo').val() === 'Seleccionar motivo' ? 'NO APLICA' : $('#nombre_motivo option:selected').text(),
+            comentario: comentarioFinal,
+            fecha: $('input[name="fecha"]').val(), // Fecha
+            id_empresa: $('#formatoSelect').val(),
+            select_nombre_competencia_id: $('#select_nombre_competencia_precio').val() === '#' ? '0' : $('#select_nombre_competencia_precio').val(),
+            select_nombre_competencia_text: $('#select_nombre_competencia_precio').val() === '#' ? 'NO APLICA' : $('#select_nombre_competencia_precio option:selected').text(),
+            precio_competencia: $('input[name="precio_competencia"]').val(),// Precio de la competencia
+            grupo: selectedPresentationData ? selectedPresentationData.grupo : '',
+            subGrupo: selectedPresentationData ? selectedPresentationData.subGrupo : '',
+            categoria: selectedPresentationData ? selectedPresentationData.categoria : '',
+            marca: selectedPresentationData ? selectedPresentationData.marca : '',
+        };
+
+        // Mostrar los datos en la consola para depuración
+        console.log(datosFormulario);
+
+        // Realizar la solicitud AJAX
+        $.ajax({
+            url: 'almacenar_venta_perdida/', // Asegúrate de que esta URL es correcta
+            type: 'POST',
+            contentType: 'application/json', // Indica que el contenido enviado es JSON
+            data: JSON.stringify(datosFormulario), // Convierte el objeto de datos a una cadena JSON
+            success: function (response) {
+                console.log('Respuesta del servidor:', response);
+                Swal.fire("", "Venta perdida almacenada exitosamente", "success");
+
+                $('#modalCrearVentaPerdida').find('input[type="text"], input[type="number"], textarea').val(''); // Limpia campos de texto y áreas de texto
+                $('#modalCrearVentaPerdida').find('select').each(function () {
+                    $(this).val($(this).find('option:first').val()); // Restablece cada select a su primera opción
+                });
+
+            },
+            error: function (xhr, status, error) {
+                console.error('Error:', error);
+            }
+        });
+    });
+</script>
+
+<script>
+    $('#modalAgregarCompetencia2').on('hidden.bs.modal', function () {
+        $('.modal-backdrop').remove(); // Esto elimina el fondo oscuro.
+        $('body').removeClass('modal-open'); // Esto corrige el scroll del body si se queda congelado.
+    });
+    $(document).ready(function () {
+        $('#guardarCompetencia').click(function () {
+            var idCompetencia = $('#id_competencia_nuevo').val();
+            var nombreCompetencia = $('#nombre_competencia_nuevo').val();
+            var descripcion = $('#descripcion_nuevo').val();
+
+            // Datos que vamos a enviar al servidor
+            var dataToSend = JSON.stringify({
+                id_competencia: idCompetencia,
+                nombre_competencia: nombreCompetencia,
+                descripcion: descripcion
+            });
+
+            console.log(dataToSend);
+
+            $.ajax({
+                type: 'POST',
+                url: '/DAC/ventas/guardar_empresa_competencia/',
+                data: dataToSend,
+                contentType: 'application/json', // Especifica que el tipo de contenido es JSON
+                headers: {
+                    'X-CSRFToken': getCookie('csrftoken') // Asegúrate de obtener el token CSRF
+                },
+                success: function (response) {
+                    console.log(response); // Puedes hacer algo con la respuesta si lo necesitas
+                    $('#modalAgregarCompetencia2').modal('hide');
+                    $('#tabla_competencias_extendida').DataTable().ajax.reload(); // Recargar la tabla de competencias
+                    Swal.fire("", "Empresa competencia almacenada exitosamente", "success");
+                },
+                error: function (xhr, status, error) {
+                    console.error(xhr.responseText); // Manejo de errores
+                }
+            });
+        });
+
+        // Función para obtener el valor de la cookie CSRF
+        function getCookie(name) {
+            var cookieValue = null;
+            if (document.cookie && document.cookie !== '') {
+                var cookies = document.cookie.split(';');
+                for (var i = 0; i < cookies.length; i++) {
+                    var cookie = jQuery.trim(cookies[i]);
+                    if (cookie.substring(0, name.length + 1) === (name + '=')) {
+                        cookieValue = decodeURIComponent(cookie.substring(name.length + 1));
+                        break;
+                    }
+                }
+            }
+            return cookieValue;
+        }
+    });
+
+    $('#tabla_competencias_extendida').on('click', '.btnEdit', function () {
+        var filaDatos = $(this).closest('tr'); // Encuentra la fila más cercana
+        var datos = $('#tabla_competencias_extendida').DataTable().row(filaDatos).data(); // Obtiene los datos de esa fila
+
+        // Rellenar el formulario del modal de edición con los datos de la fila seleccionada
+        $('#id_competencia_editar').val(datos.id_competencia);
+        $('#nombre_competencia_editar').val(datos.nombre_competencia);
+        $('#descripcion_editar').val(datos.descripcion);
+
+        // Mostrar el modal de edición
+        $('#modalEditarCompetencia').modal('show');
+    });
+
+
+    $('#tabla_competencias_extendida').on('click', '.btnEliminar', function () {
+        var filaDatos = $(this).closest('tr'); // Encuentra la fila más cercana
+        var datos = $('#tabla_competencias_extendida').DataTable().row(filaDatos).data(); // Obtiene los datos de esa fila
+        $('#id_competencia_eliminar').val(datos.id_competencia);
+        $('#modalEliminarCompetencia').modal('show');
+    });
+
+    $('#actualizarCompetencia').click(function () {
+        var idCompetencia = $('#id_competencia_editar').val();
+        var nombreCompetencia = $('#nombre_competencia_editar').val();
+        var descripcion = $('#descripcion_editar').val();
+
+        $.ajax({
+            type: 'POST',
+            url: '/DAC/ventas/editar_empresa_competencia/' + idCompetencia + "/",
+            data: JSON.stringify({
+                id_competencia: idCompetencia,
+                nombre_competencia: nombreCompetencia,
+                descripcion: descripcion
+            }),
+            contentType: 'application/json',
+            success: function (response) {
+                // Actualiza tu tabla o maneja la respuesta
+                $('#modalEditarCompetencia').modal('hide');
+                $('#editarMotivo').modal('hide');
+                $('#tabla_competencias_extendida').DataTable().ajax.reload(); // Recargar la tabla de competencias
+
+                Swal.fire("", "Competencia editado exitosamente", "success");
+            },
+            error: function (error) {
+                // Manejo de errores
+                console.error(error.responseText);
+            }
+        });
+    });
+
+    // Función para manejar la eliminación de una empresa competencia
+    function eliminarCompetencia(idCompetencia) {
+        var idCompetencia = $('#id_competencia_eliminar').val();
+        $.ajax({
+            url: '/DAC/ventas/eliminar_empresa_competencia/' + idCompetencia + '/',
+            type: 'POST', // Método HTTP adecuado para una eliminación
+            data: JSON.stringify({
+                id_competencia: idCompetencia
+            }),
+            dataType: 'json',
+            headers: {
+                'X-CSRFToken': getCookie('csrftoken') // Asegúrate de obtener el token CSRF
+            },
+            success: function (response) {
+                Swal.fire("", "Competencia eliminado exitosamente", "success");
+                $('#modalEliminarCompetencia').modal('hide');
+                $('#tabla_competencias_extendida').DataTable().ajax.reload(); // Recargar la tabla de competencias
+            },
+            error: function (xhr, status, error) {
+                console.error('Error al eliminar la competencia:', xhr.responseText);
+            }
+        });
+    }
+
+    function getCookie(name) {
+        var cookieValue = null;
+        if (document.cookie && document.cookie !== '') {
+            var cookies = document.cookie.split(';');
+            for (var i = 0; i < cookies.length; i++) {
+                var cookie = jQuery.trim(cookies[i]);
+                if (cookie.substring(0, name.length + 1) === (name + '=')) {
+                    cookieValue = decodeURIComponent(cookie.substring(name.length + 1));
+                    break;
+                }
+            }
+        }
+        return cookieValue;
+    }
+    // Evento clic para el botón de eliminación en la tabla
+    $('#confirmarEliminarCompetencia').click(function () {
+        var idCompetencia = $(this).data('id'); // Asegúrate de que 'id' es el nombre del atributo data- correcto
+        eliminarCompetencia(idCompetencia);
+    });
+</script>
+
+<script>
+    $(document).ready(function () {
+        $('#modalAgregarCompetencia').on('shown.bs.modal', function () {
+            if ($.fn.DataTable.isDataTable('#tabla_competencias_extendida')) {
+                $('#tabla_competencias_extendida').DataTable().destroy();
+            }
+            $('#tabla_competencias_extendida').DataTable({
+                pageLength: 10,
+                scrollX: true,
+                ajax: {
+                    beforeSend: function (xhr, type) {
+                        if (!type.crossDomain) {
+                            xhr.setRequestHeader(
+                                'X-CSRF-Token',
+                                $('meta[name="csrf-token"]').attr('content'));
+                        }
+                    },
+                    url: 'obtener_empresas_competencias/', // Asegúrate de que esta URL es correcta
+                    dataSrc: 'data'
+                },
+                dom: "Bfrtip",
+                buttons: [
+                    // Configura los botones según tus necesidades
+                ],
+                language: {
+                    url: "//cdn.datatables.net/plug-ins/1.11.5/i18n/es-ES.json",
+                },
+                columns: [
+                    { data: 'id_competencia', width: '10%' },
+                    { data: 'nombre_competencia', width: '45%' },
+                    { data: 'descripcion', width: '35%' },
+                    {
+                        data: 'id_venta_perdida', // Asegúrate de que 'id_venta_perdida' sea el nombre del campo que contiene el ID de la venta perdida
+                        render: function (data, type, row) {
+                            return `
+                    <div class="d-flex">
+                        <a class="btn btn-sm btn-info btnEdit mx-1" data-bs-toggle="modal" data-bs-target="#modalEditarCompetencia" data-id="${data}">
+                            <i class="material-icons">edit</i>
+                        </a>
+                        <button class="btn btn-danger btn-sm btnEliminar mx-1" data-toggle="modal" data-target="#modalEliminarCompetencia" data-competencia-id="${data}">
+                            <i class="fas fa-trash"></i>
+                        </button
+                    </div>
+                `;
+                        },
+                        orderable: false, width: '10%'
+                    }
+                ]
+            });
+        });
+    });
+</script>
+
+<script>
+
+</script>
+
+<script>
+    $(document).ready(function () {
+        const tabs = $('nav ul li a');
+        const contentPanels = $('.content-panel');
+
+        function switchTab(e) {
+            e.preventDefault();
+            const targetId = $(e.target).attr('href').substring(1);
+
+            // Oculta todos los paneles de contenido
+            contentPanels.hide();
+
+            // Remueve la clase 'active' de todas las pestañas
+            tabs.removeClass('active');
+
+            // Muestra el panel de contenido correspondiente y añade la clase 'active'
+            $('#' + targetId).show();
+            $(e.target).addClass('active');
+
+            // Lógica para mover elementos dinámicos
+            moverElementosDinamicos(targetId);
+        }
+
+        // Añade el evento click a cada pestaña
+        tabs.click(switchTab);
+
+        // Inicialmente, oculta todos los paneles y remueve 'active'
+        contentPanels.hide();
+        tabs.first().trigger('click'); // Activa la primera pestaña por defecto
+
+        function moverElementosDinamicos(panelDestinoId) {
+            $('textarea[name^="comentario"], input[name^="fecha"]').each(function () {
+                var name = $(this).attr('name');
+                var destinationPanel = name.substring(name.lastIndexOf('_') + 1);
+                if (destinationPanel === panelDestinoId) {
+                    $(this).detach().appendTo('#' + panelDestinoId + ' .input-group');
+                }
+            });
+        }
+
+
+    });
+
+    $(document).ready(function () {
+        // Sincronizar los selects de competencia cuando uno cambia
+        $('#select_nombre_competencia_precio, #select_nombre_competencia_servicio').change(function () {
+            var selectedValue = $(this).val();
+            // Actualizar todos los selects de competencia para reflejar este valor
+            $('#select_nombre_competencia_precio, #select_nombre_competencia_servicio').val(selectedValue);
+        });
+
+        const tabs = $('nav ul li a');
+        const contentPanels = $('.content-panel');
+
+        tabs.click(function (e) {
+            e.preventDefault();
+            const targetId = $(this).attr('href').substring(1);
+
+            // Oculta todos los paneles de contenido y muestra el seleccionado
+            contentPanels.hide();
+            $('#' + targetId).show();
+
+            // Remueve la clase 'active' de todas las pestañas y la añade a la actual
+            tabs.removeClass('active');
+            $(this).addClass('active');
+        });
+
+        // Activa la primera pestaña y su contenido por defecto
+        tabs.first().click();
+    });
+
+</script>
+
+<script>
+    $(document).ready(function () {
+        $(document).on('click', '.btnEdit', function () {
+            var table = $('#tabla_programaciones').DataTable();
+            var data = table.row($(this).closest('tr')).data();
+
+            var id_motivo = data.id_motivo;
+            var nombre_motivo = data.nombre_motivo;
+            var descripcion_motivo = data.descripcion_motivo;
+            var tipo = data.tipo;
+
+            $('#id_motivo_e').val(id_motivo);
+            $('#nombre_motivo_e').val(nombre_motivo);
+            $('#descripcion_motivo_e').val(descripcion_motivo);
+            $('#selectCombo2').val(tipo); // Establece el valor del select
+
+            $('#editarMotivo').modal('show');
+        });
+
+        $(document).on('click', '.btnBorrar', function () {
+            var table = $('#tabla_programaciones').DataTable();
+            var data = table.row($(this).closest('tr')).data();
+
+            var id_motivo = data.id_motivo;
+
+
+            $('#id_motivo_borrar').val(id_motivo);
+            $('#borrarMotivo').modal('show');
+        });
+
+        $('#guardarCambios').click(function () {
+            var id_motivo = $('#id_motivo').val();
+            var nombre_motivo = $('#nombre_motivo').val().trim();
+            var descripcion_motivo = $('#descripcion_motivo').val().trim();
+            var tipo = $('#selectCombo').val();
+
+            // Comprobar que los campos no están vacíos
+            if (!nombre_motivo || !descripcion_motivo || !tipo) {
+                // Alertar al usuario si algún campo está vacío
+                Swal.fire("Error", "Todos los campos son obligatorios.", "error");
+                return; // No continuar con la solicitud AJAX
+            }
+
+            // Si llegamos aquí, todos los campos tienen algún valor
+            console.log(descripcion_motivo);
+            console.log(tipo);
+
+            $.ajax({
+                url: '/DAC/ventas/guardar_motivo/',
+                type: 'POST',
+                data: JSON.stringify({
+                    'id_motivo': id_motivo,
+                    'nombre_motivo': nombre_motivo,
+                    'descripcion_motivo': descripcion_motivo,
+                    'tipo': tipo,
+                }),
+                contentType: 'application/json; charset=utf-8',
+                success: function (response) {
+                    console.log(response.message);
+                    $('#modal_crear_programacion').modal('hide');
+                    $('#tabla_programaciones').DataTable().ajax.reload();
+                    Swal.fire("", "Motivo agregado exitosamente", "success");
+                },
+                error: function (error) {
+                    Swal.fire("Error", "Error al guardar el motivo", "error");
+                    console.log(error);
+                }
+            });
+        });
+
+
+        $('#borrarMotivo').on('hidden.bs.modal', function () {
+            $('.modal-backdrop').remove();  // Elimina el backdrop
+        });
+
+        $('#modal_crear_programacion').on('hidden.bs.modal', function () {
+            $('.modal-backdrop').remove();  // Elimina el backdrop
+        });
+
+        $('#btnConfirmarBorrado').on('click', function () {
+            var idMotivo = $('#id_motivo_borrar').val(); // Obtiene el ID del motivo a borrar
+            console.log(idMotivo);
+            console.log("alooo");
+
+            $.ajax({
+                url: '/DAC/ventas/borrar_motivo/', // Asegúrate de reemplazar esto con la URL correcta
+                type: 'POST',
+                data: JSON.stringify({ id_motivo: idMotivo }),
+                contentType: 'application/json; charset=utf-8',
+                success: function (response) {
+                    // Cierra el modal
+                    $('#borrarMotivo').modal('hide');
+                    $('#tabla_programaciones').DataTable().ajax.reload();
+                    Swal.fire("", "Motivo eliminado exitosamente", "success");
+                },
+                error: function (error) {
+                    console.error('Error al borrar el motivo:', error);
+                }
+            });
+        });
+
+        $('#btnSaveEdit').click(function () {
+            var id_motivo = $('#id_motivo_e').val();
+            var nombre_motivo = $('#nombre_motivo_e').val();
+            var descripcion_motivo = $('#descripcion_motivo_e').val();
+            var tipo = $('#selectCombo2').val(); // Obtiene el valor seleccionado del select
+
+            $.ajax({
+                url: '/DAC/ventas/editar_motivo/', // Asegúrate de poner la URL correcta aquí
+                type: 'POST',
+                contentType: 'application/json',
+                data: JSON.stringify({
+                    'id_motivo': id_motivo,
+                    'nombre_motivo': nombre_motivo,
+                    'descripcion_motivo': descripcion_motivo,
+                    'tipo': tipo, // Incluye el tipo en los datos enviados
+                }),
+                success: function (response) {
+                    console.log(response.message);
+                    $('#editarMotivo').modal('hide');
+                    $('#tabla_programaciones').DataTable().ajax.reload();
+                    Swal.fire("", "Motivo editado exitosamente", "success");
+
+                },
+                error: function (xhr, status, error) {
+                    console.error(error);
+                }
+            });
+        });
+
+        if ($.fn.DataTable.isDataTable('#tabla_programaciones')) {
+            $('#tabla_programaciones').DataTable().destroy();
+        }
+        var table = $('#tabla_programaciones').DataTable({
+            pageLength: 50,
+            ajax: {
+                beforeSend: function (xhr, type) {
+                    if (!type.crossDomain) {
+                        xhr.setRequestHeader(
+                            'X-CSRF-Token',
+                            $('meta[name="csrf-token"]').attr('content'));
+                    }
+                },
+                url: '/DAC/ventas/obtener_motivos',
+                dataSrc: 'data'
+            },
+
+            "dom": '<"top"lf>rt<"bottom"ip><"clear">', // Revisa esta configuración para ajustar la disposición
+            "buttons": ['excel', 'pdf', 'print'],
+            "language": {
+                "search": "Filtro general:", // Cambia el texto del filtro
+                "url": "//cdn.datatables.net/plug-ins/1.11.5/i18n/es-ES.json"
+            },
+
+            // Otras opciones de DataTables...
+            columns: [
+                {
+                    data: 'id_motivo',
+
+                },
+                {
+                    data: 'nombre_motivo',
+                },
+                {
+                    data: 'descripcion_motivo',
+                },
+                {
+                    data: 'tipo',
+                    render: function (data, type, row) {
+                        if (data === 1) {
+                            return '<span class="badge rounded-pill" style="background-color: green; color: white; font-size: 12px;">Seleccionable</span>';
+                        } else if (data === 2) {
+                            return '<span class="badge rounded-pill" style="background-color: blue; color: white; font-size: 12px;">No seleccionable</span>';
+                        } else {
+                            return data; // O lo que corresponda para otros valores de 'tipo' que no sean 1 o 2
+                        }
+                    }
+                },
+                {
+                    data: 'id_motivo', // Asegúrate de que 'id' sea el nombre del campo que contiene el ID del teléfono
+                    render: function (data, type, row) {
+                        return `
+                    <div class="d-flex">
+                        <a class="btn btn-sm btn-info btnEdit mx-1" data-bs-toggle="modal" 
+                        data-bs-target="#modalProgramacion" data-id="${data}">
+                            <i class="material-icons">edit</i>
+                        </a>
+                        <a class="btn btn-danger btn-sm btnBorrar" data-bs-toggle="modal" 
+                        data-bs-target="#borrarMotivo"  data-id="${data}">
+                        <i class="fas fa-trash"></i>
+                        </a>
+                    `;
+                    },
+                    orderable: false
+                }
+
+            ],
+        });
+
+        $('#customSearchBox').keyup(function () {
+            table.search($(this).val()).draw();
+        });
+
+        $('#filterNombreMotivo').keyup(function () {
+            table.column(1).search(this.value).draw();
+        });
+        $('#filterDescripcionMotivo').keyup(function () {
+            table.column(2).search(this.value).draw();
+        });
+    });
+
+</script>
+{% endblock %}

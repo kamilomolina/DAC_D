@@ -1,0 +1,1165 @@
+{% extends 'componentes/menu_contable.html' %}
+{% load static %}
+
+{% block title %}
+TIPOS PARTIDAS
+{% endblock %}
+
+
+{% block body %}
+
+
+<div class="row align-items-center border-bottom mb-3 py-2 bg-white shadow-sm mx-0">
+    <div class="col d-flex align-items-center px-0">
+        <button id="toggle-sidebar" class="btn btn-primary btn-sm me-3 border-0 rounded-circle btnMenu"
+            style="width: 32px; height: 32px; padding: 0;" title="Mostrar/Ocultar menú">
+            <i class="fas fa-bars"></i>
+        </button>
+        <h6 class="page-title mb-0 fs-5 fw-bold text-dark">
+            <i class="fas fa-book text-primary me-2"></i>TIPOS DE PARTIDAS
+        </h6>
+    </div>
+    <div class="col-auto text-end float-end ms-auto download-grp px-0">
+        <button class="btn btn-sm btn-success" id="btnNuevo" title="Crear Nuevo"><i class="fas fa-plus me-2"></i>
+            Nuevo</button>
+    </div>
+</div>
+
+
+<div class="container-fluid px-0 mt-1">
+    <div class="row mx-0">
+        <div class="table-responsive">
+            <table id="tiposPartidas_Table"
+                class="table table-striped table-bordered mb-0 table-sm rounded-4 table-hover align-middle"
+                style="width: 100%;">
+                <thead class="table-gradient text-dark">
+                    <tr>
+                        <th>Codigo</th>
+                        <th>Nombre Partida</th>
+                        <th>Manual/Automatica</th>
+                        <th>Notas</th>
+                        <th>Diaria</th>
+                        <th>Sistema</th>
+                        <th>Grupo Origen</th>
+                        <th>Partida Origen</th>
+                        <th>Revision</th>
+                        <th>Estado</th>
+                        <th>Acciones</th>
+                    </tr>
+                </thead>
+
+                <tbody>
+
+                </tbody>
+            </table>
+        </div>
+    </div>
+
+</div>
+
+
+<a href="{% url 'panel_contabilidad' %}">
+    <button class="btn btn-sm btn-danger" id="btnCerrar" title="Cerrar"
+        style="position: fixed; bottom: 20px; right: 20px;">
+        <i class="fa fa-times"></i> Cerrar
+    </button>
+</a>
+
+{% include 'catalogos/modales_catalogos/m_tipos_partidas.html' %}
+{% include 'catalogos/modales_catalogos/m_detalles_tipos_partidas.html' %}
+
+{% endblock %}
+
+
+{% block scripts %}
+
+<script>
+    $('.codigo-select').select2({
+        width: '100%',
+        dropdownParent: $('#modalDetallesTiposPartidas')
+    });
+
+    $(document).ready(function () {
+        var csrfToken = "{{ csrf_token }}";
+        var buttons = "Bfrtlip";
+
+        var tiposPartidas_Table, partida_id, opcion, detalle_id, opcion_detalle, disponibilidad = 0;
+
+        var windowSize = $(window).width();
+
+        var cardHeight = $(".card-expanded").height();
+        var tableHeight = cardHeight * 0.5;
+
+        let dollarUSLocale = Intl.NumberFormat("en-US", {
+            minimumFractionDigits: 2,
+            maximumFractionDigits: 2
+        });
+
+        let intergerLocale = Intl.NumberFormat("en-US", {
+            minimumFractionDigits: 0,
+            maximumFractionDigits: 0
+        });
+
+
+
+        var toastMixin = Swal.mixin({
+            toast: true,
+            icon: 'success',
+            title: 'General Title',
+            animation: false,
+            position: 'top-right',
+            showConfirmButton: false,
+            timer: 2000,
+            timerProgressBar: true,
+            didOpen: (toast) => {
+                toast.addEventListener('mouseenter', Swal.stopTimer);
+                toast.addEventListener('mouseleave', Swal.resumeTimer);
+            }
+        });
+
+        function showLoadingScreen(text = '') {
+            Swal.fire({
+                title: '',
+                html: `<b>${text}</b>`,
+                didOpen: () => {
+                    Swal.showLoading();
+                },
+                allowOutsideClick: false,
+                showConfirmButton: false
+            });
+        }
+
+        tiposPartidas_Table = $("#tiposPartidas_Table").DataTable({
+            autoWidth: false,
+            scrollX: true,
+            scrollY: '350px',
+            scrollCollapse: true,
+            pageLength: 50,
+            dom: 'Brftip',
+            language: {
+                url: "{% static 'app/th/json/es-ES.json' %}",
+            },
+            ajax: {
+                url: `{% url 'dataTiposPartidas' %}`,
+                type: "POST",
+                dataSrc: 'data',
+                data: {
+                    opcion: 0,
+                    csrfmiddlewaretoken: csrfToken
+                },
+            },
+            colReorder: {
+                realtime: false,
+            },
+            buttons: [
+                {
+                    extend: 'excel',
+                    text: '<i class="fas fa-file-excel"></i>',
+                    titleAttr: 'Excel',
+                    className: 'btn btn-success',
+                },
+                {
+                    extend: 'pdf',
+                    text: '<i class="fas fa-file-pdf"></i>',
+                    titleAttr: 'PDF',
+                    className: 'btn btn-danger',
+                },
+                {
+                    extend: 'print',
+                    text: '<i class="fas fa-print"></i>',
+                    titleAttr: 'Imprimir',
+                    className: 'btn btn-info',
+                    orientation: 'landscape'
+                }
+            ],
+            columns: [
+                {
+                    data: 'Codigo'
+                },
+                {
+                    data: 'Nombre'
+                },
+                {
+                    data: 'manual_automatica',
+                    className: 'text-center',
+                    render: function (data, type, row) {
+                        var badge = "";
+                        if (data == 1) {
+                            badge +=
+                                '<span class="badge badge-pill bg-danger">MANUAL</span>';
+                        } else {
+                            badge +=
+                                '<span class="badge badge-pill bg-success">AUTOMATICA</span>';
+                        }
+
+                        return badge;
+                    },
+                },
+                {
+                    data: 'Notas'
+                },
+                {
+                    data: 'Diaria',
+                    className: 'text-center',
+                    render: function (data, type, row) {
+                        var badge = "";
+                        if (data == 1) {
+                            badge +=
+                                '<span class="badge badge-pill bg-success">Diaria</span>';
+                        } else {
+                            badge +=
+                                '<span class="badge badge-pill bg-warning">NO Aplica</span>';
+                        }
+
+                        return badge;
+                    },
+                },
+                {
+                    data: 'nombre_sistema'
+                },
+                {
+                    data: 'partida_hermana'
+                },
+                {
+                    data: 'partida_origen'
+                },
+                {
+                    data: 'disponibilidad',
+                    className: 'text-center',
+                    render: function (data, type, row) {
+                        var badge = "";
+                        if (data == 0) {
+                            badge +=
+                                '<span class="badge badge-pill bg-danger">Sin Revisar</span>';
+                        } else {
+                            badge +=
+                                '<span class="badge badge-pill bg-success">Revisada y Bloqueada</span>';
+                        }
+
+                        return badge;
+                    },
+                },
+                {
+                    data: 'estado',
+                    className: 'text-center',
+                    render: function (data, type, row) {
+                        var badge = "";
+                        if (data == 3) {
+                            badge +=
+                                '<span class="badge badge-pill bg-danger">Deshabilitado</span>';
+                        } else {
+                            badge +=
+                                '<span class="badge badge-pill bg-success">Activo</span>';
+                        }
+
+                        return badge;
+                    },
+                },
+                {
+                    data: null,
+                    width: '3%',
+                    title: "Acciones",
+                    render: function (data, type, row) {
+                        return `
+                            <div class="text-center">
+                                <div class="btn-group">
+                                    
+                                    <button class="btn btn-warning btn-sm editarTipoPartida" data-id="${row.PkPartidaAuto}" data-diaria="${row.Diaria}"
+                                    data-sistema="${row.FkSistema}" data-manual="${row.Manual}" data-hermana="${row.fk_partida_hermana}" data-origen="${row.fk_partida_origen}" data-manual-automatica="${row.manual_automatica}">
+                                        <i class="fas fa-edit"></i>
+                                    </button>
+
+                                    ${row.manual_automatica == 0 ? `<button class="btn btn-info btn-sm configTipoPartida" data-id="${row.PkPartidaAuto}" data-disponibilidad="${row.disponibilidad}"><i class="fas fa-tasks"></i></button>` : ''}
+
+                                    <button class="btn btn-danger btn-sm statusTipoPartida" data-id="${row.PkPartidaAuto}" data-name="${row.Nombre}" data-estado="${row.estado}">
+                                        <i class="fas fa-sync-alt"></i>
+                                    </button> 
+                                
+                                </div>
+                            </div>
+                            `;
+                    }
+                }
+            ],
+        });
+
+
+        $('#btnNuevo').click(function (e) {
+            e.preventDefault();
+
+            $('#formTiposPartidas').trigger('reset');
+            $('#modalTiposPartidasLabel').text('CREAR NUEVO TIPO PARTIDA');
+            $('#modalTiposPartidas').modal('show');
+
+            opcion = 1;
+            partida_id = null;
+
+            $('#codigo').prop('disabled', false);
+        });
+
+
+
+        $(document).on('click', '.editarTipoPartida', function () {
+            $('#formTiposPartidas').trigger('reset');
+
+            opcion = 2;
+            filaPartidas = $(this).closest('tr');
+            partida_id = $(this).data('id');
+
+            codigo = filaPartidas.find("td:eq(0)").text();
+            partida = filaPartidas.find("td:eq(1)").text();
+            notas = filaPartidas.find("td:eq(3)").text();
+
+            diaria = $(this).data('diaria');
+            sistema = $(this).data('sistema');
+            manual = $(this).data('manual');
+            hermana = $(this).data('hermana');
+            origen = $(this).data('origen');
+            manual_automatica = $(this).data('manual-automatica');
+
+            $('#codigo').prop('disabled', true);
+
+            $('#codigo').val(codigo);
+            $('#nombre').val(partida);
+            $('#notas').val(notas);
+
+            $('#diaria').val(diaria).change();
+            $('#sistema').val(sistema).change();
+            $('#partida_hermana').val(hermana).change();
+            $('#manual_automatica').val(manual_automatica).change();
+
+
+            setTimeout(() => {
+                fillSelectPartidasOrigen(origen);
+            }, 500);
+
+
+            $('#modalTiposPartidasLabel').text('EDITAR TIPO DE PARTIDA ' + codigo + ' - ' + partida);
+            $('#modalTiposPartidas').modal('show');
+
+        });
+
+
+
+
+
+        var partida_id_token = null, partida_token = null, estado_token = null;
+
+
+
+        $('#partida_hermana').change(function (e) {
+            e.preventDefault();
+
+            hermana = $(this).val() || 0;
+
+            if (hermana == 0) {
+                $('#partida_origen').prop('disabled', true);
+                return;
+            }
+
+            fillSelectPartidasOrigen();
+
+        });
+
+        function fillSelectPartidasOrigen(partida = 0) {
+            showLoadingScreen();
+
+            $.ajax({
+                url: "{% url 'dataPartidasHermanasAsignadas' %}",
+                type: "POST",
+                data: {
+                    hermana: hermana,
+                    csrfmiddlewaretoken: csrfToken
+                },
+                success: function (data) {
+                    Swal.close();
+
+                    if (data.save == 1) {
+
+                        $('#partida_origen').empty(); // Limpia opciones anteriores
+
+                        // Agrega la opción por defecto
+                        $('#partida_origen').append('<option value="0">SELECCIONE PARTIDA ORIGEN</option>');
+
+                        // Recorre los datos y agrega cada opción
+                        data.data.forEach(function (item) {
+                            $('#partida_origen').append(
+                                `<option value="${item.PkPartidaAuto}">${item.Nombre}</option>`
+                            );
+                        });
+
+                        // Habilita el select si estaba deshabilitado
+                        $('#partida_origen').val(partida).change();
+                        $('#partida_origen').prop('disabled', false);
+
+
+                    } else {
+                        Swal.fire("", "Error D: " + data.error, "error");
+                    }
+                }
+            });
+        }
+
+
+
+
+        $(document).on('click', '.statusTipoPartida', function () {
+            $('#formTiposPartidas').trigger('reset');
+
+            filaPartidas = $(this).closest('tr');
+            partida_id_token = $(this).data('id');
+            partida_token = $(this).data('name');
+            estado_token = $(this).data('estado');
+
+            tokenCambiarEstadoPartida(17);
+        });
+
+
+        $('#modalDetallesTiposPartidas').on('shown.bs.modal', function () {
+            $('.codigo_dom').select2({ width: '100%' });
+
+            detallesTiposPartidas_Table.columns.adjust().draw();
+        });
+
+        $('#formTiposPartidas').submit(function (e) {
+            e.preventDefault();
+
+            codigo = $('#codigo').val();
+            nombre = $('#nombre').val();
+            notas = $('#notas').val();
+            diaria = $('#diaria').val();
+            sistema = $('#sistema').val();
+            manual = $('#manual').val();
+            manual_automatica = $('#manual_automatica').val();
+
+            hermana = $('#partida_hermana').val();
+            origen = $('#partida_origen').val();
+
+            if (hermana != 0 && origen == 0) {
+                Swal.fire("", "Debes seleccionar una Partida Origen!", "warning");
+                return;
+            }
+
+
+            if (!codigo || !nombre || !notas || sistema == '0') {
+                Swal.fire("", "Debes llenar todos los campos!", "warning");
+            } else {
+                $.ajax({
+                    url: "{% url 'insert_update_tipos_partidas' %}",
+                    type: "POST",
+                    data: {
+                        partida_id: partida_id,
+                        codigo: codigo,
+                        nombre: nombre,
+                        notas: notas,
+                        diaria: diaria,
+                        sistema: sistema,
+                        manual: manual,
+                        manual_automatica: manual_automatica,
+                        hermana: hermana,
+                        origen: origen,
+                        opcion: opcion,
+                        csrfmiddlewaretoken: csrfToken
+                    },
+                    success: function (data) {
+                        if (data.save == 1) {
+                            if (opcion == 1) {
+                                if (data.existe == 0) {
+                                    $('#modalTiposPartidas').modal('hide');
+
+                                    toastMixin.fire({
+                                        animation: true,
+                                        title: 'Tipo Partida Creada!'
+                                    });
+                                } else {
+                                    Swal.fire("", "Ya existe un Tipo de Partida con este Codigo y/o Nombre!", "warning");
+                                }
+                            } else {
+                                $('#modalTiposPartidas').modal('hide');
+
+                                toastMixin.fire({
+                                    animation: true,
+                                    title: 'Tipo Partida Editada!'
+                                });
+                            }
+
+                            tiposPartidas_Table.ajax.reload(null, false);
+                        } else {
+                            Swal.fire("", "Error D: " + data.error, "error");
+                        }
+                    }
+                });
+            }
+
+        });
+
+
+        $(document).on('click', '.configTipoPartida', function () {
+            $('#formDetallesTipoPartidas').trigger('reset');
+
+            filaPartidas = $(this).closest('tr');
+            partida_id = $(this).data('id');
+
+            codigo = filaPartidas.find("td:eq(0)").text();
+            partida = filaPartidas.find("td:eq(1)").text();
+            notas = filaPartidas.find("td:eq(2)").text();
+
+            detalle_id = null;
+            opcion_detalle = 1;
+
+            disponibilidad = $(this).data('disponibilidad');
+
+            if (parseInt(disponibilidad) === 1) {
+                $('#formDetallesTipoPartidas').hide();
+                $('#msgPartidaBloqueada').show();
+            } else {
+                $('#formDetallesTipoPartidas').show();
+                $('#msgPartidaBloqueada').hide();
+            }
+
+
+            fillTableDetallesTiposPartidas(partida_id, disponibilidad);
+
+            $('#modalDetallesTiposPartidasLabel').text('DETALLES DEL TIPO DE PARTIDA ' + codigo + ' - ' + partida);
+            $('#modalDetallesTiposPartidas').modal('show');
+        });
+
+
+
+        function fillTableDetallesTiposPartidas(partidaID, disponibilidad) {
+            $("#detallesTiposPartidas_Table").DataTable().clear().destroy();
+
+            detallesTiposPartidas_Table = $("#detallesTiposPartidas_Table").DataTable({
+                ajax: {
+                    url: `{% url 'dataDetallesTiposPartidas' %}`,
+                    type: "POST",
+                    data: {
+                        partida_id: partidaID,
+                        opcion: 0,
+                        csrfmiddlewaretoken: csrfToken
+                    },
+                    dataSrc: 'data'
+                },
+                dom: 'Brftip',
+                paging: false,
+                ordering: false,
+                searching: false,
+                info: false,
+                scrollY: '50vh',
+                scrollCollapse: true,
+                autoWidth: false,
+                language: {
+                    url: "{% static 'app/th/json/es-ES.json' %}",
+                },
+                buttons: [
+                    {
+                        extend: 'excel',
+                        text: '<i class="fas fa-file-excel"></i>',
+                        titleAttr: 'Exportar a Excel',
+                        className: 'btn btn-success',
+                    },
+                    {
+                        extend: 'pdf',
+                        text: '<i class="fas fa-file-pdf"></i>',
+                        titleAttr: 'Exportar a PDF',
+                        className: 'btn btn-danger',
+                    },
+                    {
+                        extend: 'print',
+                        text: '<i class="fas fa-print"></i>',
+                        titleAttr: 'Imprimir',
+                        className: 'btn btn-primary',
+                        orientation: 'landscape'
+                    }
+                ],
+                columns: [
+                    { data: 'cuenta_contable' },
+                    {
+                        data: 'nombre_cuenta',
+                        className: 'text-start',
+                        render: function (data, type, row) {
+                            return row.tipo_movimiento === 'HABER' ? `<div class="text-end">${data}</div>` : `<div class="text-start">${data}</div>`;
+                        }
+                    },
+                    { data: 'descripcion', className: 'text-wrap' },
+                    { data: 'tipo_movimiento' },
+                    {
+                        data: 'valor_prueba',
+                        className: 'text-end currency',
+                        render: function (data, type, row) {
+                            return row.tipo_movimiento === 'DEBE' ? dollarUSLocale.format(parseFloat(data || 0)) : '';
+                        }
+                    },
+                    {
+                        data: 'valor_prueba',
+                        className: 'text-end currency',
+                        render: function (data, type, row) {
+                            return row.tipo_movimiento === 'HABER' ? dollarUSLocale.format(parseFloat(data || 0)) : '';
+                        }
+                    },
+                    { data: 'formula_monto' },
+                    {
+                        data: 'estado',
+                        className: 'text-center',
+                        render: function (data) {
+                            return data == 3
+                                ? '<span class="badge bg-danger">Deshabilitado</span>'
+                                : '<span class="badge bg-success">Activo</span>';
+                        }
+                    },
+                    {
+                        data: null,
+                        className: 'text-center',
+                        render: function (data, type, row) {
+                            return (disponibilidad == 0) ? `
+                            <div class="btn-group">
+                                <button class="btn btn-warning btn-sm editarDetalleTipoPartida"
+                                        data-id="${row.id_detalle}" data-cuenta="${row.cuenta_contable}" data-valor="${row.valor_prueba}" data-formula="${row.formula_monto}">
+                                    <i class="fas fa-edit"></i>
+                                </button>
+                                <button class="btn btn-danger btn-sm statusDetalleTipoPartida"
+                                        data-id="${row.id_detalle}" data-partida="${row.nombre_partida}"
+                                        data-cuenta="${row.cuenta_contable}" data-estado="${row.estado}">
+                                    <i class="fas fa-sync-alt"></i>
+                                </button> 
+                            </div>` : '';
+                            ;
+                        }
+                    }
+                ],
+                footerCallback: function (row, data) {
+                    let totalDebe = 0;
+                    let totalHaber = 0;
+
+                    data.forEach(row => {
+                        const valor = parseFloat(row.valor_prueba || 0);
+                        if (row.tipo_movimiento === 'DEBE') totalDebe += valor;
+                        if (row.tipo_movimiento === 'HABER') totalHaber += valor;
+                    });
+
+                    $('#totalDebeContable').text(dollarUSLocale.format(totalDebe));
+                    $('#totalHaberContable').text(dollarUSLocale.format(totalHaber));
+
+                    const balance = totalDebe - totalHaber;
+                    const balanceSpan = $('#balanceContable');
+                    balanceSpan.text(dollarUSLocale.format(balance));
+                    balanceSpan.css('color', balance === 0 ? 'green' : 'red');
+                }
+            });
+        }
+
+
+
+
+
+
+        $('#formDetallesTipoPartidas').submit(function (e) {
+            e.preventDefault();
+
+            cuenta = $('#detalle_cuenta').val();
+            tipo_movimiento = $('#detalle_tipo_movimiento').val();
+            formula_monto = $('#detalle_formula').val();
+            valor_prueba = $('#detalle_valor_prueba').val().replace(/,/g, "") || 0;
+            descripcion = $('#detalle_descripcion').val();
+
+            if (cuenta == 0 || tipo_movimiento == 0 || !descripcion) {
+                Swal.fire("", "Debes seleccionar y/o llenar TODOS los campos!", "warning");
+            } else {
+
+                $.ajax({
+                    url: "{% url 'insert_update_detalles_tipos_partidas' %}",
+                    type: "POST",
+                    data: {
+                        detalle_id: detalle_id,
+                        partida_id: partida_id,
+                        cuenta: cuenta,
+                        tipo_movimiento: tipo_movimiento,
+                        formula_monto: formula_monto,
+                        valor_prueba: valor_prueba,
+                        descripcion: descripcion,
+                        opcion: opcion_detalle,
+                        csrfmiddlewaretoken: csrfToken
+                    },
+                    success: function (data) {
+                        if (data.save == 1) {
+                            if (opcion_detalle == 1) {
+                                if (data.existe == 0) {
+                                    toastMixin.fire({
+                                        animation: true,
+                                        title: 'Configuracion de Partida Creada!'
+                                    });
+
+
+                                    $('#formDetallesTipoPartidas').trigger('reset');
+                                    detalle_id = null;
+                                    opcion_detalle = 1;
+                                } else {
+                                    Swal.fire("", "Ya existe esta configuracion en esta Partida!", "warning");
+                                }
+                            } else {
+                                toastMixin.fire({
+                                    animation: true,
+                                    title: 'Configuracion de Partida Editada!'
+                                });
+
+                                $('#formDetallesTipoPartidas').trigger('reset');
+                                detalle_id = null;
+                                opcion_detalle = 1;
+                            }
+
+                            detallesTiposPartidas_Table.ajax.reload(null, false);
+
+                        } else {
+                            Swal.fire("", "Error D: " + data.error, "error");
+                        }
+                    }
+                });
+
+            }
+
+        });
+
+
+
+        $(document).on('click', '.editarDetalleTipoPartida', function () {
+            $('#formDetallesTipoPartidas').trigger('reset');
+
+
+            filaConfigs = $(this).closest('tr');
+
+            opcion_detalle = 2;
+            detalle_id = $(this).data('id');
+
+            cuenta = filaConfigs.find("td:eq(0)").text();
+            descripcion = filaConfigs.find("td:eq(2)").text();
+            tipo_movimiento = filaConfigs.find("td:eq(3)").text();
+            valor_prueba = $(this).data('valor');
+            formula_monto = $(this).data('formula');
+
+            //valor_prueba = valor_prueba.replace(/,/g, "") || 0;
+
+            $('#detalle_cuenta').val(cuenta).change();
+            $('#detalle_descripcion').val(descripcion);
+            $('#detalle_tipo_movimiento').val(tipo_movimiento).change();
+            $('#detalle_valor_prueba').val(valor_prueba);
+            $('#detalle_formula').val(formula_monto);
+        });
+
+        var detalle_id_token = null, detalle_partida_token = null, detalle_token = null, detalle_estado_token = null;
+
+        $(document).on('click', '.statusDetalleTipoPartida', function () {
+
+            $('#formDetallesTipoPartidas').trigger('reset');
+
+            detalle_id_token = $(this).data('id');
+            detalle_partida_token = $(this).data('partida');
+            detalle_token = $(this).data('cuenta');
+            detalle_estado_token = $(this).data('estado');
+
+            $.ajax({
+                url: "{% url 'update_status_detalle_tipos_partidas' %}",
+                type: "POST",
+                data: {
+                    detalle_id: detalle_id_token,
+                    csrfmiddlewaretoken: csrfToken
+                },
+                success: function (data) {
+                    if (data.save == 1) {
+                        //tokenMarcarComoUtilizado(num_documento, id_tipo_token, id_modulo, usuario);
+                        Swal.close();
+
+                        toastMixin.fire({
+                            animation: true,
+                            title: 'Estado de Configuracion de Partida Editado!'
+                        });
+                        detallesTiposPartidas_Table.ajax.reload(null, false);
+                    } else {
+                        Swal.fire("", "Error D: " + data.error, "error");
+                    }
+                }
+            });
+            //tokenCambiarEstadoDetallePartida(18)
+
+        });
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+        function tokenCambiarEstadoPartida(status) {
+            sucursal = 2;
+            num_documento = partida_id_token;
+            id_tipo_token = status;
+            id_modulo = 12;
+            usuario = '{{ userName }}';
+            tabla = 'conta_partidas_automaticas';
+
+            let assignedDetalle = '';
+
+            if (estado_token == 3) {
+
+                assignedDetalle = [
+                    {
+                        mov_original: partida_id_token,
+                        documento: partida_token,
+                        cantidad: 1,
+                        descripcion: `Se quiere habilitar el tipo de partida ${partida_token}`,
+                        valor: 'Habilitar',
+                        observacion: `Estado Anterior: Deshabilitado. Estado Nuevo: Habilitado`
+                    }
+                ];
+            } else {
+
+                assignedDetalle = [
+                    {
+                        mov_original: partida_id_token,
+                        documento: partida_token,
+                        cantidad: 1,
+                        descripcion: `Se quiere deshabilitar el tipo de partida ${partida_token}`,
+                        valor: 'Deshabilitar',
+                        observacion: `Estado Anterior: Habilitado. Estado Nuevo: Deshabilitado`
+                    }
+                ];
+            }
+
+
+
+            $.ajax({
+                url: "http://3.230.160.184:81/API/token/validar/solicitud",
+                type: "POST",
+                data: {
+                    sucursal: sucursal,
+                    num_documento: num_documento,
+                    id_tipo_token: id_tipo_token,
+                    id_modulo: id_modulo,
+                    usuario: usuario,
+                    tabla: tabla,
+                    assignedDetalle: JSON.stringify(assignedDetalle),
+                    csrfmiddlewaretoken: "{{ csrf_token }}"
+                },
+                success: function (data) {
+                    if (data.save == 1) {
+                        Swal.close();
+
+                        console.log(`${data.existe} Estado: ${data.estado}`);
+
+                        if (data.estado == 'NO EXISTE' || data.estado == 'CANCELADO' || data.estado == 'RECHAZADO' || data.estado == 'APLICADO') {
+                            console.log('Crear Solicitud');
+
+                            tokenGenerarSolicitud(sucursal, num_documento, id_tipo_token, id_modulo, usuario, tabla, assignedDetalle);
+                        }
+                        else if (data.estado == 'SOLICITADO') {
+                            console.log('Ver msj cancelar o dejar ahi!');
+
+                            Swal.fire({
+                                title: "Ya Existe una Solicitud de Token Pendiente!",
+                                text: "¿Deseas Esperar que sea Gestionada o Cancelar la Solicitud Previa?",
+                                icon: "warning",
+                                showCancelButton: true,
+                                confirmButtonText: "No Realizar Ninguna Accion",
+                                cancelButtonText: "Cancelar Solicitud Anterior",
+                                reverseButtons: true
+                            }).then((result) => {
+                                if (result.isConfirmed) {
+                                    console.log('No se cancela el token, sigue en lista de espera!');
+                                } else {
+                                    tokenCancelarSolicitud(sucursal, num_documento, id_tipo_token, id_modulo, usuario, tabla, 'El usuario decidio cancelar esta solicitud!');
+                                }
+                            });
+
+                        }
+                        else {
+                            console.log('proceder a cambiar estado');
+
+                            cambiarEstadoPartidaTokenAutorizado(partida_id_token, num_documento, id_tipo_token, id_modulo, usuario, status);
+                        }
+                    } else {
+                        Swal.fire({
+                            icon: 'error',
+                            title: 'Error',
+                            text: 'Error!' + data.error
+                        });
+                    }
+                }
+
+            });
+        }
+
+
+        function cambiarEstadoPartidaTokenAutorizado(partida_id, num_documento, id_tipo_token, id_modulo, usuario, status) {
+
+            showLoadingScreen('Token Autorizado: Cambiando Estado Tipo Partida!');
+
+            $.ajax({
+                url: "{% url 'update_status_tipos_partidas' %}",
+                type: "POST",
+                data: {
+                    partida_id: partida_id,
+                    csrfmiddlewaretoken: csrfToken
+                },
+                success: function (data) {
+                    if (data.save == 1) {
+                        tokenMarcarComoUtilizado(num_documento, id_tipo_token, id_modulo, usuario);
+                        Swal.close();
+
+                        toastMixin.fire({
+                            animation: true,
+                            title: 'Estado del Tipo de Partida Editado!'
+                        });
+                        tiposPartidas_Table.ajax.reload(null, false);
+                    } else {
+                        Swal.fire("", "Error D: " + data.error, "error");
+                    }
+                }
+            });
+
+        }
+
+
+        function tokenCambiarEstadoDetallePartida(status) {
+            sucursal = 2;
+            num_documento = detalle_id_token;
+            id_tipo_token = status;
+            id_modulo = 12;
+            usuario = '{{ userName }}';
+            tabla = 'conta_partidas_automaticas_detalle';
+
+            let assignedDetalle = '';
+
+            if (detalle_estado_token == 3) {
+
+                assignedDetalle = [
+                    {
+                        mov_original: detalle_id_token,
+                        documento: detalle_token,
+                        cantidad: 1,
+                        descripcion: `Se quiere habilitar la cuenta ${detalle_token} del tipo de partida ${detalle_partida_token}`,
+                        valor: 'Habilitar',
+                        observacion: `Estado Anterior: Deshabilitado. Estado Nuevo: Habilitado`
+                    }
+                ];
+            } else {
+
+                assignedDetalle = [
+                    {
+                        mov_original: detalle_id_token,
+                        documento: detalle_token,
+                        cantidad: 1,
+                        descripcion: `Se quiere deshabilitar la cuenta ${detalle_token} del tipo de partida ${detalle_partida_token}`,
+                        valor: 'Deshabilitar',
+                        observacion: `Estado Anterior: Habilitado. Estado Nuevo: Deshabilitado`
+                    }
+                ];
+            }
+
+
+
+            $.ajax({
+                url: "http://3.230.160.184:81/API/token/validar/solicitud",
+                type: "POST",
+                data: {
+                    sucursal: sucursal,
+                    num_documento: num_documento,
+                    id_tipo_token: id_tipo_token,
+                    id_modulo: id_modulo,
+                    usuario: usuario,
+                    tabla: tabla,
+                    assignedDetalle: JSON.stringify(assignedDetalle),
+                    csrfmiddlewaretoken: "{{ csrf_token }}"
+                },
+                success: function (data) {
+                    if (data.save == 1) {
+                        Swal.close();
+
+                        console.log(`${data.existe} Estado: ${data.estado}`);
+
+                        if (data.estado == 'NO EXISTE' || data.estado == 'CANCELADO' || data.estado == 'RECHAZADO' || data.estado == 'APLICADO') {
+                            console.log('Crear Solicitud');
+
+                            tokenGenerarSolicitud(sucursal, num_documento, id_tipo_token, id_modulo, usuario, tabla, assignedDetalle);
+                        }
+                        else if (data.estado == 'SOLICITADO') {
+                            console.log('Ver msj cancelar o dejar ahi!');
+
+                            Swal.fire({
+                                title: "Ya Existe una Solicitud de Token Pendiente!",
+                                text: "¿Deseas Esperar que sea Gestionada o Cancelar la Solicitud Previa?",
+                                icon: "warning",
+                                showCancelButton: true,
+                                confirmButtonText: "No Realizar Ninguna Accion",
+                                cancelButtonText: "Cancelar Solicitud Anterior",
+                                reverseButtons: true
+                            }).then((result) => {
+                                if (result.isConfirmed) {
+                                    console.log('No se cancela el token, sigue en lista de espera!');
+                                } else {
+                                    tokenCancelarSolicitud(sucursal, num_documento, id_tipo_token, id_modulo, usuario, tabla, 'El usuario decidio cancelar esta solicitud!');
+                                }
+                            });
+
+                        }
+                        else {
+                            console.log('proceder a cambiar estado');
+
+                            cambiarEstadoDetallePartidaTokenAutorizado(detalle_id_token, num_documento, id_tipo_token, id_modulo, usuario, status);
+                        }
+                    } else {
+                        Swal.fire({
+                            icon: 'error',
+                            title: 'Error',
+                            text: 'Error!' + data.error
+                        });
+                    }
+                }
+
+            });
+        }
+
+
+        function cambiarEstadoDetallePartidaTokenAutorizado(detalle_id, num_documento, id_tipo_token, id_modulo, usuario, status) {
+
+            showLoadingScreen('Token Autorizado: Cambiando Estado Cuenta de Tipo Partida!');
+
+            $.ajax({
+                url: "{% url 'update_status_detalle_tipos_partidas' %}",
+                type: "POST",
+                data: {
+                    detalle_id: detalle_id,
+                    csrfmiddlewaretoken: csrfToken
+                },
+                success: function (data) {
+                    if (data.save == 1) {
+                        tokenMarcarComoUtilizado(num_documento, id_tipo_token, id_modulo, usuario);
+                        Swal.close();
+
+                        toastMixin.fire({
+                            animation: true,
+                            title: 'Estado de Configuracion de Partida Editado!'
+                        });
+                        detallesTiposPartidas_Table.ajax.reload(null, false);
+                    } else {
+                        Swal.fire("", "Error D: " + data.error, "error");
+                    }
+                }
+            });
+
+        }
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+        function tokenMarcarComoUtilizado(num_documento, id_tipo_token, id_modulo, usuario) {
+            $.ajax({
+                url: "http://3.230.160.184:81/API/token/v2/verify", // Cambia esto a tu endpoint Django
+                type: "POST",
+                data: {
+                    num_documento: num_documento,
+                    id_tipo_token: id_tipo_token,
+                    id_modulo: id_modulo,
+                    usuario: usuario,
+                    csrfmiddlewaretoken: "{{ csrf_token }}"
+                },
+                success: function (data) {
+                    if (data.save == 1) {
+                        console.log('Token Aplicado!');
+                    } else {
+                        Swal.fire({
+                            icon: 'error',
+                            title: 'Error',
+                            text: 'Error!' + data.error
+                        });
+                    }
+                }
+            });
+        }
+
+        function tokenGenerarSolicitud(sucursal, num_documento, id_tipo_token, id_modulo, usuario, tabla, assignedDetalle) {
+            $.ajax({
+                url: "http://3.230.160.184:81/API/token/generar/solicitud", // Cambia esto a tu endpoint Django
+                type: "POST",
+                data: {
+                    sucursal: sucursal,
+                    num_documento: num_documento,
+                    id_tipo_token: id_tipo_token,
+                    id_modulo: id_modulo,
+                    usuario: usuario,
+                    tabla: tabla,
+                    assignedDetalle: JSON.stringify(assignedDetalle),
+                    csrfmiddlewaretoken: "{{ csrf_token }}"
+                },
+                success: function (data) {
+                    if (data.save == 1) {
+                        Swal.fire("", "Solicitud de Token Enviada!", "success");
+                    } else {
+                        Swal.fire({
+                            icon: 'error',
+                            title: 'Error',
+                            text: 'Error!' + data.error
+                        });
+                    }
+                }
+
+            });
+        }
+
+        function tokenCancelarSolicitud(sucursal, num_documento, id_tipo_token, id_modulo, usuario, tabla, comentario) {
+            $.ajax({
+                url: "http://3.230.160.184:81/API/token/cancelar/solicitud", // Cambia esto a tu endpoint Django
+                type: "POST",
+                data: {
+                    sucursal: sucursal,
+                    num_documento: num_documento,
+                    id_tipo_token: id_tipo_token,
+                    id_modulo: id_modulo,
+                    usuario: usuario,
+                    tabla: tabla,
+                    comentario: comentario,
+                    csrfmiddlewaretoken: "{{ csrf_token }}"
+                },
+                success: function (data) {
+                    if (data.save == 1) {
+                        Swal.fire("", "Solicitud de Token Cancelada!", "success");
+                    } else {
+                        Swal.fire({
+                            icon: 'error',
+                            title: 'Error',
+                            text: 'Error!' + data.error
+                        });
+                    }
+                }
+
+            });
+        }
+
+
+
+
+
+
+
+        /*  */
+    });
+</script>
+{% endblock %}

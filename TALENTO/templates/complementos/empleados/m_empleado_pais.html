@@ -1,0 +1,31 @@
+<div class="modal fade" id="modalCrearPais" tabindex="-1" role="dialog" aria-labelledby="exampleModalLabel" data-bs-keyboard="false" data-bs-backdrop="static" aria-hidden="true">
+    <div class="modal-dialog modal-lg" role="document">
+        <div class="modal-content">
+            <div class="modal-header" style="background-color: #304458; color:white">
+                <h5 class="modal-title" id="exampleModalLabel">Crear Nuevo País</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+            </div>
+            <div class="modal-body">
+                <form id="formCrearPais">
+                   
+                    <div class="mb-3">
+                        <label for="nombre-pais">Nombre del País: <span style="color: red;">*</span></label>
+                        <input type="text" class="form-control" id="nombre-pais" name="nombre_pais">
+                        <small id="error-nombre-pais" class="text-danger" style="display: none;">El nombre del país es obligatorio.</small>
+                    </div>
+                    <div class="mb-3">
+                        <label for="nacionalidad">Nacionalidad: <span style="color: red;">*</span></label>
+                        <input type="text" class="form-control" id="nacionalidad_pais" name="nacionalidad_pais">
+                        <small id="error-nacionalidad" class="text-danger" style="display: none;">La nacionalidad es obligatoria.</small>
+                    </div>
+                    
+                    
+                    <div class="modal-footer">
+                        <button type="submit" class="btn btn-success animate__animated animate__pulse animate__slow animate__infinite">Guardar</button>
+                        <button type="button" class="btn btn-danger close" data-bs-dismiss="modal">Cerrar</button>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+</div>

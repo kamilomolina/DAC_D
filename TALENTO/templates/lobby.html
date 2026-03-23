@@ -1,0 +1,538 @@
+{% load static %}
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.0.2/dist/css/bootstrap.min.css" rel="stylesheet"
+        integrity="sha384-EVSTQN3/azprG1Anm3QDgpJLIm9Nao0Yz1ztcQTwFspd3yD65VohhpuuCOmLASjC" crossorigin="anonymous">
+
+    <script src="https://cdn.jsdelivr.net/npm/@popperjs/core@2.9.2/dist/umd/popper.min.js"
+        integrity="sha384-IQsoLXl5PILFhosVNubq5LC7Qb9DXgDA9i+tQ8Zj3iwWAwPtgFTxbJ8NT4GN1R8p" crossorigin="anonymous">
+        </script>
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.0.2/dist/js/bootstrap.min.js"
+        integrity="sha384-cVKIPhGWiC2Al4u+LWgxfKTRIcfu0JTxR+EQDz/bgldoEyl4H0zUF0QKbrJ0EcQF" crossorigin="anonymous">
+        </script>
+
+    <link href="https://fonts.googleapis.com/icon?family=Material+Icons" rel="stylesheet">
+
+    <link rel="stylesheet" href="https://cdn.datatables.net/1.13.7/css/jquery.dataTables.min.css">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/twitter-bootstrap/5.2.0/css/bootstrap.min.css">
+
+    <link href="https://cdn.datatables.net/1.13.8/css/jquery.dataTables.css" rel="stylesheet">
+    <link href="https://cdn.datatables.net/buttons/2.4.2/css/buttons.dataTables.css" rel="stylesheet">
+    <link href="https://cdn.datatables.net/fixedcolumns/4.3.0/css/fixedColumns.dataTables.css" rel="stylesheet">
+    <link href="https://cdn.datatables.net/fixedheader/3.4.0/css/fixedHeader.dataTables.css" rel="stylesheet">
+    <link href="https://cdn.datatables.net/searchpanes/2.2.0/css/searchPanes.dataTables.css" rel="stylesheet">
+    <link href="https://cdn.datatables.net/select/1.7.0/css/select.dataTables.css" rel="stylesheet">
+    <link rel="icon" type="image/png" sizes="16x16" href="{% static 'app/cws/images/favicon-16x16.png' %}">
+
+    <script src="https://kit.fontawesome.com/e716b78aa6.js" crossorigin="anonymous"></script>
+
+    <script src="https://unpkg.com/sweetalert/dist/sweetalert.min.js"></script>
+
+    <script type="text/javascript" src="https://code.highcharts.com/stock/highstock.js"></script>
+    <script src="https://code.highcharts.com/modules/exporting.js"></script>
+    <script src="https://code.highcharts.com/modules/export-data.js"></script>
+    <script src="https://code.highcharts.com/modules/accessibility.js"></script>
+
+    <link rel="stylesheet" href="{% static 'app/css/WS.css' %}">
+
+    <title>Talento Humano</title>
+
+    <style>
+        .toast-success {
+            background-color: #35a035 !important;
+        }
+
+        .toast-message {
+            color: #FFFFFF !important;
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+        }
+
+        body {
+            margin: 0;
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            min-height: 100vh;
+            display: flex;
+            flex-direction: column;
+            background: #eef2f5;
+            /* Light soft gray/blue for a clean background */
+            color: #2C3E50;
+        }
+
+        /* Decoración de fondo suave */
+        body::before {
+            content: '';
+            position: absolute;
+            top: -150px;
+            right: -100px;
+            width: 500px;
+            height: 500px;
+            background: radial-gradient(circle, rgba(54, 146, 180, 0.15) 0%, rgba(255, 255, 255, 0) 70%);
+            border-radius: 50%;
+            z-index: -1;
+        }
+
+        body::after {
+            content: '';
+            position: absolute;
+            bottom: -150px;
+            left: -100px;
+            width: 400px;
+            height: 400px;
+            background: radial-gradient(circle, rgba(53, 160, 53, 0.1) 0%, rgba(255, 255, 255, 0) 70%);
+            border-radius: 50%;
+            z-index: -1;
+        }
+
+        .main-wrapper {
+            flex: 1;
+            display: flex;
+            flex-direction: column;
+            z-index: 1;
+        }
+
+        /* ----- HEADER ----- */
+        .header {
+            padding: 15px 30px;
+            background-color: #2C3E50;
+            /* Base de TH_CSS */
+            color: #ffffff;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            box-shadow: 0 4px 15px rgba(0, 0, 0, 0.08);
+            position: relative;
+            z-index: 10;
+        }
+
+        .header-brand {
+            font-size: 1.2rem;
+            font-weight: 700;
+            color: #ffffff;
+            letter-spacing: 0.5px;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+
+        .header-brand i {
+            color: #3692b4;
+            font-size: 28px;
+        }
+
+        .header-actions {
+            display: flex;
+            align-items: center;
+            gap: 20px;
+        }
+
+        .btn-salir-nav {
+            background-color: rgba(220, 53, 69, 0.1);
+            color: #ff6b6b;
+            border: 1px solid rgba(220, 53, 69, 0.2);
+            border-radius: 8px;
+            padding: 8px 16px;
+            font-weight: 600;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            transition: all 0.3s ease;
+        }
+
+        .btn-salir-nav:hover {
+            background-color: #dc3545;
+            color: #ffffff;
+            transform: translateY(-2px);
+            box-shadow: 0 4px 10px rgba(220, 53, 69, 0.3);
+        }
+
+        .user-nav {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            background: rgba(255, 255, 255, 0.1);
+            padding: 5px 15px 5px 5px;
+            border-radius: 30px;
+        }
+
+        .user-nav img {
+            width: 35px;
+            height: 35px;
+            border-radius: 50%;
+            border: 2px solid #3692b4;
+        }
+
+        .user-nav h6 {
+            margin: 0;
+            font-weight: 600;
+            font-size: 14px;
+        }
+
+        /* ----- MAIN CONTENT ----- */
+        .page-wrapper {
+            flex: 1;
+            padding: 50px 20px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+
+        .main-card {
+            background-color: #ffffff;
+            border-radius: 24px;
+            box-shadow: 0 15px 35px rgba(0, 0, 0, 0.06);
+            width: 100%;
+            max-width: 1100px;
+            padding: 50px;
+            position: relative;
+            overflow: hidden;
+            border-top: 6px solid #3692b4;
+            /* Acento azul TH_CSS */
+        }
+
+        .page-title {
+            margin-bottom: 40px;
+            font-size: 32px;
+            font-weight: 800;
+            text-align: center;
+            color: #2C3E50;
+            letter-spacing: -0.5px;
+        }
+
+        .page-subtitle {
+            text-align: center;
+            color: #7f8c8d;
+            margin-top: -30px;
+            margin-bottom: 40px;
+            font-size: 16px;
+        }
+
+        /* ----- MODULE CARDS ----- */
+        .modules-container {
+            display: flex;
+            justify-content: center;
+            gap: 40px;
+            flex-wrap: wrap;
+        }
+
+        .icon-card {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            background-color: #ffffff;
+            border-radius: 20px;
+            padding: 40px 20px;
+            width: 260px;
+            cursor: pointer;
+            transition: all 0.4s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+            border: 1px solid #f0f0f0;
+            box-shadow: 0 10px 20px rgba(0, 0, 0, 0.03);
+            position: relative;
+        }
+
+        .icon-card .icon-wrapper {
+            width: 80px;
+            height: 80px;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            margin-bottom: 20px;
+            transition: all 0.4s ease;
+        }
+
+        .icon-card .material-icons {
+            font-size: 40px;
+            transition: all 0.4s ease;
+        }
+
+        /* Color Variants based on TH_CSS */
+        /* Empleados */
+        .card-empleados {
+            border-bottom: 5px solid #3692b4;
+        }
+
+        .card-empleados .icon-wrapper {
+            background-color: rgba(54, 146, 180, 0.1);
+        }
+
+        .card-empleados .material-icons {
+            color: #3692b4;
+        }
+
+        .card-empleados:hover {
+            background: linear-gradient(145deg, #ffffff, #f2f9fc);
+            border-color: #3692b4;
+        }
+
+        /* Nómina */
+        .card-nomina {
+            border-bottom: 5px solid #35a035;
+        }
+
+        .card-nomina .icon-wrapper {
+            background-color: rgba(53, 160, 53, 0.1);
+        }
+
+        .card-nomina .material-icons {
+            color: #35a035;
+        }
+
+        .card-nomina:hover {
+            background: linear-gradient(145deg, #ffffff, #f2fcf2);
+            border-color: #35a035;
+        }
+
+        /* Asistencias */
+        .card-asistencias {
+            border-bottom: 5px solid #c0a24e;
+        }
+
+        .card-asistencias .icon-wrapper {
+            background-color: rgba(192, 162, 78, 0.1);
+        }
+
+        .card-asistencias .material-icons {
+            color: #c0a24e;
+        }
+
+        .card-asistencias:hover {
+            background: linear-gradient(145deg, #ffffff, #fcfaf0);
+            border-color: #c0a24e;
+        }
+
+        .icon-card:hover {
+            transform: translateY(-12px);
+            box-shadow: 0 20px 30px rgba(0, 0, 0, 0.08);
+        }
+
+        .icon-card:hover .icon-wrapper {
+            transform: scale(1.1);
+        }
+
+        .icon-card p {
+            margin: 0;
+            font-size: 20px;
+            font-weight: 700;
+            color: #2C3E50;
+        }
+
+        .icon-card:active {
+            transform: translateY(-4px);
+            box-shadow: 0 8px 15px rgba(0, 0, 0, 0.06);
+        }
+
+        /* ----- FOOTER ----- */
+        footer {
+            padding: 20px;
+            text-align: center;
+            background-color: #2C3E50;
+            color: #8da4b8;
+            font-size: 14px;
+            font-weight: 500;
+            border-top: 1px solid #3a5068;
+        }
+
+        /* ----- RESPONSIVE ----- */
+        @media (max-width: 768px) {
+            .modules-container {
+                gap: 20px;
+            }
+
+            .icon-card {
+                width: 100%;
+                max-width: 300px;
+                padding: 25px 20px;
+            }
+
+            .page-title {
+                font-size: 26px;
+            }
+
+            .main-card {
+                padding: 30px 20px;
+            }
+
+            .header {
+                flex-direction: column;
+                gap: 15px;
+                padding: 15px;
+            }
+
+            .header-actions {
+                width: 100%;
+                justify-content: space-between;
+            }
+        }
+    </style>
+
+</head>
+
+<body>
+    <div class="main-wrapper">
+        <div class="header" id="header-navbar">
+            <div class="header-brand">
+                <i class="material-icons">business_center</i>
+                Talento Humano
+            </div>
+
+            <div class="header-actions">
+                <div class="user-nav">
+                    <img src="{% static 'app/ticketit/images/avatar-01.png' %}" alt="Avatar">
+                    <h6>{{ fullName }}</h6>
+                </div>
+
+                <button class="btn btn-salir-nav" onclick="window.location.href='{% url 'modulos_aplicaciones' %}'">
+                    <i class="material-icons">exit_to_app</i> Salir
+                </button>
+            </div>
+        </div>
+
+        <div class="page-wrapper">
+            <div class="main-card">
+                <h3 class="page-title">Apartados del Módulo de Talento Humano</h3>
+                <p class="page-subtitle">Selecciona el área al que deseas ingresar</p>
+
+                <div class="modules-container">
+                    <!-- Empleados -->
+                    <div class="icon-card card-empleados clickedModule">
+                        <input type="hidden" value="TH100" class="moduleValue">
+                        <input type="hidden" value="empleados" class="moduleUrl">
+                        <input type="hidden" value="Empleados" class="nombreApartado">
+                        <div class="icon-wrapper">
+                            <span class="material-icons">groups</span>
+                        </div>
+                        <p>Empleados</p>
+                    </div>
+
+                    <!-- Nómina -->
+                    <div class="icon-card card-nomina clickedModule">
+                        <input type="hidden" value="TH300" class="moduleValue">
+                        <input type="hidden" value="nomina" class="moduleUrl">
+                        <input type="hidden" value="Nómina" class="nombreApartado">
+                        <div class="icon-wrapper">
+                            <span class="material-icons">monetization_on</span>
+                        </div>
+                        <p>Nómina</p>
+                    </div>
+
+                    <!-- Asistencias -->
+                    <div class="icon-card card-asistencias clickedModule">
+                        <input type="hidden" value="TH200" class="moduleValue">
+                        <input type="hidden" value="asistencias" class="moduleUrl">
+                        <input type="hidden" value="Asistencias" class="nombreApartado">
+                        <div class="icon-wrapper">
+                            <span class="material-icons">event_available</span>
+                        </div>
+                        <p>Asistencias</p>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+    <footer>
+        <p class="text-capitalize">COPYRIGHT © 2024. V1.1 - RM</p>
+    </footer>
+    </div>
+    <script src="https://code.jquery.com/jquery-3.6.0.js"></script>
+    <script src="https://cdn.datatables.net/1.13.7/js/jquery.dataTables.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/jszip/3.10.1/jszip.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/pdfmake/0.2.7/pdfmake.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/pdfmake/0.2.7/vfs_fonts.js"></script>
+    <script src="https://cdn.datatables.net/1.13.8/js/jquery.dataTables.js"></script>
+    <script src="https://cdn.datatables.net/buttons/2.4.2/js/dataTables.buttons.js"></script>
+    <script src="https://cdn.datatables.net/buttons/2.4.2/js/buttons.html5.js"></script>
+    <script src="https://cdn.datatables.net/buttons/2.4.2/js/buttons.print.js"></script>
+    <script src="https://cdn.datatables.net/fixedcolumns/4.3.0/js/dataTables.fixedColumns.js"></script>
+    <script src="https://cdn.datatables.net/fixedheader/3.4.0/js/dataTables.fixedHeader.js"></script>
+    <script src="https://cdn.datatables.net/searchpanes/2.2.0/js/dataTables.searchPanes.js"></script>
+    <script src="https://cdn.datatables.net/select/1.7.0/js/dataTables.select.js"></script>
+    <script src="https://cdn.datatables.net/plug-ins/1.13.1/api/sum().js"></script>
+    <script src="https://cdn.datatables.net/plug-ins/1.12.1/sorting/currency.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/FileSaver.js/2.0.5/FileSaver.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.17.0/xlsx.full.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/TableExport/5.2.0/js/tableexport.min.js"></script>
+    <script src="https://unpkg.com/xlsx/dist/xlsx.full.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/chosen/1.8.7/chosen.min.css">
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/chosen/1.8.7/chosen.jquery.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/autonumeric@4.6.0/dist/autoNumeric.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/jquery.inputmask/5.0.6/jquery.inputmask.min.js"></script>
+    <script>$(document).ready(function () {
+            $(".formattedMoneyInputs").inputmask("decimal", {
+                radixPoint: ".",
+                groupSeparator: ",",
+                digits: 2,
+                autoGroup: true,
+                rightAlign: false,
+                removeMaskOnSubmit: true,
+            });
+
+            var csrfToken = "{{ csrf_token }}";
+            var user_id = "{{ user_id }}";
+            var userName = "{{ userName }}";
+
+            localStorage.setItem('jwtToken', '{{token}}');
+
+            $(document).on('click', '.clickedModule', function () {
+                modulo = $(this).closest('.clickedModule').find('.moduleValue').val();
+                nombre_apartado = $(this).closest('.clickedModule').find('.nombreApartado').val();
+                url = $(this).closest('.clickedModule').find('.moduleUrl').val();
+
+                token = localStorage.getItem('jwtToken');
+
+                Swal.fire({
+
+                    //title: '',
+                    //html: '<b>Validando acceso al apartado de ' + nombre_apartado + ' </b>',
+                    didOpen: () => {
+                        Swal.showLoading()
+                    }
+
+                    ,
+                    allowOutsideClick: false,
+                    showConfirmButton: false
+                });
+
+                $.ajax({
+                    url: `{% url 'menuRequest' %}`,
+                    type: "POST",
+                    dataScr: 'data',
+                    data: {
+                        menu: modulo,
+                        user_id: user_id,
+                        username: userName,
+                        csrfmiddlewaretoken: csrfToken
+                    },
+                    dataType: "json",
+                    success: function (data) {
+                        Swal.close();
+
+                        if (data.save == 1) {
+                            if (data.module == 1) {
+                                //Swal.fire("", "Acceso Valido!", "success");
+                                window.location = window.location + "/" + url;
+                            }
+
+                            else {
+                                Swal.fire("", "No tienes acceso al Modulo!", "warning");
+                            }
+
+                        }
+
+                        else {
+                            Swal.fire("", "Error D: " + data.error, "error");
+                        }
+                    }
+                });
+            });
+        });
+    </script>
+</body>
+
+</html>

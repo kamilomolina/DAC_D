@@ -1,0 +1,424 @@
+{% extends 'componentes/menu_activo.html' %}
+{% load static %}
+
+{% block title %}
+Gestión de Activos
+{% endblock %}
+
+{% block body %}
+
+<div class="container-fluid mt-3">
+    {% csrf_token %}
+
+    <div class="card shadow-sm border-0">
+        <div class="card-header bg-white">
+            <div class="d-flex justify-content-between align-items-center flex-wrap gap-2">
+                <h5 class="mb-0">Gestión de Activos</h5>
+                <button class="btn btn-primary btn-sm" id="btnNuevoActivo">
+                    <i class="material-icons align-middle" style="font-size:18px;">add</i>
+                    Nuevo activo
+                </button>
+            </div>
+        </div>
+
+        <div class="card-body">
+            <div class="row g-2 mb-3">
+                <div class="col-md-3">
+                    <label class="form-label form-label-sm">Empresa</label>
+                    <input type="text" class="form-control form-control-sm" id="fkEmpresa" value="1">
+                </div>
+                <div class="col-md-3">
+                    <label class="form-label form-label-sm">Estado</label>
+                    <select class="form-select form-select-sm" id="estadoFiltro">
+                        <option value="0">Todos</option>
+                        <option value="1" selected>Activos</option>
+                        <option value="2">Inactivos</option>
+                        <option value="3">Eliminados</option>
+                    </select>
+                </div>
+                <div class="col-md-4">
+                    <label class="form-label form-label-sm">Buscar</label>
+                    <input type="text" class="form-control form-control-sm" id="textoBusqueda" placeholder="Código, nombre, marca, serie, factura...">
+                </div>
+                <div class="col-md-2 d-flex align-items-end">
+                    <button class="btn btn-secondary btn-sm w-100" id="btnBuscarActivos">
+                        Buscar
+                    </button>
+                </div>
+            </div>
+
+            <div class="table-responsive">
+                <table class="table table-bordered table-hover table-sm w-100" id="tablaActivos">
+                    <thead class="table-light">
+                        <tr>
+                            <th>ID</th>
+                            <th>Código</th>
+                            <th>Nombre</th>
+                            <th>Marca</th>
+                            <th>Modelo</th>
+                            <th>Serie</th>
+                            <th>Fecha Compra</th>
+                            <th>Valor Compra</th>
+                            <th>Acciones</th>
+                        </tr>
+                    </thead>
+                    <tbody></tbody>
+                </table>
+            </div>
+        </div>
+    </div>
+</div>
+
+
+<div class="modal fade" id="modalActivo" tabindex="-1" aria-hidden="true">
+    <div class="modal-dialog modal-xl modal-dialog-scrollable">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title">Activo</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+            </div>
+
+            <div class="modal-body">
+                <input type="hidden" id="pkActivo">
+
+                <div class="row g-2">
+                    <div class="col-md-3">
+                        <label class="form-label form-label-sm">Código Activo</label>
+                        <input type="text" class="form-control form-control-sm" id="codigoActivo">
+                    </div>
+
+                    <div class="col-md-5">
+                        <label class="form-label form-label-sm">Nombre Activo</label>
+                        <input type="text" class="form-control form-control-sm" id="nombreActivo">
+                    </div>
+
+                    <div class="col-md-4">
+                        <label class="form-label form-label-sm">Categoría</label>
+                        <select class="form-select form-select-sm" id="fkCategoria"></select>
+                    </div>
+
+                    <div class="col-md-4">
+                        <label class="form-label form-label-sm">Proveedor</label>
+                        <select class="form-select form-select-sm" id="fkProveedor"></select>
+                    </div>
+
+                    <div class="col-md-4">
+                        <label class="form-label form-label-sm">Ubicación Actual</label>
+                        <select class="form-select form-select-sm" id="fkUbicacionActual"></select>
+                    </div>
+
+                    <div class="col-md-2">
+                        <label class="form-label form-label-sm">Fecha Compra</label>
+                        <input type="date" class="form-control form-control-sm" id="fechaCompra">
+                    </div>
+
+                    <div class="col-md-3">
+                        <label class="form-label form-label-sm">Marca</label>
+                        <input type="text" class="form-control form-control-sm" id="marca">
+                    </div>
+
+                    <div class="col-md-3">
+                        <label class="form-label form-label-sm">Modelo</label>
+                        <input type="text" class="form-control form-control-sm" id="modelo">
+                    </div>
+
+                    <div class="col-md-3">
+                        <label class="form-label form-label-sm">Serie</label>
+                        <input type="text" class="form-control form-control-sm" id="serie">
+                    </div>
+
+                    <div class="col-md-3">
+                        <label class="form-label form-label-sm">Número Factura</label>
+                        <input type="text" class="form-control form-control-sm" id="numeroFactura">
+                    </div>
+
+                    <div class="col-md-3">
+                        <label class="form-label form-label-sm">Valor Compra</label>
+                        <input type="number" step="0.01" class="form-control form-control-sm" id="valorCompra">
+                    </div>
+
+                    <div class="col-md-12">
+                        <label class="form-label form-label-sm">Descripción</label>
+                        <textarea class="form-control form-control-sm" id="descripcion" rows="2"></textarea>
+                    </div>
+
+                    <div class="col-md-12">
+                        <label class="form-label form-label-sm">Observaciones</label>
+                        <textarea class="form-control form-control-sm" id="observaciones" rows="2"></textarea>
+                    </div>
+                </div>
+            </div>
+
+            <div class="modal-footer">
+                <button class="btn btn-success btn-sm" id="btnGuardarActivo">Guardar</button>
+                <button class="btn btn-secondary btn-sm" data-bs-dismiss="modal">Cerrar</button>
+            </div>
+        </div>
+    </div>
+</div>
+
+{% endblock %}
+
+{% block scripts %}
+<script src="{% static 'app/activo/utils.js' %}"></script>
+<script>
+    let tablaActivos = null;
+
+$(document).ready(function () {
+    inicializarEventos();
+    cargarCombos();
+    cargarActivos();
+});
+
+function inicializarEventos() {
+    $('#btnBuscarActivos').on('click', function () {
+        cargarActivos();
+    });
+
+    $('#btnNuevoActivo').on('click', function () {
+        limpiarFormularioActivo();
+        $('#modalActivo').modal('show');
+    });
+
+    $('#btnGuardarActivo').on('click', function () {
+        guardarActivo();
+    });
+
+    $('#textoBusqueda').on('keypress', function (e) {
+        if (e.which === 13) {
+            cargarActivos();
+        }
+    });
+}
+
+function cargarCombos() {
+    fillCategorias();
+    fillProveedores();
+    fillUbicaciones();
+}
+
+function fillCategorias() {
+    ActivoUtils.ajax("{% url 'ACTIVO:fill_categorias_activos' %}", {
+        fkEmpresa: $('#fkEmpresa').val()
+    }, function (response) {
+        let html = `<option value="">Seleccione</option>`;
+        $.each(response.data, function (i, item) {
+            html += `<option value="${item.PkCategoria}">${item.NombreCategoria}</option>`;
+        });
+        $('#fkCategoria').html(html);
+    });
+}
+
+function fillProveedores() {
+    $.ajax({
+        url: "{% url 'ACTIVO:fill_proveedores_activos' %}",
+        type: 'GET',
+        data: {
+            fkEmpresa: $('#fkEmpresa').val()
+        },
+        success: function (response) {
+            let html = `<option value="">Seleccione</option>`;
+            $.each(response.data, function (i, item) {
+                html += `<option value="${item.PkProveedor}">${item.NombreProveedor}</option>`;
+            });
+            $('#fkProveedor').html(html);
+        }
+    });
+}
+
+function fillUbicaciones() {
+    $.ajax({
+        url: "{% url 'ACTIVO:fill_ubicaciones_activos' %}",
+        type: 'GET',
+        data: {
+            fkEmpresa: $('#fkEmpresa').val()
+        },
+        success: function (response) {
+            let html = `<option value="">Seleccione</option>`;
+            $.each(response.data, function (i, item) {
+                html += `<option value="${item.PkUbicacion}">${item.NombreUbicacion}</option>`;
+            });
+            $('#fkUbicacionActual').html(html);
+        }
+    });
+}
+
+function cargarActivos() {
+    ActivoUtils.ajax("{% url 'ACTIVO:get_activos' %}", {
+        fkEmpresa: $('#fkEmpresa').val(),
+        estado: $('#estadoFiltro').val(),
+        textoBusqueda: $('#textoBusqueda').val()
+    }, function (response) {
+        if ($.fn.DataTable.isDataTable('#tablaActivos')) {
+            $('#tablaActivos').DataTable().destroy();
+        }
+
+        $('#tablaActivos tbody').empty();
+
+        $.each(response.data, function (i, item) {
+            $('#tablaActivos tbody').append(`
+                <tr>
+                    <td>${item.PkActivo}</td>
+                    <td>${item.CodigoActivo || ''}</td>
+                    <td>${item.NombreActivo || ''}</td>
+                    <td>${item.Marca || ''}</td>
+                    <td>${item.Modelo || ''}</td>
+                    <td>${item.Serie || ''}</td>
+                    <td>${item.FechaCompra || ''}</td>
+                    <td class="text-end">${ActivoUtils.formatNumber(item.ValorCompra)}</td>
+                    <td class="text-center">
+                        <button class="btn btn-primary btn-sm me-1" onclick="editarActivo(${item.PkActivo})">
+                            Editar
+                        </button>
+                        <button class="btn btn-danger btn-sm" onclick="eliminarActivo(${item.PkActivo})">
+                            Eliminar
+                        </button>
+                    </td>
+                </tr>
+            `);
+        });
+
+        tablaActivos = $('#tablaActivos').DataTable({
+            destroy: true,
+            pageLength: 10,
+            order: [[0, 'desc']],
+            language: { url: '//cdn.datatables.net/plug-ins/1.13.7/i18n/es-ES.json' }
+        });
+    });
+}
+
+function editarActivo(pkActivo) {
+    limpiarFormularioActivo();
+
+    $.ajax({
+        url: "{% url 'ACTIVO:get_activo_x_id' %}",
+        type: 'GET',
+        data: {
+            pkActivo: pkActivo
+        },
+        success: function (response) {
+            if (!response.success) {
+                Swal.fire("Atención", response.mensaje, "warning");
+                return;
+            }
+
+            let d = response.data;
+
+            $('#pkActivo').val(d.PkActivo);
+            $('#codigoActivo').val(d.CodigoActivo);
+            $('#nombreActivo').val(d.NombreActivo);
+            $('#descripcion').val(d.Descripcion);
+            $('#fkCategoria').val(d.fkCategoria);
+            $('#fkProveedor').val(d.fkProveedor);
+            $('#fkUbicacionActual').val(d.fkUbicacionActual);
+            $('#marca').val(d.Marca);
+            $('#modelo').val(d.Modelo);
+            $('#serie').val(d.Serie);
+            $('#fechaCompra').val(d.FechaCompra);
+            $('#numeroFactura').val(d.NumeroFactura);
+            $('#valorCompra').val(d.ValorCompra);
+            $('#observaciones').val(d.Observaciones);
+
+            $('#modalActivo').modal('show');
+        }
+    });
+}
+
+function guardarActivo() {
+    let pkActivo = $('#pkActivo').val();
+
+    let url = pkActivo ? "{% url 'ACTIVO:update_activo' %}" : "{% url 'ACTIVO:insert_activo' %}";
+
+    $.ajax({
+        url: url,
+        type: 'POST',
+        data: {
+            pkActivo: pkActivo,
+            codigoActivo: $('#codigoActivo').val(),
+            nombreActivo: $('#nombreActivo').val(),
+            descripcion: $('#descripcion').val(),
+            fkCategoria: $('#fkCategoria').val(),
+            fkProveedor: $('#fkProveedor').val(),
+            fkUbicacionActual: $('#fkUbicacionActual').val(),
+            marca: $('#marca').val(),
+            modelo: $('#modelo').val(),
+            serie: $('#serie').val(),
+            fechaCompra: $('#fechaCompra').val(),
+            numeroFactura: $('#numeroFactura').val(),
+            valorCompra: $('#valorCompra').val(),
+            observaciones: $('#observaciones').val(),
+            fkEmpresa: $('#fkEmpresa').val(),
+            csrfmiddlewaretoken: $('[name=csrfmiddlewaretoken]').val()
+        },
+        success: function (response) {
+            if (response.save == 1) {
+                Swal.fire("Éxito", response.mensaje, "success");
+                $('#modalActivo').modal('hide');
+                cargarActivos();
+            } else {
+                Swal.fire("Error", response.mensaje, "error");
+            }
+        },
+        error: function(xhr, status, error) {
+            Swal.fire("Error", "Error al guardar: " + (xhr.responseJSON ? xhr.responseJSON.mensaje : error), "error");
+            console.error(xhr.responseText);
+        }
+    });
+}
+
+function eliminarActivo(pkActivo) {
+    Swal.fire({
+        title: '¿Estás seguro?',
+        text: "¡No podrás revertir esto!",
+        icon: 'warning',
+        showCancelButton: true,
+        confirmButtonColor: '#3085d6',
+        cancelButtonColor: '#d33',
+        confirmButtonText: 'Sí, eliminar',
+        cancelButtonText: 'Cancelar'
+    }).then((result) => {
+        if (result.isConfirmed) {
+            $.ajax({
+                url: "{% url 'ACTIVO:delete_activo' %}",
+                type: 'POST',
+                data: {
+                    pkActivo: pkActivo,
+                    estado: 3,
+                    csrfmiddlewaretoken: $('[name=csrfmiddlewaretoken]').val()
+                },
+                success: function (response) {
+                    if (response.save == 1) {
+                        Swal.fire("Eliminado", response.mensaje, "success");
+                        cargarActivos();
+                    } else {
+                        Swal.fire("Error", response.mensaje, "error");
+                    }
+                }
+            });
+        }
+    });
+}
+
+function limpiarFormularioActivo() {
+    $('#pkActivo').val('');
+    $('#codigoActivo').val('');
+    $('#nombreActivo').val('');
+    $('#descripcion').val('');
+    $('#fkCategoria').val('');
+    $('#fkProveedor').val('');
+    $('#fkUbicacionActual').val('');
+    $('#marca').val('');
+    $('#modelo').val('');
+    $('#serie').val('');
+    $('#fechaCompra').val('');
+    $('#numeroFactura').val('');
+    $('#valorCompra').val('');
+    $('#observaciones').val('');
+}
+
+function formatoNumero(valor) {
+    return ActivoUtils.formatNumber(valor);
+}
+</script>
+
+{% endblock %}

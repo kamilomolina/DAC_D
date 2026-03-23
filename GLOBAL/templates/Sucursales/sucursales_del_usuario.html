@@ -1,0 +1,564 @@
+{% extends 'componentes/menu_global_security.html' %}
+{% load static %}
+
+{% block title %}
+USUARIOS DE LA SUCURSAL
+{% endblock %}
+
+
+{% block body %}
+
+
+<div class="container-fluid mt-1">
+    <div class="card shadow-lg card-expanded">
+
+        <div class="row align-items-center">
+            <div class="col d-flex align-items-center">
+                <button id="toggle-sidebar" class="me-3" title="Mostrar/Ocultar Menu">
+                </button>
+                <i class="material-icons d-block">person</i>
+                <h4 class="page-title mb-0">USUARIOS DE LA SUCURSAL</h4>
+            </div>
+        </div>
+
+        <div class="container-fluid pt-1">
+
+            <div class="row mt-1">
+
+                <div class="row d-flex align-items-start justify-content-between">
+
+                    <div class="col-3">
+                        <label class="me-2">USUARIOS</label>
+                        <div class="table-responsive  shadow  bg-blanco ">
+                            <table id="tableUsuarios"
+                                class="table table-striped table-bordered mb-0 table-sm rounded-4 table-hover align-middle ">
+                                <thead class="bg-blanco text-dark">
+                                    <tr>
+                                        <th>Nombre</th>
+                                        <th>Usuario</th>
+                                    </tr>
+                                </thead>
+                                <tbody>
+                                </tbody>
+                            </table>
+                        </div>
+                    </div>
+
+                    <div class="col-lg-4">
+                        <label class="me-2">SUCURSALES DISPONIBLES</label>
+                        <div class="table-responsive  shadow bg-blanco ">
+                            <table id="tableSucursalesDisponibles"
+                                class="table table-striped table-bordered mb-0 table-sm rounded-4 table-hover align-middle ">
+                                <thead class="table-success text-dark">
+                                    <tr>
+                                        <th>Codigo</th>
+                                        <th>Sucursales Disponible</th>
+                                    </tr>
+                                </thead>
+                                <tbody class="table-success text-dark">
+                                </tbody>
+                            </table>
+                        </div>
+                    </div>
+
+                    <div class="col-lg-1 d-flex flex-column align-items-center my-4">
+                        <button id="btnAgregar" class="btn btn-success btn-sm mb-2" style="width: 50px; height: 50px;">
+                            <i class="large material-icons">arrow_forward</i>
+                        </button>
+                        <button id="btnQuitar" class="btn btn-danger btn-sm mb-2" style="width: 50px; height: 50px;">
+                            <i class="large material-icons">arrow_back</i>
+                        </button>
+                    </div>
+
+                    <div class="col-lg-4">
+                        <label class="me-2">SUCURSALES ASIGNADAS</label>
+                        <div class="table-responsive  shadow bg-blanco">
+                            <table id="tableSucursalesAsignadas"
+                                class="table table-striped table-bordered mb-0 table-sm rounded-4 table-hover align-middle ">
+                                <thead class="table-danger text-dark">
+                                    <tr>
+                                        <th>Codigo</th>
+                                        <th>Sucursales Asignada</th>
+                                    </tr>
+                                </thead>
+                                <tbody class="table-danger text-dark">
+                                </tbody>
+                            </table>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<a href="{% url 'global_main' %}">
+    <button class="btn btn-sm btn-danger" id="btnCerrar" title="Cerrar"
+        style="position: fixed; bottom: 20px; right: 20px;">
+        <i class="fa fa-times"></i> Cerrar
+    </button>
+</a>
+
+{% endblock %}
+
+
+
+{% block scripts %}
+<script>
+    $(document).ready(function () {
+
+        var csrfToken = "{{ csrf_token }}";
+        var tableFirmas, firma_id;
+
+        var toastMixin = Swal.mixin({
+            toast: true,
+            icon: 'success',
+            title: 'General Title',
+            animation: false,
+            position: 'top-right',
+            showConfirmButton: false,
+            timer: 2000,
+            timerProgressBar: true,
+            didOpen: (toast) => {
+                toast.addEventListener('mouseenter', Swal.stopTimer);
+                toast.addEventListener('mouseleave', Swal.resumeTimer);
+            }
+        });
+
+        /* MENU ID Y SUBMENU ID */
+        $('#sucursalMenu, #sucursalesUsuario_submenu').addClass('active');
+
+        id_usuario = null
+        id_sucursal_disponible = null
+        id_sucursal_asignada = null
+
+        getUsuariosDisponibles()
+
+        function getUsuariosDisponibles() {
+
+            var cardHeight = $(".card-expanded").height();
+            var tableHeight = cardHeight * 0.5;
+
+            $("#tableUsuarios").DataTable().clear().destroy();
+
+            tableUsuarios = $('#tableUsuarios').DataTable({
+                autoWidth: false,
+                scrollX: true,
+                scrollY: tableHeight + 'px',
+                scrollCollapse: true,
+                pageLength: 50,
+                dom: 'rftip',
+                language: {
+                    url: "{% static 'app/th/json/es-ES.json' %}",
+                },
+                ajax: {
+                    url: `{% url 'get_sucursales_del_usuario_usuarios_data' %}`,
+                    type: "POST",
+                    dataSrc: 'data',
+                    data: {
+                        csrfmiddlewaretoken: csrfToken
+                    },
+                },
+                colReorder: {
+                    realtime: false,
+                },
+                buttons: [
+                    {
+                        extend: 'excel',
+                        text: '<i class="fas fa-file-excel"></i>',
+                        titleAttr: 'Exportar a Excel',
+                        className: 'btn btn-success',
+                    },
+                    {
+                        extend: 'pdf',
+                        text: '<i class="fas fa-file-pdf"></i>',
+                        titleAttr: 'Exportar a PDF',
+                        className: 'btn btn-danger',
+                    },
+                    {
+                        extend: 'print',
+                        text: '<i class="fas fa-print"></i>',
+                        titleAttr: 'Imprimir',
+                        className: 'btn btn-primary',
+                        orientation: 'landscape'
+                    }
+                ],
+                columns: [
+                    {
+                        data: 'Nombre',
+                    },
+                    {
+                        data: 'Usuario',
+                    },
+                ],
+                order: [[1, "asc"]],
+            });
+
+        }
+
+        $('#tableUsuarios tbody').on('click', 'tr', function () {
+            $('#tableUsuarios tbody tr').removeClass('selected');
+            $(this).addClass('selected');
+
+            id_usuario = tableUsuarios.row(this).data().PKUsuario;
+            llenarSucursales()
+
+        });
+
+        function llenarSucursales() {
+            getSucursalesDisponibles()
+                .then(data => {
+                    return llenarSucursalesDisponibles();
+                })
+                .catch(error => {
+                    console.log('Error al obtener las sucursales:', error);
+                });
+
+            getSucursalesAsignadas()
+                .then(data => {
+                    return llenarSucursalesAsignadas();
+                })
+                .catch(error => {
+                    console.log('Error al obtener las sucursales:', error);
+                });
+        }
+
+
+        function getSucursalesDisponibles() {
+            return new Promise((resolve, reject) => {
+                $("#tableSucursalesDisponibles").DataTable().clear().destroy();
+
+                var cardHeight = $(".card-expanded").height();
+                var tableHeight = cardHeight * 0.5;
+
+                tableSucursalesDisponibles = $('#tableSucursalesDisponibles').DataTable({
+                    autoWidth: false,
+                    scrollX: true,
+                    scrollY: tableHeight + 'px',
+                    scrollCollapse: true,
+                    pageLength: 50,
+                    dom: 'rftip',
+                    language: {
+                        url: "{% static 'app/th/json/es-ES.json' %}",
+                    },
+                    ajax: {
+                        url: `{% url 'get_sucursales_del_usuario_sucursales_data' %}`,
+                        type: "POST",
+                        dataSrc: 'data',
+                        data: {
+                            csrfmiddlewaretoken: csrfToken
+                        },
+                        success: function (data) {
+                            tableSucursalesDisponibles.clear().rows.add(data.data).draw();
+                            resolve();
+                        },
+                        error: function (xhr, status, error) {
+                            reject(error);
+                        }
+                    },
+                    colReorder: {
+                        realtime: false,
+                    },
+                    buttons: [
+                        {
+                            extend: 'excel',
+                            text: '<i class="fas fa-file-excel"></i>',
+                            titleAttr: 'Exportar a Excel',
+                            className: 'btn btn-success',
+                        },
+                        {
+                            extend: 'pdf',
+                            text: '<i class="fas fa-file-pdf"></i>',
+                            titleAttr: 'Exportar a PDF',
+                            className: 'btn btn-danger',
+                        },
+                        {
+                            extend: 'print',
+                            text: '<i class="fas fa-print"></i>',
+                            titleAttr: 'Imprimir',
+                            className: 'btn btn-primary',
+                            orientation: 'landscape'
+                        }
+                    ],
+                    columns: [
+                        {
+                            data: 'CodigoSucursal',
+                        },
+                        {
+                            data: 'NombreEmpresa',
+                        },
+                    ],
+                    order: [[0, "asc"]],
+                });
+            });
+        }
+
+
+        $('#tableSucursalesDisponibles tbody').on('click', 'tr', function () {
+            $('#tableSucursalesDisponibles tbody tr').removeClass('selected');
+
+            $(this).addClass('selected');
+
+
+            id_sucursal_disponible = tableSucursalesDisponibles.row(this).data().fkSucursal;
+
+        });
+
+
+        function llenarSucursalesDisponibles() {
+            return new Promise((resolve, reject) => {
+
+                $.ajax({
+                    url: "{% url 'get_sucursales_del_usuario_data' %}",
+                    type: "POST",
+                    data: {
+                        varUsuario: id_usuario,
+                        csrfmiddlewaretoken: csrfToken
+                    },
+                    success: function (data) {
+                        let sucursalesUsuario = data.data;
+
+                        let table = $('#tableSucursalesDisponibles').DataTable();
+                        let rows = table.rows().data();
+
+                        for (let i = rows.length - 1; i >= 0; i--) {
+                            let rowData = rows[i];
+
+                            sucursalesUsuario.forEach(sucursal => {
+                                if (rowData.fkSucursal == sucursal.fkSucursal) {
+
+                                    table.row(i).remove().draw();
+                                }
+                            });
+                        }
+
+                        resolve();
+                    },
+                    error: function (xhr, status, error) {
+                        reject("Error al obtener las sucursales: " + error);
+                    }
+
+                });
+
+            });
+        }
+
+
+        function getSucursalesAsignadas() {
+
+            return new Promise((resolve, reject) => {
+
+
+                $("#tableSucursalesAsignadas").DataTable().clear().destroy();
+
+                var cardHeight = $(".card-expanded").height();
+                var tableHeight = cardHeight * 0.5;
+
+                tableSucursalesAsignadas = $('#tableSucursalesAsignadas').DataTable({
+                    autoWidth: false,
+                    scrollX: true,
+                    scrollY: tableHeight + 'px',
+                    scrollCollapse: true,
+                    pageLength: 50,
+                    dom: 'rftip',
+                    language: {
+                        url: "{% static 'app/th/json/es-ES.json' %}",
+                    },
+                    ajax: {
+                        url: `{% url 'get_sucursales_del_usuario_sucursales_asignadas_data' %}`,
+                        type: "POST",
+                        dataSrc: 'data',
+                        data: {
+                            csrfmiddlewaretoken: csrfToken
+                        },
+                        success: function (data) {
+                            tableSucursalesAsignadas.clear().rows.add(data.data).draw();
+                            resolve();
+                        },
+                        error: function (xhr, status, error) {
+                            reject(error);
+                        }
+                    },
+                    colReorder: {
+                        realtime: false,
+                    },
+                    buttons: [
+                        {
+                            extend: 'excel',
+                            text: '<i class="fas fa-file-excel"></i>',
+                            titleAttr: 'Exportar a Excel',
+                            className: 'btn btn-success',
+                        },
+                        {
+                            extend: 'pdf',
+                            text: '<i class="fas fa-file-pdf"></i>',
+                            titleAttr: 'Exportar a PDF',
+                            className: 'btn btn-danger',
+                        },
+                        {
+                            extend: 'print',
+                            text: '<i class="fas fa-print"></i>',
+                            titleAttr: 'Imprimir',
+                            className: 'btn btn-primary',
+                            orientation: 'landscape'
+                        }
+                    ],
+                    columns: [
+                        {
+                            data: 'CodigoSucursal',
+                        },
+                        {
+                            data: 'NombreEmpresa',
+                        },
+                    ],
+                    order: [[0, "asc"]],
+                });
+            });
+
+        }
+
+        $('#tableSucursalesAsignadas tbody').on('click', 'tr', function () {
+            $('#tableSucursalesAsignadas tbody tr').removeClass('selected');
+
+            $(this).addClass('selected');
+
+
+            id_sucursal_asignada = tableSucursalesAsignadas.row(this).data().fkSucursal;
+
+        });
+
+
+        function llenarSucursalesAsignadas() {
+            return new Promise((resolve, reject) => {
+
+                $.ajax({
+                    url: "{% url 'get_sucursales_del_usuario_data' %}",
+                    type: "POST",
+                    data: {
+                        varUsuario: id_usuario,
+                        csrfmiddlewaretoken: csrfToken
+                    },
+                    success: function (data) {
+                        let sucursalesUsuario = data.data;
+
+                        let table = $('#tableSucursalesAsignadas').DataTable();
+                        let rows = table.rows().data();
+
+                        rows.each(function (rowData, index) {
+                            sucursalesUsuario.forEach(sucursal => {
+                                if (rowData.fkSucursal == sucursal.fkSucursal) {
+                                    rowData.Esta = 1
+                                }
+                            });
+                        });
+
+                        let rowsEliminar = table.rows().data();
+
+                        for (let i = rowsEliminar.length - 1; i >= 0; i--) {
+                            let rowData = rowsEliminar[i];
+
+                            if (rowData.Esta != 1) {
+                                table.row(i).remove().draw();
+                            }
+                        }
+
+
+
+
+                    },
+                    error: function (xhr, status, error) {
+                        console.log("Error al obtener las sucursales:", error);
+                    }
+                });
+
+            });
+        }
+
+
+        $('#btnAgregar').on('click', function () {
+            asignar(id_sucursal_disponible, id_usuario)
+        });
+
+        $('#btnQuitar').on('click', function () {
+            quitar(id_sucursal_asignada, id_usuario)
+        });
+
+        $('#tableUsuariosDisponibles tbody').on('dblclick', 'tr', function () {
+            asignar(id_sucursal_disponible, id_usuario)
+        });
+
+        $('#tableUsuariosAsignados tbody').on('dblclick', 'tr', function () {
+            quitar(id_sucursal_asignada, id_usuario)
+        });
+
+
+        function asignar(asignarSucursal, asignarUsuario) {
+
+            if (asignarSucursal == null || asignarUsuario == null) {
+                Swal.fire("", "Debes seleccionar una Sucursal y un Usuario Disponible!", "warning");
+            } else {
+                $.ajax({
+                    url: "{% url 'insert_sucursales_del_usuario_sucursal_disponible' %}",
+                    type: "POST",
+                    data: {
+                        varSucursal: asignarSucursal,
+                        varUsuario: asignarUsuario,
+                        csrfmiddlewaretoken: csrfToken
+                    },
+                    success: function (data) {
+                        if (data.save == 1) {
+                            toastMixin.fire({
+                                animation: true,
+                                title: 'Sucursal Asignada!'
+                            });
+
+                            id_sucursal_asignada = null
+                            id_sucursal_disponible = null
+
+                            llenarSucursales()
+                        } else {
+                            Swal.fire("", "Error D: " + data.error, "error");
+                        }
+                    }
+                });
+            }
+        }
+
+        function quitar(quitarSucursal, quitarUsuario) {
+
+            if (quitarSucursal == null || quitarUsuario == null) {
+                Swal.fire("", "Debes seleccionar una Sucursal y un Usuario Asignado!", "warning");
+            } else {
+                $.ajax({
+                    url: "{% url 'eliminar_sucursales_del_usuario_sucursal_asignada' %}",
+                    type: "POST",
+                    data: {
+                        varSucursal: quitarSucursal,
+                        varUsuario: quitarUsuario,
+                        csrfmiddlewaretoken: csrfToken
+                    },
+                    success: function (data) {
+                        if (data.save == 1) {
+                            toastMixin.fire({
+                                animation: true,
+                                title: 'Sucursal Removida!'
+                            });
+
+                            id_sucursal_asignada = null
+                            id_sucursal_disponible = null
+
+                            llenarSucursales()
+                        } else {
+                            Swal.fire("", "Error D: " + data.error, "error");
+                        }
+                    }
+                });
+            }
+        }
+
+    });
+
+
+
+</script>
+{% endblock %}

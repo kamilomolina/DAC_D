@@ -1,0 +1,860 @@
+{% extends 'componentes/menu_contable.html' %}
+{% load static %}
+
+{% block title %}
+ENLAZAR DESTINOS O PROCEDENCIAS
+{% endblock %}
+
+
+{% block body %}
+
+<div class="row align-items-center border-bottom mb-3 py-2 bg-white shadow-sm mx-0">
+    <div class="col d-flex align-items-center px-0">
+        <button id="toggle-sidebar" class="btn btn-primary btn-sm me-3 border-0 rounded-circle btnMenu"
+            style="width: 32px; height: 32px; padding: 0;">
+            <i class="fas fa-bars"></i>
+        </button>
+        <h6 class="page-title mb-0 fs-5 fw-bold text-dark">
+            <i class="fas fa-link text-primary me-2"></i>GESTIÓN DE ENLACES BANCARIOS
+        </h6>
+    </div>
+</div>
+
+<div class="container-fluid px-0 mt-1">
+
+    <div class="row g-3 align-items-end mx-0">
+
+        <div class="col-md-2">
+            <label for="selectEmpresa">Empresa:</label>
+            <select id="selectEmpresa" class="form-select form-select-sm" name="selectEmpresa">
+                {% for e in empresasData %}
+                <option value="{{ e.id }}">{{ e.nombre }}</option>
+                {% endfor %}
+            </select>
+        </div>
+
+        <div class="col-md-2">
+            <label>Tipo:</label>
+            <select id="selectTipo" class="form-select form-select-sm">
+                <option value="1">Destinos</option>
+                <option value="2">Procedencias</option>
+            </select>
+        </div>
+
+        <div class="col-md-2">
+            <label>Estado:</label>
+            <select id="selectEstado" class="form-select form-select-sm">
+                <option value="0">Sin Enlazar</option>
+                <option value="1">Enlazados</option>
+                <option value="2">Todos</option>
+            </select>
+        </div>
+
+        <div class="col-md-3 d-flex gap-2">
+            <button id="btnBuscar" class="btn btn-sm btn-success">
+                Buscar
+            </button>
+
+            <button id="btnAdminEnlaces" class="btn btn-sm btn-dark">
+                <i class="fas fa-cogs"></i> Administrar Enlaces
+            </button>
+
+            <button id="btnCargaMasiva" class="btn btn-sm btn-primary" style="display:none">
+                <i class="fas fa-file-excel"></i>
+                Carga Masiva Excel
+            </button>
+        </div>
+
+
+    </div>
+
+    <hr>
+
+    <div class="row">
+        <div class="table-responsive">
+            <table id="tablaMovimientos" class="table table-striped table-bordered table-sm table-hover">
+                <thead>
+                    <tr>
+                        <th>Fecha</th>
+                        <th>Referencia</th>
+                        <th>Concepto</th>
+                        <th>Cuenta Bancaria</th>
+                        <th>Tipo Cuenta</th>
+                        <th>Banco</th>
+                        <th>Valor</th>
+                        <th>Creado Por</th>
+                        <th>Fecha Hora Creado</th>
+                        <th>Enlace</th>
+                        <th>Cuenta Contable</th>
+                        <th>Enlace Por</th>
+                        <th>Fecha Hora Enlace</th>
+                        <th>Acciones</th>
+                    </tr>
+                </thead>
+                <tbody></tbody>
+            </table>
+
+        </div>
+    </div>
+</div>
+
+
+
+<div class="modal fade" id="modalEnlaces" tabindex="-1">
+    <div class="modal-dialog modal-xl">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5>Seleccionar Enlace</h5>
+                <button class="btn-close" data-bs-dismiss="modal"></button>
+            </div>
+            <div class="modal-body">
+
+                <table id="tablaEnlaces" class="table table-bordered table-sm">
+                    <thead>
+                        <tr>
+                            <th>Nombre</th>
+                            <th>Cuenta Contable</th>
+                            <th>Tipo</th>
+                            <th>Acción</th>
+                        </tr>
+                    </thead>
+                    <tbody></tbody>
+                </table>
+
+            </div>
+        </div>
+    </div>
+</div>
+
+
+<div class="modal fade" id="modalCargaExcel" tabindex="-1">
+    <div class="modal-dialog">
+        <div class="modal-content">
+
+            <div class="modal-header">
+                <h5 class="modal-title">
+                    Carga Masiva de Enlaces desde Excel
+                </h5>
+                <button class="btn-close" data-bs-dismiss="modal"></button>
+            </div>
+
+            <div class="modal-body">
+
+                <div class="alert alert-info">
+                    <strong>Nota:</strong>
+                    Este proceso actualizará el campo
+                    <b>id_enlace</b> de los registros en el archivo.
+                    <br><br>
+                    El archivo debe ser el Excel generado desde este mismo módulo
+                    y corresponder al tipo seleccionado
+                    (<b>Destinos</b> o <b>Procedencias</b>).
+                </div>
+
+                <label>Seleccione archivo:</label>
+                <input type="file" id="fileExcel" class="form-control form-control-sm" accept=".xlsx">
+
+            </div>
+
+            <div class="modal-footer">
+                <button id="btnProcesarExcel" class="btn btn-success btn-sm">Procesar Archivo</button>
+                <button class="btn btn-danger btn-sm" data-bs-dismiss="modal">Cancelar</button>
+            </div>
+
+        </div>
+    </div>
+</div>
+
+<div class="modal fade" id="modalAdminEnlaces" tabindex="-1">
+    <div class="modal-dialog modal-xl">
+        <div class="modal-content">
+
+            <div class="modal-header">
+                <h5 class="modal-title">Administración de Enlaces</h5>
+                <button class="btn-close" data-bs-dismiss="modal"></button>
+            </div>
+
+            <div class="modal-body">
+
+                <div class="d-flex justify-content-end mb-2">
+                    <button id="btnNuevoEnlace" class="btn btn-sm btn-primary">
+                        <i class="fas fa-plus"></i> Nuevo
+                    </button>
+                </div>
+
+                <div class="row mt-2">
+                    <table id="tablaAdminEnlaces" class="table table-bordered table-sm table-striped">
+                        <thead>
+                            <tr>
+                                <th>#</th>
+                                <th>Nombre</th>
+                                <th>Cuenta Contable</th>
+                                <th>Tipo</th>
+                                <th>Estado</th>
+                                <th width="120">Acciones</th>
+                            </tr>
+                        </thead>
+                        <tbody></tbody>
+                    </table>
+                </div>
+
+            </div>
+
+        </div>
+    </div>
+</div>
+
+
+<div class="modal fade" id="modalFormEnlace" tabindex="-1">
+    <div class="modal-dialog">
+        <div class="modal-content">
+
+            <div class="modal-header">
+                <h5 class="modal-title">Formulario Enlace</h5>
+                <button class="btn-close" data-bs-dismiss="modal"></button>
+            </div>
+
+            <div class="modal-body">
+
+                <input type="hidden" id="form_id_enlace" value="0">
+
+                <div class="mb-2">
+                    <label>Nombre Enlace</label>
+                    <select id="form_nombre_enlace" class="form-select form-select-sm"></select>
+                </div>
+
+                <div class="mb-2">
+                    <label>Tipo</label>
+                    <select id="form_tipo" class="form-select form-select-sm">
+                        <option value="1">DESTINO</option>
+                        <option value="2">PROCEDENCIA</option>
+                    </select>
+                </div>
+
+                <div class="mb-2">
+                    <label>Cuenta Contable</label>
+                    <select id="form_cuenta" class="form-select form-select-sm"></select>
+                </div>
+
+            </div>
+
+            <div class="modal-footer">
+                <button id="btnGuardarEnlace" class="btn btn-success btn-sm">Guardar</button>
+                <button class="btn btn-danger btn-sm" data-bs-dismiss="modal">Cancelar</button>
+            </div>
+
+        </div>
+    </div>
+</div>
+
+
+<a href="{% url 'panel_contabilidad' %}">
+    <button class="btn btn-sm btn-danger" id="btnCerrar" title="Cerrar"
+        style="position: fixed; bottom: 20px; right: 20px;">
+        <i class="fa fa-times"></i> Cerrar
+    </button>
+</a>
+
+{% endblock %}
+
+
+{% block scripts %}
+
+<script>
+    $(document).ready(function () {
+
+        var csrfToken = "{{ csrf_token }}";
+        var tableFirmas, firma_id, TipoDocto = null, NumeroDocto = null;
+        var mes = "{{mes}}";
+        var saldosCuentasTable;
+
+        let tablaMovimientos;
+        let tablaEnlaces;
+        let currentRowData = null;
+        let tablaAdminEnlaces;
+
+        $('#selectTipo').val(1);
+
+        var toastMixin = Swal.mixin({
+            toast: true,
+            icon: 'success',
+            title: 'General Title',
+            animation: false,
+            position: 'top-right',
+            showConfirmButton: false,
+            timer: 2000,
+            timerProgressBar: true,
+            didOpen: (toast) => {
+                toast.addEventListener('mouseenter', Swal.stopTimer);
+                toast.addEventListener('mouseleave', Swal.resumeTimer);
+            }
+        });
+
+        let dollarUSLocale = Intl.NumberFormat("en-US", {
+            minimumFractionDigits: 2,
+            maximumFractionDigits: 2
+        });
+
+        let intergerLocale = Intl.NumberFormat("en-US", {
+            minimumFractionDigits: 0,
+            maximumFractionDigits: 0
+        });
+
+        function showLoadingScreen(text = '') {
+            Swal.fire({
+                title: '',
+                html: `<b>${text}</b>`,
+                didOpen: () => {
+                    Swal.showLoading();
+                },
+                allowOutsideClick: false,
+                showConfirmButton: false
+            });
+        }
+
+
+        function xmlSafe(text) {
+            if (!text) return '';
+            return String(text)
+                .replace(/&/g, '&amp;')
+                .replace(/</g, '&lt;')
+                .replace(/>/g, '&gt;')
+                .replace(/"/g, '&quot;')
+                .replace(/'/g, '&apos;');
+        }
+
+        function cargarTablaEnlaces(tipo) {
+
+            $.post("{% url 'dataTiposEnlancesDestinosProcedencias' %}", {
+                tipo_enlance: tipo,
+                estado: 1,
+                csrfmiddlewaretoken: "{{ csrf_token }}"
+            }, function (resp) {
+
+                let html = '';
+
+                resp.data.forEach(function (e) {
+                    html += `
+                    <tr>
+                        <td>${e.id_enlace}</td>
+                        <td>${e.nombre_enlace}</td>
+                        <td>${e.cuenta_contable}</td>
+                        <td>${e.tipo_enlance}</td>
+                    </tr>`;
+                });
+
+                $('#tablaEnlaces tbody').html(html);
+
+            });
+        }
+
+
+        // ===============================
+        // ABRIR MODAL
+        // ===============================
+        $('#btnCargaMasiva').click(function () {
+            $('#fileExcel').val('');
+            $('#modalCargaExcel').modal('show');
+        });
+
+        // ===============================
+        // PROCESAR EXCEL
+        // ===============================
+        $('#btnProcesarExcel').click(function () {
+
+            let file = $('#fileExcel')[0].files[0];
+            let tipo = $('#selectTipo').val();
+
+            if (!file) {
+                Swal.fire("Atención", "Seleccione un archivo", "warning");
+                return;
+            }
+
+            let data = new FormData();
+            data.append("file", file);
+            data.append("tipo_enlance", tipo);
+            data.append("csrfmiddlewaretoken", "{{ csrf_token }}");
+
+            showLoadingScreen('Procesando...');
+
+            $.ajax({
+                url: "{% url 'cargarExcelEnlacesDestinosProcedencias' %}",
+                type: "POST",
+                data: data,
+                processData: false,
+                contentType: false,
+
+                success: function (resp) {
+
+                    $('#modalCargaExcel').modal('hide');
+
+                    Swal.close();
+
+                    Swal.fire(
+                        "Resultado",
+                        resp.mensaje,
+                        "success"
+                    );
+
+                    // Recargar tabla principal
+                    // cargarTabla();
+                    tablaMovimientos.ajax.reload(null, false);
+
+                },
+
+                error: function () {
+                    Swal.fire(
+                        "Error",
+                        "No se pudo procesar el archivo",
+                        "error"
+                    );
+                }
+            });
+
+        });
+
+
+        tablaMovimientos = $('#tablaMovimientos').DataTable({
+            language: {
+                url: "{% static 'app/th/json/es-ES.json' %}",
+            },
+        });
+
+        function cargarTabla() {
+            let empresa = $('#selectEmpresa').val();
+            let tipo = $('#selectTipo').val();
+            let estado = $('#selectEstado').val();
+
+            showLoadingScreen();
+
+            $('#btnCargaMasiva').hide();
+
+            $("#tablaMovimientos").DataTable().clear().destroy();
+
+            tablaMovimientos = $('#tablaMovimientos').DataTable({
+                initComplete: function () {
+                    Swal.close();
+
+                    if (estado == 0 || estado == 2) {
+                        // 👇 mostrar botón de carga masiva
+                        $('#btnCargaMasiva').show();
+                    }
+                },
+                scrollX: true,
+                scrollY: '50vh',
+                scrollCollapse: true,
+                pageLength: 50,
+                dom: 'Brftip',
+                language: {
+                    url: "{% static 'app/th/json/es-ES.json' %}",
+                },
+                fixedColumns: {
+                    left: 0,
+                    right: 1,
+                },
+                buttons: [
+                    /* {
+                        extend: 'excel',
+                        text: '<i class="fas fa-file-excel"></i>',
+                        titleAttr: 'Exportar a Excel',
+                        className: 'btn btn-success',
+                    }, */
+                    {
+                        text: '<i class="fas fa-file-excel"></i>',
+                        className: 'btn btn-success',
+                        action: function () {
+
+                            let empresa = $('#selectEmpresa').val();
+                            let tipo = $('#selectTipo').val();
+                            let estado = $('#selectEstado').val();
+
+                            let form = $('<form>', {
+                                action: "{% url 'exportMovimientosDestinosProcedenciasExcel' %}",
+                                method: 'POST'
+                            });
+
+                            form.append(`{% csrf_token %}`);
+
+                            form.append(`<input name="empresa" value="${empresa}">`);
+                            form.append(`<input name="tipo_enlance" value="${tipo}">`);
+                            form.append(`<input name="estado" value="${estado}">`);
+
+                            $('body').append(form);
+                            form.submit();
+                        }
+                    }, {
+                        extend: 'pdf',
+                        text: '<i class="fas fa-file-pdf"></i>',
+                        titleAttr: 'Exportar a PDF',
+                        className: 'btn btn-danger',
+                    },
+                    {
+                        extend: 'print',
+                        text: '<i class="fas fa-print"></i>',
+                        titleAttr: 'Imprimir',
+                        className: 'btn btn-primary',
+                        orientation: 'landscape'
+                    }
+                ],
+                ajax: {
+                    url: "{% url 'dataDestinosProcedenciasMovimientos' %}",
+                    type: "POST",
+                    data: {
+                        empresa: empresa,
+                        tipo_enlance: tipo,
+                        estado: estado,
+                        csrfmiddlewaretoken: "{{ csrf_token }}"
+                    },
+                    dataSrc: 'data'
+                },
+                columns: [
+                    { data: 'FechaMovimientoText' },
+                    { data: 'NumeroMovimiento' },
+                    { data: 'ConceptoTrim' },
+                    { data: 'CuentaBancaria' },
+                    { data: 'TipoCuenta' },
+                    { data: 'Banco' },
+                    {
+                        data: 'valor_movimiento', className: 'text-end',
+                        render: $.fn.dataTable.render.number(',', '.', 2)
+                    },
+                    { data: 'FechaHora' },
+                    { data: 'ElaboradoPor' },
+                    {
+                        data: 'nombre_enlace',
+                        render: function (data, type, row) {
+                            if (parseInt(row.id_enlace) === 0) {
+                                return '<span class="badge bg-warning text-dark">SIN ENLAZAR</span>';
+                            }
+                            return data || '';
+                        }
+                    },
+                    {
+                        data: 'cuenta_contable_enlance',
+                        render: function (data, type, row) {
+                            if (parseInt(row.id_enlace) === 0) {
+                                return '<span class="badge bg-warning text-dark">SIN ENLAZAR</span>';
+                            }
+                            return data || '';
+                        }
+                    },
+                    { data: 'enlace_por' },
+                    { data: 'fecha_hora_enlace' },
+                    {
+                        data: null,
+                        render: function (data, type, row) {
+
+                            var btnEdit = `<button class="btn btn-sm btn-warning btnEditar" title="Editar enlace" data-id="${row.pk_registro}">
+                                    <i class="fas fa-edit"></i>
+                            </button>`;
+
+                            var btnDelete = `<button class="btn btn-sm btn-danger btnQuitar" title="Quitar enlace" data-id="${row.pk_registro}">
+                                    <i class="fas fa-trash"></i>
+                                </button>`;
+
+                            let botones = '';
+
+                            if (parseInt(row.id_enlace) == 0) {
+                                // Sin enlace → solo editar
+                                botones = btnEdit;
+                            } else {
+                                // Con enlace → editar + quitar
+                                botones = btnEdit + btnDelete;
+                            }
+
+                            return `
+                                <div class="text-center">
+                                    <div class="btn-group">
+                                        ${botones}
+                                    </div>
+                                </div>
+                            `;
+                        }
+
+                    }
+                ]
+            });
+        }
+
+        $('#btnBuscar').click(function () {
+            cargarTabla();
+        });
+
+
+        $('#tablaMovimientos').on('click', '.btnEditar', function () {
+            currentRowData = tablaMovimientos.row($(this).parents('tr')).data();
+
+            $('#modalEnlaces').modal('show');
+
+            let tipo = $('#selectTipo').val();
+
+            if (tablaEnlaces) tablaEnlaces.destroy();
+
+            tablaEnlaces = $('#tablaEnlaces').DataTable({
+                ajax: {
+                    url: "{% url 'dataTiposEnlancesDestinosProcedencias' %}",
+                    type: "POST",
+                    data: {
+                        tipo_enlance: tipo,
+                        estado: 1,
+                        csrfmiddlewaretoken: "{{ csrf_token }}"
+                    },
+                    dataSrc: 'data'
+                },
+                columns: [
+                    { data: 'nombre_enlace' },
+                    { data: 'cuenta_contable' },
+                    { data: 'tipo_enlance' },
+                    {
+                        data: null,
+                        render: function (data) {
+                            return `<button class="btn btn-sm btn-success btnSelect">➜</button>`;
+                        }
+                    }
+                ]
+            });
+        });
+
+
+        $('#tablaEnlaces').on('click', '.btnSelect', function () {
+            let data = tablaEnlaces.row($(this).parents('tr')).data();
+
+            $.post("{% url 'setEnlaceMovimiento' %}", {
+                id_mov: currentRowData.pk_registro,
+                id_enlace: data.id_enlace,
+                tipo: $('#selectTipo').val(),
+                csrfmiddlewaretoken: "{{ csrf_token }}"
+            }, function (resp) {
+                if (resp.save == 1) {
+                    Swal.fire('', 'Enlace asignado correctamente', 'success');
+                    $('#modalEnlaces').modal('hide');
+                    tablaMovimientos.ajax.reload(null, false);
+                }
+            });
+        });
+
+
+
+        $('#tablaMovimientos').on('click', '.btnQuitar', function () {
+
+            let data = tablaMovimientos.row($(this).parents('tr')).data();
+            let tipo = $('#selectTipo').val();
+
+            let pk_registro = $(this).data('id');
+
+            Swal.fire({
+                title: '¿Quitar enlace?',
+                text: 'Este movimiento quedará sin enlace contable.',
+                icon: 'warning',
+                showCancelButton: true,
+                confirmButtonText: 'Sí, quitar',
+                cancelButtonText: 'Cancelar'
+            }).then((result) => {
+
+                if (result.isConfirmed) {
+                    $.post("{% url 'setEnlaceMovimiento' %}", {
+                        id_mov: pk_registro,  // en procedencias se ajusta
+                        id_enlace: 0,
+                        tipo: tipo,
+                        csrfmiddlewaretoken: "{{ csrf_token }}"
+                    }, function (resp) {
+
+                        if (resp.save == 1) {
+                            Swal.fire('', 'Enlace eliminado correctamente', 'success');
+                            tablaMovimientos.ajax.reload(null, false);
+                        } else {
+                            Swal.fire('', resp.error || 'Error al quitar enlace', 'error');
+                        }
+
+                    });
+                }
+
+            });
+        });
+
+
+
+
+
+
+
+        $('#btnAdminEnlaces').click(function () {
+
+            $('#modalAdminEnlaces').modal('show');
+
+            if (tablaAdminEnlaces) tablaAdminEnlaces.destroy();
+
+            tablaAdminEnlaces = $('#tablaAdminEnlaces').DataTable({
+                ajax: {
+                    url: "{% url 'dataTiposEnlancesDestinosProcedencias' %}",
+                    type: "POST",
+                    data: {
+                        tipo_enlance: 0,
+                        estado: 0,
+                        csrfmiddlewaretoken: "{{ csrf_token }}"
+                    },
+                    dataSrc: 'data'
+                },
+                columns: [
+                    { data: 'id_enlace' },
+                    { data: 'nombre_enlace' },
+                    { data: 'cuenta_contable' },
+                    { data: 'tipo_enlance' },
+                    {
+                        data: 'estado',
+                        render: function (data) {
+                            if (parseInt(data) === 3)
+                                return '<span class="badge bg-danger">DESHABILITADO</span>';
+                            return '<span class="badge bg-success">ACTIVO</span>';
+                        }
+                    },
+                    {
+                        data: null,
+                        render: function () {
+                            return `
+                                <div class="text-center">
+                                    <div class="btn-group">
+                                        <button class="btn btn-sm btn-warning btnEditAdmin">
+                                            <i class="fas fa-edit"></i>
+                                        </button>
+                                        <button class="btn btn-sm btn-secondary btnToggleEstado">
+                                            <i class="fas fa-sync-alt"></i>
+                                        </button>
+                                    </div>
+                                </div>
+                            `;
+                        }
+                    }
+                ]
+            });
+
+        });
+
+
+        $('#form_nombre_enlace').select2({
+            tags: true,
+            width: '100%',
+            dropdownParent: $('#modalFormEnlace'),
+            placeholder: "Seleccione o escriba",
+            allowClear: true
+        });
+
+
+        function cargarNombresExistentes() {
+
+            $.post("{% url 'dataEnlacesAdmin' %}", {
+                csrfmiddlewaretoken: "{{ csrf_token }}"
+            }, function (resp) {
+
+                let html = '<option></option>';
+
+                resp.data.forEach(function (e) {
+                    html += `<option value="${e.nombre_enlace}">${e.nombre_enlace}</option>`;
+                });
+
+                $('#form_nombre_enlace').html(html).trigger('change');
+            });
+
+        }
+
+        cargarNombresExistentes();
+
+        function cargarCuentas(cuenta_contable = '') {
+            let empresa = $('#selectEmpresa').val();
+
+            $.post("{% url 'list_all_cuentas_grado' %}", {
+                empresa: empresa,
+                grado: 15,
+                csrfmiddlewaretoken: "{{ csrf_token }}"
+            }, function (resp) {
+
+                let html = '<option value="">Seleccione</option>';
+
+                resp.data.forEach(function (c) {
+                    let texto = c.CodigoCuenta + " | " + c.Concepto;
+                    html += `<option value="${texto}">${texto}</option>`;
+                });
+
+                $('#form_cuenta').html(html);
+
+                if (cuenta_contable != '') {
+                    $('#form_cuenta').val(cuenta_contable).trigger('change');
+                }
+            });
+
+        }
+
+
+        $('#btnNuevoEnlace').click(function () {
+            console.log('nuevo');
+
+            $('#form_id_enlace').val(0);
+            $('#form_nombre_enlace').val(null).trigger('change');
+            $('#form_tipo').val(1);
+            cargarCuentas();
+
+            $('#modalFormEnlace').modal('show');
+
+        });
+
+
+        $('#tablaAdminEnlaces').on('click', '.btnEditAdmin', function () {
+            console.log('editar');
+
+            let data = tablaAdminEnlaces.row($(this).parents('tr')).data();
+
+            $('#form_id_enlace').val(data.id_enlace);
+            $('#form_nombre_enlace').val(data.nombre_enlace).trigger('change');
+            $('#form_tipo').val(data.id_tipo_enlace);
+            cargarCuentas(data.cuenta_contable);
+            // $('#form_cuenta').val(data.cuenta_contable).trigger('change');
+
+            $('#modalFormEnlace').modal('show');
+
+        });
+
+
+        $('#btnGuardarEnlace').click(function () {
+
+            $.post("{% url 'saveEnlaceDestinoProcedencia' %}", {
+                id_enlace: $('#form_id_enlace').val(),
+                tipo: $('#form_tipo').val(),
+                nombre: $('#form_nombre_enlace').val(),
+                cuenta: $('#form_cuenta').val(),
+                csrfmiddlewaretoken: "{{ csrf_token }}"
+            }, function (resp) {
+
+                if (resp.save == 1) {
+                    $('#modalFormEnlace').modal('hide');
+                    tablaAdminEnlaces.ajax.reload(null, false);
+                    toastMixin.fire({ icon: 'success', title: 'Guardado correctamente' });
+                }
+
+            });
+
+        });
+
+
+        $('#tablaAdminEnlaces').on('click', '.btnToggleEstado', function () {
+
+            let data = tablaAdminEnlaces.row($(this).parents('tr')).data();
+
+            $.post("{% url 'toggleEnlaceDestinoProcedencia' %}", {
+                id_enlace: data.id_enlace,
+                csrfmiddlewaretoken: "{{ csrf_token }}"
+            }, function (resp) {
+
+                if (resp.save == 1) {
+                    tablaAdminEnlaces.ajax.reload(null, false);
+                    toastMixin.fire({ icon: 'success', title: 'Estado actualizado' });
+                }
+
+            });
+
+        });
+
+
+
+
+    });
+</script>
+{% endblock %}

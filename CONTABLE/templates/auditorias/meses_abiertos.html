@@ -1,0 +1,165 @@
+{% extends 'componentes/menu_contable.html' %}
+{% load static %}
+
+{% block title %}MESES ABIERTOS > N DÍAS{% endblock %}
+
+{% block body %}
+<div class="row align-items-center border-bottom mb-3 py-2 bg-white shadow-sm mx-0">
+    <div class="col d-flex align-items-center px-0">
+        <button id="toggle-sidebar" class="btn btn-primary btn-sm me-3 border-0 rounded-circle btnMenu"
+            style="width: 32px; height: 32px; padding: 0;">
+            <i class="fas fa-bars"></i>
+        </button>
+        <h6 class="page-title mb-0 fs-5 fw-bold text-dark">
+            <i class="fas fa-calendar-alt text-primary me-2"></i>MESES ABIERTOS > N DÍAS
+        </h6>
+    </div>
+</div>
+
+<div class="container-fluid px-0 mt-1">
+    <div class="row g-3 d-flex align-items-end mx-0">
+        <div class="col-12 col-md-3 mb-3">
+            <label>Empresa:</label>
+            <select id="selectEmpresa" class="form-select form-select-sm">
+                {% for e in empresasData %}
+                <option value="{{ e.id }}">{{ e.nombre }}</option>
+                {% endfor %}
+            </select>
+        </div>
+        <div class="col-12 col-md-2 mb-3">
+            <label for="selectAnio">Año:</label>
+            <select id="selectAnio" class="form-select form-select-sm">
+                <!-- años se llenan con jQuery -->
+            </select>
+        </div>
+        <div class="col-12 col-md-2 mb-3 d-none">
+            <label>Días límite:</label>
+            <input type="number" id="diasLimite" value="0" class="form-control form-control-sm">
+        </div>
+        <div class="col-12 col-md-2 mb-3">
+            <button class="btn btn-sm btn-success" id="btnLoadData">Cargar</button>
+        </div>
+    </div>
+
+    <div class="table-responsive mt-2">
+        <table id="tblMesesAbiertos"
+            class="table table-striped table-bordered mb-0 table-sm rounded-4 table-hover align-middle"
+            style="width:100%;">
+            <thead class="table-gradient text-dark">
+                <tr>
+                    <th>Año</th>
+                    <th>Mes</th>
+                    <th>Fecha Estimada Cierre</th>
+                    <th>Días Abierto</th>
+                    <th>Estado Alerta</th>
+                </tr>
+            </thead>
+            <tbody></tbody>
+            <tfoot class="table-active">
+                <tr>
+                    <th colspan="3" class="text-end">Total Meses Abiertos:</th>
+                    <th class="text-end"></th>
+                    <th></th>
+                </tr>
+            </tfoot>
+        </table>
+    </div>
+</div>
+
+<a href="{% url 'panel_contabilidad' %}">
+    <button class="btn btn-sm btn-danger" id="btnCerrar" style="position: fixed; bottom: 20px; right: 20px;">
+        <i class="fa fa-times"></i> Cerrar
+    </button>
+</a>
+{% endblock %}
+
+{% block scripts %}
+<script>
+    $(function () {
+        var csrfToken = "{{ csrf_token }}";
+        var varAnio = "{{varAnio}}";
+
+        // Init vacío para que se vea la tabla desde el inicio
+        $("#tblMesesAbiertos").DataTable({
+            language: { url: "{% static 'app/th/json/es-ES.json' %}" },
+        });
+
+        function showLoadingScreen() {
+            Swal.fire({
+                html: `<b>Cargando...</b>`,
+                didOpen: () => Swal.showLoading(),
+                allowOutsideClick: false,
+                showConfirmButton: false
+            });
+        }
+
+        const selectAnio = $('#selectAnio');
+
+        for (let i = 0; i <= 5; i++) {
+            const anio = varAnio - i;
+            selectAnio.append(`<option value="${anio}">${anio}</option>`);
+        }
+
+        function loadMesesAbiertos(empresa, anioA, diasLimite) {
+            showLoadingScreen();
+            $("#tblMesesAbiertos").DataTable().clear().destroy();
+
+            $('#tblMesesAbiertos').DataTable({
+                autoWidth: false,
+                scrollX: true,
+                scrollY: '350px',
+                scrollCollapse: true,
+                pageLength: 50,
+                dom: 'Brftip',
+                language: { url: "{% static 'app/th/json/es-ES.json' %}" },
+                ajax: {
+                    url: "{% url 'dataMesesAbiertos' %}",
+                    type: "POST",
+                    data: {
+                        empresa: empresa,
+                        anio: anioA,
+                        dias: diasLimite,
+                        csrfmiddlewaretoken: csrfToken
+                    },
+                    dataSrc: 'data'
+                },
+                buttons: [
+                    { extend: 'excel', text: '<i class="fas fa-file-excel"></i>', className: 'btn btn-success' },
+                    { extend: 'pdf', text: '<i class="fas fa-file-pdf"></i>', className: 'btn btn-danger' },
+                    { extend: 'print', text: '<i class="fas fa-print"></i>', className: 'btn btn-primary', orientation: 'landscape' }
+                ],
+                columns: [
+                    { data: 'anio' },
+                    { data: 'nombre_mes' },
+                    { data: 'fecha_estimada_cierre' },
+                    { data: 'dias_transcurridos', className: 'text-end' },
+                    {
+                        data: 'estado_alerta',
+                        className: 'text-center',
+                        render: function (data) {
+                            if (data === "CRÍTICO") return `<span class="badge bg-danger">${data}</span>`;
+                            if (data === "ALERTA") return `<span class="badge bg-warning text-dark">${data}</span>`;
+                            return `<span class="badge bg-success">${data}</span>`;
+                        }
+                    },
+                ],
+                initComplete: function () { Swal.close(); },
+                footerCallback: function () {
+                    const api = this.api();
+                    let total = api.column(3).data().reduce((a, b) => Number(a) + Number(b), 0);
+                    $(api.column(3).footer()).html(
+                        total.toLocaleString('en-US', { minimumFractionDigits: 0, maximumFractionDigits: 0 })
+                    );
+                }
+            });
+        }
+
+
+        $('#btnLoadData').click(function () {
+            loadMesesAbiertos($('#selectEmpresa').val(), $('#selectAnio').val(), $('#diasLimite').val());
+        });
+
+
+    });
+</script>
+{% endblock %}

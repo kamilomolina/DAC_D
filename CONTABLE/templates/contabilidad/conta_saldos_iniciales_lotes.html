@@ -1,0 +1,548 @@
+{% extends 'componentes/menu_contable.html' %}
+{% load static %}
+
+{% block title %}
+SALDOS INICIALES
+{% endblock %}
+
+{% block body %}
+
+<div class="row align-items-center border-bottom mb-3 py-2 bg-white shadow-sm mx-0">
+    <div class="col d-flex align-items-center px-0">
+        <button id="toggle-sidebar" class="btn btn-primary btn-sm me-3 border-0 rounded-circle btnMenu"
+            style="width: 32px; height: 32px; padding: 0;" title="Mostrar/Ocultar menú">
+            <i class="fas fa-bars"></i>
+        </button>
+        <h6 class="page-title mb-0 fs-5 fw-bold text-dark">
+            <i class="fas fa-file-invoice-dollar text-primary me-2"></i>SALDOS INICIALES
+        </h6>
+    </div>
+</div>
+
+<div class="container-fluid px-0 mt-1">
+
+    <!-- FILTROS -->
+    <div class="row g-3 align-items-end mx-0">
+
+        <div class="col-12 col-md-3">
+            <label>Empresa</label>
+            <select id="fkEmpresa" class="form-select form-select-sm">
+                {% for e in empresasData %}
+                <option value="{{ e.id }}">{{ e.nombre }}</option>
+                {% endfor %}
+            </select>
+        </div>
+
+        <div class="col-12 col-md-2">
+            <label>Fecha de Corte</label>
+            <input type="date" id="fechaCorte" class="form-control form-control-sm" value="{{ date2 }}">
+        </div>
+
+        <div class="col-12 col-md-3">
+            <label>Crear o Seleccionar un Lote</label>
+            <select id="idLote" class="form-select form-select-sm">
+                <option value="0">➕ Nuevo Lote</option>
+            </select>
+            <button id="btnAccionLote" class="btn btn-sm btn-info w-100 mt-1">
+                Crear Lote
+            </button>
+        </div>
+
+        <div class="col-12 col-md-4 text-end">
+            <input type="file" id="excelFile" class="form-control form-control-sm mb-1">
+
+            <button class="btn btn-sm btn-outline-success" id="btnDescargarPlantilla">
+                <i class="fas fa-download me-1"></i> Descargar Plantilla
+            </button>
+
+            <button class="btn btn-sm btn-primary" id="btnSubirExcel">
+                <i class="fas fa-file-excel me-1"></i> Subir Excel
+            </button>
+
+            <button class="btn btn-sm btn-success" id="btnProcesarLote">
+                <i class="fas fa-check me-1"></i> Procesar Lote
+            </button>
+        </div>
+
+    </div>
+
+    <hr>
+
+    <!-- TABLA -->
+    <div class="row mx-0 mt-2">
+        <div class="table-responsive">
+            <table id="tablaLoteDetalle"
+                class="table table-striped table-bordered table-sm table-hover align-middle w-100">
+                <thead class="table-gradient text-dark">
+                    <tr>
+                        <th>Código</th>
+                        <th>Cuenta</th>
+                        <th>Estado</th>
+                        <th>Saldo</th>
+                        <th>Acciones</th>
+                    </tr>
+                </thead>
+                <tbody></tbody>
+
+                <tfoot>
+                    <tr>
+                        <th colspan="3" class="text-end">TOTAL:</th>
+                        <th class="text-end"></th>
+                        <th></th>
+                    </tr>
+                </tfoot>
+
+            </table>
+        </div>
+    </div>
+
+</div>
+
+<a href="{% url 'panel_contabilidad' %}">
+    <button class="btn btn-sm btn-danger" style="position: fixed; bottom: 20px; right: 20px;">
+        <i class="fa fa-times"></i> Cerrar
+    </button>
+</a>
+
+{% endblock %}
+
+{% block scripts %}
+
+<script>
+    $(document).ready(function () {
+
+        var csrfToken = "{{ csrf_token }}";
+        var tableLote = null;
+        var idLoteActual = 0;
+
+        // estado inicial
+        $("#btnSubirExcel").hide();
+        $("#btnProcesarLote").hide();
+
+        // =============================
+        // DESCARGAR PLANTILLA
+        // =============================
+        $("#btnDescargarPlantilla").click(function () {
+            window.location.href = "{% url 'conta_saldos_iniciales_descargar_plantilla' %}";
+        });
+
+        $('#fkEmpresa').change(function (e) {
+            e.preventDefault();
+
+            cargarLotes();
+        });
+
+        // =============================
+        // CARGAR LOTES
+        // =============================
+        function cargarLotes() {
+            $("#idLote").html('<option value="0">➕ Nuevo Lote</option>');
+
+            $.get("{% url 'conta_lotes_listar' %}", {
+                fkEmpresa: $("#fkEmpresa").val()
+            }, function (resp) {
+                resp.data.forEach(l => {
+                    $("#idLote").append(`
+                    <option value="${l.id_lote}">
+                        Lote ${l.id_lote} | ${l.fecha_corte}
+                        ${l.estado_lote == 1 ? '(PROCESADO)' : ''}
+                        Creado: ${l.fecha_hora_creado}
+                    </option>
+                `);
+                });
+            });
+        }
+
+        // =============================
+        // TEXTO DEL BOTÓN SEGÚN SELECT
+        // =============================
+        $("#idLote").change(function () {
+            if ($(this).val() == "0") {
+                $("#btnAccionLote")
+                    .text("Crear Lote")
+                    .removeClass("btn-primary")
+                    .addClass("btn-info");
+            } else {
+                $("#btnAccionLote")
+                    .text("Cargar Lote")
+                    .removeClass("btn-info")
+                    .addClass("btn-primary");
+            }
+        });
+
+        // =============================
+        // BOTÓN CREAR / CARGAR
+        // =============================
+        $("#btnAccionLote").click(function () {
+
+            let seleccionado = $("#idLote").val();
+
+            // CREAR
+            if (seleccionado == "0") {
+
+                $.post("{% url 'conta_lote_nuevo' %}", {
+                    fkEmpresa: $("#fkEmpresa").val(),
+                    fecha_corte: $("#fechaCorte").val(),
+                    csrfmiddlewaretoken: csrfToken
+                }, function (resp) {
+
+                    idLoteActual = resp.id_lote;
+
+                    $("#idLote").append(`
+                    <option value="${idLoteActual}">
+                        Lote ${idLoteActual} | ${resp.fecha_corte}
+                    </option>
+                    `).val(idLoteActual);
+
+                    $("#btnSubirExcel").show();
+                    $("#btnProcesarLote").show();
+
+                    Swal.fire({
+                        icon: 'success',
+                        title: 'Lote creado',
+                        text: 'Ya puede cargar información.',
+                        timer: 1800,
+                        showConfirmButton: false
+                    });
+
+                    cargarDetalleLote();
+                });
+
+            }
+            // CARGAR
+            else {
+
+                idLoteActual = seleccionado;
+
+                $("#btnSubirExcel").show();
+                $("#btnProcesarLote").show();
+
+                Swal.fire({
+                    icon: 'info',
+                    title: 'Lote cargado',
+                    text: 'Puede revisar o continuar cargando información.',
+                    timer: 1800,
+                    showConfirmButton: false
+                });
+
+                cargarDetalleLote();
+            }
+        });
+
+
+        // =============================
+        // DETALLE DEL LOTE
+        // =============================
+        function cargarDetalleLote() {
+
+            if (tableLote) tableLote.destroy();
+
+            tableLote = $("#tablaLoteDetalle").DataTable({
+                ajax: {
+                    url: "{% url 'conta_saldo_lote_detalle' %}",
+                    data: {
+                        id_lote: idLoteActual,
+                        fkEmpresa: $("#fkEmpresa").val()
+                    },
+                    dataSrc: "data"
+                },
+                columns: [
+                    { data: "codigo" },
+                    { data: "NombreCuenta" },
+                    {
+                        data: "cuenta_valida",
+                        render: function (val) {
+                            if (val == 1) {
+                                return `<span class="badge bg-success">Verificada</span>`;
+                            } else {
+                                return `<span class="badge bg-danger">No Existe</span>`;
+                            }
+                        },
+                        className: "text-center"
+                    },
+                    {
+                        data: "saldo",
+                        className: 'text-end',
+                        render: $.fn.dataTable.render.number(',', '.', 2)
+                    },
+                    {
+                        data: null,
+                        orderable: false,
+                        className: "text-center",
+                        render: function (row) {
+                            return `
+                                <button class="btn btn-sm btn-warning btnEditDetalle"
+                                    data-id="${row.id_detalle_saldo}"
+                                    data-codigo="${row.codigo}"
+                                    data-saldo="${row.saldo}">
+                                    <i class="fas fa-edit"></i>
+                                </button>
+
+                                <button class="btn btn-sm btn-danger btnDeleteDetalle"
+                                    data-id="${row.id_detalle_saldo}">
+                                    <i class="fas fa-trash"></i>
+                                </button>
+                            `;
+                        }
+                    }
+
+                ],
+
+                // 🔥 AQUÍ VA LA MAGIA
+                footerCallback: function (row, data, start, end, display) {
+
+                    let api = this.api();
+
+                    // Función para limpiar valores
+                    let toNumber = function (i) {
+                        if (typeof i === 'string') {
+                            return parseFloat(i.replace(/,/g, '')) || 0;
+                        }
+                        return typeof i === 'number' ? i : 0;
+                    };
+
+                    // Sumatoria de la columna SALDO (índice 2)
+                    let totalSaldo = api
+                        .column(3, { page: 'current' })
+                        .data()
+                        .reduce(function (a, b) {
+                            return toNumber(a) + toNumber(b);
+                        }, 0);
+
+                    // Pintar total en el footer
+                    let colorClass = totalSaldo >= 0 ? 'text-success fw-bold' : 'text-danger fw-bold';
+
+                    $(api.column(3).footer()).html(`
+                        <span class="${colorClass}">
+                            ${totalSaldo.toLocaleString('es-HN', {
+                        minimumFractionDigits: 2,
+                        maximumFractionDigits: 2
+                    })}
+                        </span>
+                    `);
+
+                }
+            });
+        }
+
+        $(document).on('click', '.btnEditDetalle', function () {
+
+            editarDetalleSaldo(
+                $(this).data('id'),
+                $(this).data('codigo'),
+                $(this).data('saldo')
+            );
+
+        });
+
+        $(document).on('click', '.btnDeleteDetalle', function () {
+
+            eliminarDetalleSaldo($(this).data('id'));
+
+        });
+
+        function editarDetalleSaldo(idDetalle, codigoActual, saldoActual) {
+
+            Swal.fire({
+                title: 'Editar Detalle de Saldo',
+                html: `
+                        <label class="form-label">Cuenta Contable</label>
+                        <input id="swalCodigoCuenta"
+                            type="text"
+                            class="form-control"
+                            value="${codigoActual}">
+
+                        <label class="form-label">Saldo</label>
+                        <input id="swalSaldo"
+                            type="number"
+                            step="0.01"
+                            class="form-control"
+                            value="${saldoActual}">
+                    `,
+                focusConfirm: false,
+                showCancelButton: true,
+                confirmButtonText: 'Guardar',
+                cancelButtonText: 'Cancelar',
+                preConfirm: () => {
+
+                    let codigo = $('#swalCodigoCuenta').val();
+                    let saldo = $('#swalSaldo').val();
+
+                    if (!codigo || saldo === '' || isNaN(saldo)) {
+                        Swal.showValidationMessage(
+                            'Debe seleccionar una cuenta y un saldo válido'
+                        );
+                        return false;
+                    }
+
+                    return { codigo, saldo };
+                }
+            }).then((result) => {
+
+                if (result.isConfirmed) {
+
+                    $.post("{% url 'conta_saldo_lote_editar' %}", {
+                        id_detalle_saldo: idDetalle,
+                        codigo: result.value.codigo,
+                        saldo: result.value.saldo,
+                        csrfmiddlewaretoken: "{{ csrf_token }}"
+                    }, function () {
+
+                        Swal.fire({
+                            icon: 'success',
+                            title: 'Detalle actualizado',
+                            timer: 1200,
+                            showConfirmButton: false
+                        });
+
+                        tableLote.ajax.reload(null, false);
+                    });
+                }
+            });
+        }
+
+
+        function eliminarDetalleSaldo(idDetalle) {
+
+            Swal.fire({
+                title: '¿Eliminar este registro?',
+                text: 'Esta acción no se puede deshacer',
+                icon: 'warning',
+                showCancelButton: true,
+                confirmButtonText: 'Eliminar',
+                cancelButtonText: 'Cancelar'
+            }).then((r) => {
+
+                if (r.isConfirmed) {
+
+                    $.post("{% url 'conta_saldo_lote_eliminar' %}", {
+                        id_detalle_saldo: idDetalle,
+                        csrfmiddlewaretoken: "{{ csrf_token }}"
+                    }, function () {
+
+                        Swal.fire({
+                            icon: 'success',
+                            title: 'Registro eliminado',
+                            timer: 1000,
+                            showConfirmButton: false
+                        });
+
+                        tableLote.ajax.reload(null, false);
+                    });
+                }
+            });
+        }
+
+
+        // =============================
+        // SUBIR EXCEL
+        // =============================
+        $("#btnSubirExcel").click(function () {
+
+            if (!$("#excelFile")[0].files.length) {
+                Swal.fire('Atención', 'Seleccione un archivo Excel', 'warning');
+                return;
+            }
+
+            let formData = new FormData();
+            formData.append("excel", $("#excelFile")[0].files[0]);
+            formData.append("id_lote", idLoteActual);
+            formData.append("fkEmpresa", $("#fkEmpresa").val());
+            formData.append("fecha_corte", $("#fechaCorte").val());
+            formData.append("csrfmiddlewaretoken", csrfToken);
+
+            $.ajax({
+                url: "{% url 'conta_saldo_lote_upload_excel' %}",
+                type: "POST",
+                data: formData,
+                processData: false,
+                contentType: false,
+                success: function () {
+                    Swal.fire({
+                        icon: 'success',
+                        title: 'Excel cargado',
+                        timer: 1200,
+                        showConfirmButton: false
+                    });
+                    tableLote.ajax.reload();
+                }
+            });
+        });
+
+        // =============================
+        // PROCESAR LOTE
+        // =============================
+        $("#btnProcesarLote").click(function () {
+
+            Swal.fire({
+                title: '¿Procesar lote?',
+                text: 'Se actualizarán los saldos contables.',
+                icon: 'warning',
+                showCancelButton: true,
+                confirmButtonText: 'Procesar',
+                cancelButtonText: 'Cancelar'
+            }).then((r) => {
+
+                if (r.isConfirmed) {
+
+                    $.ajax({
+                        url: "{% url 'conta_saldo_lote_procesar' %}",
+                        type: "POST",
+                        data: {
+                            id_lote: idLoteActual,
+                            fkEmpresa: $("#fkEmpresa").val(),
+                            csrfmiddlewaretoken: csrfToken
+                        },
+                        success: function (resp) {
+
+                            if (!resp.success) {
+                                Swal.fire({
+                                    icon: 'error',
+                                    title: 'Proceso detenido',
+                                    text: resp.error || 'No se pudo procesar el lote'
+                                });
+                                return;
+                            }
+
+                            Swal.fire({
+                                icon: 'success',
+                                title: 'Lote procesado',
+                                timer: 1800,
+                                showConfirmButton: false
+                            });
+
+                            $("#btnSubirExcel").hide();
+                            $("#btnProcesarLote").hide();
+
+                            cargarLotes();
+                            cargarDetalleLote();
+                        },
+                        error: function (xhr) {
+
+                            let msg = 'No se pudo procesar el lote';
+
+                            if (xhr.responseJSON && xhr.responseJSON.error) {
+                                msg = xhr.responseJSON.error;
+                            } else if (xhr.responseText) {
+                                msg = xhr.responseText;
+                            }
+
+                            Swal.fire({
+                                icon: 'error',
+                                title: 'Proceso detenido',
+                                text: msg
+                            });
+                        }
+
+
+                    });
+                }
+            });
+        });
+
+
+        // INIT
+        cargarLotes();
+    });
+</script>
+{% endblock %}

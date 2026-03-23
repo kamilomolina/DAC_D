@@ -1,0 +1,1264 @@
+html, body {
+    height: 100vh;
+}
+
+
+body {
+    display: flex;
+    flex-direction: column;
+    background-color: #2C3E50; /* Color de fondo azul oscuro */
+    background-image: linear-gradient(to bottom, #2C3E50, #2C3E50); /* Gradiente sutil de azul oscuro a un tono ligeramente más claro */
+    background-size: cover;
+    position: relative;
+    color: #333; 
+    font-family: 'Arial', sans-serif;
+    height: 100vh;
+    margin: 0;
+    padding: 0;
+}
+
+/* Elemento decorativo: círculos suaves */
+body::before {
+    content: '';
+    position: absolute;
+    top: 10%;
+    left: 10%;
+    width: 300px;
+    height: 300px;
+    background: rgba(255, 255, 255, 0.1);
+    border-radius: 50%;
+    z-index: -1;
+}
+
+body::after {
+    content: '';
+    position: absolute;
+    bottom: 20%;
+    right: 15%;
+    width: 200px;
+    height: 200px;
+    background: rgba(255, 255, 255, 0.2);
+    border-radius: 50%;
+    z-index: -1;
+}
+
+/* Estilo de la barra de navegación */
+.navbar {
+    background-color: #f4f6f9; /* Azul más profundo del gradiente */
+    padding: 0.25rem 0.5rem;
+}
+
+.navbar-nav .nav-link {
+    font-weight: 700;
+    font-size: 0.875rem;
+    color: #333; /* Un gris oscuro para buen contraste */
+}
+
+.navbar-toggler {
+    padding: 0.25rem 0.5rem;
+    color: #333;
+}
+
+.navbar-toggler-icon {
+    background-image: url("data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 30 30'><path stroke='rgba(51, 51, 51, 1)' stroke-width='2' d='M4 7h22M4 15h22M4 23h22'/></svg>");
+}
+
+.navbar-nav .dropdown-menu {
+    background-color: #a5d8ff; /* Azul intermedio del gradiente */
+    color: #333;
+}
+
+.navbar-nav .dropdown-item:hover {
+    background-color: #72c2f1; /* Azul más profundo al pasar el ratón */
+    color: #333;
+}
+
+footer {
+    position: fixed;
+    bottom: 0;
+    width: 100%;
+    background: #f8f9fa;
+    text-align: center;
+    padding: 0.5rem 0;
+}
+
+.navbar .nav-link:hover,
+.navbar .navbar-brand:hover {
+    color: #004080; /* Azul oscuro */
+}
+
+.navbar-brand {
+    display: flex;
+    align-items: center;
+    font-size: 0.95rem;
+    font-weight: 700;
+
+}
+
+.navbar-brand:hover .material-icons::before {
+    content: 'arrow_back';
+}
+
+.navbar-brand .material-icons {
+    cursor: pointer;
+    padding-right: 5px;
+}
+
+.table {
+    font-size: 0.8rem; /* Reduce el tamaño de la fuente para la tabla */
+}
+
+.table th, .table td {
+    padding: 0.5rem; /* Reduce el padding para un diseño más compacto */
+}
+
+
+/* Elimina los bordes del contenedor de Select2 y deja solo el borde inferior */
+.select2-container--default .select2-selection--single {
+    background-color: transparent;
+    border: none !important; /* Elimina todos los bordes */
+    border-bottom: 1px solid #d4d2d2 !important; /* Añade solo un borde inferior */
+    border-radius: 0 !important; /* Elimina los bordes redondeados */
+    outline: none !important;
+    box-shadow: none !important; /* Asegura que no haya sombras */
+    padding: 0.5rem 0;
+}
+
+/* Cambia el borde inferior cuando el select está enfocado */
+.select2-container--default .select2-selection--single:focus, 
+.select2-container--default .select2-selection--single .select2-selection__rendered:focus {
+    border-bottom: 2px solid #0056b3 !important; /* Cambia el color del borde inferior al enfocar */
+    outline: none !important;
+    box-shadow: none !important;
+}
+
+/* Cambia el fondo del área donde se muestran las opciones */
+.select2-container--default .select2-dropdown {
+    background-color: #f9fafb; /* Cambia este valor al color que prefieras */
+    border: none;
+}
+
+/* Asegura que las opciones coincidan con el fondo general */
+.select2-container--default .select2-results__option {
+    background-color: #f9fafb;
+    color: #333;
+}
+
+/* Cambia el fondo de la opción seleccionada */
+.select2-container--default .select2-results__option--highlighted[aria-selected] {
+    background-color: #d8d9e2;
+    color: #333;
+}
+
+
+/*------------------------------------------------CREAR EMPLEADO----------------------------------------------------------*/
+
+.container-empleado-crear {
+    background-color: #f4f6f9 !important;
+    border-radius: 12px;
+    max-width: 100%;
+    width: 100%;
+    height: 100vh;
+    overflow-y: auto; /* Asegúrate de que sea visible */
+    transition: all 0.3s ease-in-out;
+}
+
+.crear-container{
+  
+    height: 100vh;
+    overflow-y: auto; /* Asegúrate de que sea visible */
+    transition: all 0.3s ease-in-out;  
+}
+
+
+
+.form-control {
+    border-radius: 8px;
+    box-shadow: inset 0 1px 3px rgba(0, 0, 0, 0.1);
+    transition: box-shadow 0.3s ease;
+}
+
+.form-control:focus {
+    box-shadow: 0 0 5px rgba(33, 150, 243, 0.5);
+    border-color: #2196f3;
+}
+
+/* Media query para pantallas más grandes */
+@media (min-width: 1900px) {
+    .container-empleado-crear {
+        max-width: 1850px; /* Fija el ancho máximo para pantallas grandes */
+        min-width: 1850px; /* Ancho mínimo para pantallas grandes */
+    }
+}
+
+/* Media query para pantallas medianas */
+@media (min-width: 1200px) and (max-width: 1900px) {
+    .container-empleado-crear {
+        max-width: 1600; /* Se adapta al 80% del ancho de la pantalla */
+        min-width: 600px; /* Asegura un ancho mínimo de 600px */
+    }
+}
+
+/* Media query para pantallas pequeñas */
+@media (max-width: 1199px) {
+    .container-empleado-crear {
+        max-width: 95vw; /* Se adapta al 95% del ancho de la pantalla */
+        min-width: 300px; /* Asegura un ancho mínimo de 300px */
+        padding: 20px; /* Reduce el padding en pantallas pequeñas */
+    }
+}
+
+
+.img-fluid {
+    width: 100px;
+    height: 100px;
+    object-fit: cover;
+    border-radius: 8px; /* Cambia el border-radius si prefieres esquinas menos redondeadas */
+}
+
+.form-label {
+    font-size: 0.900rem;
+    font-weight: normal;
+}
+
+.input-underline {
+    border: none;
+    border-bottom: 1px solid #1e6fc0;
+    border-radius: 0;
+    outline: none;
+    width: 100%;
+    box-shadow: none;
+}
+
+.input-underline:focus {
+    border-bottom: 1px solid #007bff; /* Cambia el color según tu preferencia */
+}
+
+.label-width {
+    font-weight: bold;
+    width: 150px; /* Ajusta este valor según tus necesidades */
+    margin-right: 10px;
+    text-align: left;
+}
+
+.section-title {
+    font-size: 1.25rem;
+    font-weight: 700;
+    margin-top: 0;
+}
+
+.subsection-title {
+    font-size: 1rem;
+    font-weight: 600;
+    margin-top: 1.5rem;
+}
+
+.section-divider {
+    border: 0;
+    border-top: 10px solid #e0e0e0; /* Aumenta el grosor del borde superior */
+    margin: 0.5rem 0; /* Ajusta el margen según sea necesario */
+}
+
+.position-relative {
+    position: relative;
+}
+
+.position-absolute {
+    position: absolute;
+}
+
+.top-0 {
+    top: 0;
+}
+
+.end-0 {
+    right: 0;
+}
+
+.m-2 {
+    margin: 0.5rem;
+}
+
+.row-align-center {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 20px; /* Ajusta según sea necesario */
+}
+
+.card-body.d-flex {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 20px;
+
+}
+
+.card-title {
+    margin: 0;
+}
+
+.btn-add {
+    background-color: #87CEEB;
+    border: none;
+    color: white;
+    padding: 5px;
+    border-radius: 10%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    height: 40px;
+    width: 40px;
+}
+
+.btn-add .material-icons {
+    font-size: 24px;
+}
+
+.select-font-size, .form-label {
+    font-size: 0.900rem; /* Asegura que el tamaño de la fuente sea el mismo */
+}
+
+.text-pastel-green {
+    color: #35a035; /* Pastel Green */
+}
+
+.text-pastel-blue {
+    color: #3692b4; /* Pastel Blue */
+}
+
+.text-pastel-orange {
+    color: #c0a24e;; /* Pastel Orange */
+}
+
+.text-pastel-purple {
+    color: #a0a0e2; /* Pastel Purple */
+}
+
+.text-pastel-pink {
+    color: #ffcccb; /* Pastel Pink */
+}
+
+.invisible {
+    display: none;
+}
+
+.dataTables_filter {
+    display: block !important;
+}
+
+::placeholder {
+    font-size: 0.90rem; /* Ajusta este tamaño según tus necesidades */
+    color: #6c757d; /* Cambia el color si es necesario */
+}
+
+.button-group {
+    display: flex;
+    gap: 5px;
+}
+
+.custom-divider {
+    width: 100%;
+    height: 2px; /* Cambia la altura según tu preferencia */
+    background-color: #e0e0e0; /* Cambia el color según tu preferencia */
+    margin: 0.5rem 0; /* Ajusta el margen según sea necesario */
+}
+
+
+/*------------------------------------------------------ MODAL DE HABILIDADES ---------------------------------------------------------------*/
+ /* Estilo para la tabla */
+
+
+/* Alinear las acciones a la derecha */
+.text-right {
+    text-align: right;
+}
+
+/* Colores de los botones */
+.btn-success {
+    background-color: #28a745 !important;
+    border-color: #28a745;
+    margin-right: 5px; /* Espaciado consistente */
+    color: white !important;
+
+
+}
+
+
+.btn-warning {
+    background-color: #ffc107;
+    border-color: #ffc107;
+    margin-left: 5px; /* Espaciado consistente */
+}
+
+/* Quitar el espacio entre botones en la columna de acciones */
+.text-right button {
+    margin-left: 5px;
+}
+
+.pill {
+    background-color: #87cefa;
+    color: white;
+    padding: 5px 10px;
+    border-radius: 25px;
+    display: inline-flex;
+    align-items: center;
+    margin: 5px;
+}
+
+.pill .close {
+    margin-left: 10px;
+    color: white;
+    cursor: pointer;
+}
+
+
+.select2-container--default .select2-selection--single .select2-selection__rendered {
+    font-size: 0.900rem; /* Asegura que el tamaño de la fuente sea el mismo que el del label */
+}
+
+.select2-container--default .select2-selection--single .select2-selection__arrow b {
+    border-color: #000 transparent transparent transparent;
+}
+
+/* solo el SELECT*/
+.select2-container--default .select2-selection--single {
+    height: calc(1.5em + 0.75rem + 2px);
+    border: 1px solid #ced4da;
+    border-radius: 0.25rem;
+    padding: 0.375rem 0.75rem;
+    font-size: 0.875rem; /* Tamaño de la letra reducido */
+}
+/* Ajusta la flecha del dropdown */
+.select2-container--default .select2-selection--single .select2-selection__arrow {
+    height: calc(1.5em + 0.75rem + 2px);
+    top: 50%;
+    right: 0.75rem;
+    transform: translateY(-50%);
+}
+
+/* Ajusta el texto del select */
+.select2-container--default .select2-selection--single .select2-selection__rendered {
+    line-height: 1.5;
+    color: #495057;
+    font-size: 0.875rem; /* Tamaño de la letra reducido */
+}
+
+/* Estilo del dropdown para que se parezca a los otros inputs */
+.select2-container .select2-dropdown {
+    border: 1px solid #ced4da;
+    border-radius: 0.25rem;
+    font-size: 0.875rem; /* Tamaño de la letra reducido */
+}
+
+/* Ajusta el hover y el focus */
+.select2-container--default .select2-selection--single:hover,
+.select2-container--default .select2-selection--single:focus {
+    border-color: #80bdff;
+    outline: 0;
+    box-shadow: 0 0 0 0.2rem rgba(0,123,255,.25);
+}
+
+/* Asegúrate de que no haya padding/margin adicional en el select2 */
+.select2-container .select2-selection--single {
+    padding: 0.375rem 0.75rem;
+}
+
+.custom-margin-right {
+    margin-right: 10px; /* Puedes ajustar el valor según lo necesites */
+}
+.preview-container {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 10px;
+    margin-top: 10px;
+}
+
+.preview-item {
+    position: relative;
+    width: 100px;
+    height: 100px;
+    border: 1px solid #ccc;
+    border-radius: 5px;
+    overflow: hidden;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    flex-direction: column;
+}
+
+.preview-item img,
+.preview-item .file-icon {
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+}
+
+.preview-item .remove-btn {
+    position: absolute;
+    top: 5px;
+    right: 5px;
+    background: rgba(255, 0, 0, 0.7);
+    color: white;
+    border: none;
+    border-radius: 50%;
+    width: 20px;
+    height: 20px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    cursor: pointer;
+}
+
+#fileList .file-item {
+    margin-bottom: 10px;
+    display: flex;
+    align-items: center;
+}
+
+#fileList .file-item i {
+    font-size: 24px;
+    margin-right: 10px;
+}
+
+#foto-input {
+    display: none;
+}
+
+.btn-primary {
+    background-color: #007bff;
+    border: none;
+    color: white;
+    padding: 10px 20px;
+    border-radius: 5px;
+    font-size: 0.875rem;
+}
+
+.btn-primary:hover {
+    background-color: #0056b3;
+}
+
+#foto-input {
+    display: none;
+}
+
+.btn-custom {
+    background-color: #007bff !important;
+    border: none;
+    color: white !important;
+    padding: 10px 20px;
+    border-radius: 5px;
+    font-size: 0.875rem;
+}
+
+.btn-custom:hover {
+    background-color: #00BFFF !important;
+}
+
+.img-fluid {
+    width: 200px; /* Ajusta el tamaño de la imagen según sea necesario */
+    height: 200px; /* Ajusta el tamaño de la imagen según sea necesario */
+    object-fit: cover;
+    border-radius: 8px; /* Cambia el border-radius si prefieres esquinas menos redondeadas */
+}
+
+
+/*-----------------------------------------------MODAL EQUIPO--------------------------------------------*/
+.input-underline {
+    border: none;
+    border-bottom: 1px solid #ccc;
+    border-radius: 0;
+    outline: none;
+    width: 100%;
+    box-shadow: none;
+}
+
+.input-underline:focus {
+    border-bottom: 1px solid #007bff;
+}
+
+.form-label {
+    font-size: 0.900rem;
+    font-weight: normal;
+    margin-right: 10px;
+}
+
+.material-icons {
+    vertical-align: middle;
+}
+
+.btn-add-equipo {
+    background-color: #9f61af;
+    border: none;
+    color: white;
+    padding: 5px;
+    border-radius: 10%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    height: 40px;
+    width: 40px;
+}
+
+.btn-add-equipo .material-icons {
+    font-size: 24px;
+}
+
+.list-group-item {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+}
+
+
+/*-----------------------------------MODAL FAMILIARES----------------------------------------------------*/
+
+.input-underline {
+    border: none;
+    border-bottom: 1px solid #f9fafb;
+    border-radius: 0;
+    outline: none;
+    width: 100%;
+    box-shadow: none;
+}
+
+.input-underline:focus {
+    border-bottom: 1px solid #007bff;
+}
+
+.form-label {
+    font-size: 0.900rem;
+    font-weight: normal;
+    margin-right: 10px;
+}
+
+.material-icons {
+    vertical-align: middle;
+}
+
+.btn-add-familiares {
+    background-color: #c0a24e;
+    border: none;
+    color: white;
+    padding: 5px;
+    border-radius: 10%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    height: 40px;
+    width: 40px;
+}
+
+.btn-add-familiares .material-icons {
+    font-size: 24px;
+}
+
+.table {
+    width: 100%;
+}
+
+/*-----------------------------------------------CONTACTOS DE EMERGENCIA----------------------------------------------*/
+
+/* Asegúrate de que estos estilos sean consistentes con los demás en tu aplicación */
+.form-label {
+    font-size: 0.900rem;
+    font-weight: normal;
+}
+
+.input-underline {
+    border: none;
+    border-bottom: 1px solid #ccc;
+    border-radius: 0;
+    outline: none;
+    width: 100%;
+    box-shadow: none;
+}
+
+.input-underline:focus {
+    border-bottom: 1px solid #007bff; /* Cambia el color según tu preferencia */
+}
+
+.btn-primary.custom-button {
+    background-color: #3498db; /* Azul vibrante */
+    border-color: #2980b9;
+    padding: 5px 15px;
+    font-size: 16px;
+    border-radius: 8px;
+    color: white;
+    transition: all 0.3s ease; /* Transición suave para todos los cambios */
+    box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1); /* Sombra inicial */
+    cursor: pointer; /* Cambia el cursor al pasar sobre el botón */
+}
+
+.btn-primary.custom-button:hover {
+    background-color: #2980b9; /* Azul más oscuro en hover */
+    border-color: #1c6692;
+    transform: translateY(-3px); /* Efecto de elevación */
+    box-shadow: 0 8px 12px rgba(0, 0, 0, 0.2); /* Sombra más pronunciada */
+}
+
+.btn-primary.custom-button:active {
+    background-color: #1c6692; /* Azul más oscuro cuando se presiona */
+    border-color: #145a7a;
+    transform: translateY(0); /* Vuelve a su posición original */
+    box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1); /* Sombra reducida */
+}
+
+
+
+/*-------------------------------------------------MODAL DE CURRICULUM--------------------------------------------------------*/
+
+.modal-custom-width .modal-dialog {
+    max-width: 90%; /* Ajusta este valor según tus necesidades */
+}
+
+.modal-custom-width .modal-content {
+    padding: 20px; /* Opcional: agregar padding para mayor espacio dentro del modal */
+}
+
+/*--------------------------------------------------Modal departamentos---------------------------------------------------------*/
+.modal-custom-width .modal-dialog {
+    max-width: 50%; /* Ajusta este valor según tus necesidades */
+}
+
+.card-empleado {
+    background-color: #fff; /* Color de fondo */
+    border-radius: 5px; /* Bordes redondeados */
+    box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1); /* Sombra para darle más estilo */
+    border: none; /* Eliminar borde predeterminado */
+}
+
+.card-empleado .card-body {
+    padding: 1rem; /* Espacio interno */
+}
+
+.card-empleado .card-title {
+    font-weight: bold; /* Negrita para el título */
+}
+
+.card-empleado .card-text i {
+    margin-right: 0.5rem; /* Espacio entre icono y texto */
+}
+
+.icon-large {
+    color: #333;
+    font-size: 40px;
+}
+
+.card-empleado {
+    background-color: #fff; 
+}
+
+.search-container {
+    flex: 1; 
+    max-width: 30%; 
+    min-width: 100px; 
+    margin: 0 auto; 
+}
+.search-input {
+    flex: 1; 
+    padding-left: 2.5rem; 
+    border-top-right-radius: 0;
+    border-bottom-right-radius: 0;
+}
+
+.search-icon {
+    position: absolute;
+    left: 10px;
+    top: 50%;
+    transform: translateY(-50%);
+    color: #aaa;
+}
+.search-button {
+    border-top-left-radius: 0;
+    border-bottom-left-radius: 0;
+    border-left: none; /* Elimina el borde entre el input y el botón */
+    background: none;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    padding: 0 10px;
+}
+.search-button .material-icons {
+    color: #aaa;
+}
+
+/* Reduce padding and adjust height for navbar items */
+.navbar-reduced-height {
+    padding-top: 0.2rem;
+    padding-bottom: 0.2rem;
+}
+
+.navbar-reduced-height .navbar-brand {
+    padding-top: 0.2rem;
+    padding-bottom: 0.2rem;
+}
+
+.navbar-reduced-height .navbar-nav .nav-link {
+    padding-top: 0.2rem;
+    padding-bottom: 0.2rem;
+}
+
+.navbar-reduced-height .user-img img {
+    width: 24px; /* Adjust width as needed */
+    height: 24px; /* Adjust height as needed */
+}
+
+.navbar-reduced-height .user-header .avatar img {
+    width: 24px; /* Adjust width as needed */
+    height: 24px; /* Adjust height as needed */
+}
+
+/* Optionally, reduce icon size */
+.navbar-reduced-height .icon-large {
+    font-size: 1.5rem; /* Adjust size as needed */
+}
+
+.search_select_box {
+    width: 100% !important; /* Ocupa todo el ancho disponible */
+    margin-bottom: 12px; /* Espacio debajo del contenedor */
+}
+
+.search_select_box > div {
+    width: 100% !important;
+    margin-bottom: 8px; /* Espacio entre el label y el select */
+}
+
+.search_select_box select {
+    width: 100% !important; /* Ocupa todo el ancho del contenedor */
+    display: block;
+    padding: 8px; /* Ajusta el padding según sea necesario */
+    box-sizing: border-box; /* Asegura que el padding y border se incluyan en el ancho */
+    margin: 0; /* Elimina cualquier margin adicional */
+    border: 2px solid #007BFF; /* Borde más grueso y de color azul */
+    border-radius: 4px; /* Bordes ligeramente redondeados */
+    box-shadow: 0 0 5px rgba(0, 123, 255, 0.5); /* Sombra para resaltar */
+}
+
+@keyframes glow {
+    0% {
+        box-shadow: 0 0 5px #007BFF;
+    }
+    50% {
+        box-shadow: 0 0 20px #007BFF;
+    }
+    100% {
+        box-shadow: 0 0 5px #007BFF;
+    }
+}
+
+.glow {
+    animation: glow 2s infinite;
+}
+
+.animated-shake  {
+    animation: float 3s infinite;
+}
+
+@keyframes float {
+    0% {
+        transform: translateY(0);
+    }
+    50% {
+        transform: translateY(-10px);
+    }
+    100% {
+        transform: translateY(0);
+    }
+}
+
+.badge-success{
+    background-color: #28a745 !important;
+}
+
+.badge-danger{
+    background-color: #dc3545 !important;
+}
+
+.badge-warning{
+    background-color: #ffc107 !important;
+}
+
+.badge-info{
+    background-color: #17a2b8 !important;
+}
+
+
+#guardarBtn {
+    border: none;
+    background: none;
+    outline: none;
+    box-shadow: none;
+    transition: transform 0.3s ease, color 0.3s ease;
+}
+
+/* Efecto continuo de resplandor alrededor del botón */
+@keyframes glow {
+    0% {
+        box-shadow: 0 0 5px rgba(40, 167, 69, 0.5);
+    }
+    50% {
+        box-shadow: 0 0 20px rgba(40, 167, 69, 1);
+    }
+    100% {
+        box-shadow: 0 0 5px rgba(40, 167, 69, 0.5);
+    }
+}
+
+
+#guardarBtn {
+    background-color: transparent !important; /* Fondo transparente */
+    border: none;
+    color: #28A745 !important; /* Color verde del ícono o texto */
+    padding: 10px;
+    border-radius: 5px;
+    transition: transform 0.3s ease, color 0.3s ease; /* Efecto suave de cambio de tamaño y color */
+}
+
+/* Mantener el fondo transparente al pasar el mouse */
+#guardarBtn:hover {
+    background-color: transparent !important; /* Mantener transparente */
+    color: #218838 !important; /* Opcional: cambiar ligeramente el color del ícono/texto */
+    transform: scale(1.05); /* Efecto de agrandamiento */
+}
+
+/* Asegurarse de que el ícono también siga el estilo */
+#guardarBtn i {
+    color: inherit; /* Hacer que el color del ícono siga el color del botón */
+}
+
+.table-responsive {
+    white-space: nowrap;
+  }
+
+
+  
+/* Contenedor para los botones flotantes */
+.float-buttons {
+    position: fixed;
+    right: 5rem;
+    bottom: 1rem;
+    display: flex;
+    gap: 1rem; /* Espacio entre los botones */
+    z-index: 1000; /* Para asegurarte de que esté por encima de otros elementos */
+}
+
+/* Botón Guardar */
+.guardar-float {
+    background-color: green;
+    color: white;
+    padding: 10px 20px;
+    border-radius: 5px;
+    cursor: pointer;
+    opacity: 0.8;
+    transition: all 0.5s ease;
+}
+
+.guardar-float:hover {
+    opacity: 1;
+    background-color: darkgreen; /* Cambia el color en hover si lo deseas */
+}
+
+/* Botón Volver arriba */
+.back-to-top {
+    display: block;
+    background: tomato;
+    color: white;
+    padding: 0.3rem 1rem;
+    transition: all 0.5s linear;
+    cursor: pointer;
+    opacity: 0.8;
+    border-radius: 10%;
+}
+
+.back-to-top:hover {
+    opacity: 1;
+}
+
+/* Badge para los tickets asignados */
+.badge-process {
+    background-color: #28a745 !important; /* Verde */
+    color: #fff !important; /* Texto en blanco */
+}
+
+/* Badge para los tickets no asignados */
+.badge-null {
+    background-color: #dc3545 !important; /* Rojo */
+    color: #fff !important; /* Texto en blanco */
+}
+
+.back-to-top {
+    display: flex; /* Usamos flexbox para centrar el contenido */
+    justify-content: center; /* Centra horizontalmente */
+    align-items: center; /* Centra verticalmente */
+    background-color: #0056B3; /* Color de fondo sólido */
+    color: white;
+    transition: all 0.5s linear;
+    cursor: pointer;
+    opacity: 0.8;
+    border-radius: 10%; /* Hacer el botón completamente circular */
+    width: 40px;
+    height: 40px;
+    position: fixed;
+    bottom: 40px;
+    right: 120px; /* Ajusta el valor para moverlo más a la izquierda */
+    z-index: 9999; /* Asegurarte de que esté por encima de otros elementos */
+    box-shadow: 0px 4px 6px rgba(0, 0, 0, 0.1); /* Añade sombra para resaltar */
+}
+
+.back-to-top i {
+    font-size: 24px;
+    display: block;
+    line-height: normal; /* Asegura que no haya line-height adicional */
+}
+
+.back-to-top:hover {
+    opacity: 1;
+    background-color: #34495E; /* Cambia a un tono más oscuro en hover */
+    color: white;
+}
+
+
+.dropdown-item.selected::before {
+    content: '✔';  
+    color: green; 
+    margin-right: 10px; 
+}
+
+
+.dropdown-item.selected {
+    font-weight: bold;  
+}
+
+
+.tooltip-inner {
+    background-color: black !important; /* Fondo negro */
+    color: white !important;           /* Texto en blanco */
+    border-radius: 5px;                /* Borde redondeado */
+    padding: 5px 10px;                 /* Padding para que el texto no esté pegado al borde */
+    font-size: 14px;                   /* Tamaño de fuente ajustable */
+}
+
+.tooltip-arrow {
+    border-top-color: black !important; 
+}
+
+.disabled {
+    pointer-events: none;
+    opacity: 0.6;
+}
+
+.ocultar-planilla {
+    display: none !important;
+}
+
+.dataTables_wrapper {
+    width: 100% !important;
+    overflow: auto; /* Garantiza que las tablas mantengan el scroll horizontal si es necesario */
+}
+
+.form-control,
+.select2-container .select2-selection--single {
+    height: 38px !important;
+    /* Ajusta la altura para que coincida */
+    font-size: 14px;
+}
+
+.select2-container--default .select2-selection--single {
+    border: 1px solid #ced4da;
+    border-radius: 0.25rem;
+    padding: 6px 12px;
+    /* Agrega espacio interno para alinear el texto */
+    height: 38px !important;
+    /* Asegura la misma altura */
+}
+
+/* Estilo general para todos los select, incluyendo chosen */
+.form-control,
+.chosen-container .chosen-single,
+.chosen-container-multi .chosen-choices {
+    height: calc(1.5em + 0.75rem + 2px);
+    padding: 0.375rem 0.75rem;
+    font-size: 1rem;
+    border-radius: 0.25rem;
+    border: 1px solid #ced4da;
+    background-color: #f8f9fa;
+    color: #495057;
+}
+
+/* Asegurar que Chosen tenga el mismo diseño */
+.chosen-container .chosen-single span,
+.chosen-container-multi .chosen-choices li.search-choice span {
+    line-height: 1.5;
+}
+
+/* Opcional: estilo para los selects cuando están en estado de lectura */
+.form-control[readonly],
+.chosen-container .chosen-single[readonly] {
+    background-color: #e9ecef;
+    color: #495057;
+}
+
+/* Estilo de los select chosen cuando están activos */
+.chosen-container-active .chosen-single {
+    border-color: #80bdff;
+    outline: 0;
+    box-shadow: 0 0 0 0.2rem rgba(0, 123, 255, .25);
+}
+
+/* Ajustes para mejorar la apariencia de los campos y etiquetas */
+.form-label {
+    font-weight: bold;
+    color: #333;
+}
+
+/* Margen inferior para los elementos en el formulario */
+.form-control,
+.chosen-container {
+    margin-bottom: 0.75rem;
+}
+
+/* Botones */
+.modal-footer .btn {
+    padding: 0.5rem 1.5rem;
+    font-size: 1rem;
+}
+
+/* Espacio adicional para los selects Chosen */
+.chosen-container {
+    width: 100% !important;
+}
+
+.chosen-container.is-invalid .chosen-single {
+    border-color: #e3342f !important; /* Rojo para validación fallida */
+}
+
+.chosen-container.is-invalid .chosen-single::after {
+    content: 'error_outline'; /* Icono de error con borde */
+    font-family: 'Material Icons';
+    color: #e3342f; /* Rojo del icono */
+    font-size: 1.4rem;
+    font-weight: bold;
+    position: absolute;
+    right: 10px;
+    top: 50%;
+    transform: translateY(-50%);
+    text-shadow: 0 0 1px rgba(0, 0, 0, 0.1);
+}
+
+
+/* Ajuste para chosen con error */
+.chosen-container.is-invalid .chosen-single {
+    border-color: #e3342f !important; /* Rojo para validación fallida */
+}
+
+.chosen-container.is-invalid .chosen-single::after {
+    content: 'error_outline'; /* Icono de error con borde similar */
+    font-family: 'Material Icons';
+    color: #e3342f; /* Rojo del icono */
+    font-size: 1.2rem;
+    position: absolute;
+    right: 10px;
+    top: 50%;
+    transform: translateY(-50%);
+}
+
+
+/* Ajuste para chosen con error */
+.chosen-container.is-invalid .chosen-single {
+    border-color: #e3342f !important; /* Rojo para validación fallida */
+}
+
+.chosen-container.is-invalid .chosen-single::after {
+    content: 'error_outline'; /* Icono de error */
+    font-family: 'Material Icons';
+    color: #e3342f; /* Rojo del icono */
+    font-size: 1.2rem;
+    position: absolute;
+    right: 10px;
+    top: 50%;
+    transform: translateY(-50%);
+}
+
+.btn-estilo-primary {
+    width: 45px;
+    /* Ancho fijo */
+    height: 40px;
+    /* Altura fija */
+    padding: 0;
+    /* Elimina el relleno predeterminado */
+    border: none;
+    /* Opcional: elimina bordes extra si los hay */
+    border-radius: 8px;
+    /* Opcional: aplica bordes redondeados */
+    display: flex;
+    align-items: center;
+    /* Centra el contenido verticalmente */
+    justify-content: center;
+    /* Centra el contenido horizontalmente */
+    background-color: #007BFF;
+    color: white;
+}
+
+.btn-estilo-success {
+    width: 45px;
+    /* Ancho fijo */
+    height: 40px;
+    /* Altura fija */
+    padding: 0;
+    /* Elimina el relleno predeterminado */
+    border: none;
+    /* Opcional: elimina bordes extra si los hay */
+    border-radius: 8px;
+    /* Opcional: aplica bordes redondeados */
+    display: flex;
+    align-items: center;
+    /* Centra el contenido verticalmente */
+    justify-content: center;
+    /* Centra el contenido horizontalmente */
+    background-color: #28A745;
+    color: white;
+}
+
+.btn-estilo-secondary {
+    width: 45px;
+    /* Ancho fijo */
+    height: 40px;
+    /* Altura fija */
+    padding: 0;
+    /* Elimina el relleno predeterminado */
+    border: none;
+    /* Opcional: elimina bordes extra si los hay */
+    border-radius: 8px;
+    /* Opcional: aplica bordes redondeados */
+    display: flex;
+    align-items: center;
+    /* Centra el contenido verticalmente */
+    justify-content: center;
+    /* Centra el contenido horizontalmente */
+    background-color: #5C636A;
+    color: white;
+}
+
+.btn-estilo-danger {
+    width: 45px;
+    /* Ancho fijo */
+    height: 40px;
+    /* Altura fija */
+    padding: 0;
+    /* Elimina el relleno predeterminado */
+    border: none;
+    /* Opcional: elimina bordes extra si los hay */
+    border-radius: 8px;
+    /* Opcional: aplica bordes redondeados */
+    display: flex;
+    align-items: center;
+    /* Centra el contenido verticalmente */
+    justify-content: center;
+    /* Centra el contenido horizontalmente */
+    background-color: #BB2D3B;
+    color: white;
+}
+
+
+

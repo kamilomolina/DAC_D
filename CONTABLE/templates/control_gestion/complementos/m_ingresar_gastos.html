@@ -1,0 +1,296 @@
+<div class="modal fade" id="modalAsignarCentro" tabindex="-1" role="dialog" data-bs-keyboard="false"
+    data-bs-backdrop="static" aria-labelledby="modalAsignarCentro" aria-hidden="true">
+    <div class="modal-dialog modal-lg">
+        <div class="modal-content">
+            <div class="modal-header" style="background-color: rgb(38, 67, 30);">
+                <h5 class="modal-title modal-title-ingresar-gasto" style="font-weight: 900; color: white"
+                    id="exampleModalLabel">ASIGNAR GASTO A UN
+                    CENTRO</h5>
+                <button type="button" style="background-color: #FFFFFF00; border: 0px;" id="btn_cancelar_asignar_centro"
+                    class="btn_cancelar_asignar_centro"><i class="fas fa-times"></i></button>
+            </div>
+            <div class="modal-body">
+
+                <form method="POST" id="formAsignarCentro">
+
+                    <input type="hidden" id="fkBancario" name="fkBancario">
+                    <input type="hidden" id="encabezado_gasto" name="encabezado_gasto">
+                    <input type="hidden" id="detalle_gasto" name="detalle_gasto">
+                    <input type="hidden" id="hidden_id_cuenta_contable" name="hidden_id_cuenta_contable">
+                    <input type="hidden" id="hidden_numero_cuenta" name="hidden_numero_cuenta">
+                    <input type="date" id="FechaDocumento" name="FechaDocumento" hidden>
+                    <input type="hidden" id="hidden_mes_cuenta" name="hidden_mes_cuenta">
+                    <input type="hidden" id="hidden_anio_cuenta" name="hidden_anio_cuenta">
+
+                    <div class="row">
+                        <div class="col-lg-4">
+                            <div class="form-group">
+                                <label for="" class="col-form-label">Centro:</label>
+                                <select name="centro_asignar" id="centro_asignar" class="form-select form-select-sm">
+                                    <option value="0" selected>Seleccione un Centro</option>
+                                    {% for centro in centrosData %}
+                                    <option value="{{ centro.id_centro }}">{{ centro.nombre_centro }}</option>
+                                    {% endfor %}
+                                </select>
+                            </div>
+                        </div>
+                        <div class="col-lg-4">
+                            <div class="form-group">
+                                <label for="" class="col-form-label">Cuenta Gasto:</label>
+                                <select name="cuenta_gasto_asignar" id="cuenta_gasto_asignar"
+                                    class="form-select form-select-sm">
+                                    <option value="0" selected>Seleccione cuenta a Ingresar Gasto</option>
+
+                                </select>
+                            </div>
+                        </div>
+                        <div class="col-lg-4">
+                            <div class="form-group">
+                                <label for="" class="col-form-label">Disponible Cuenta:</label>
+                                <input type="text" class="form-control form-control-sm formattedMoneyInputs"
+                                    placeholder="0.00" id="presupuesto_cuenta_disponible" readonly>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="row">
+
+                        <div class="col-lg-4">
+                            <div class="form-group">
+                                <label for="" class="col-form-label">Valor Gasto:</label>
+                                <input type="text" class="form-control form-control-sm formattedMoneyInputs" readonly
+                                    placeholder="0.00" id="valor_gasto">
+                            </div>
+                        </div>
+                        <div class="col-lg-4">
+                            <div class="form-group">
+                                <label for="" class="col-form-label">Valor a Ingresar:</label>
+                                <input type="text" class="form-control form-control-sm formattedMoneyInputs"
+                                    placeholder="0.00" id="valor_ingresar_gasto">
+                            </div>
+                        </div>
+                        <div class="col-lg-4">
+                            <div class="form-group">
+                                <label for="" class="col-form-label">Balance:</label>
+                                <input type="text" class="form-control form-control-sm formattedMoneyInputs" readonly
+                                    placeholder="0.00" id="valor_balance_gasto">
+                            </div>
+                        </div>
+
+                    </div>
+
+                    <br>
+
+                    <div class="modal-footer">
+                        <button type="submit" class="btn btn-success btn_asignar"
+                            id="btnGuardarAsignarCentro">Guardar</button>
+                        <button type="button" class="btn btn-danger btn_cancelar_asignar_centro"
+                            id="btn_cancelar_asignar_centro">Cancelar</button>
+                    </div>
+                </form>
+
+            </div>
+        </div>
+    </div>
+</div>
+
+
+<div class="modal fade" id="modalGastosFueraPresupuesto" tabindex="-1" role="dialog" data-bs-keyboard="false"
+    data-bs-backdrop="static" aria-labelledby="modalGastosFueraPresupuesto" aria-hidden="true">
+    <div class="modal-dialog modal-fullscreen">
+        <div class="modal-content">
+            <div class="modal-header" style="background-color: rgb(159, 16, 0);">
+                <h5 class="modal-title modal-title-ingresar-gasto" style="font-weight: 900; color: white"
+                    id="exampleModalLabel">LISTADO DE GASTOS FUERA DE PRESUPUESTO</h5>
+                <button type="button" style="background-color: #FFFFFF00; border: 0px;" id="btn_close_fuera_presupuesto"
+                    class="btn_close_fuera_presupuesto"><i class="fas fa-times"></i></button>
+            </div>
+            <div class="modal-body">
+
+                <div class="row p-2">
+                    <div class="col-sm-2">
+                        <div class="form-group">
+                            <label class="col-form-label">Mes Gasto: </label>
+                            <select class="form-select form-select-sm filterStyle text-nowrap mes_gasto periodGasto"
+                                id="mes_gasto">
+                                <option value="1">Enero</option>
+                                <option value="2">Febrero</option>
+                                <option value="3">Marzo</option>
+                                <option value="4">Abril</option>
+                                <option value="5">Mayo</option>
+                                <option value="6">Junio</option>
+                                <option value="7">Julio</option>
+                                <option value="8">Agosto</option>
+                                <option value="9">Septiembre</option>
+                                <option value="10">Octubre</option>
+                                <option value="11">Noviembre</option>
+                                <option value="12">Diciembre</option>
+                            </select>
+                        </div>
+                    </div>
+                    <div class="col-sm-2">
+                        <div class="form-group">
+                            <label class="col-form-label">Año Gasto: </label>
+                            <select class="form-select form-select-sm filterStyle text-nowrap anio_gasto periodGasto"
+                                id="anio_gasto">
+                            </select>
+                        </div>
+                    </div>
+                </div>
+
+                <br>
+
+                <div class="row p-2">
+                    <div class="row d-flex justify-content-end">
+                        <span><b>Filtros Rápidos</b></span>
+                        <div class="mainFilters">
+                            <div class="row f-flex justify-content-end">
+                                <div class="col-sm">
+                                    <label for="">Numero Cuenta</label>
+                                    <input type="text" class="form-control form-control-sm tableMainFilters"
+                                        id="NumeroNOFilter" placeholder="Numero Cuenta">
+                                </div>
+                                <div class="col-sm">
+                                    <label for="">Cuenta Contable</label>
+                                    <input type="text" class="form-control form-control-sm tableMainFilters"
+                                        id="CuentaNOFilter" placeholder="Cuenta Contable">
+                                </div>
+                                <div class="col-sm">
+                                    <label for="">Concepto</label>
+                                    <input type="text" class="form-control form-control-sm tableMainFilters"
+                                        id="ConceptoNOFilter" placeholder="Encabezado">
+                                </div>
+                                <div class="col-sm">
+                                    <label for="">Centro</label>
+                                    <input type="text" class="form-control form-control-sm tableMainFilters"
+                                        id="CentroNOFilter" placeholder="Centro">
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <br>
+
+                <div class="row">
+                    <div class="table-responsive">
+                        <table id="tableGastosNOPresupuesto"
+                            class="table rounded-4 table-sm table-bordered table-striped align-middle mb-0 table-principal"
+                            style="width:100%">
+
+                            <thead class="table-gradient text-dark">
+                                <tr>
+                                    <th class="text-center">#</th>
+                                    <th class="text-center">ID Movimiento</th>
+                                    <th class="text-center">Fecha Gasto</th>
+                                    <th class="text-center">Número Cuenta</th>
+                                    <th class="text-center">Cuenta Contable</th>
+                                    <th class="text-center">Concepto</th>
+                                    <th class="text-center">Centro Asignado</th>
+                                    <th class="text-center">Total Gasto</th>
+                                    <th class="text-center">Presupuesto Cuenta</th>
+                                    <th class="text-center">Total Gastos Ingresados</th>
+                                    <th class="text-center">Disponible</th>
+                                    <th class="text-center">Diferencia con Gasto Nuevo</th>
+                                    <th class="text-center">Acciones</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+
+            </div>
+
+            <div class="modal-footer">
+                <button type="button" class="btn btn-danger btn_close_fuera_presupuesto"
+                    id="btn_close_fuera_presupuesto">Cerrar</button>
+            </div>
+        </div>
+    </div>
+</div>
+
+
+
+
+
+<div class="modal fade" id="modalIngresoGasto" tabindex="-1" aria-labelledby="titleIngresoGasto" aria-hidden="true">
+    <div class="modal-dialog modal-fullscreen">
+        <div class="modal-content">
+            <div class="modal-header" style="background-color: rgb(78, 115, 223);">
+                <h5 class="modal-title" id="titleIngresoGasto" style="font-weight: 900; color: white">Ingreso de
+                    Gastos</h5>
+                <button type="button" class="btn-close btn_close_modal_desglose_gastos" data-bs-dismiss="modal"
+                    aria-label="Close"></button>
+            </div>
+
+            <div class="modal-body">
+
+                <div class="row p-2">
+                    <div class="row d-flex justify-content-end">
+                        <span><b>Filtros Rápidos</b></span>
+                        <div class="mainFilters">
+                            <div class="row f-flex justify-content-end">
+                                <div class="col-sm">
+                                    <label for="">Cuenta Contable</label>
+                                    <input type="text" class="form-control form-control-sm tableMainFilters"
+                                        id="CuentaFilter" placeholder="Cuenta">
+                                </div>
+                                <div class="col-sm">
+                                    <label for="">Concepto</label>
+                                    <input type="text" class="form-control form-control-sm tableMainFilters"
+                                        id="Concepto2Filter" placeholder="Concepto">
+                                </div>
+                                <div class="col-sm">
+                                    <label for="">Centro</label>
+                                    <input type="text" class="form-control form-control-sm tableMainFilters"
+                                        id="CentroFilter" placeholder="CentroFilter">
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <br>
+
+                <div class="row">
+                    <div class="table-responsive">
+                        <table id="tableDesgloseGastoBnk"
+                            class="table rounded-4 table-sm table-bordered table-striped align-middle mb-0 table-principal"
+                            style="width:100%">
+
+                            <thead class="table-gradient text-dark">
+                                <tr>
+                                    <th class="text-center">#</th>
+                                    <th class="text-center">ID Movimiento</th>
+                                    <th class="text-center">Fecha Gasto</th>
+                                    <th class="text-center">Cuenta Contable</th>
+                                    <th class="text-center">Concepto</th>
+                                    <th class="text-center">Centro Asignado</th>
+                                    <th class="text-center">Total Gasto</th>
+                                    <th class="text-center">Estado</th>
+                                    <th class="text-center">Ingresado Por</th>
+                                    <th class="text-center">Gasto Adicional</th>
+                                    <th class="text-center">Aprueba Gasto Adicional</th>
+                                    <th class="text-center">Acciones</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+
+            </div>
+
+            <div class="modal-footer">
+                <button type="button" class="btn btn-danger btn_close_modal_desglose_gastos"
+                    id="btn_close_modal_desglose_gastos">Cerrar</button>
+            </div>
+
+        </div>
+    </div>
+</div>

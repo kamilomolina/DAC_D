@@ -1,0 +1,28 @@
+<!-- Modal para Cambiar Contraseña -->
+<div class="modal fade" id="modalCambiarContrasena" tabindex="-1" role="dialog"
+  aria-labelledby="modalCambiarContrasenaLabel" aria-hidden="true">
+  <div class="modal-dialog" role="document">
+    <div class="modal-content">
+      <div class="modal-header">
+        <h5 class="modal-title" id="modalCambiarContrasenaLabel">Cambiar Contraseña</h5>
+        <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Cerrar"></button>
+      </div>
+      <div class="modal-body">
+        <form id="formCambiarContrasena">
+          <div class="mb-3">
+            <label for="nuevaContrasenaEditar" class="form-label">Nueva Contraseña</label>
+            <input type="password" class="form-control" id="nuevaContrasenaEditar" required>
+          </div>
+          <div class="mb-3">
+            <label for="confirmarContrasenaEditar" class="form-label">Confirmar Contraseña</label>
+            <input type="password" class="form-control" id="confirmarContrasenaEditar" required>
+          </div>
+        </form>
+      </div>
+      <div class="modal-footer">
+        <button type="button" class="btn btn-primary" id="guardarContrasenaEditar">Guardar</button>
+        <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancelar</button>
+      </div>
+    </div>
+  </div>
+</div>

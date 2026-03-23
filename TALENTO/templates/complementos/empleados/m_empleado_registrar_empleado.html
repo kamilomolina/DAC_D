@@ -1,0 +1,54 @@
+<div class="modal fade" id="modalRegistrarEmpleado" tabindex="-1" role="dialog" aria-labelledby="exampleModalLabel"
+    data-bs-keyboard="false" data-bs-backdrop="static" aria-hidden="true">
+    <div class="modal-dialog modal-lg" role="document">
+        <div class="modal-content"> <!-- Increased the height of the modal -->
+            <div class="modal-header" style="background-color: #28A745; color:black">
+                <h5 class="modal-title" id="exampleModalLabel">
+                    <i class="material-icons me-2 text-gray">person_add</i>Registro de Empleado
+                </h5>
+
+                <button type="button" id="cerrarRegistro" class="close" data-dismiss="modal" aria-label="Close">
+                    <span aria-hidden="true">&times;</span>
+                </button>
+            </div>
+            <div class="modal-body" style="overflow-y: auto;">
+                <!-- Ensure the body content is scrollable if it overflows -->
+                <form id="formRegistrarEmpleado" method="POST">
+                    <div class="col-md-12 d-flex align-items-center">
+                        <label for="registro-empleado" class="form-label label-width">Identidad:</label>
+                        <input type="text" id="registro-empleado" name="registro_empleado"
+                            class="form-control input-underline">
+                    </div>
+
+                    <div class="modal-footer">
+                        <button type="submit"
+                            class="btn btn-success animate__animated animate__pulse animate__slow animate__infinite">Guardar</button>
+                        <button type="button" class="btn btn-danger close" data-dismiss="modal"
+                            id="cerrar-modal">Cerrar</button>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+</div>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/jquery.inputmask/5.0.6/jquery.inputmask.min.js"></script>
+<script>
+    // Escuchar el clic en el botón de cerrar
+    $('#cerrar-modal').on('click', function () {
+        // Redirigir a la ruta de 'ver_empleados'
+        window.location.href = "{% url 'ver_empleados' %}";
+    });
+
+    $('#cerrarRegistro').on('click', function () {
+    // Redirigir a la ruta que deseas
+    window.location.href = "{% url 'ver_empleados' %}";
+});
+
+
+
+    $("#registro-empleado, #TutorID").inputmask("9999-9999-99999", {
+        placeholder: "0",
+        clearMaskOnLostFocus: false,
+    });
+
+</script>

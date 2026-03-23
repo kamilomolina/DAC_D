@@ -1,0 +1,56 @@
+<div class="modal fade" id="modalActualizarListadoDiaLibre" tabindex="-1" aria-labelledby="modalListadoTurnosLabel"
+    aria-hidden="true" data-bs-keyboard="false" data-bs-backdrop="static">
+    <div class="modal-dialog modal-lg"> 
+        <div class="modal-content">
+            <div class="modal-header" style="background-color: #304458; color: white;">
+                <h5 class="modal-title modalListadoTurnosLabel" id="modalListadoTurnosLabel">
+                    <i class="material-icons me-2 text-gray">list</i> Turnos
+                </h5>
+
+                <button type="button" class="close" data-bs-dismiss="modal" aria-label="Close"><span
+                        aria-hidden="true">&times;</span></button>
+
+            </div>
+
+
+            <div class="modal-body" style="background-color: #f4f6f9;">
+                <div class="modal-body" style="background-color: #f4f6f9;">
+                    <!-- Contenedor para fecha y comentario en la misma línea -->
+                    <div class="row mb-3">
+                        <div class="form-group col-md-6">
+                            <label for="fechaTurnoActuralizar" class="form-label">
+                                <span style="color: red;">*</span> Fecha del Turno:
+                            </label>
+                            <input type="date" id="fechaTurnoActuralizar" class="form-control form-control-sm">
+                        </div>
+                        <div class="form-group col-md-6">
+                            <label for="comentarioTurnoActuralizar" class="form-label">
+                                Descripción:
+                            </label>
+                            <input id="comentarioTurnoActuralizar" class="form-control form-control-sm" placeholder="Escribe una Descripción...">
+                        </div>
+                    </div>
+                
+                    <!-- Contenedor para el select en una nueva línea -->
+                    <div class="row mb-3">
+                        <div class="form-group col-md-6">
+                            <label for="idturnoActuralizar" class="form-label">
+                                Turnos
+                            </label>
+                            <select id="idturnoActuralizar" class="form-select form-select-sm">
+                                {% for turno in turnos %}
+                                <option value="{{ turno.0 }}">{{ turno.3 }}</option>
+                                {% endfor %}
+                            </select>
+                        </div>
+                    </div>
+                </div>
+                
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-success btn-sm" id="editarDiaLibres">Editar</button>
+                <button type="button" class="btn btn-danger btn-sm" data-bs-dismiss="modal">Cerrar</button>
+            </div>
+        </div>
+    </div>
+</div>

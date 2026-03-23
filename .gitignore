@@ -1,0 +1,15 @@
+/env
+dacd/__pycache__/
+myapp/__pycache__/
+mysqlclient-1.4.6-cp35-cp35m-win32.whl
+requirements.txt
+seguridad/__pycache__/
+*.pyc
+__pycache__/
+/API/__pycache__/
+/API/__pycache__
+*.pyc
+/REPORTERIA/views/__pycache__
+/CWS/views/__pycache__
+*.pyc
+*.pyc

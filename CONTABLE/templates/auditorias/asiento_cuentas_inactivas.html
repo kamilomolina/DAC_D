@@ -1,0 +1,144 @@
+{% extends 'componentes/menu_contable.html' %}
+{% load static %}
+
+{% block title %}ASIENTOS CON CUENTAS INACTIVAS{% endblock %}
+
+{% block body %}
+
+<div class="row align-items-center border-bottom mb-3 py-2 bg-white shadow-sm mx-0">
+    <div class="col d-flex align-items-center px-0">
+        <button id="toggle-sidebar" class="btn btn-primary btn-sm me-3 border-0 rounded-circle btnMenu"
+            style="width: 32px; height: 32px; padding: 0;" title="Mostrar/Ocultar menú">
+            <i class="fas fa-bars"></i>
+        </button>
+        <h6 class="page-title mb-0 fs-5 fw-bold text-dark">
+            <i class="fas fa-ban text-primary me-2"></i>ASIENTOS CON CUENTAS INACTIVAS
+        </h6>
+    </div>
+</div>
+
+<div class="container-fluid px-0 mt-1">
+    <div class="row g-3 d-flex align-items-end mx-0">
+        <div class="col-12 col-md-3 mb-3">
+            <label>Empresa:</label>
+            <select id="selectEmpresa" class="form-select form-select-sm">
+                {% for e in empresasData %}
+                <option value="{{ e.id }}">{{ e.nombre }}</option>
+                {% endfor %}
+            </select>
+        </div>
+        <div class="col-12 col-md-2 mb-3">
+            <label>Desde:</label>
+            <input type="date" id="fini" value="{{ date1 }}" class="form-control form-control-sm">
+        </div>
+        <div class="col-12 col-md-2 mb-3">
+            <label>Hasta:</label>
+            <input type="date" id="ffin" value="{{ date2 }}" class="form-control form-control-sm">
+        </div>
+        <div class="col-12 col-md-2 mb-3">
+            <button class="btn btn-sm btn-success" id="btnLoadData">Cargar</button>
+        </div>
+    </div>
+
+    <div class="row mt-1">
+        <div class="table-responsive">
+            <table id="tblCuentasInactivas"
+                class="table table-striped table-bordered mb-0 table-sm rounded-4 table-hover align-middle"
+                style="width:100%;">
+                <thead class="table-gradient text-dark">
+                    <tr>
+                        <th>Partida</th>
+                        <th>Fecha</th>
+                        <th>Tipo</th>
+                        <th>Documento</th>
+                        <th>Cuenta</th>
+                        <th>Nombre Cuenta</th>
+                        <th class="text-end">Debe</th>
+                        <th class="text-end">Haber</th>
+                    </tr>
+                </thead>
+                <tbody></tbody>
+            </table>
+        </div>
+    </div>
+</div>
+
+<a href="{% url 'panel_contabilidad' %}">
+    <button class="btn btn-sm btn-danger" id="btnCerrar" title="Cerrar"
+        style="position: fixed; bottom: 20px; right: 20px;">
+        <i class="fa fa-times"></i> Cerrar
+    </button>
+</a>
+{% endblock %}
+
+{% block scripts %}
+<script>
+    $(function () {
+        var csrfToken = "{{ csrf_token }}";
+
+        $("#tblCuentasInactivas").DataTable({
+            language: { url: "{% static 'app/th/json/es-ES.json' %}" },
+        });
+
+        function showLoadingScreen(text = '') {
+            Swal.fire({
+                title: '',
+                html: `<b>${text}</b>`,
+                didOpen: () => {
+                    Swal.showLoading();
+                },
+                allowOutsideClick: false,
+                showConfirmButton: false
+            });
+        }
+
+        function loadCuentasInactivas(empresa, fini, ffin) {
+            showLoadingScreen();
+
+            $("#tblCuentasInactivas").DataTable({
+                destroy: true,
+                autoWidth: false,
+                scrollX: true,
+                scrollY: '350px',
+                scrollCollapse: true,
+                pageLength: 50,
+                dom: 'Brftip',
+                language: { url: "{% static 'app/th/json/es-ES.json' %}" },
+                buttons: [
+                    { extend: 'excel', text: '<i class="fas fa-file-excel"></i>', className: 'btn btn-success' },
+                    { extend: 'pdf', text: '<i class="fas fa-file-pdf"></i>', className: 'btn btn-danger' },
+                    { extend: 'print', text: '<i class="fas fa-print"></i>', className: 'btn btn-primary', orientation: 'landscape' }
+                ],
+                ajax: {
+                    url: "{% url 'dataCuentasInactivas' %}",
+                    type: "POST",
+                    dataSrc: "data",
+                    data: {
+                        empresa: empresa,
+                        fechaInicial: fini,
+                        fechaFinal: ffin,
+                        csrfmiddlewaretoken: "{{ csrf_token }}"
+                    }
+                },
+                initComplete: function () { Swal.close(); },
+                columns: [
+                    { data: "Npartida" },
+                    { data: "Fecha" },
+                    { data: "TipoDocto" },
+                    { data: "NumeroDocto" },
+                    { data: "CodigoCuenta" },
+                    { data: "NombreCuenta" },
+                    { data: "Debe", className: "text-end", render: $.fn.dataTable.render.number(',', '.', 2) },
+                    { data: "Haber", className: "text-end", render: $.fn.dataTable.render.number(',', '.', 2) }
+                ]
+            });
+        }
+
+        $('#btnLoadData').click(function () {
+            loadCuentasInactivas($('#selectEmpresa').val(), $('#fini').val(), $('#ffin').val());
+        });
+
+
+    });
+</script>
+{% endblock %}

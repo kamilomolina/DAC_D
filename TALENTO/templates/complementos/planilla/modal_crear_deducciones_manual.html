@@ -1,0 +1,97 @@
+<div class="modal fade" id="bonificacionesYDeduccionesManualmente" tabindex="-1"
+            aria-labelledby="ModaldeduccionesBonificacionesManual" aria-hidden="true" data-bs-keyboard="false"
+            data-bs-backdrop="static">
+            <div class="modal-dialog modal-lg "> <!-- Centrar el modal -->
+                <div class="modal-content">
+                    <div class="modal-header" style="background-color: #304458; color: white;">
+                        <h5 class="modal-title" id="CrearDeduccionEmpledado">
+                            <i class="material-icons me-2 text-gray">verified_user</i> Nuevo Ingreso
+                        </h5>
+                        <button type="button" class="cerrar-modal-ded btn-close" data-bs-dismiss="modal" aria-label="Close"
+                            style="filter: invert(1);"></button>
+                    </div>
+                    <div class="modal-body">
+                        <!-- Contenedor para centrar el contenido -->
+                        <div class="container-fluid">
+                            <form id="formCrearDeduccionManual" method="POST">
+                                {% csrf_token %}
+                                <input type="hidden" id="idDeduccionDetalle">
+                                <input type="hidden" id="idempleadomanua">
+                                <div class="row g-3">
+                                    <!-- Código de Planilla -->
+                                    <div class="col-md-6">
+                                        <label for="tipoArchivo" class="form-label"><span
+                                            style="color: red;">*</span>Ajuste Nomina</label>
+                                        <select id="tipoArchivoManual" name="tipoArchivoManual"
+                                            class="form-select form-select-sm tipoArchivo">
+                                            <option value="">Seleccione una opción</option>
+                                        </select>
+                                    </div>
+                                    <div class="col-md-6">
+                                        <label for="empleado-planilla-manual" class="form-label"><span
+                                                style="color: red;">*</span> Empleado</label>
+                                        <select class="form-control chosen-select" id="empleado-planilla-manual"
+                                            name="empleado_planilla_manual">
+                                            <option value="">Seleccione un empleado</option>
+                                        </select>
+                                    </div>
+
+                                    <!-- Tipo de Deducción -->
+                                    <div class="col-md-6">
+                                        <label for="deduccion-planilla-manual" class="form-label" id='tipo'><span
+                                            style="color: red;">*</span>Ajuste Tipo</label>
+                                        <select class="form-control chosen-select" id="deduccion-planilla-manual"
+                                            name="deduccion_planilla_manual">
+
+                                        </select>
+                                    </div>
+
+                                    <!-- Valor de la Deducción -->
+                                    <div class="col-md-6">
+                                        <label for="valor-deduccion-manual" class="form-label "><span
+                                            style="color: red;">*</span>Valor</label>
+                                        <input type="text" class="form-control formattedMoneyInputs" id="valor-deduccion-manual"
+                                            name="valor_deduccion_manual" placeholder="Valor de la deducción">
+                                    </div>
+                                    <div class="col-md-6">
+
+                                        <input type="hidden" class="form-control" id="cod-planilla-manual"
+                                            name="cod_planilla_manual" value="{{ codigo }}" readonly>
+                                        <input type="hidden" class="form-control bg-light text-muted"
+                                            id="nombre-planilla-manual" placeholder="nombre de la planilla"
+                                            value="{{ nombre_planilla }}" readonly>
+                                    </div>
+
+                                    <!-- Fecha de Planilla -->
+                                    <div class="col-md-6">
+
+                                        <input type="hidden" class="form-control bg-light text-muted"
+                                            id="fecha-planilla-manual" placeholder="Fecha de la planilla"
+                                            value="{{ periodo }}" readonly>
+                                    </div>
+
+                                    <!-- Tipo de Planilla -->
+                                    <div class="col-md-6">
+
+                                        <input type="hidden" class="form-control bg-light text-muted"
+                                            id="tipo-planilla-manual" placeholder="Tipo de planilla"
+                                            value="{{ descripcion_cargo_laboral }}" readonly>
+                                    </div>
+                                </div>
+                                <div class="row">
+                                    <div class="col-md-12 text-end">
+                                        <button type="submit" class="btn btn-success mt-3"><i
+                                                class="material-icons">save</i>Guardar</button>
+                                        <button type="button" class="btn btn-danger mt-3 cerrar-modal-ded"
+                                            data-bs-dismiss="modal">Cerrar</button>
+                                    </div>
+                                </div>
+                            </form>
+                        </div>
+
+                    </div>
+
+                </div>
+            </div>
+        </div>
+    

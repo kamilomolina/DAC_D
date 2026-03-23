@@ -1,0 +1,1431 @@
+{% extends 'componentes/menu_bancario.html' %}
+{% load static %}
+
+{% block title %}
+CREAR MOVIMIENTO DEBITO
+{% endblock %}
+
+{% block body %}
+
+<div class="row align-items-center border-bottom mb-3 py-2 bg-white shadow-sm mx-0">
+    <div class="col d-flex align-items-center px-0">
+        <button id="toggle-sidebar" class="btn btn-primary btn-sm me-3 border-0 rounded-circle btnMenu"
+            style="width: 32px; height: 32px; padding: 0;">
+            <i class="fas fa-bars"></i>
+        </button>
+
+        <h6 class="page-title mb-0 fs-5 fw-bold text-dark">
+            <i class="fas fa-money-check-alt text-primary me-2"></i>CREAR {{ titulo_tipo }}
+        </h6>
+    </div>
+</div>
+
+<input type="hidden" id="id_empresa" value="{{ id_empresa }}">
+
+<div class="container-fluid px-0 mt-1">
+
+    <form id="frmMovimiento">
+
+        <input type="hidden" id="fkTipoMovimiento" value="{{ fkTipoMovimiento }}">
+
+        <div class="row g-2 mx-0">
+
+            <!-- ========== COLUMNA IZQUIERDA ========== -->
+            <div class="col-md-5">
+
+                <div class="card card-banco p-2">
+
+                    <div class="d-flex justify-content-between align-items-center mb-2">
+                        <div class="text-muted small">
+                            <i class="fas fa-info-circle me-1"></i> Resumen
+                        </div>
+
+                        <div class="d-flex gap-2 align-items-center">
+                            <span class="badge bg-light text-dark border" id="badgeMoneda">
+                                <i class="fas fa-coins me-1"></i> Moneda: --
+                            </span>
+
+                            <span class="badge bg-light text-dark border" id="badgeTS">
+                                <i class="fas fa-times-circle text-danger me-1"></i> NO TS
+                            </span>
+
+                            <span class="badge bg-light text-dark border" id="badgeEstado">
+                                <i class="fas fa-flag me-1"></i> Estado: --
+                            </span>
+                        </div>
+                    </div>
+
+
+                    <div class="row g-2">
+
+                        <div class="col-md-6">
+                            <label for="selectEmpresa">Empresa:</label>
+                            <select id="selectEmpresa" class="form-select form-select-sm" name="selectEmpresa">
+                                {% for e in empresasData %}
+                                <option value="{{ e.PkEmpresa }}">{{ e.NombreEmpresa }}</option>
+                                {% endfor %}
+                            </select>
+                        </div>
+
+                        <!-- BANCO -->
+                        <div class="col-md-6">
+                            <label class="fw-semibold">Banco:</label>
+
+                            <select id="selectBanco" class="form-select form-select-sm">
+                                <option value="0">Seleccione un Banco</option>
+                                {% for b in bancosData %}
+                                <option value="{{ b.PkCatBanco }}" data-img="data:image/png;base64,{{ b.ImagenBanco }}">
+                                    {{ b.Banco }}
+                                </option>
+                                {% endfor %}
+                            </select>
+
+                            <div class="text-center mt-2">
+                                <img id="imgBanco" style="max-height:70px; max-width:200px;">
+                            </div>
+                        </div>
+
+                        <!-- CUENTA -->
+                        <div class="col-md-3">
+                            <label class="fw-semibold">Cuenta Bancaria:</label>
+                            <select id="selectCuenta" class="form-select form-select-sm">
+                                <option value="0">Seleccione una Cuenta Bancaria</option>
+                            </select>
+                        </div>
+
+                        <!-- FECHA -->
+                        <div class="col-md-3">
+                            <label class="fw-semibold">Fecha:</label>
+                            <input type="date" id="fecha" class="form-control form-control-sm"
+                                value="{{ fecha_actual|date:'Y-m-d' }}">
+                        </div>
+
+                        <!-- NUMERO -->
+                        <div class="col-md-3">
+                            <label class="fw-semibold">Número:</label>
+                            <input type="number" id="numero" class="form-control form-control-sm">
+                        </div>
+
+                        <!-- VALOR -->
+                        <div class="col-md-3">
+                            <label class="fw-semibold">Valor:</label>
+                            <input type="text" id="valor"
+                                class="form-control form-control-sm text-end formattedMoneyInputs">
+                        </div>
+
+                        <input hidden type="text" id="valorLps"
+                            class="form-control form-control-sm text-end formattedMoneyInputs">
+                        <input hidden type="checkbox" id="chkTS" class="form-check-input me-1">
+                        <select hidden id="selectEstado" class="form-select form-select-sm">
+                            {% for ce in estadosData %}
+                            <option value="{{ ce.PkCatEstado }}">{{ ce.Estado }}</option>
+                            {% endfor %}
+                        </select>
+
+
+                        <!-- BENEFICIARIO -->
+                        <div class="col-md-12">
+                            <label class="fw-semibold">Beneficiario:</label>
+                            <input type="text" id="beneficiario" class="form-control form-control-sm">
+                        </div>
+
+                        <!-- CONCEPTO -->
+                        <div class="col-md-12">
+                            <label class="fw-semibold">Concepto:</label>
+                            <textarea id="concepto" class="form-control form-control-sm" rows="2"></textarea>
+                        </div>
+
+                        <!-- MONTO LETRAS -->
+                        <div class="col-md-12">
+                            <label class="fw-semibold">Monto en Letras:</label>
+                            <div class="alert alert-info p-1 mb-0" id="montoLetras">
+                                ---
+                            </div>
+                        </div>
+
+                    </div>
+                </div>
+            </div>
+
+
+            <!-- ========== COLUMNA DERECHA ========== -->
+            <div class="col-md-7">
+
+                <div class="card card-banco p-2">
+
+                    <!-- PANEL TAF -->
+                    <div id="panelTAF" class="border rounded p-2 mt-2" style="display:none; background:#eef5ff;">
+                        <div class="d-flex justify-content-between align-items-center">
+
+                            <div>
+                                <i class="fas fa-random text-primary me-1"></i>
+                                <strong>Transferencia automática de fondos</strong>
+                            </div>
+
+                            <div>
+                                Cuenta TAF:
+                                <span id="lblCuentaTAF" class="fw-bold">---</span>
+                            </div>
+
+                            <div>
+                                Saldo cuenta TAF:
+                                <span id="lblSaldoTAF" class="fw-bold">0.00</span>
+                            </div>
+
+                        </div>
+                    </div>
+
+
+                    <!-- ===== USADO PARA (DESTINOS) ===== -->
+                    <div class="row g-2 mb-2">
+                        <div class="col-md-12">
+                            <label class="fw-semibold">Usado para:</label>
+
+                            <select id="selectDestino" class="form-select form-select-sm">
+                                <option value="0" data-prov="0" data-acre="0">Seleccione...</option>
+                                {% for d in destinosData %}
+                                <option value="{{ d.PkCatDestino }}" data-prov="{{ d.PagoProveedores }}"
+                                    data-acre="{{ d.PagoSolicPAcree }}">
+                                    {{ d.DestinoMovimiento }}
+                                </option>
+                                {% endfor %}
+                            </select>
+                        </div>
+                    </div>
+
+
+                    <!-- ===== ENTIDAD (SIEMPRE VISIBLE) ===== -->
+                    <div class="border rounded p-2 mb-2" style="background:#f8f9fa">
+
+                        <div class="row g-2 align-items-end">
+
+                            <!-- PROVEEDOR / ACREEDOR -->
+                            <div class="col-md-8">
+                                <label id="lblEntidad" class="fw-semibold">Proveedor:</label>
+
+                                <select id="selectEntidad" class="form-select form-select-sm">
+
+                                    <option value="0">Seleccione...</option>
+
+                                    <!-- PROVEEDORES -->
+                                    {% for p in proveedoresData %}
+                                    <option class="opt-prov" value="{{ p.Id_Proveedor }}">
+                                        {{ p.Nombre_Proveedor }}
+                                    </option>
+                                    {% endfor %}
+
+                                    <!-- ACREEDORES -->
+                                    {% for a in acreedoresData %}
+                                    <option class="opt-acre" value="{{ a.Id_Proveedor }}">
+                                        {{ a.Nombre_Proveedor }}
+                                    </option>
+                                    {% endfor %}
+
+                                </select>
+                            </div>
+                        </div>
+                    </div>
+
+
+                    <!-- ===== BLOQUE VERDE DINÁMICO (SOLO INGRESOS) ===== -->
+                    <div id="seccionIngresos" style="display:none">
+
+                        <div class="border rounded p-2 mb-2" style="background:#f3fff3">
+
+                            <div class="row g-2 align-items-end">
+
+                                <!-- DOCUMENTO / INGRESO -->
+                                <div class="col-md-6">
+                                    <label id="lblDocumento" class="fw-semibold">Ingreso:</label>
+
+
+                                    <select id="selectDocumento" class="form-select form-select-sm">
+                                        <option value="0" data-saldo="0">Seleccione...</option>
+                                    </select>
+                                </div>
+
+                                <!-- LIQUIDAR -->
+                                <div class="col-md-4">
+                                    <label class="fw-semibold">Liquidar:</label>
+
+                                    <input type="text" id="txtLiquidar"
+                                        class="form-control form-control-sm text-end formattedMoneyInputs">
+                                </div>
+
+                                <div class="col-md-2 text-end">
+                                    <button type="button" id="btnAgregarIngreso" class="btn btn-sm btn-success w-100">
+                                        <i class="fas fa-plus"></i>
+                                    </button>
+                                </div>
+
+                            </div>
+                        </div>
+                    </div>
+
+
+                    <!-- ===== TABLA RESULTADOS ===== -->
+                    <div class="table-responsive">
+                        <table class="table table-sm table-bordered table-mini" id="tablaIngresos">
+
+                            <thead>
+                                <tr>
+                                    <th>Entidad</th>
+                                    <th>Documento</th>
+                                    <th>Valor Pago</th>
+                                    <th>Valor Pago Lps</th>
+                                    <th>Ajuste Dif</th>
+                                    <th>Valor Pago M.E</th>
+                                    <th width="40"></th>
+                                </tr>
+                            </thead>
+
+                            <tbody></tbody>
+
+                            <tfoot>
+                                <tr class="fw-bold">
+                                    <td colspan="2">Totales:</td>
+                                    <td id="tot1" class="currency formattedMoneyInputs">0.00</td>
+                                    <td id="tot2" class="currency formattedMoneyInputs">0.00</td>
+                                    <td id="tot3" class="currency formattedMoneyInputs">0.00</td>
+                                    <td id="tot4" class="currency formattedMoneyInputs">0.00</td>
+                                    <td></td>
+                                </tr>
+                            </tfoot>
+
+                        </table>
+                    </div>
+
+                </div>
+            </div>
+
+
+
+        </div>
+
+
+        <!-- ===== MOVIMIENTOS LIGADOS ===== -->
+        <div class="row mt-2">
+            <div class="col-md-12">
+
+                <div class="card card-banco p-2">
+
+                    <div class="section-title mb-2">
+                        Movimientos Ligados
+                    </div>
+
+                    <table class="table table-sm table-bordered" id="tblMovLigados">
+                        <thead>
+                            <tr>
+                                <th style="width:30px"></th>
+                                <th>Tipo Movimiento</th>
+                                <th>Destino</th>
+                                <th>Cuenta Bancaria</th>
+                                <th>Número</th>
+                                <th>Fecha</th>
+                                <th>Concepto</th>
+                                <th class="text-end">Valor</th>
+                            </tr>
+                        </thead>
+                        <tbody id="tblLigados"></tbody>
+                    </table>
+
+
+                </div>
+
+            </div>
+        </div>
+
+
+        <!-- ===== BOTÓN GUARDAR ===== -->
+        <div class="row mt-2">
+            <div class="col d-flex justify-content-end">
+                <button type="button" id="btnGuardar" class="btn btn-success">
+                    <i class="fas fa-save"></i>
+                    Guardar {{ titulo_tipo }}
+                </button>
+            </div>
+        </div>
+
+    </form>
+</div>
+
+
+<a href="{% url 'panel_bancario' %}">
+    <button class="btn btn-sm btn-danger" id="btnCerrar" title="Cerrar"
+        style="position: fixed; bottom: 20px; right: 20px;">
+        <i class="fa fa-times"></i> Cerrar
+    </button>
+</a>
+
+{% endblock %}
+
+
+{% block scripts %}
+
+<script>
+    $(function () {
+
+        var csrfToken = "{{ csrf_token }}";
+        var buttons = "Bfrtlip";
+
+        let tipo = $("#fkTipoMovimiento").val();
+
+        let dollarUSLocale = Intl.NumberFormat("en-US", {
+            minimumFractionDigits: 2,
+            maximumFractionDigits: 2
+        });
+
+        let intergerLocale = Intl.NumberFormat("en-US", {
+            minimumFractionDigits: 0,
+            maximumFractionDigits: 0
+        });
+
+        // ===============================
+        // NUEVO → estado del destino
+        // ===============================
+        let modoDestino = "normal"; // normal | proveedor | acreedor
+
+        // ===============================
+        // DATASET EN MEMORIA (VB STYLE)
+        // ===============================
+        let movimientosLigados = [];
+        let movimientosDetalle = [];
+        let pkTemp = 0;
+
+        function nextPk() {
+            pkTemp++;
+            return pkTemp;
+        }
+
+        let timerMovLigados = null;
+
+        function solicitarRecalculoLigados() {
+
+            if (timerMovLigados) {
+                clearTimeout(timerMovLigados);
+            }
+
+            timerMovLigados = setTimeout(function () {
+                generarMovimientosLigados();
+            }, 150);
+        }
+
+        // ===============================
+        // ESTADO INICIAL
+        // ===============================
+        if (tipo == "1") {
+            $("#selectEstado").val("1");
+            $("#beneficiario").prop("readonly", false);
+            setEstadoBadge("Elaborado");
+        } else {
+            $("#selectEstado").val("5");
+            $("#beneficiario").prop("readonly", true);
+            setEstadoBadge("Cobrado");
+        }
+
+        function setTSBadge(aplica) {
+            if (aplica == 1) {
+                $("#badgeTS").html('<i class="fas fa-check-circle text-success me-1"></i> SI TS');
+            } else {
+                $("#badgeTS").html('<i class="fas fa-times-circle text-danger me-1"></i> NO TS');
+            }
+        }
+
+        function setMonedaBadge(moneda) {
+            $("#badgeMoneda").html('<i class="fas fa-coins me-1"></i> Moneda: ' + (moneda || '--'));
+        }
+
+        function setEstadoBadge(texto) {
+            $("#badgeEstado").html('<i class="fas fa-flag me-1"></i> Estado: ' + (texto || '--'));
+        }
+
+
+        function getTipoMovimientoTexto() {
+
+            // fkTipoMovimiento viene del hidden
+            let t = parseInt($("#fkTipoMovimiento").val() || 0);
+
+            switch (t) {
+                case 1: return "Cheque";
+                case 2: return "Retención en Venta";
+                case 3: return "Nota de Débito";
+                case 4: return "Nota de Crédito";
+                default: return "Movimiento";
+            }
+        }
+
+
+        // ===============================
+        // COLOR TARJETA
+        // ===============================
+        const colores = {
+            1: "#e3f2fd",
+            2: "#fff3e0",
+            3: "#fce4ec",
+            4: "#e8f5e9"
+        };
+
+        $(".card-banco").css("background", colores[tipo] || "#f0f8ff");
+
+
+        // ===============================
+        // EMPRESA / BANCO / CUENTAS
+        // ===============================
+        $('#selectEmpresa').val($('#id_empresa').val());
+
+        $("#selectEmpresa").change(function () {
+
+            let emp = $(this).val();
+
+            $("form").each(function () { this.reset(); });
+            $(this).val(emp);
+
+            cargarCuentas();
+        });
+
+        $("#selectBanco").change(function () {
+
+            let img = $(this).find(':selected').data('img');
+
+            $("#imgBanco").attr("src", img || "");
+
+            cargarCuentas();
+        });
+
+
+        function cargarCuentas() {
+
+            let empresa = $("#selectEmpresa").val();
+            let banco = parseInt($("#selectBanco").val());
+
+            $.get("{% url 'get_cuentas_bancarias' %}", {
+                empresa: empresa,
+                status: 1,
+                banco: banco,
+                csrfmiddlewaretoken: csrfToken
+            }, function (resp) {
+
+                let html = '<option value="0" data-ts="0" data-taf="0" data-porc="0" data-moneda="Sin Definir">Seleccione una Cuenta Bancaria</option>';
+
+                resp.data.forEach(function (c) {
+
+                    let txtTS = c.AplicaTS == 1 ? " | SI APLICA TS" : " | NO APLICA TS";
+
+                    html += `
+                    <option 
+                        value="${c.PkCatCuentaBancaria}"
+                        data-cuenta_bancaria="${c.CuentaBancaria}"
+                        data-ts="${c.AplicaTS}"
+                        data-taf="${c.FkCalculoTS}"
+                        data-cktaf="${c.FkCuentaTAF}"
+                        data-cuentataf="${c.CuentaBancariaTAF}"
+                        data-porc="${c.PorcentajePos}"
+                        data-moneda="${c.Moneda}">
+                        ${c.CuentaBancaria} - ${c.Moneda}${txtTS}
+                    </option>`;
+                });
+
+                $("#selectCuenta").html(html);
+                $('#selectCuenta').val(0).change();
+            });
+        }
+
+
+
+        $('#valor').on('blur', function () {
+            let v = $(this).val().replace(/,/g, "");
+            $('#valorLps').val(v);
+
+            $("#montoLetras").text(NumtoLetras(v));
+            solicitarRecalculoLigados();
+        });
+
+        $("#fecha").change(function () {
+            solicitarRecalculoLigados();
+        });
+
+        $("#selectCuenta").change(function () {
+
+            let op = $(this).find(':selected');
+
+            let ts = op.data('ts');
+            let moneda = op.data('moneda');
+
+            let fkCuentaTAF = parseInt(op.data("cktaf") || 0);
+            let cuentaTAF = op.data("cuentataf" || '');
+
+
+            if (fkCuentaTAF > 0) {
+                $("#panelTAF").show();
+
+                $.get("{% url 'api_get_saldo_cuenta' %}", {
+                    cuenta: fkCuentaTAF
+                }, function (resp) {
+                    $('#lblCuentaTAF').text(cuentaTAF);
+                    $("#lblSaldoTAF").text(
+                        dollarUSLocale.format(resp.saldo || 0)
+                    );
+                });
+
+            } else {
+                $("#panelTAF").hide();
+                $('#lblCuentaTAF').text('---');
+                $("#lblSaldoTAF").text("0.00");
+            }
+
+
+            $("#valorLps").prop("readonly", moneda == "Lempiras");
+
+            $("#chkTS").prop("checked", ts == 1);
+
+            setTSBadge(ts);
+            setMonedaBadge(moneda);
+
+            solicitarRecalculoLigados();
+        });
+
+
+
+        function initFormulario() {
+
+            $("#selectBanco").val(0);
+            $("#selectCuenta").val(0);
+            $("#selectDestino").val(0);
+            $("#selectEntidad").val(0);
+            $("#numero").val('');
+            $("#valor").val('');
+            $("#valorLps").val('');
+            $("#concepto").val('');
+            $("#montoLetras").text('---');
+
+            $("#tablaIngresos tbody").empty();
+            // $("#tblLigados").empty();
+        }
+
+        initFormulario();
+
+
+
+
+        // ===============================
+        // CAMBIO DESTINO (NUEVO FLUJO)
+        // ===============================
+        $("#selectDestino").change(function () {
+
+            let op = $(this).find(":selected");
+
+            let esProv = parseInt(op.data("prov") || 0);
+            let esAcre = parseInt(op.data("acre") || 0);
+
+            // 🔥 RESET TOTAL (SIEMPRE)
+            $("#selectEntidad").val(0);
+            $("#selectDocumento").html('<option value="0">Seleccione...</option>');
+            $("#txtLiquidar").val('');
+
+            $("#tablaIngresos tbody").empty();
+
+            // $("#tblLigados").empty(); // ← MUY IMPORTANTE (TS)
+
+            // ==========================
+            // PROVEEDOR
+            // ==========================
+            if (esProv === 1) {
+
+                modoDestino = "proveedor";
+
+                $("#seccionIngresos").show();
+                $("#lblEntidad").text("Proveedor:");
+                $("#lblDocumento").text("Ingreso:");
+
+                $(".opt-prov").show();
+                $(".opt-acre").hide();
+            }
+
+            // ==========================
+            // ACREEDOR
+            // ==========================
+            else if (esAcre === 1) {
+
+                modoDestino = "acreedor";
+
+                $("#seccionIngresos").show();
+                $("#lblEntidad").text("Acreedor:");
+                $("#lblDocumento").text("COD:");
+
+                $(".opt-prov").hide();
+                $(".opt-acre").show();
+            }
+
+            // ==========================
+            // NORMAL
+            // ==========================
+            else {
+
+                modoDestino = "normal";
+
+                $("#seccionIngresos").hide();
+
+                $("#lblEntidad").text("Proveedor:");
+                $("#lblDocumento").text("Ingreso:");
+
+                $(".opt-prov,.opt-acre").show();
+
+                $("#tablaIngresos tbody").empty();
+
+                // $("#tblLigados").empty();
+
+                // ⭐ TS DEL MOVIMIENTO ÚNICO
+            }
+
+
+            recalcularTotales();
+            solicitarRecalculoLigados();
+
+        });
+
+
+
+        // ===================================================
+        // HELPERS UI
+        // ===================================================
+        function setDocumentoLoading() {
+            $("#selectDocumento").html('<option value="0">Cargando...</option>');
+            $("#txtLiquidar").val('');
+        }
+
+        function setDocumentoEmpty() {
+            $("#selectDocumento").html('<option value="0">Seleccione...</option>');
+            $("#txtLiquidar").val('');
+        }
+
+        function money(n) {
+            n = parseFloat(n || 0) || 0;
+            return dollarUSLocale.format(n);
+        }
+
+        function buildOption(tipo, docId, saldo, label, extraSmall) {
+            // extraSmall: texto pequeño debajo (opcional)
+            let fullLabel = label + (extraSmall ? ` | ${extraSmall}` : '');
+            return `
+            <option
+                value="${docId}"
+                data-tipo="${tipo}"
+                data-doc-id="${docId}"
+                data-saldo="${saldo}"
+                data-label="${label.replace(/"/g, '&quot;')}"
+            >
+                ${fullLabel}
+            </option>`;
+        }
+
+        function existeDocumentoEnTabla(tipo, docId) {
+            let existe = false;
+            $("#tablaIngresos tbody tr").each(function () {
+                let t = ($(this).data("tipo") || "").toString();
+                let id = parseInt($(this).data("docId") || 0);
+                if (t === tipo && id === docId) {
+                    existe = true;
+                    return false; // break
+                }
+            });
+            return existe;
+        }
+
+        // ===================================================
+        // CAMBIO ENTIDAD
+        // ===================================================
+        $("#selectEntidad").change(function () {
+
+            if (modoDestino === "normal") return;
+
+            let entidadId = $(this).val();
+
+            if (parseInt(entidadId || 0) === 0) {
+                setDocumentoEmpty();
+                return;
+            }
+
+            setDocumentoLoading();
+
+            // PROVEEDOR (INGRESOS)
+            if (modoDestino === "proveedor") {
+
+                $.get("{% url 'api_get_ingresos_pendientes' %}", {
+                    modo: 1,
+                    proveedor_id: entidadId,
+                    empresa_id: $("#selectEmpresa").val(),
+                    csrfmiddlewaretoken: csrfToken
+                }, function (resp) {
+
+                    let html = '<option value="0">Seleccione...</option>';
+
+                    (resp.data || []).forEach(function (x) {
+
+                        let docId = parseInt(x.id_factura || 0);
+                        let saldo = parseFloat(x.saldo || 0) || 0;
+
+                        // Label visual consistente
+                        let label = `FAC-${x.numero_factura} (#${docId})`;
+                        let extra = `Saldo L. ${money(saldo)} | ${x.fecha_factura || ''}`;
+
+                        html += buildOption("ING", docId, saldo, label, extra);
+                    });
+
+                    $("#selectDocumento").html(html);
+                    $("#selectDocumento").val(0).change();
+                });
+
+                return;
+            }
+
+            // ACREEDOR (SOLICITUDES)
+            if (modoDestino === "acreedor") {
+
+                $.get("{% url 'api_get_solicitudes_acreedor' %}", {
+                    cod_proveedor: entidadId, // aqui entidadId ES CodProveedor (varchar5)
+                    empresa_id: $("#selectEmpresa").val(),
+                    csrfmiddlewaretoken: csrfToken
+                }, function (resp) {
+
+                    let html = '<option value="0">Seleccione...</option>';
+
+                    (resp.data || []).forEach(function (x) {
+
+                        // OJO: tu SP devuelve CodSolicitud
+                        let docId = parseInt(x.CodSolicitud || 0);
+                        let saldo = parseFloat(x.Saldo || 0) || 0;
+
+                        let label = `SOL-${docId}`;
+                        let extra = `Saldo L. ${money(saldo)} | ${x.Documento || ''}`;
+
+                        html += buildOption("ACR", docId, saldo, label, extra);
+                    });
+
+                    $("#selectDocumento").html(html);
+                    $("#selectDocumento").val(0).change();
+                });
+
+                return;
+            }
+
+            solicitarRecalculoLigados();
+
+        });
+
+
+        // ===================================================
+        // DOCUMENTO CAMBIO -> auto llena liquidar con saldo
+        // ===================================================
+        $("#selectDocumento").change(function () {
+
+            let opt = $(this).find(":selected");
+            let saldo = parseFloat(opt.data("saldo") || 0) || 0;
+
+            $("#txtLiquidar").val(saldo > 0 ? money(saldo) : '');
+        });
+
+
+        // ===================================================
+        // AGREGAR DOCUMENTO (ING o ACR)
+        // ===================================================
+        $("#btnAgregarIngreso").click(function () {
+
+            let entidadIdRaw = $("#selectEntidad").val();
+            let entidadId = (modoDestino === "acreedor")
+                ? (entidadIdRaw || "")            // cod proveedor (varchar)
+                : parseInt(entidadIdRaw || 0);     // proveedor_id int
+
+            let entidadTxt = $("#selectEntidad option:selected").text().trim();
+
+            let opt = $("#selectDocumento option:selected");
+            let docId = parseInt($("#selectDocumento").val() || 0);
+
+            let tipo = (opt.data("tipo") || "").toString(); // ING / ACR
+            let docLabel = (opt.data("label") || opt.text() || "").toString().trim();
+            let docTxt = opt.text().trim();
+
+            let saldo = parseFloat(opt.data("saldo") || 0) || 0;
+            let liquidar = parseFloat(($("#txtLiquidar").val() || "").replace(/,/g, "")) || 0;
+
+            if (modoDestino !== "normal") {
+                if ((modoDestino === "acreedor" && (entidadId === "0" || entidadId === "")) || (modoDestino !== "acreedor" && entidadId <= 0)) {
+                    return Swal.fire("", "Seleccione entidad", "warning");
+                }
+            }
+
+            if (docId <= 0 || liquidar <= 0) {
+                return Swal.fire("", "Documento inválido", "warning");
+            }
+
+            // ===========================
+            // DUPLICADO (tipo + docId)
+            // ===========================
+            if (existeDocumentoEnTabla(tipo, docId)) {
+                Swal.fire("", "Este documento ya fue agregado!", "warning");
+                return;
+            }
+
+            // Clamp
+            if (liquidar > saldo) liquidar = saldo;
+
+            let diferencia = saldo - liquidar;
+
+            // Para restaurar option cuando se borre
+            let restorePayload = {
+                tipo: tipo,
+                docId: docId,
+                saldo: saldo,
+                label: docLabel,
+                txt: docTxt
+            };
+
+            let esAcreedor = (tipo === "ACR");
+
+            let row = `
+                <tr
+                    data-entidad-id="${(modoDestino === "acreedor") ? entidadId : parseInt(entidadId)}"
+                    data-entidad-txt="${entidadTxt.replace(/"/g, '&quot;')}"
+                    data-tipo="${tipo}"
+                    data-doc-id="${docId}"
+                    data-doc-label="${docLabel.replace(/"/g, '&quot;')}"
+                    data-saldo="${saldo}"
+                    data-restore='${JSON.stringify(restorePayload).replace(/'/g, "&apos;")}'
+                >
+                    <td>
+                        ${entidadTxt}
+                        <div class="text-muted small">
+                            ${esAcreedor ? `Solicitud: SOL-${docId}` : `Factura: ${docLabel}`}
+                        </div>
+                    </td>
+                    <td>${docTxt}</td>
+                    <td class="p1 text-end">
+                        <input type="text"
+                            class="form-control form-control-sm text-end liq-edit formattedMoneyInputs"
+                            value="${money(liquidar)}">
+                    </td>
+                    <td class="p2 text-end">${money(liquidar)}</td>
+                    <td class="p3 text-end">${money(diferencia)}</td>
+                    <td class="p4 text-end">${money(liquidar)}</td>
+                    <td class="text-center">
+                        <button class="btn btn-danger btn-sm del" type="button">
+                            <i class="fas fa-trash"></i>
+                        </button>
+                    </td>
+                </tr>
+            `;
+
+            $("#tablaIngresos tbody").append(row);
+
+            // quitar del select el agregado
+            $("#selectDocumento").val(0).change();
+
+            recalcularTotales();
+            solicitarRecalculoLigados();
+        });
+
+
+        // ===================================================
+        // EDITAR / ELIMINAR
+        // ===================================================
+        $(document).on("blur", ".liq-edit", function () {
+
+            let tr = $(this).closest("tr");
+
+            let saldo = parseFloat(tr.data("saldo") || 0) || 0;
+            let valor = parseFloat(($(this).val() || "").replace(/,/g, "")) || 0;
+
+            if (valor > saldo) valor = saldo;
+
+            let diferencia = saldo - valor;
+
+            $(this).val(money(valor));
+            tr.find(".p2").text(money(valor));
+            tr.find(".p3").text(money(diferencia));
+            tr.find(".p4").text(money(valor));
+
+            recalcularTotales();
+            solicitarRecalculoLigados();
+        });
+
+        $(document).on("click", ".del", function () {
+            $(this).closest("tr").remove();
+            recalcularTotales();
+            solicitarRecalculoLigados();
+        });
+
+
+        function renderMovimientosLigados() {
+
+            $("#tblLigados").empty();
+
+            if (!movimientosLigados.length) return;
+
+            movimientosLigados.forEach(function (m) {
+
+                let detalleRows = movimientosDetalle
+                    .filter(d => d.fk_mov_temp == m.pk)
+                    .map(d => `
+                        <tr class="table-light">
+                            <td>${d.procedencia}</td>
+                            <td class="text-end">${dollarUSLocale.format(d.valor)}</td>
+                            <td>${d.tipo}</td>
+                            <td>${d.numero}</td>
+                            <td>${d.cuenta}</td>
+                            <td>${d.librador}</td>
+                            <td>${d.banco}</td>
+                        </tr>
+                    `).join("");
+
+                let detalleHtml = "";
+
+                if (detalleRows) {
+                    detalleHtml = `
+                        <tr class="detalle-row">
+                            <td></td>
+                            <td colspan="7">
+                                <table class="table table-sm table-bordered mb-0">
+                                    <thead>
+                                        <tr>
+                                            <th>Procedencia</th>
+                                            <th>Valor</th>
+                                            <th>Tipo</th>
+                                            <th>Número</th>
+                                            <th>Cuenta</th>
+                                            <th>Librador</th>
+                                            <th>Banco</th>
+                                        </tr>
+                                    </thead>
+                                    <tbody>
+                                        ${detalleRows}
+                                    </tbody>
+                                </table>
+                            </td>
+                        </tr>
+                    `;
+                }
+
+                let fila = `
+                    <tr data-pk="${m.pk}">
+                        <td>${m.tipo_txt}</td>
+                        <td>${m.destino_txt || ""}</td>
+                        <td>${m.cuenta_txt || ""}</td>
+                        <td>${m.numero || "Por asignar"}</td>
+                        <td>${m.fecha || ""}</td>
+                        <td>${m.concepto || ""}</td>
+                        <td class="text-end">
+                            ${dollarUSLocale.format(parseFloat(m.valor || 0))}
+                        </td>
+                    </tr>
+                    ${detalleHtml}
+                `;
+
+                $("#tblLigados").append(fila);
+            });
+        }
+
+
+        // ===================================================
+        // GENERADOR CENTRAL (VB STYLE REAL)
+        // ===================================================
+        function generarMovimientosLigados() {
+
+            // =========================
+            // RESET DATASET
+            // =========================
+            movimientosLigados = [];
+            movimientosDetalle = [];
+            pkTemp = 0;
+
+            let cuenta = $("#selectCuenta option:selected");
+
+            // ===== CUENTAS LIMPIAS PARA USAR EN TODO EL MÉTODO
+            let fkCuentaTAF = parseInt(cuenta.data("cktaf") || 0);
+            let tieneTAF = fkCuentaTAF > 0;
+
+            let cuentaTAFTxt = (cuenta.data("cuentataf") || "").toString();
+            let cuentaPrincipalTxt = (cuenta.data("cuenta_bancaria") || "").toString();
+            let fkCuentaPrincipal = parseInt(cuenta.val() || 0);
+
+
+            let aplicaTS = parseInt(cuenta.data("ts") || 0);
+            let fkTipoCalculo = parseInt(cuenta.data("taf") || 0);
+            let moneda = (cuenta.data("moneda") || "").toString();
+
+            let fecha = $("#fecha").val();
+            let numero = $("#numero").val() || "SIN INGRESAR";
+            let tipoMovimientoTxt = getTipoMovimientoTexto();
+
+            let valorMovimiento =
+                parseFloat(($("#valorLps").val() || "0").replace(/,/g, "")) || 0;
+
+            if (valorMovimiento <= 0 || !fecha) {
+                renderMovimientosLigados();
+                return;
+            }
+
+            // =====================================================
+            // 1️⃣ ARMAR ITEMS (NORMAL / MULTI)
+            // =====================================================
+            let items = [];
+
+            if (modoDestino !== "normal") {
+
+                let agrupados = {};
+
+                $("#tablaIngresos tbody tr").each(function () {
+
+                    let entidadId = parseInt($(this).data("entidad-id") || 0);
+                    if (entidadId <= 0) return;
+
+                    let entidadTxt = ($(this).data("entidad-txt") || "").toString();
+
+                    let pago = parseFloat(
+                        ($(this).find(".p2").text() || "0").replace(/,/g, "")
+                    ) || 0;
+
+                    if (!agrupados[entidadId]) {
+                        agrupados[entidadId] = {
+                            total: 0,
+                            txt: entidadTxt
+                        };
+                    }
+
+                    agrupados[entidadId].total += pago;
+                });
+
+                Object.keys(agrupados).forEach(function (id) {
+                    items.push({
+                        entidad_id: parseInt(id),
+                        entidad_txt: agrupados[id].txt,
+                        total: agrupados[id].total
+                    });
+                });
+
+            } else {
+
+                let entidadId = parseInt($("#selectEntidad").val() || 0);
+
+                items.push({
+                    entidad_id: entidadId,
+                    entidad_txt: "MOVIMIENTO",
+                    total: valorMovimiento
+                });
+            }
+
+            // =====================================================
+            // 2️⃣ GENERADOR TAF (SIEMPRE INDEPENDIENTE DEL TS)
+            // =====================================================
+            function generarTAF(valorBase, conceptoBase) {
+
+                if (!tieneTAF) return;
+
+                // ===== DEBITO (TAF)
+                movimientosLigados.push({
+                    pk: nextPk(),
+                    tipo_txt: "Nota de Débito",
+                    numero: "Por asignar",
+                    fecha: fecha,
+                    valor: valorBase,
+                    fk_cuenta_bancaria: fkCuentaTAF,
+                    cuenta_txt: cuentaTAFTxt,
+                    concepto: conceptoBase
+                });
+
+                // ===== CREDITO (PRINCIPAL)
+                let pkCredito = nextPk();
+
+                movimientosLigados.push({
+                    pk: pkCredito,
+                    tipo_txt: "Nota de Crédito",
+                    numero: "Por asignar",
+                    fecha: fecha,
+                    valor: valorBase,
+                    fk_cuenta_bancaria: fkCuentaPrincipal,
+                    cuenta_txt: cuentaPrincipalTxt,
+                    concepto: conceptoBase
+                });
+
+                movimientosDetalle.push({
+                    fk_mov_temp: pkCredito,
+                    procedencia: "Transferencia",
+                    valor: valorBase,
+                    tipo: "Transferencia",
+                    numero: "Por asignar",
+                    cuenta: cuentaPrincipalTxt,
+                    librador: $("#selectEmpresa option:selected").text(),
+                    banco: $("#selectBanco option:selected").text()
+                });
+            }
+
+            // =====================================================
+            // 3️⃣ TS (VB REAL)
+            // =====================================================
+            if (aplicaTS === 1 && fkTipoCalculo > 0) {
+
+                $.post("{% url 'calcular_tasa_seguridad_multi' %}", {
+                    fkTipoCalculo: fkTipoCalculo,
+                    moneda: moneda,
+                    valorEnLps: valorMovimiento,
+                    fecha: fecha,
+                    items: JSON.stringify(items),
+                    csrfmiddlewaretoken: csrfToken
+                }, function (resp) {
+
+                    if (!resp || !resp.success) {
+                        renderMovimientosLigados();
+                        return;
+                    }
+
+                    // ---- TS por item
+                    (resp.data || []).forEach(function (x) {
+
+                        let montoTS = parseFloat(x.tasa_seguridad || 0);
+                        if (montoTS <= 0) return;
+
+                        let conceptoTS =
+                            `Pago Tasa de Seguridad sobre ${dollarUSLocale.format(x.total)} Lempiras de ${tipoMovimientoTxt} ${numero}`;
+
+                        // si hay TAF → primero transferencia
+                        generarTAF(montoTS, conceptoTS);
+
+                        // movimiento TS final
+                        movimientosLigados.push({
+                            pk: nextPk(),
+                            tipo_txt: "Nota de Débito",
+                            numero: "Por asignar",
+                            valor: montoTS,
+                            concepto: conceptoTS
+                        });
+                    });
+
+                    // 🔥 TAF normal del movimiento (independiente del TS)
+                    let conceptoTAF =
+                        `Valor transferido desde la Cuenta Bancaria ${cuentaTAFTxt}
+                        del Banco ${$("#selectBanco option:selected").text()}
+                        para la Cuenta Bancaria ${cuentaPrincipalTxt},
+                        Pago de ${tipoMovimientoTxt} ${numero}`;
+
+
+                    generarTAF(valorMovimiento, conceptoTAF);
+
+                    renderMovimientosLigados();
+                });
+
+            } else {
+
+                // =========================
+                // SOLO TAF (SIN TS)
+                // =========================
+                let conceptoTAF =
+                    `Valor transferido desde la Cuenta Bancaria ${cuentaTAFTxt}
+                    del Banco ${$("#selectBanco option:selected").text()}
+                    para la Cuenta Bancaria ${cuentaPrincipalTxt},
+                    Pago de ${tipoMovimientoTxt} ${numero}`;
+
+                generarTAF(valorMovimiento, conceptoTAF);
+
+                renderMovimientosLigados();
+            }
+        }
+
+
+        // ===============================
+        // TOTALES
+        // ===============================
+        function recalcularTotales() {
+
+            let t1 = 0, t2 = 0, t3 = 0, t4 = 0;
+
+            $("#tablaIngresos tbody tr").each(function () {
+
+                t1 += parseFloat($(this).find(".liq-edit").val().replace(/,/g, "")) || 0;
+                t2 += parseFloat($(this).find(".p2").text().replace(/,/g, "")) || 0;
+                t3 += parseFloat($(this).find(".p3").text().replace(/,/g, "")) || 0;
+                t4 += parseFloat($(this).find(".p4").text().replace(/,/g, "")) || 0;
+            });
+
+            $("#tot1").text(dollarUSLocale.format(t1));
+            $("#tot2").text(dollarUSLocale.format(t2));
+            $("#tot3").text(dollarUSLocale.format(t3));
+            $("#tot4").text(dollarUSLocale.format(t4));
+        }
+
+
+
+        // ===============================
+        // GUARDAR MOVIMIENTO
+        // ===============================
+        $("#btnGuardar").click(function () {
+
+            let btn = $("#btnGuardar");
+
+            // evita doble click real
+            if (btn.prop("disabled")) return;
+
+            // =========================
+            // DATA BASE
+            // =========================
+            let data = {
+                tipo: tipo,
+
+                banco: $("#selectBanco").val(),
+                banco_text: $("#selectBanco option:selected").text(),
+
+                cuenta: $("#selectCuenta").val(),
+                cuenta_text: $("#selectCuenta option:selected").text(),
+
+                estado: $("#selectEstado").val(),
+                empresa: $("#selectEmpresa").val(),
+
+                destino: $("#selectDestino").val(),
+                destino_text: $("#selectDestino option:selected").text(),
+
+                beneficiario: $("#beneficiario").val() || "",
+
+                fecha: $("#fecha").val(),
+                numero: $("#numero").val(),
+
+                valor: ($("#valor").val() || "0").replace(/,/g, ""),
+                valorLps: ($("#valorLps").val() || "0").replace(/,/g, ""),
+
+                concepto: $("#concepto").val(),
+                entidad_id: parseInt($("#selectEntidad").val() || 0),
+
+                moneda: $("#selectMoneda option:selected").text(),
+
+                // SOLO ESTE CHECK ES REAL
+                ck_taf: $("#ckTAF").is(":checked"),
+
+                cuenta_taf: $("#selectCuentaTAF").val() || null,
+                cuenta_taf_text: $("#selectCuentaTAF option:selected").text() || "",
+
+                ingresos: [],
+                movimientos_ligados: []
+            };
+
+
+            // =========================
+            // INGRESOS
+            // =========================
+            $("#tablaIngresos tbody tr").each(function () {
+                data.ingresos.push({
+                    entidad_id: parseInt($(this).data("entidad-id") || 0),
+                    entidad_txt: ($(this).data("entidad-txt") || "").toString(),
+                    es_acreedor: parseInt($(this).data("es-acreedor") || 0),
+                    cod: ($(this).data("cod") || "").toString(),
+                    doc_id: parseInt($(this).data("doc-id") || 0),
+                    doc_txt: ($(this).data("doc-txt") || "").toString(),
+                    valor_pago_lps:
+                        parseFloat(
+                            ($(this).find(".p2").text() || "0").replace(/,/g, "")
+                        ) || 0
+                });
+            });
+
+            // =========================
+            // MOVIMIENTOS LIGADOS
+            // =========================
+            movimientosLigados.forEach(function (m) {
+                data.movimientos_ligados.push({
+                    tipo_txt: m.tipo_txt,
+                    numero: m.numero || "",
+                    valor: parseFloat(m.valor || 0),
+                    concepto: m.concepto || ""
+                });
+            });
+
+            // =========================
+            // VALIDACIONES
+            // =========================
+            if (!data.fecha || !data.numero) {
+                Swal.fire({
+                    icon: "warning",
+                    title: "Datos incompletos",
+                    text: "Complete la fecha y el número del movimiento"
+                });
+                return;
+            }
+
+            if (parseFloat(data.valorLps) <= 0) {
+                Swal.fire({
+                    icon: "warning",
+                    title: "Valor inválido",
+                    text: "El valor debe ser mayor a cero"
+                });
+                return;
+            }
+
+            if (modoDestino !== "normal" && data.ingresos.length === 0) {
+                Swal.fire({
+                    icon: "warning",
+                    title: "Sin ingresos",
+                    text: "Agregue al menos un ingreso antes de guardar"
+                });
+                return;
+            }
+
+            // =========================
+            // DESHABILITAR AQUÍ 👈
+            // =========================
+            btn.prop("disabled", true);
+
+            console.log("🚀 GUARDAR PAYLOAD:", data);
+
+            // =========================
+            // AJAX SAVE
+            // =========================
+            $.ajax({
+                url: "{% url 'saveMovimientoBancarioDebito' %}",
+                method: "POST",
+                data: {
+                    payload: JSON.stringify(data),
+                    csrfmiddlewaretoken: csrfToken
+                },
+
+                success: function (resp) {
+
+                    if (!resp || !resp.success) {
+
+                        btn.prop("disabled", false); // ← IMPORTANTE
+
+                        Swal.fire({
+                            icon: "error",
+                            title: "Error al guardar",
+                            text: resp.message || "No se pudo guardar el movimiento"
+                        });
+
+                        return;
+                    }
+
+                    Swal.fire({
+                        icon: "success",
+                        title: "Guardado correctamente",
+                        text: "El movimiento fue registrado",
+                        timer: 1500,
+                        showConfirmButton: false
+                    }).then(() => {
+                        window.location.reload();
+                    });
+                },
+
+                error: function () {
+
+                    btn.prop("disabled", false); // ← IMPORTANTE
+
+                    Swal.fire({
+                        icon: "error",
+                        title: "Error del servidor",
+                        text: "No se pudo completar la operación"
+                    });
+                }
+            });
+
+        });
+
+
+    });
+</script>
+
+
+
+{% endblock %}

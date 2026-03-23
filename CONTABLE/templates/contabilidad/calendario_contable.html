@@ -1,0 +1,276 @@
+{% extends 'componentes/menu_contable.html' %}
+{% load static %}
+
+{% block title %}
+CALENDARIO CONTABLE
+{% endblock %}
+
+
+{% block body %}
+
+<div class="row align-items-center border-bottom mb-3 py-2 bg-white shadow-sm mx-0">
+    <div class="col d-flex align-items-center px-0">
+        <button id="toggle-sidebar" class="btn btn-primary btn-sm me-3 border-0 rounded-circle btnMenu"
+            style="width: 32px; height: 32px; padding: 0;" title="Mostrar/Ocultar menú">
+            <i class="fas fa-bars"></i>
+        </button>
+        <h6 class="page-title mb-0 fs-5 fw-bold text-dark">
+            <i class="fas fa-calendar-alt text-primary me-2"></i>CALENDARIO CONTABLE
+        </h6>
+    </div>
+</div>
+
+
+<div class="container-fluid px-0 mt-1">
+    <div class="row g-3 d-flex align-items-end mx-0">
+        <div class="col-12 col-md-2 mb-3">
+            <label for="selectEmpresa">Empresa:</label>
+            <select id="selectEmpresa" class="form-select form-select-sm" name="selectEmpresa">
+                {% for e in empresasData %}
+                <option value="{{ e.id }}">{{ e.nombre }}</option>
+                {% endfor %}
+            </select>
+        </div>
+
+        <div class="col-12 col-md-2 mb-3">
+            <label for="selectAnio">Año:</label>
+            <select id="selectAnio" class="form-select form-select-sm">
+                <!-- años se llenan con jQuery -->
+            </select>
+        </div>
+
+        <div class="col-12 col-md-2 mb-3">
+            <button class="btn btn-sm btn-success" id="btnLoadData">Cargar</button>
+        </div>
+    </div>
+
+    <hr>
+
+    <div class="row mx-0 mt-1">
+        <div class="table-responsive">
+
+            <table id="calendarioContableTable"
+                class="table table-striped table-bordered table-sm rounded-4 table-hover align-middle"
+                style="width: 100%;">
+                <thead class="table-gradient text-dark">
+                    <tr>
+                        <th>Fecha</th>
+                        <th>Mes</th>
+                        <th>Año</th>
+                        <th>Acciones</th>
+                    </tr>
+                </thead>
+                <tbody></tbody>
+            </table>
+
+        </div>
+    </div>
+</div>
+
+
+<a href="{% url 'panel_contabilidad' %}">
+    <button class="btn btn-sm btn-danger" id="btnCerrar" title="Cerrar"
+        style="position: fixed; bottom: 20px; right: 20px;">
+        <i class="fa fa-times"></i> Cerrar
+    </button>
+</a>
+
+{% endblock %}
+
+
+{% block scripts %}
+
+<script>
+    $(document).ready(function () {
+
+        var csrfToken = "{{ csrf_token }}";
+        var mes = "{{mes}}";
+        var calendarioContableTable;
+
+        var toastMixin = Swal.mixin({
+            toast: true,
+            icon: 'success',
+            title: 'General Title',
+            animation: false,
+            position: 'top-right',
+            showConfirmButton: false,
+            timer: 2000,
+            timerProgressBar: true,
+            didOpen: (toast) => {
+                toast.addEventListener('mouseenter', Swal.stopTimer);
+                toast.addEventListener('mouseleave', Swal.resumeTimer);
+            }
+        });
+
+        let dollarUSLocale = Intl.NumberFormat("en-US", {
+            minimumFractionDigits: 2,
+            maximumFractionDigits: 2
+        });
+
+        let intergerLocale = Intl.NumberFormat("en-US", {
+            minimumFractionDigits: 0,
+            maximumFractionDigits: 0
+        });
+
+        id_empresa = 3;
+        $('#selectEmpresa').val(id_empresa).change();
+        $('#selectMes').val(mes).change();
+
+        function showLoadingScreen(text = '') {
+            Swal.fire({
+                title: '',
+                html: `<b>${text}</b>`,
+                didOpen: () => {
+                    Swal.showLoading();
+                },
+                allowOutsideClick: false,
+                showConfirmButton: false
+            });
+        }
+
+        const anioActual = new Date().getFullYear();
+        const selectAnio = $('#selectAnio');
+
+        for (let i = 0; i <= 5; i++) {
+            const anio = anioActual - i;
+            selectAnio.append(`<option value="${anio}">${anio}</option>`);
+        }
+
+        $('#calendarioContableTable').DataTable({
+            language: {
+                url: "{% static 'app/th/json/es-ES.json' %}",
+            },
+        });
+
+        $('#btnLoadData').click(function () {
+            const empresa = $('#selectEmpresa').val();
+            const anio = $('#selectAnio').val();
+
+            showLoadingScreen();
+
+            $.ajax({
+                url: "{% url 'load_calendario_contable' %}",
+                type: "POST",
+                data: {
+                    empresa,
+                    anio,
+                    csrfmiddlewaretoken: csrfToken
+                },
+                success: function (data) {
+                    Swal.close();
+
+                    var cardHeight = $(".card-expanded").height();
+                    var tableHeight = cardHeight * 0.5;
+
+                    $("#calendarioContableTable").DataTable().clear().destroy();
+
+                    calendarioContableTable = $('#calendarioContableTable').DataTable({
+                        data: data.data,
+                        ordering: false,
+                        paging: false,
+                        searching: false,
+                        info: false,
+                        autoWidth: false,
+                        scrollX: true,
+                        scrollY: '350px',
+                        scrollCollapse: true,
+                        pageLength: 50,
+                        dom: 'Brftip',
+                        language: {
+                            url: "{% static 'app/th/json/es-ES.json' %}",
+                        },
+                        buttons: [
+                            {
+                                extend: 'excel',
+                                text: '<i class="fas fa-file-excel"></i>',
+                                titleAttr: 'Excel',
+                                className: 'btn btn-success',
+                            },
+                            {
+                                extend: 'pdf',
+                                text: '<i class="fas fa-file-pdf"></i>',
+                                titleAttr: 'PDF',
+                                className: 'btn btn-danger',
+                            },
+                            {
+                                extend: 'print',
+                                text: '<i class="fas fa-print"></i>',
+                                titleAttr: 'Imprimir',
+                                className: 'btn btn-info',
+                                orientation: 'landscape'
+                            }
+                        ],
+                        columns: [
+                            {
+                                data: 'fecha_estimada_cierre',
+                                render: function (data, type, row) {
+                                    const disabled = row.cerrado == 1 ? 'disabled' : '';
+                                    return `<input type="date" class="form-control form-control-sm fechaCierre" 
+                                    value="${data}" data-mes="${row.mes}" ${disabled} />`;
+                                }
+                            },
+                            {
+                                data: 'mes',
+                                render: function (data) {
+                                    const meses = ['Enero', 'Febrero', 'Marzo', 'Abril', 'Mayo', 'Junio', 'Julio', 'Agosto', 'Septiembre', 'Octubre', 'Noviembre', 'Diciembre'];
+                                    return meses[data - 1];
+                                }
+                            },
+                            { data: 'anio' },
+                            {
+                                data: null,
+                                render: function (data, type, row) {
+                                    if (row.cerrado == 1) {
+                                        return '<span class="text-muted">Cerrado</span>';
+                                    }
+                                    return `
+                                        <div class="text-center">
+                                            <div class="btn-group">
+                                                <button class="btn btn-sm btn-success btnGuardarFecha small" data-mes="${row.mes}">
+                                                    <i class="material-icons">save</i>
+                                                </button>
+                                            </div>
+                                        </div>
+                                    `;
+                                }
+                            }
+                        ],
+
+                    });
+                }
+            });
+        });
+
+        $(document).on('click', '.btnGuardarFecha', function () {
+            const $btn = $(this);
+            const mes = $btn.data('mes');
+            const fecha = $btn.closest('tr').find('.fechaCierre').val();
+            const empresa = $('#selectEmpresa').val();
+            const anio = $('#selectAnio').val();
+
+            $.ajax({
+                url: "{% url 'guardar_fecha_calendario' %}",
+                type: "POST",
+                data: {
+                    empresa,
+                    anio,
+                    mes,
+                    fecha,
+                    csrfmiddlewaretoken: csrfToken
+                },
+                success: function (data) {
+                    if (data.save == 1) {
+                        toastMixin.fire({ title: 'Fecha Actualizada!' });
+                    } else {
+                        Swal.fire('Error', data.error, 'error');
+                    }
+                }
+            });
+        });
+
+
+
+
+    });
+</script>
+{% endblock %}

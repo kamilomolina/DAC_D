@@ -1,0 +1,282 @@
+{% extends 'componentes/menu_contable.html' %}
+{% load static %}
+
+{% block title %}
+ASIGNAR CUENTAS MOVIMIENTOS
+{% endblock %}
+
+{% block body %}
+
+<style>
+    .currency {
+        text-align: right !important;
+    }
+</style>
+
+<div class="row align-items-center border-bottom mb-3 py-2 bg-white shadow-sm mx-0">
+    <div class="col d-flex align-items-center px-0">
+        <button id="toggle-sidebar" class="btn btn-primary btn-sm me-3 border-0 rounded-circle btnMenu"
+            style="width: 32px; height: 32px; padding: 0;" title="Mostrar/Ocultar Menu">
+            <i class="fas fa-bars"></i>
+        </button>
+        <h6 class="page-title mb-0 fs-5 fw-bold text-dark">
+            <i class="fas fa-tasks text-primary me-2"></i>ASIGNAR CUENTAS MOVIMIENTOS
+        </h6>
+    </div>
+</div>
+
+
+<div class="container-fluid px-0 mt-1">
+    <div class="row mx-0">
+        <form id="formCuentaMovimiento">
+            <div class="row d-flex align-items-end mx-0">
+
+                <div class="col-md-4">
+                    <label for="tipoMovimiento" class="form-label">Tipo Movimiento</label>
+                    <select id="tipoMovimiento" name="tipoMovimiento" class="form-select form-select-sm codigo-select">
+                        <option value="">Seleccione un Tipo Movimiento</option>
+                        {% for tipo in tiposMovimientoData %}
+                        <option value="{{ tipo.id_tipo_cuenta_movimiento }}">{{ tipo.descripcion }}</option>
+                        {% endfor %}
+                    </select>
+                </div>
+
+                <div class="col-md-4">
+                    <label for="cuentaContableAsignar" class="form-label">Cuenta</label>
+                    <select id="cuentaContableAsignar" name="cuentaContableAsignar"
+                        class="form-select form-select-sm codigo-select">
+                        <option value="">Seleccione una Cuenta</option>
+                        {% for cta in cuentasData %}
+                        <option value="{{ cta.id_cuenta }}">{{ cta.CodigoCuenta }} || {{ cta.Concepto }}</option>
+                        {% endfor %}
+                    </select>
+                </div>
+
+                <div class="col-md-2">
+                    <button type="submit" class="btn btn-success btn-sm">Asignar Cuenta</button>
+                </div>
+
+            </div>
+        </form>
+
+    </div>
+
+    <br>
+    <hr>
+    <br>
+
+    <div class="row mx-0">
+        <div class="table-responsive">
+            <table id="cuentasAsignadasTable"
+                class="table table-striped table-bordered mb-0 table-sm rounded-4 table-hover align-middle"
+                style="width: 100%;">
+                <thead class="table-gradient text-dark">
+                    <tr>
+                        <th>Codigo Cuenta</th>
+                        <th>Concepto Cuenta</th>
+                        <th>Tipo Movimiento</th>
+                        <th>Estado</th>
+                        <th>Acciones</th>
+                    </tr>
+                </thead>
+
+                <tbody>
+
+                </tbody>
+            </table>
+        </div>
+    </div>
+
+</div>
+
+<a href="{% url 'panel_contabilidad' %}">
+    <button class="btn btn-sm btn-danger" id="btnCerrar" title="Cerrar"
+        style="position: fixed; bottom: 20px; right: 20px;">
+        <i class="fa fa-times"></i> Cerrar
+    </button>
+</a>
+
+
+{% endblock %}
+
+
+{% block scripts %}
+
+<script>
+    $('.codigo-select').select2({
+        width: '100%'
+    });
+
+    $(document).ready(function () {
+        var csrfToken = "{{ csrf_token }}";
+        var buttons = "Bfrtlip";
+        var cuentasTabla;
+
+        var windowSize = $(window).width();
+
+        let modoEdicion = false;
+        let idCuentaMovimiento = null;
+        let opcion = 1;
+
+        let dollarUSLocale = Intl.NumberFormat("en-US", {
+            minimumFractionDigits: 2,
+            maximumFractionDigits: 2
+        });
+
+        let intergerLocale = Intl.NumberFormat("en-US", {
+            minimumFractionDigits: 0,
+            maximumFractionDigits: 0
+        });
+
+        var toastMixin = Swal.mixin({
+            toast: true,
+            icon: 'success',
+            title: 'General Title',
+            animation: false,
+            position: 'top-right',
+            showConfirmButton: false,
+            timer: 2000,
+            timerProgressBar: true,
+            didOpen: (toast) => {
+                toast.addEventListener('mouseenter', Swal.stopTimer);
+                toast.addEventListener('mouseleave', Swal.resumeTimer);
+            }
+        });
+
+        function showLoadingScreen(text = '') {
+            Swal.fire({
+                title: '',
+                html: `<b>${text}</b>`,
+                didOpen: () => {
+                    Swal.showLoading();
+                },
+                allowOutsideClick: false,
+                showConfirmButton: false
+            });
+        }
+
+        cuentasTabla = $('#cuentasAsignadasTable').DataTable({
+            ajax: {
+                url: '{% url "dataCuentasAsignadas" %}',
+                type: "POST",
+                data: {
+                    csrfmiddlewaretoken: csrfToken
+                },
+                dataSrc: 'data'
+            },
+            columns: [
+                { data: 'codigo_cuenta' },
+                { data: 'nombre_cuenta' },
+                { data: 'descripcion' },
+                {
+                    data: 'estado',
+                    render: function (data) {
+                        return data == 3
+                            ? '<span class="badge bg-danger">Deshabilitado</span>'
+                            : '<span class="badge bg-success">Activo</span>';
+                    }
+                },
+                {
+                    data: 'id_cuenta_movimiento',
+                    render: function (id) {
+                        return `
+                            <button class="btn btn-sm btn-warning editCuenta" data-id="${id}"><i class="fas fa-edit"></i></button>
+                            <button class="btn btn-sm btn-danger toggleEstado" data-id="${id}"><i class="fas fa-sync"></i></button>
+                        `;
+                    }
+                }
+            ]
+        });
+
+        $(document).on('click', '.editCuenta', function () {
+            let row = $(this).closest('tr');
+            let data = cuentasTabla.row(row).data();
+
+            $('#tipoMovimiento').val(data.id_tipo_cuenta_movimiento).trigger('change');
+            $('#cuentaContableAsignar').val(data.id_cuenta_contable).trigger('change');
+
+            $('#formCuentaMovimiento button[type=submit]')
+                .removeClass('btn-success')
+                .addClass('btn-warning')
+                .text('Editar Cuenta');
+
+            modoEdicion = true;
+            idCuentaMovimiento = data.id_cuenta_movimiento;
+            opcion = 2;
+        });
+
+
+        $('#formCuentaMovimiento').submit(function (e) {
+            e.preventDefault();
+
+            var tipoId = $('#tipoMovimiento').val();
+            var cuentaId = $('#cuentaContableAsignar').val();
+            var cuentaTexto = $('#cuentaContableAsignar option:selected').text();
+            var cuentaCodigo = cuentaTexto.split(" || ")[0];
+            var cuentaNombre = cuentaTexto.split(" || ")[1];
+
+            console.log(tipoId);
+            console.log(cuentaId);
+
+            if (!tipoId || !cuentaId) {
+                Swal.fire("", "Debe seleccionar un Tipo y una Cuenta", "warning");
+                return;
+            }
+
+            $.ajax({
+                url: "{% url 'insert_cuenta_tipo_movimiento' %}",
+                type: "POST",
+                data: {
+                    id_cuenta_movimiento: idCuentaMovimiento,
+                    id_cuenta_contable: cuentaId,
+                    codigo_cuenta: cuentaCodigo,
+                    nombre_cuenta: cuentaNombre,
+                    id_tipo_cuenta_movimiento: tipoId,
+                    opcion: opcion,
+                    csrfmiddlewaretoken: csrfToken
+                },
+                success: function (data) {
+                    if (data.save == 1) {
+                        if (opcion == 1 && data.existe == 1) {
+                            Swal.fire("", "Ya existe esa cuenta para ese Tipo", "warning");
+                        } else {
+                            Swal.fire(
+                                opcion == 1 ? "Cuenta Asignada" : "Cuenta Editada",
+                                "",
+                                "success"
+                            );
+                            cuentasTabla.ajax.reload(null, false);
+                            resetFormulario();
+                        }
+                    } else {
+                        Swal.fire("Error", data.error, "error");
+                    }
+                }
+            });
+
+        });
+
+
+        function resetFormulario() {
+            $('#formCuentaMovimiento')[0].reset();
+            $('#tipoMovimiento').val('').trigger('change');
+            $('#cuentaContableAsignar').val('').trigger('change');
+            $('#formCuentaMovimiento button[type=submit]')
+                .removeClass('btn-warning')
+                .addClass('btn-success')
+                .text('Asignar Cuenta');
+            modoEdicion = false;
+            idCuentaMovimiento = null;
+            opcion = 1;
+        }
+
+
+
+
+
+
+
+        /*  */
+    });
+</script>
+{% endblock %}

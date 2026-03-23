@@ -1,0 +1,473 @@
+{% extends 'componentes/menu_global_security.html' %}
+{% load static %}
+
+{% block title %}
+ACCIONES DEL GRUPO
+{% endblock %}
+
+
+{% block body %}
+
+
+<div class="container-fluid mt-1">
+    <div class="card shadow-lg card-expanded">
+
+        <div class="row align-items-center">
+            <div class="col d-flex align-items-center">
+                <button id="toggle-sidebar" class=" me-3" title="Mostrar/Ocultar Menu">
+                </button>
+                <i class="material-icons d-block">person</i>
+                <h4 class="page-title mb-0">ACCIONES DEL GRUPO</h4>
+            </div>
+
+            <div class="col d-flex justify-content-end">
+                <div class="w-50 d-flex flex-column align-items-right">
+                    <label for="selectModulo" class="me-2">MODULOS</label>
+                    <select id="selectModulo" class="form-select form-select-sm" name="selectModulo">
+                        <option value="" data-description="Descripcion">Seleccione un Modulo</option>
+                        {% for m in modulos %}
+                        <option value="{{ m.PKmodulo }}" data-description="{{ m.Descripcion }}">
+                            {{ m.Nombre }}
+                        </option>
+                        {% endfor %}
+                    </select>
+                </div>
+            </div>
+        </div>
+
+        <div class="container-fluid pt-1">
+
+
+            <div class="row d-flex align-items-start justify-content-between">
+
+                <div class="col-4">
+                    <label class="me-2">ACCIONES</label>
+                    <div class="table-responsive bg-blanco">
+                        <table id="tableGrupos"
+                            class="table table-striped table-bordered mb-0 table-sm rounded-4 table-hover align-middle">
+                            <thead class="bg-blanco text-dark">
+                                <tr>
+                                    <th>Nombres</th>
+                                    <th>Usuario</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+
+                <div class="col-lg-3">
+                    <label class="me-2">ACCIONES DISPONIBLES</label>
+                    <div class="table-responsive bg-blanco">
+                        <table id="tableAccionesDisponibles"
+                            class="table table-striped table-bordered mb-0 table-sm rounded-4 table-hover align-middle">
+                            <thead class="table-success text-dark ">
+                                <tr>
+                                    <th>Acciones</th>
+                                </tr>
+                            </thead>
+                            <tbody class="table-success text-dark ">
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+
+                <div class="col-lg-1 d-flex flex-column align-items-center my-4">
+                    <button id="btnAgregar" class="btn btn-success btn-sm mb-2" style="width: 50px; height: 50px;">
+                        <i class="large material-icons">arrow_forward</i>
+                    </button>
+                    <button id="btnQuitar" class="btn btn-danger btn-sm mb-2" style="width: 50px; height: 50px;">
+                        <i class="large material-icons">arrow_back</i>
+                    </button>
+                </div>
+
+                <div class="col-lg-3">
+                    <label class="me-2">ACCIONES ASIGNADAS</label>
+                    <div class="table-responsive bg-blanco">
+                        <table id="tableAccionesAsignadas"
+                            class="table table-striped table-bordered mb-0 table-sm rounded-4 table-hover align-middle">
+                            <thead class="table-danger text-dark">
+                                <tr>
+                                    <th>Acciones</th>
+                                </tr>
+                            </thead>
+                            <tbody class="table-danger text-dark">
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+
+
+<a href="{% url 'global_main' %}">
+    <button class="btn btn-sm btn-danger" id="btnCerrar" title="Cerrar"
+        style="position: fixed; bottom: 20px; right: 20px;">
+        <i class="fa fa-times"></i> Cerrar
+    </button>
+</a>
+
+{% endblock %}
+
+
+
+{% block scripts %}
+<script>
+    $(document).ready(function () {
+
+        var csrfToken = "{{ csrf_token }}";
+        var tableFirmas, firma_id;
+
+        var toastMixin = Swal.mixin({
+            toast: true,
+            icon: 'success',
+            title: 'General Title',
+            animation: false,
+            position: 'top-right',
+            showConfirmButton: false,
+            timer: 2000,
+            timerProgressBar: true,
+            didOpen: (toast) => {
+                toast.addEventListener('mouseenter', Swal.stopTimer);
+                toast.addEventListener('mouseleave', Swal.resumeTimer);
+            }
+        });
+
+        /* MENU ID Y SUBMENU ID */
+        $('#gruposMenu, #accionesDelGrupo_submenu').addClass('active');
+
+        selectedAccionAsignadaId = null
+        selectedAccionDisponibleId = null
+        selectedGrupoId = null
+        id_modulo = null
+
+
+        $('#selectModulo').select2({
+            templateResult: function (data) {
+                if (!data.id) { return data.text; }
+                let description = $(data.element).data('description');
+                return $('<div><strong>' + data.text + '</strong><br><small>' + description + '</small></div>');
+            },
+            templateSelection: function (data) {
+                let description = $(data.element).data('description');
+                return data.text + " | " + description;
+            },
+            width: 'resolve'
+        });
+
+
+        $('#selectModulo').change(function (e) {
+            e.preventDefault();
+
+            id_modulo = $(this).val();
+            getGrupos();
+            getAccionesDisponibles();
+            getAccionesAsignadas();
+        });
+
+
+        function getGrupos() {
+
+            $("#tableGrupos").DataTable().clear().destroy();
+
+            var cardHeight = $(".card-expanded").height();
+            var tableHeight = cardHeight * 0.5;
+
+            tableGrupos = $('#tableGrupos').DataTable({
+                autoWidth: false,
+                scrollX: true,
+                scrollY: tableHeight + 'px',
+                scrollCollapse: true,
+                pageLength: 50,
+                dom: 'rftip',
+                language: {
+                    url: "{% static 'app/th/json/es-ES.json' %}",
+                },
+                ajax: {
+                    url: `{% url 'get_acciones_grupos_data' %}`,
+                    type: "POST",
+                    dataSrc: 'data',
+                    data: {
+                        varModulo: id_modulo,
+                        csrfmiddlewaretoken: csrfToken
+                    },
+                },
+                colReorder: {
+                    realtime: false,
+                },
+                buttons: [
+                    {
+                        extend: 'excel',
+                        text: '<i class="fas fa-file-excel"></i>',
+                        titleAttr: 'Exportar a Excel',
+                        className: 'btn btn-success',
+                    },
+                    {
+                        extend: 'pdf',
+                        text: '<i class="fas fa-file-pdf"></i>',
+                        titleAttr: 'Exportar a PDF',
+                        className: 'btn btn-danger',
+                    },
+                    {
+                        extend: 'print',
+                        text: '<i class="fas fa-print"></i>',
+                        titleAttr: 'Imprimir',
+                        className: 'btn btn-primary',
+                        orientation: 'landscape'
+                    }
+                ],
+                columns: [
+                    {
+                        data: 'Nombre',
+                    },
+                    {
+                        data: 'Descripcion',
+                    },
+                ],
+                order: [[0, "asc"]],
+            });
+
+        }
+
+        $('#tableGrupos tbody').on('click', 'tr', function () {
+            $('#tableGrupos tbody tr').removeClass('selected');
+
+            $(this).addClass('selected');
+
+            selectedGrupoId = tableGrupos.row(this).data().PKgrupo;
+
+            getAccionesDisponibles();
+            getAccionesAsignadas();
+        });
+
+
+        function getAccionesDisponibles() {
+
+            $("#tableAccionesDisponibles").DataTable().clear().destroy();
+
+            var cardHeight = $(".card-expanded").height();
+            var tableHeight = cardHeight * 0.5;
+
+            tableAccionesDisponibles = $('#tableAccionesDisponibles').DataTable({
+                autoWidth: false,
+                scrollX: true,
+                scrollY: tableHeight + 'px',
+                scrollCollapse: true,
+                pageLength: 50,
+                dom: 'rftip',
+                language: {
+                    url: "{% static 'app/th/json/es-ES.json' %}",
+                },
+                ajax: {
+                    url: `{% url 'get_acciones_grupos_diponibles_data' %}`,
+                    type: "POST",
+                    dataSrc: 'data',
+                    data: {
+                        varGrupo: selectedGrupoId,
+                        varModulo: id_modulo,
+                        csrfmiddlewaretoken: csrfToken
+                    },
+                },
+                colReorder: {
+                    realtime: false,
+                },
+                buttons: [
+                    {
+                        extend: 'excel',
+                        text: '<i class="fas fa-file-excel"></i>',
+                        titleAttr: 'Exportar a Excel',
+                        className: 'btn btn-success',
+                    },
+                    {
+                        extend: 'pdf',
+                        text: '<i class="fas fa-file-pdf"></i>',
+                        titleAttr: 'Exportar a PDF',
+                        className: 'btn btn-danger',
+                    },
+                    {
+                        extend: 'print',
+                        text: '<i class="fas fa-print"></i>',
+                        titleAttr: 'Imprimir',
+                        className: 'btn btn-primary',
+                        orientation: 'landscape'
+                    }
+                ],
+                columns: [
+                    {
+                        data: 'Nombres',
+                    },
+                ],
+                order: [[0, "asc"]],
+            });
+
+        }
+
+        $('#tableAccionesDisponibles tbody').on('click', 'tr', function () {
+            $('#tableAccionesDisponibles tbody tr').removeClass('selected');
+
+            $(this).addClass('selected');
+
+            selectedAccionDisponibleId = tableAccionesDisponibles.row(this).data().fkAccion;
+        });
+
+
+        function getAccionesAsignadas() {
+
+            $("#tableAccionesAsignadas").DataTable().clear().destroy();
+
+            var cardHeight = $(".card-expanded").height();
+            var tableHeight = cardHeight * 0.5;
+
+            tableAccionesAsignadas = $('#tableAccionesAsignadas').DataTable({
+                autoWidth: false,
+                scrollX: true,
+                scrollY: tableHeight + 'px',
+                scrollCollapse: true,
+                pageLength: 50,
+                dom: 'rftip',
+                language: {
+                    url: "{% static 'app/th/json/es-ES.json' %}",
+                },
+                ajax: {
+                    url: `{% url 'get_acciones_grupos_asignadas_data' %}`,
+                    type: "POST",
+                    dataSrc: 'data',
+                    data: {
+                        varGrupo: selectedGrupoId,
+                        varModulo: id_modulo,
+                        csrfmiddlewaretoken: csrfToken
+                    },
+                },
+                colReorder: {
+                    realtime: false,
+                },
+                buttons: [
+                    {
+                        extend: 'excel',
+                        text: '<i class="fas fa-file-excel"></i>',
+                        titleAttr: 'Exportar a Excel',
+                        className: 'btn btn-success',
+                    },
+                    {
+                        extend: 'pdf',
+                        text: '<i class="fas fa-file-pdf"></i>',
+                        titleAttr: 'Exportar a PDF',
+                        className: 'btn btn-danger',
+                    },
+                    {
+                        extend: 'print',
+                        text: '<i class="fas fa-print"></i>',
+                        titleAttr: 'Imprimir',
+                        className: 'btn btn-primary',
+                        orientation: 'landscape'
+                    }
+                ],
+                columns: [
+                    {
+                        data: 'Nombres',
+                    },
+                ],
+                order: [[0, "asc"]],
+            });
+
+        }
+
+        $('#tableAccionesAsignadas tbody').on('click', 'tr', function () {
+            $('#tableAccionesAsignadas tbody tr').removeClass('selected');
+
+            $(this).addClass('selected');
+
+            selectedAccionAsignadaId = tableAccionesAsignadas.row(this).data().fkAccion;
+        });
+
+        $('#btnAgregar').on('click', function () {
+            asignar(selectedGrupoId, selectedAccionDisponibleId)
+        });
+
+        $('#btnQuitar').on('click', function () {
+            quitar(selectedGrupoId, selectedAccionAsignadaId)
+        });
+
+        $('#tableAccionesDisponibles tbody').on('dblclick', 'tr', function () {
+            asignar(selectedGrupoId, selectedAccionDisponibleId)
+        });
+
+        $('#tableAccionesAsignadas tbody').on('dblclick', 'tr', function () {
+            quitar(selectedGrupoId, selectedAccionAsignadaId)
+        });
+
+        function asignar(asignarGrupo, asignarAccion) {
+
+            if (asignarGrupo == null || asignarAccion == null) {
+                Swal.fire("", "Debes seleccionar una Accion y un Grupo Disponible!", "warning");
+            } else {
+                $.ajax({
+                    url: "{% url 'insert_accion_grupo' %}",
+                    type: "POST",
+                    data: {
+                        varGrupo: asignarGrupo,
+                        varAccion: asignarAccion,
+                        csrfmiddlewaretoken: csrfToken
+                    },
+                    success: function (data) {
+                        if (data.save == 1) {
+                            toastMixin.fire({
+                                animation: true,
+                                title: 'Accion Asignada!'
+                            });
+
+                            selectedAccionAsignadaId = null
+                            selectedAccionDisponibleId = null
+
+                            tableAccionesDisponibles.ajax.reload(null, false);
+                            tableAccionesAsignadas.ajax.reload(null, false);
+                        } else {
+                            Swal.fire("", "Error D: " + data.error, "error");
+                        }
+                    }
+                });
+            }
+        }
+
+        function quitar(quitarGrupo, quitarAccion) {
+
+            if (quitarGrupo == null || quitarAccion == null) {
+                Swal.fire("", "Debes seleccionar una Accion y un Grupo Asignado!", "warning");
+            } else {
+                $.ajax({
+                    url: "{% url 'eliminar_accion_grupo' %}",
+                    type: "POST",
+                    data: {
+                        varGrupo: quitarGrupo,
+                        varAccion: quitarAccion,
+                        csrfmiddlewaretoken: csrfToken
+                    },
+                    success: function (data) {
+                        if (data.save == 1) {
+                            toastMixin.fire({
+                                animation: true,
+                                title: 'Accion Removida!'
+                            });
+
+                            selectedAccionAsignadaId = null
+                            selectedAccionDisponibleId = null
+
+                            tableAccionesDisponibles.ajax.reload(null, false);
+                            tableAccionesAsignadas.ajax.reload(null, false);
+                        } else {
+                            Swal.fire("", "Error D: " + data.error, "error");
+                        }
+                    }
+                });
+            }
+        }
+
+    });
+
+</script>
+
+{% endblock %}

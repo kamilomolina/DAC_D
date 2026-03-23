@@ -1,0 +1,915 @@
+{% extends 'componentes/menu_bancario.html' %}
+{% load static %}
+
+{% block title %}
+CREAR ANTICIPO CLIENTES
+{% endblock %}
+
+<style>
+    /* ancho SOLO del dropdown */
+    .select2-container--default .select2-dropdown {
+        width: 400px !important;
+        /* ajustá a gusto */
+    }
+
+    /* opcional: texto completo sin cortarse */
+    .select2-results__option {
+        white-space: nowrap;
+    }
+</style>
+
+{% block body %}
+
+<div class="row align-items-center border-bottom mb-3 py-2 bg-white shadow-sm mx-0">
+    <div class="col d-flex align-items-center px-0">
+        <button id="toggle-sidebar" class="btn btn-primary btn-sm me-3 border-0 rounded-circle btnMenu"
+            style="width: 32px; height: 32px; padding: 0;">
+            <i class="fas fa-bars"></i>
+        </button>
+
+        <h6 class="page-title mb-0 fs-5 fw-bold text-dark">
+            <i class="fas fa-hand-holding-usd text-primary me-2"></i>CREAR ANTICIPO CLIENTES
+        </h6>
+    </div>
+</div>
+
+<input type="hidden" id="id_empresa" value="{{ id_empresa }}">
+
+<div class="container-fluid px-0 mt-1">
+
+    <form id="frmAnticipo">
+
+        <div class="row g-2 mx-0">
+
+            <!-- ========== COLUMNA IZQUIERDA ========== -->
+            <div class="col-md-5">
+
+                <div class="card card-banco p-2">
+
+                    <div class="d-flex justify-content-between align-items-center mb-2">
+                        <div class="text-muted small">
+                            <i class="fas fa-info-circle me-1"></i> Resumen
+                        </div>
+
+                        <div class="d-flex gap-2 align-items-center">
+                            <span class="badge bg-light text-dark border" id="badgeMoneda">
+                                <i class="fas fa-coins me-1"></i> Moneda: --
+                            </span>
+                        </div>
+                    </div>
+
+
+                    <div class="row g-2">
+
+                        <div class="col-md-6">
+                            <label for="selectEmpresa">Empresa:</label>
+                            <select id="selectEmpresa" class="form-select form-select-sm" name="selectEmpresa">
+                                {% for e in empresasData %}
+                                <option value="{{ e.PkEmpresa }}">{{ e.NombreEmpresa }}</option>
+                                {% endfor %}
+                            </select>
+                        </div>
+
+                        <!-- BANCO -->
+                        <div class="col-md-6">
+                            <label class="fw-semibold">Banco:</label>
+
+                            <select id="selectBanco" class="form-select form-select-sm">
+                                <option value="0">Seleccione un Banco</option>
+                                {% for b in bancosData %}
+                                <option value="{{ b.PkCatBanco }}" data-img="data:image/png;base64,{{ b.ImagenBanco }}">
+                                    {{ b.Banco }}
+                                </option>
+                                {% endfor %}
+                            </select>
+
+                            <div class="text-center mt-2">
+                                <img id="imgBanco" style="max-height:70px; max-width:200px;">
+                            </div>
+                        </div>
+
+                        <!-- CUENTA -->
+                        <div class="col-md-3">
+                            <label class="fw-semibold">Cuenta Bancaria:</label>
+                            <select id="selectCuenta" class="form-select form-select-sm">
+                                <option value="0">Seleccione una Cuenta Bancaria</option>
+                            </select>
+                        </div>
+
+                        <!-- FECHA -->
+                        <div class="col-md-3">
+                            <label class="fw-semibold">Fecha:</label>
+                            <input type="date" id="fecha" class="form-control form-control-sm"
+                                value="{{ fecha_actual|date:'Y-m-d' }}">
+                        </div>
+
+                        <!-- NUMERO -->
+                        <div class="col-md-3">
+                            <label class="fw-semibold">Número:</label>
+                            <input type="number" id="numero" class="form-control form-control-sm">
+                        </div>
+
+                        <!-- VALOR -->
+                        <div class="col-md-3">
+                            <label class="fw-semibold">Valor:</label>
+                            <input type="text" id="valor"
+                                class="form-control form-control-sm text-end formattedMoneyInputs">
+                        </div>
+
+                        <input hidden type="text" id="valorLps"
+                            class="form-control form-control-sm text-end formattedMoneyInputs">
+                        <input hidden type="checkbox" id="chkTS" class="form-check-input me-1">
+                        <select hidden id="selectEstado" class="form-select form-select-sm">
+                            {% for ce in estadosData %}
+                            <option value="{{ ce.PkCatEstado }}">{{ ce.Estado }}</option>
+                            {% endfor %}
+                        </select>
+
+                        <!-- CONCEPTO -->
+                        <div class="col-md-12">
+                            <label class="fw-semibold">Concepto:</label>
+                            <textarea id="concepto" class="form-control form-control-sm" rows="2"></textarea>
+                        </div>
+
+                        <!-- MONTO LETRAS -->
+                        <div class="col-md-12">
+                            <label class="fw-semibold">Monto en Letras:</label>
+                            <div class="alert alert-info p-1 mb-0" id="montoLetras">
+                                ---
+                            </div>
+                        </div>
+
+                    </div>
+                </div>
+            </div>
+
+
+            <div class="col-md-7">
+
+                <div class="card card-banco p-2">
+
+                    <!-- ========================= -->
+                    <!-- SELECCIÓN CLIENTE -->
+                    <!-- ========================= -->
+                    <div class="row g-2 mb-2">
+
+                        <div class="col-md-12">
+                            <label class="fw-semibold">Cliente:</label>
+                            <select id="selectCliente" class="form-select form-select-sm">
+                                <option value="0">Seleccione Cliente</option>
+                                {% for c in clientesData %}
+                                <option value="{{c.PKCliente}}" data-id="{{c.PKCliente}}"
+                                    data-codigo_cliente="{{c.Codigo}}">{{c.NombreConocido}}</option>
+                                {% endfor %}
+                            </select>
+                        </div>
+
+                    </div>
+
+
+                    <!-- ========================= -->
+                    <!-- FACTURAS DEL CLIENTE -->
+                    <!-- ========================= -->
+                    <div class="table-responsive mb-3">
+                        <table class="table table-sm table-bordered" id="tablaFacturasCliente">
+
+                            <thead class="table-light">
+                                <tr>
+                                    <th style="width:150px;">Factura</th>
+                                    <th style="width:120px;">Fecha</th>
+                                    <th class="text-end" style="width:150px;">Saldo</th>
+                                    <th class="text-end" style="width:150px;">Abonar</th>
+                                </tr>
+                            </thead>
+
+                            <tbody>
+                            </tbody>
+
+                            <tfoot>
+                                <tr class="fw-bold">
+                                    <td colspan="3" class="text-end">
+                                        Total a Enviar:
+                                    </td>
+                                    <td id="totalFacturasEnviar" class="text-end currency formattedMoneyInputs">
+                                        0.00
+                                    </td>
+                                </tr>
+                            </tfoot>
+
+                        </table>
+                    </div>
+
+
+
+                    <!-- ========================= -->
+                    <!-- BOTÓN AGREGAR -->
+                    <!-- ========================= -->
+                    <div class="mb-3 text-end">
+                        <button type="button" id="btnAgregarFacturas" class="btn btn-success btn-sm">
+                            <i class="fas fa-plus"></i>
+                            Agregar a Lista de Abonos
+                        </button>
+                    </div>
+
+                </div>
+            </div>
+
+        </div>
+
+        <!-- ========================= -->
+        <!-- DETALLE ANTICIPO -->
+        <!-- ========================= -->
+        <div class="section-title mb-2">
+            Detalle Abonos
+        </div>
+
+        <div class="row">
+            <div class="table-responsive">
+                <table class="table table-sm table-bordered" id="tablaDetalleAnticipo">
+
+                    <thead>
+                        <tr>
+                            <th>Banco</th>
+                            <th>Cta. Bancaria</th>
+                            <th>Numero</th>
+                            <th>Cliente</th>
+                            <th>Factura</th>
+                            <th>Fecha</th>
+                            <th class="text-end">Abono</th>
+                            <th style="width:40px"></th>
+                        </tr>
+                    </thead>
+
+                    <tbody id="tbodyDetalleAnticipo">
+                    </tbody>
+
+                    <tfoot>
+                        <tr class="fw-bold">
+                            <td colspan="6" class="text-end">
+                                Total Abonos:
+                            </td>
+                            <td id="totalAbonos" class="text-end currency">
+                                0.00
+                            </td>
+                            <th style="width:40px"></th>
+                        </tr>
+
+                        <tr>
+                            <td colspan="6" class="text-end fw-bold">
+                                Disponible Restante:
+                            </td>
+                            <td class="text-end">
+                                <span id="badgeDisponible" class="badge bg-success">
+                                    0.00
+                                </span>
+                            </td>
+                            <th style="width:40px"></th>
+                        </tr>
+                    </tfoot>
+
+
+                </table>
+            </div>
+        </div>
+
+        <!-- ===== BOTÓN GUARDAR ===== -->
+        <div class="row mt-2">
+            <div class="col d-flex justify-content-end">
+                <button type="button" id="btnGuardar" class="btn btn-success">
+                    <i class="fas fa-save"></i>
+                    Guardar
+                </button>
+            </div>
+        </div>
+
+    </form>
+</div>
+
+
+<a href="{% url 'panel_bancario' %}">
+    <button class="btn btn-sm btn-danger" id="btnCerrar" title="Cerrar"
+        style="position: fixed; bottom: 20px; right: 20px;">
+        <i class="fa fa-times"></i> Cerrar
+    </button>
+</a>
+
+{% endblock %}
+
+
+{% block scripts %}
+
+<script>
+    $(function () {
+
+        var csrfToken = "{{ csrf_token }}";
+        var buttons = "Bfrtlip";
+
+        let dollarUSLocale = Intl.NumberFormat("en-US", {
+            minimumFractionDigits: 2,
+            maximumFractionDigits: 2
+        });
+
+        let intergerLocale = Intl.NumberFormat("en-US", {
+            minimumFractionDigits: 0,
+            maximumFractionDigits: 0
+        });
+
+        function showLoadingScreen(text = '') {
+            Swal.fire({
+                title: '',
+                html: `<b>${text}</b>`,
+                didOpen: () => {
+                    Swal.showLoading();
+                },
+                allowOutsideClick: false,
+                showConfirmButton: false
+            });
+        }
+
+        // ===============================
+        // DATATABLES
+        // ===============================
+
+        let tablaFacturas = $('#tablaFacturasCliente').DataTable({
+            dom: '<"top"f>rt<"bottom">',
+            scrollY: "300px",
+            scrollCollapse: true,
+            paging: false,
+            info: false,
+            ordering: true,
+            searching: true,
+            language: {
+                search: "Buscar:",
+                zeroRecords: "No hay registros",
+                emptyTable: "Seleccione un Cliente para Cargar Documentos Pendientes"
+            }
+        });
+
+        let tablaDetalle = $('#tablaDetalleAnticipo').DataTable({
+            dom: '<"top"f>rt<"bottom">',
+            scrollY: "250px",
+            scrollCollapse: true,
+            paging: false,
+            info: false,
+            ordering: false,
+            searching: true,
+            language: {
+                search: "Buscar:",
+                zeroRecords: "No hay registros"
+            }
+        });
+
+        function setMonedaBadge(moneda) {
+            $("#badgeMoneda").html('<i class="fas fa-coins me-1"></i> Moneda: ' + (moneda || '--'));
+        }
+
+        // ===============================
+        // EMPRESA / BANCO / CUENTAS
+        // ===============================
+        $("#selectEmpresa").change(function () {
+            let emp = $(this).val();
+            $("form").each(function () { this.reset(); });
+            $(this).val(emp);
+
+            cargarCuentas();
+        });
+
+        $("#selectBanco").change(function () {
+
+            let img = $(this).find(':selected').data('img');
+
+            $("#imgBanco").attr("src", img || "");
+
+            cargarCuentas();
+        });
+
+
+        function cargarCuentas() {
+
+            let empresa = $("#selectEmpresa").val();
+            let banco = parseInt($("#selectBanco").val());
+
+            $.get("{% url 'get_cuentas_bancarias' %}", {
+                empresa: empresa,
+                status: 1,
+                banco: banco,
+                csrfmiddlewaretoken: csrfToken
+            }, function (resp) {
+
+                let html = '<option value="0" data-ts="0" data-taf="0" data-porc="0" data-moneda="Sin Definir">Seleccione una Cuenta Bancaria</option>';
+
+                resp.data.forEach(function (c) {
+
+                    let txtTS = c.AplicaTS == 1 ? " | SI APLICA TS" : " | NO APLICA TS";
+
+                    html += `
+                    <option 
+                        value="${c.PkCatCuentaBancaria}"
+                        data-cuenta_bancaria="${c.CuentaBancaria}"
+                        data-ts="${c.AplicaTS}"
+                        data-taf="${c.FkCalculoTS}"
+                        data-cktaf="${c.FkCuentaTAF}"
+                        data-cuentataf="${c.CuentaBancariaTAF}"
+                        data-porc="${c.PorcentajePos}"
+                        data-moneda="${c.Moneda}">
+                        ${c.CuentaBancaria} - ${c.Moneda}${txtTS}
+                    </option>`;
+                });
+
+                $("#selectCuenta").html(html);
+                $('#selectCuenta').val(0).change();
+            });
+        }
+
+
+        $('#valor').on('blur', function () {
+            let v = $(this).val().replace(/,/g, "");
+
+            $("#montoLetras").text(NumtoLetras(v));
+
+            recalcularTotalDetalle();
+        });
+
+        $("#selectCuenta").change(function () {
+            let op = $(this).find(':selected');
+            let moneda = op.data('moneda');
+
+            $("#valorLps").prop("readonly", moneda == "Lempiras");
+
+            setMonedaBadge(moneda);
+        });
+
+        $('#selectCliente').select2({
+            placeholder: "Seleccione un Cliente",
+            closeOnSelect: true,
+            width: '100%',
+            dropdownAutoWidth: true
+        });
+
+        $('#selectCliente').on('change', function () {
+
+            let opt = $(this).find(':selected');
+            let codigo_cliente = opt.data('codigo_cliente');
+
+            if (!codigo_cliente || codigo_cliente == 0) {
+
+                $("#tablaFacturasCliente tbody").html(`
+                    <tr>
+                        <td colspan="4" class="text-center text-muted">
+                            Seleccione un cliente
+                        </td>
+                    </tr>
+                `);
+
+                recalcularTotalFacturasEnviar();
+                return;
+            }
+
+            $.ajax({
+                url: "{% url 'get_cxc_pendientes_cliente' %}",
+                type: "GET",
+                data: {
+                    codigo_cliente: codigo_cliente
+                },
+                success: function (resp) {
+
+                    tablaFacturas.clear();
+
+                    if (!resp.data || resp.data.length === 0) {
+                        tablaFacturas.clear().draw();
+                        recalcularTotalFacturasEnviar();
+                        return;
+                    }
+
+                    resp.data.forEach(function (doc) {
+
+                        tablaFacturas.row.add([
+                            doc.NoDocumento,
+                            doc.FechaDoc,
+                            `<div class="text-end">${dollarUSLocale.format(doc.Saldo)}</div>`,
+                            `<input type="text"
+                            class="form-control form-control-sm text-end inputAbono formattedMoneyInputs"
+                            value="0.00"
+                            data-pkcxc="${doc.PKcxc}"
+                            data-saldo="${doc.Saldo}">`
+                        ]);
+
+                    });
+
+                    tablaFacturas.draw(false);
+
+                    recalcularTotalFacturasEnviar();
+                },
+                error: function () {
+                    Swal.fire("", "Error al cargar las facturas.", "error");
+                }
+            });
+
+        });
+
+
+        $(document).on("blur", ".inputAbono", function () {
+
+            let saldo = parseFloat($(this).data("saldo")) || 0;
+            let valor = parseFloat($(this).val().replace(/,/g, '')) || 0;
+
+            if (valor > saldo) {
+
+                $(this).val(dollarUSLocale.format(saldo));
+
+                Swal.fire("", "El abono no puede ser mayor que el saldo.", "warning");
+            } else {
+                $(this).val(dollarUSLocale.format(valor));
+            }
+
+            recalcularTotalFacturasEnviar();
+        });
+
+
+        function bloquearEncabezado(bloquear) {
+
+            $("#selectEmpresa").prop("disabled", bloquear);
+            $("#selectBanco").prop("disabled", bloquear);
+            $("#selectCuenta").prop("disabled", bloquear);
+            $("#fecha").prop("disabled", bloquear);
+            $("#numero").prop("readonly", bloquear);
+        }
+
+        function initFormulario() {
+
+            $("#selectBanco").val(0);
+            $("#selectCuenta").val(0);
+            $("#selectCliente").val(0).trigger('change');
+            $("#numero").val('');
+            $("#valor").val('');
+            $("#concepto").val('');
+            $("#montoLetras").text('---');
+
+            bloquearEncabezado(false);
+
+            tablaFacturas.clear();
+        }
+
+        initFormulario();
+
+
+
+
+
+        // =======================================
+        // DETALLE ANTICIPO EN MEMORIA
+        // =======================================
+
+        let detalleAnticipo = [];
+
+        function getValorAnticipo() {
+            return parseFloat($("#valor").val().replace(/,/g, '')) || 0;
+        }
+
+        function getTotalAcumulado() {
+            return detalleAnticipo.reduce((sum, item) => sum + item.abono, 0);
+        }
+
+        function recalcularTotalDetalle() {
+
+            let total = getTotalAcumulado();
+            let valorAnticipo = getValorAnticipo();
+            let restante = valorAnticipo - total;
+
+            $("#totalAbonos")
+                .text(dollarUSLocale.format(total))
+                .addClass("currency text-end");
+
+            $("#badgeDisponible")
+                .text(dollarUSLocale.format(restante));
+
+            // 🔴 Si está completo
+            if (restante <= 0 && valorAnticipo > 0) {
+
+                $("#badgeDisponible")
+                    .removeClass("bg-success")
+                    .addClass("bg-danger");
+
+                $("#btnAgregarFacturas").prop("disabled", true);
+                $(".inputAbono").prop("disabled", true);
+
+            } else {
+
+                $("#badgeDisponible")
+                    .removeClass("bg-danger")
+                    .addClass("bg-success");
+
+                $("#btnAgregarFacturas").prop("disabled", false);
+                $(".inputAbono").prop("disabled", false);
+            }
+        }
+
+
+        // =======================================
+        // AGREGAR FACTURAS A LISTA DE ABONOS
+        // =======================================
+
+        $("#btnAgregarFacturas").click(function () {
+
+            let valorAnticipo = getValorAnticipo();
+            let totalActual = getTotalAcumulado();
+            let totalNuevo = 0;
+
+            let clienteId = $("#selectCliente").val();
+            let clienteText = $("#selectCliente option:selected").text();
+            let clienteCodigo = $("#selectCliente option:selected").data("codigo_cliente");
+
+            if (clienteId == 0) {
+                Swal.fire("", "Seleccione un cliente.", "warning");
+                return;
+            }
+
+            if (valorAnticipo <= 0) {
+                Swal.fire("", "Debe ingresar el valor del anticipo primero.", "warning");
+                return;
+            }
+
+            let nuevosItems = [];
+            let facturasDuplicadas = [];
+
+            tablaFacturas.rows().every(function () {
+
+                let rowNode = this.node();
+                let $row = $(rowNode);
+
+                let tdFactura = $row.find("td:eq(0)");
+                let pkcxc = $row.find(".inputAbono").data("pkcxc");
+                let factura = tdFactura.text().trim();
+                let fecha = $row.find("td:eq(1)").text();
+
+                let abono = parseFloat(
+                    $row.find(".inputAbono").val().replace(/,/g, '')
+                ) || 0;
+
+                let saldo = parseFloat(
+                    $row.find(".inputAbono").data('saldo')
+                ) || 0;
+
+                if (abono > 0) {
+
+                    let yaExiste = detalleAnticipo.some(item => item.pkcxc == pkcxc);
+
+                    if (yaExiste) {
+                        facturasDuplicadas.push(factura);
+                        return;
+                    }
+
+                    totalNuevo += abono;
+
+                    nuevosItems.push({
+                        pkcxc: pkcxc,
+                        banco: $("#selectBanco option:selected").text().trim(),
+                        cuenta_bancaria: String($("#selectCuenta option:selected").data("cuenta_bancaria") || '').trim(),
+                        codigo_cliente: clienteCodigo,
+                        cliente: clienteText,
+                        factura: factura,
+                        fecha: fecha,
+                        abono: abono,
+                        saldo: saldo,
+                    });
+                }
+
+            });
+
+
+            if (facturasDuplicadas.length > 0) {
+                $(".inputAbono").val("0.00");
+
+                Swal.fire(
+                    "",
+                    "Las siguientes facturas ya fueron agregadas:<br><br><b>" +
+                    facturasDuplicadas.join("<br>") +
+                    "</b>",
+                    "warning"
+                );
+                return;
+            }
+
+            if (totalNuevo <= 0) {
+                Swal.fire("", "Debe ingresar al menos un monto a abonar.", "warning");
+                return;
+            }
+
+            if ((totalActual + totalNuevo) > valorAnticipo) {
+                Swal.fire("", "Se excede el valor del anticipo.", "error");
+                return;
+            }
+
+            // 🔵 Agregamos
+            detalleAnticipo = detalleAnticipo.concat(nuevosItems);
+            bloquearEncabezado(true);
+
+            $(".inputAbono").val("0.00");
+
+            renderDetalle();
+
+            Swal.fire("", "Abonos agregados correctamente.", "success");
+        });
+
+
+
+        // =======================================
+        // RENDER TABLA DETALLE
+        // =======================================
+        function renderDetalle() {
+
+            tablaDetalle.clear();
+
+            let bancoNombre = $("#selectBanco option:selected").text();
+            let cuentaNombre = $("#selectCuenta option:selected").data("cuenta_bancaria") || '';
+
+            detalleAnticipo.forEach((item, index) => {
+
+                tablaDetalle.row.add([
+                    bancoNombre,
+                    cuentaNombre,
+                    $("#numero").val(),
+                    item.cliente,
+                    item.factura,
+                    item.fecha,
+                    `<div class="text-end">${dollarUSLocale.format(item.abono)}</div>`,
+                    `<div class="text-center">
+                        <button type="button"
+                                class="btn btn-sm btn-danger btnEliminar"
+                                data-index="${index}">
+                            <i class="fas fa-trash"></i>
+                        </button>
+                    </div>`
+                ]);
+
+            });
+
+            tablaDetalle.draw(false);
+
+            recalcularTotalDetalle();
+        }
+
+        // =======================================
+        // ELIMINAR FILA
+        // =======================================
+        $(document).on("click", ".btnEliminar", function () {
+
+            let index = $(this).data("index");
+
+            detalleAnticipo.splice(index, 1);
+
+            renderDetalle();
+
+            if (detalleAnticipo.length === 0) {
+                bloquearEncabezado(false);
+            }
+        });
+
+
+        function recalcularTotalFacturasEnviar() {
+
+            let total = 0;
+
+            $(".inputAbono").each(function () {
+                let v = parseFloat($(this).val().replace(/,/g, '')) || 0;
+                total += v;
+            });
+
+            $("#totalFacturasEnviar")
+                .text(dollarUSLocale.format(total))
+                .addClass("currency text-end");
+        }
+
+        $(document).on("keyup blur", ".inputAbono", function () {
+            recalcularTotalFacturasEnviar();
+        });
+
+
+
+        // =======================================
+        // GUARDAR VALIDACIÓN FINAL
+        // =======================================
+        $("#btnGuardar").click(function () {
+
+            let valorAnticipo = getValorAnticipo();
+            let totalDetalle = getTotalAcumulado();
+
+            // ===============================
+            // VALIDAR ENCABEZADO
+            // ===============================
+
+            let banco = $("#selectBanco").val();
+            let cuenta = $("#selectCuenta").val();
+            let numero = $("#numero").val().trim();
+            let fecha = $("#fecha").val();
+            let concepto = $("#concepto").val().trim();
+
+            if (!banco || banco == 0) {
+                Swal.fire("", "Debe seleccionar un banco.", "warning");
+                return;
+            }
+
+            if (!cuenta || cuenta == 0) {
+                Swal.fire("", "Debe seleccionar una cuenta bancaria.", "warning");
+                return;
+            }
+
+            if (!fecha) {
+                Swal.fire("", "Debe seleccionar una fecha.", "warning");
+                return;
+            }
+
+            if (!numero) {
+                Swal.fire("", "Debe ingresar el número de referencia.", "warning");
+                return;
+            }
+
+            if (!valorAnticipo || valorAnticipo <= 0) {
+                Swal.fire("", "Debe ingresar un valor válido.", "warning");
+                return;
+            }
+
+            if (!concepto) {
+                Swal.fire("", "Debe ingresar un concepto.", "warning");
+                return;
+            }
+
+
+            if (detalleAnticipo.length === 0) {
+                Swal.fire("", "No hay abonos definidos.", "warning");
+                return;
+            }
+
+            if (totalDetalle !== valorAnticipo) {
+                Swal.fire("", "El total de abonos debe ser exactamente igual al valor del anticipo.", "warning");
+                return;
+            }
+
+            showLoadingScreen('Procesando...');
+
+            $.ajax({
+                url: "{% url 'bank_guardar_lote_abonos' %}",
+                type: "POST",
+                data: {
+                    csrfmiddlewaretoken: csrfToken,
+
+                    fkEmpresa: $("#selectEmpresa").val(),
+                    empresaNombre: $("#selectEmpresa option:selected").text().trim(),
+
+                    fkBanco: $("#selectBanco").val(),
+                    bancoNombre: $("#selectBanco option:selected").text().trim(),
+
+                    fkCuentaBancaria: $("#selectCuenta").val(),
+                    cuentaBancaria: $("#selectCuenta option:selected").data("cuenta_bancaria"),
+                    moneda: $("#selectCuenta option:selected").data("moneda"),
+
+                    numero: $("#numero").val(),
+                    fecha: $("#fecha").val(),
+                    valorAnticipo: valorAnticipo,
+                    concepto: $("#concepto").val(),
+
+                    detalle: JSON.stringify(detalleAnticipo)
+                },
+
+                success: function (resp) {
+
+                    if (resp.success) {
+                        Swal.close();
+
+                        Swal.fire("", "Lote Guardado Correctamente.", "success");
+
+                        // 🔵 Reset formulario
+                        detalleAnticipo = [];
+                        renderDetalle();
+                        $("#frmAnticipo")[0].reset();
+                        $("#selectCliente").val(0).trigger("change");
+                        bloquearEncabezado(false);
+
+                    } else {
+
+                        Swal.fire("", resp.error || "Error al guardar.", "error");
+
+                    }
+
+                },
+
+                error: function (xhr) {
+
+                    console.log(xhr.responseText);
+                    Swal.fire("", "Error de servidor.", "error");
+
+                }
+
+            });
+
+        });
+
+
+
+
+    });
+</script>
+
+
+
+{% endblock %}

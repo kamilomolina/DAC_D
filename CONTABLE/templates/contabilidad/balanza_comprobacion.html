@@ -1,0 +1,348 @@
+{% extends 'componentes/menu_contable.html' %}
+{% load static %}
+
+{% block title %}
+BALANZA COMPROBACION
+{% endblock %}
+
+
+{% block body %}
+
+<div class="row align-items-center border-bottom mb-3 py-2 bg-white shadow-sm mx-0">
+    <div class="col d-flex align-items-center px-0">
+        <button id="toggle-sidebar" class="btn btn-primary btn-sm me-3 border-0 rounded-circle btnMenu"
+            style="width: 32px; height: 32px; padding: 0;" title="Mostrar/Ocultar menú">
+            <i class="fas fa-bars"></i>
+        </button>
+        <h6 class="page-title mb-0 fs-5 fw-bold text-dark">
+            <i class="fas fa-tasks text-primary me-2"></i>BALANZA DE COMPROBACIÓN
+        </h6>
+    </div>
+</div>
+
+
+<div class="container-fluid px-0 mt-1">
+
+    <div class="row g-3 d-flex align-items-end mx-0">
+
+        <div class="col-lg-2">
+            <div class="form-group">
+                <label for="empresaPartida">Empresa:</label>
+                <select id="empresaPartida" class="form-select form-select-sm" name="empresaPartida">
+                    {% for e in empresasData %}
+                    <option value="{{ e.id }}">{{ e.nombre }}</option>
+                    {% endfor %}
+                </select>
+            </div>
+        </div>
+
+        <div class="col-lg-2">
+            <div class="form-group">
+                <label for="periodoInicio">Desde:</label>
+                <input type="date" id="periodoInicio" class="form-control form-control-sm pickedDate"
+                    value="{{ date1 }}">
+            </div>
+        </div>
+
+        <div class="col-lg-2">
+            <div class="form-group">
+                <label for="periodoFinal">Hasta:</label>
+                <input type="date" id="periodoFinal" class="form-control form-control-sm pickedDate"
+                    value="{{ date2 }}">
+            </div>
+        </div>
+
+        <div class="col-lg-2">
+            <button type="button" class="btn btn-success btn-sm" id="btnLoadData">Cargar</button>
+        </div>
+
+    </div>
+
+
+    <br>
+
+    <div class="row mx-0">
+        <div class="table-responsive">
+
+            <table id="tblBalanza"
+                class="table table-striped table-bordered mb-0 table-sm rounded-4 table-hover align-middle"
+                style="width: 100%;">
+
+                <thead class="table-gradient text-dark">
+                    <tr>
+                        <th>Código</th>
+                        <th>Nombre</th>
+                        <th>Saldo Inicial</th>
+                        <th>Debe</th>
+                        <th>Haber</th>
+                        <th>Saldo Deudor</th>
+                        <th>Saldo Acreedor</th>
+                    </tr>
+                </thead>
+                <tbody></tbody>
+
+                <tfoot>
+                    <tr>
+                        <th colspan="2" class="text-end">Totales</th>
+                        <th class="text-end"></th>
+                        <th class="text-end"></th>
+                        <th class="text-end"></th>
+                        <th class="text-end"></th>
+                        <th class="text-end"></th>
+                    </tr>
+                </tfoot>
+
+            </table>
+
+
+        </div>
+    </div>
+</div>
+
+
+<a href="{% url 'panel_contabilidad' %}">
+    <button class="btn btn-sm btn-danger" id="btnCerrar" title="Cerrar"
+        style="position: fixed; bottom: 20px; right: 20px;">
+        <i class="fa fa-times"></i> Cerrar
+    </button>
+</a>
+
+{% endblock %}
+
+
+
+{% block scripts %}
+
+<script>
+    $(document).ready(function () {
+        var csrfToken = "{{ csrf_token }}";
+        var empresa_id = "{{ empresa }}";
+
+        $('#empresaPartida').val(empresa_id).change();
+
+        var toastMixin = Swal.mixin({
+            toast: true,
+            icon: 'success',
+            title: 'General Title',
+            animation: false,
+            position: 'top-right',
+            showConfirmButton: false,
+            timer: 2000,
+            timerProgressBar: true,
+            didOpen: (toast) => {
+                toast.addEventListener('mouseenter', Swal.stopTimer);
+                toast.addEventListener('mouseleave', Swal.resumeTimer);
+            }
+        });
+
+        let dollarUSLocale = Intl.NumberFormat("en-US", {
+            minimumFractionDigits: 2,
+            maximumFractionDigits: 2
+        });
+
+        let intergerLocale = Intl.NumberFormat("en-US", {
+            minimumFractionDigits: 0,
+            maximumFractionDigits: 0
+        });
+
+        function showLoadingScreen(text = '') {
+            Swal.fire({
+                title: '',
+                html: `<b>${text}</b>`,
+                didOpen: () => {
+                    Swal.showLoading();
+                },
+                allowOutsideClick: false,
+                showConfirmButton: false
+            });
+        }
+
+
+        $('#btnLoadData').click(function (e) {
+            e.preventDefault();
+
+
+            fillTableBalanza();
+        });
+
+        $("#tblBalanza").DataTable({
+            language: {
+                url: "{% static 'app/th/json/es-ES.json' %}",
+            },
+        });
+
+        function fillTableBalanza() {
+            const empresa = $('#empresaPartida').val();
+            const date1 = $('#periodoInicio').val();
+            const date2 = $('#periodoFinal').val();
+            const codigo = '';
+            const modo_busqueda = 2; // el nuevo select
+
+            showLoadingScreen();
+
+            $("#tblBalanza").DataTable().clear().destroy();
+
+            const cardHeight = $(".card-expanded").height();
+            const tableHeight = cardHeight * 0.5;
+
+
+            // Asumimos que ya definiste: tableHeight, csrfToken, codigo, date1, date2, empresa, modo_busqueda
+            // También que existe un <span id="saldoFinalReferencia"></span> en tu vista.
+
+            $("#tblBalanza").DataTable({
+                initComplete: function () {
+                    Swal.close();
+                },
+                drawCallback: function (row, data) {
+                    const api = this.api();
+
+                    function sum(col) {
+                        return api
+                            .column(col, { search: 'applied' })
+                            .data()
+                            .reduce((a, b) => (parseFloat(a) || 0) + (parseFloat(b) || 0), 0);
+                    }
+
+                    const totalInicial = sum(2);
+                    const totalDebe = sum(3);
+                    const totalHaber = sum(4);
+                    const totalFinal = sum(5);
+                    const totalNat = sum(6);
+
+                    // Pinta los valores
+                    $(api.column(2).footer()).html(totalInicial.toLocaleString(undefined, { minimumFractionDigits: 2 }));
+                    $(api.column(3).footer()).html(totalDebe.toLocaleString(undefined, { minimumFractionDigits: 2 }));
+                    $(api.column(4).footer()).html(totalHaber.toLocaleString(undefined, { minimumFractionDigits: 2 }));
+                    $(api.column(5).footer()).html(`Bal: ` + totalFinal.toLocaleString(undefined, { minimumFractionDigits: 2 }));
+                    $(api.column(6).footer()).html(totalNat.toLocaleString(undefined, { minimumFractionDigits: 2 }));
+
+                    // Colorear totales Debe y Haber
+                    if (totalDebe.toFixed(2) === totalHaber.toFixed(2)) {
+                        $(api.column(3).footer()).css('background-color', '#d4edda'); // verde suave
+                        $(api.column(4).footer()).css('background-color', '#d4edda');
+                    } else {
+                        $(api.column(3).footer()).css('background-color', '#f8d7da'); // rojo suave
+                        $(api.column(4).footer()).css('background-color', '#f8d7da');
+                    }
+
+                    // Colorear saldo final total (0 = verde, distinto = rojo)
+                    if (totalFinal.toFixed(2) === "0.00") {
+                        $(api.column(5).footer()).css('background-color', '#d4edda');
+                    } else {
+                        $(api.column(5).footer()).css('background-color', '#f8d7da');
+                    }
+                },
+                autoWidth: false,
+                scrollX: true,
+                scrollY: '50vh',
+                scrollCollapse: true,
+                pageLength: -1,
+                dom: 'Brftip',
+                language: {
+                    url: "{% static 'app/th/json/es-ES.json' %}",
+                },
+                ajax: {
+                    url: `{% url 'dataBalanzaComprobacion' %}`,
+                    type: "POST",
+                    dataSrc: 'data',
+                    data: {
+                        fecha_inicio: date1,
+                        fecha_fin: date2,
+                        fkEmpresa: empresa,
+                        modo_busqueda,
+                        csrfmiddlewaretoken: csrfToken
+                    }
+                },
+                colReorder: { realtime: false },
+                ordering: false,
+                buttons: [
+                    {
+                        extend: 'excel',
+                        text: '<i class="fas fa-file-excel"></i>',
+                        titleAttr: 'Exportar a Excel',
+                        className: 'btn btn-success',
+                    },
+                    {
+                        extend: 'pdf',
+                        text: '<i class="fas fa-file-pdf"></i>',
+                        titleAttr: 'Exportar a PDF',
+                        className: 'btn btn-danger',
+                        orientation: 'landscape'
+                    },
+                    {
+                        extend: 'print',
+                        text: '<i class="fas fa-print"></i>',
+                        titleAttr: 'Imprimir',
+                        className: 'btn btn-info',
+                        orientation: 'landscape'
+                    }
+                ],
+                columns: [
+                    { data: 'Codigo' },
+                    { data: 'Nombre' },
+                    {
+                        data: 'Saldo_Inicial',
+                        className: 'text-end',
+                        render: $.fn.dataTable.render.number(',', '.', 2)
+                    },
+                    {
+                        data: 'Debe_Periodo',
+                        className: 'text-end',
+                        render: $.fn.dataTable.render.number(',', '.', 2)
+                    },
+                    {
+                        data: 'Haber_Periodo',
+                        className: 'text-end',
+                        render: $.fn.dataTable.render.number(',', '.', 2)
+                    },
+                    {
+                        data: 'Saldo_Final',
+                        className: 'text-end',
+                        render: function (data, type, row) {
+
+                            let saldo = parseFloat(row.Saldo_Final) || 0;
+                            let tipo = parseInt(row.id_tipo_saldo) || 0;
+
+                            if (tipo === 1) {
+                                return $.fn.dataTable.render.number(',', '.', 2).display(Math.abs(saldo));
+                            }
+
+                            return $.fn.dataTable.render.number(',', '.', 2).display(0);
+                        }
+                    },
+                    {
+                        data: 'Saldo_Final',
+                        className: 'text-end',
+                        render: function (data, type, row) {
+
+                            let saldo = parseFloat(row.Saldo_Final) || 0;
+                            let tipo = parseInt(row.id_tipo_saldo) || 0;
+
+                            if (tipo === 2) {
+                                return $.fn.dataTable.render.number(',', '.', 2).display(Math.abs(saldo));
+                            }
+
+                            return $.fn.dataTable.render.number(',', '.', 2).display(0);
+                        }
+                    }
+
+
+                ],
+            });
+
+        }
+
+
+
+
+
+
+
+
+
+
+
+        /*  */
+    });
+</script>
+{% endblock %}

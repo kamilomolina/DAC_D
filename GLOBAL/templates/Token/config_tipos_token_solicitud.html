@@ -1,0 +1,475 @@
+{% extends 'componentes/menu_global_security.html' %}
+{% load static %}
+
+{% block title %}
+CONFIGURACION TIPOS SOLICITUDES DE TOKEN Y USUARIOS
+{% endblock %}
+
+{% block body %}
+
+<div class="row">
+    <div class="col-lg-12">
+
+        <div class="card card-expanded card-table comman-shadow shadow-lg">
+            <div class="card-body">
+
+                <div class="row align-items-center">
+                    <div class="col d-flex align-items-center">
+                        <button id="toggle-sidebar" class="hamburger btnMenu me-3" title="Mostrar/Ocultar Menu">
+                            
+                        </button>
+                        <h3 class="page-title">CONFIGURACION TIPOS DE SOLICITUD DE TOKENS Y USUARIOS</h3>
+                    </div>
+                </div>
+                <br>
+
+                <div class="row f-flex justify-content-start align-items-end">
+                    
+                    <div class="col-sm-2">
+                        <div class="form-group">
+                            <label for="" class="form-label">Tipo Token</label>
+                            <select class="form-select form-select-sm chosen-select" id="tipo_token_select">
+                                <option selected value="0">Seleccione un Tipo</option>
+                            </select>
+                        </div>
+                    </div>
+
+                    <div class="col-sm-2">
+                        <div class="form-group">
+                            <label class="form-label">Usuario:</label>
+                            <select class="form-select form-select-sm chosen-select" id="usuario" name="usuario">
+                                <option selected value="0">Seleccione un Usuario</option>
+                                {% for user in usuarios %}
+                                <option value="{{ user.PKUsuario }}">{{ user.Nombre }}</option>
+                                {% endfor %}
+                            </select>
+                        </div>
+                    </div>
+
+                    <div class="col-sm-2">
+                        <div class="form-group">
+                            <label class="form-label">Sucursal:</label>
+                            <select class="form-select form-select-sm chosen-select" id="sucursal" name="sucursal">
+                                <option selected value="0">Seleccione una Sucursal</option>
+                                <option value="0">TODAS</option>
+                                {% for user in usuarios %}
+                                <option value="{{ user.PKsucursal }}">{{ user.NombreSucursal }}
+                                </option>
+                                {% endfor %}
+                            </select>
+                        </div>
+                    </div>
+
+
+                    <div class="col-sm-4">
+                        <div class="form-group">
+                            <button type="button" class="btn btn-primary" id="btnAgregar" title="Agregar"><i
+                                    class="fas fa-plus"></i> Agg. Usuario</button>
+                            <a href="#" type="button" class="btn btn-warning" id="btnNuevo" data-toggle="modal"
+                                title="Crear Nuevo Tipo" alt="Crear Nuevo Tipo"><i class="fas fa-plus"></i> Tipo
+                                Token</a>
+                        </div>
+                    </div>
+
+                </div>
+
+
+                <div class="table-responsive">
+                    <table id="usuariosTable" class="table table-hover table-center table-bordered table-striped"
+                        style="width:100%">
+                        <thead class="thead-light">
+                            <tr>
+                                <th class="text-center">#</th>
+                                <th class="text-center">Tipo Token</th>
+                                <th class="text-center">Usuario</th>
+                                <th class="text-center">Correo</th>
+                                <th class="text-center">Acciones</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+
+                        </tbody>
+                    </table>
+                </div>
+
+            </div>
+        </div>
+
+    </div>
+</div>
+
+
+
+<div class="modal fade" id="modalTipoToken" tabindex="-1" aria-labelledby="modalTipoTokenLabel" aria-hidden="true"
+    data-bs-keyboard="false" data-bs-backdrop="static">
+    <div class="modal-dialog modal-sm">
+        <div class="modal-content">
+            <div class="modal-header" id="comment-header" style="background-color: rgb(145, 75, 35)">
+                <h5 class="modal-title" id="modalTipoTokenLabel" style="color: #fff">NUEVO TIPO TOKEN</h5>
+                <button type="button" class="btn-close close_modal_tipo_token" data-bs-dismiss="modal"
+                    aria-label="Close"></button>
+            </div>
+
+            <div class="modal-body">
+
+
+                <form id="formTipoToken" method="POST">
+
+                    <div class="row">
+                        <div class="col-lg-12">
+                            <div class="form-group">
+                                <label for="new_tipo_token">Tipo Token</label>
+                                <input class="form-control form-control-sm" id="new_tipo_token"
+                                    name="new_tipo_token"></input>
+                            </div>
+                        </div>
+                    </div>
+
+                    <br>
+
+                    <div class="modal-footer d-flex justify-content-end">
+                        <button type="submit" class="btn btn-success">Guardar</button>
+                        <button type="button" class="btn btn-disabled close_modal_tipo_token"
+                            data-bs-dismiss="modal">Cerrar</button>
+                    </div>
+
+                </form>
+
+
+            </div>
+
+
+        </div>
+    </div>
+</div>
+
+<a href="{% url 'global_main' %}">
+    <button class="btn btn-sm btn-danger" id="btnCerrar" title="Cerrar"
+        style="position: fixed; bottom: 20px; right: 20px;">
+        <i class="fa fa-times"></i> Cerrar
+    </button>
+</a>
+{% endblock %}
+
+{% block scripts %}
+<script>
+    $(document).ready(function () {
+
+        var csrfToken = "{{ csrf_token }}";
+        var buttons = "Brtlip";
+
+        $("#sucursal").closest(".col-sm-2").hide();
+
+
+        $('#tokenMenu, #tiposToken').addClass('active');
+
+        var toastMixin = Swal.mixin({
+            toast: true,
+            icon: 'success',
+            title: 'General Title',
+            animation: true,
+            position: 'top-right',
+            showConfirmButton: false,
+            timer: 2500,
+            timerProgressBar: true,
+            customClass: {
+                popup: 'custom-toast'
+            },
+            didOpen: (toast) => {
+                toast.addEventListener('mouseenter', Swal.stopTimer)
+                toast.addEventListener('mouseleave', Swal.resumeTimer)
+            }
+        });
+
+        var toastMixinLong = Swal.mixin({
+            toast: true,
+            icon: 'success',
+            title: 'General Title',
+            animation: true,
+            position: 'top-right',
+            showConfirmButton: false,
+            timer: 5000,
+            timerProgressBar: true,
+            customClass: {
+                popup: 'custom-toast'
+            },
+            didOpen: (toast) => {
+                toast.addEventListener('mouseenter', Swal.stopTimer)
+                toast.addEventListener('mouseleave', Swal.resumeTimer)
+            }
+        });
+
+
+        $(".chosen-select").chosen({
+            width: "100%"
+        });
+
+        $('#btnNuevo').click(function (e) {
+            e.preventDefault();
+
+            $('#modalTipoToken').modal('show');
+            $('#formTipoToken').trigger('reset');
+            id_tipo = null;
+            opcion = 1;
+        });
+
+        $('#formTipoToken').submit(function (e) {
+            e.preventDefault();
+
+            new_tipo_token = $('#new_tipo_token').val();
+
+            $.ajax({
+                beforeSend: function (xhr, type) {
+                    if (!type.crossDomain) {
+                        xhr.setRequestHeader('X-CSRF-Token', $(
+                            'meta[name="csrf-token"]')
+                            .attr(
+                                'content'));
+                    }
+                },
+                url: `{% url 'new_tipo_token' %}`,
+                method: 'POST',
+                data: {
+                    id_tipo: id_tipo,
+                    new_tipo_token: new_tipo_token,
+                    opcion: 1,
+                    csrfmiddlewaretoken: csrfToken
+                },
+                success: function (data) {
+                    if (data.save == 1) {
+                        if (data.existe == 0) {
+                            fillTiposToken();
+                            $('#modalTipoToken').modal('hide');
+                            toastMixin.fire({
+                                icon: 'success',
+                                animation: true,
+                                title: 'Tipo de Token Creado!'
+                            });
+                        } else {
+                            Swal.fire("", "Ya existe este Tipo de Token!", "warning");
+                        }
+                    } else {
+                        Swal.fire("", "Error D: " + data.error, "error");
+                    }
+                },
+
+            });
+        });
+
+
+        function fillTiposToken() {
+            $.ajax({
+                beforeSend: function (xhr, type) {
+                    if (!type.crossDomain) {
+                        xhr.setRequestHeader('X-CSRF-Token', $(
+                            'meta[name="csrf-token"]')
+                            .attr(
+                                'content'));
+                    }
+                },
+                url: `{% url 'get_select_tipo_token' %}`,
+                type: 'POST',
+                data: {
+                    opcion: 1,
+                    csrfmiddlewaretoken: csrfToken
+                },
+                success: function (data) {
+
+                    if (data.data.length > 0) {
+                        $("#tipo_token_select").empty();
+
+                        $("#tipo_token_select").append('<option value="">Seleccione un token</option>');
+
+                        data.data.forEach(function (token) {
+                            $("#tipo_token_select").append(
+                                `<option value="${token.id_tipo_token}">${token.tipo_token}</option>`
+                            );
+                        });
+
+                    } else {
+                        $("#tipo_token_select").html('<option value="">No hay tokens disponibles</option>');
+                    }
+
+                    // $('#tipo_token_select').html(data);
+
+                    $('.chosen-select').val(0).trigger("chosen:updated");
+                    $('.chosen-select').trigger("chosen:updated");
+                },
+
+            });
+        }
+
+        fillTiposToken();
+
+        var cardHeight = $(".card-expanded").height();
+        var tableHeight = cardHeight * 0.5;
+
+        usuariosTable = $("#usuariosTable").DataTable({
+            beforeSend: function (xhr, type) {
+                if (!type.crossDomain) {
+                    xhr.setRequestHeader('X-CSRF-Token', $('meta[name="csrf-token"]').attr(
+                        'content'));
+                }
+            },
+            scrollX: true,
+            scrollCollapse: true,
+            scrollY: tableHeight + 'px',
+            pageLength: 50,
+            ajax: {
+                url: `{% url 'get_usuarios_token' %}`,
+                method: "GET",
+            },
+            language: {
+                url: "{% static 'app/th/json/es-ES.json' %}",
+            },
+            columns: [{
+                data: "id_correo"
+            },
+            {
+                data: "tipo_token"
+            },
+            {
+                data: "nombre",
+                className: "text-wrap"
+            },
+            {
+                data: "email",
+                className: "text-wrap"
+            },
+            {
+                data: null,
+                render: function (data, type, row) {
+                    return "<div class='text-center'><div class='btn-group'><button class='btn btn-danger btn-sm btnDeleteUser' data-id='" +
+                        data.id_correo +
+                        "' title='Eliminar'><i class='material-icons'>delete</i></button></div></div>";
+                }
+            },
+            ]
+        });
+
+
+        $('#tipo_token_select').change(function () {
+            if ($(this).val() == 0) {
+                value = "";
+            } else {
+                value = $.trim($('#tipo_token_select option:selected').text());
+            }
+            usuariosTable.column(1).search(value).draw();
+        });
+        $('#usuario').change(function () {
+            if ($(this).val() == 0) {
+                value = "";
+            } else {
+                value = $.trim($('#usuario option:selected').text());
+            }
+
+            usuariosTable.column(2).search(value).draw();
+        });
+
+
+        $('#btnAgregar').click(function (e) {
+            e.preventDefault();
+
+            tipo = $('#tipo_token_select').val();
+            user_id = $('#usuario').val();
+
+            if (tipo == 0 || user_id == 0) {
+                toastMixin.fire({
+                    icon: 'warning',
+                    animation: true,
+                    title: 'Debes seleccionar un Tipo Token y un Usuario!'
+                });
+            } else {
+
+                $.ajax({
+                    beforeSend: function (xhr, type) {
+                        if (!type.crossDomain) {
+                            xhr.setRequestHeader('X-CSRF-Token', $(
+                                'meta[name="csrf-token"]')
+                                .attr(
+                                    'content'));
+                        }
+                    },
+                    url: `{% url 'add_usuarios_token' %}`,
+                    method: 'POST',
+                    data: {
+                        tipo: tipo,
+                        user_id: user_id,
+                        csrfmiddlewaretoken: csrfToken
+                    },
+                    success: function (data) {
+                        if (data.save == 1) {
+
+                            if (data.existe == 1) {
+                                toastMixin.fire({
+                                    icon: 'warning',
+                                    animation: true,
+                                    title: 'Ya has agregado a este Usuario a este Tipo de Token!'
+                                });
+                            } else {
+                                toastMixin.fire({
+                                    icon: 'success',
+                                    animation: true,
+                                    title: 'Usuario Agregado!'
+                                });
+
+                                $('.chosen-select').val(0).trigger("chosen:updated");
+                                $('.chosen-select').trigger("chosen:updated");
+                            }
+
+                            usuariosTable.ajax.reload(null, false);
+
+
+                        } else {
+                            Swal.fire("", "Error L: " + data.error, "error");
+                        }
+                    },
+
+                });
+
+            }
+
+        });
+
+
+        $(document).on('click', '.btnDeleteUser', function () {
+            id = $(this).data('id');
+
+            $.ajax({
+                beforeSend: function (xhr, type) {
+                    if (!type.crossDomain) {
+                        xhr.setRequestHeader('X-CSRF-Token', $(
+                            'meta[name="csrf-token"]')
+                            .attr(
+                                'content'));
+                    }
+                },
+                url: `{% url 'delete_usuarios_token' %}`,
+                method: 'POST',
+                data: {
+                    id: id,
+                    csrfmiddlewaretoken: csrfToken
+                },
+                success: function (data) {
+                    if (data.save == 1) {
+
+                        toastMixin.fire({
+                            icon: 'success',
+                            animation: true,
+                            title: 'Usuario Eliminado!'
+                        });
+
+                        usuariosTable.ajax.reload(null, false);
+
+
+                    } else {
+                        Swal.fire("", "Error L: " + data.error, "error");
+                    }
+                },
+
+            });
+        });
+
+    });
+</script>
+{% endblock %}

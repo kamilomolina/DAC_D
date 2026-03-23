@@ -1,0 +1,30 @@
+"{% url 'revisar_gasto_vaic' %}",
+
+
+csrfmiddlewaretoken: csrfToken,
+
+
+
+beforeSend: function (xhr, settings) {
+                    if (!settings.crossDomain) {
+                        xhr.setRequestHeader("X-CSRFToken", csrfToken);
+                    }
+                },
+
+
+
+function showLoadingScreen(text = '') {
+            Swal.fire({
+                title: '',
+                html: `<b>${text}</b>`,
+                didOpen: () => {
+                    Swal.showLoading();
+                },
+                allowOutsideClick: false,
+                showConfirmButton: false
+            });
+        }
+
+
+
+        const urlPresupuestos = "{% url 'fill_table_gastos_presupuestados' %}?id=" + centro_id + "&mes=" + varMonth + "&anio=" + varAnio + "&autoriza=0";

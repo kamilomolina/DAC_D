@@ -1,0 +1,28 @@
+<!-- Modal para Cambiar Usuario -->
+<div class="modal fade" id="modalCambiarUsuario" tabindex="-1" role="dialog" aria-labelledby="modalCambiarUsuarioLabel"
+  aria-hidden="true">
+  <div class="modal-dialog" role="document">
+    <div class="modal-content">
+      <div class="modal-header">
+        <h5 class="modal-title" id="modalCambiarUsuarioLabel">Cambiar Usuario</h5>
+        <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Cerrar"></button>
+      </div>
+      <div class="modal-body">
+        <form id="formCambiarUsuario">
+          <div class="mb-3">
+            <label for="usuarioActual" class="form-label">Usuario Actual</label>
+            <input type="text" class="form-control" id="usuarioActual" disabled>
+          </div>
+          <div class="mb-3">
+            <label for="nuevoUsuario" class="form-label">Nuevo Usuario</label>
+            <input type="text" class="form-control" id="nuevoUsuario" required>
+          </div>
+        </form>
+      </div>
+      <div class="modal-footer">
+        <button type="button" class="btn btn-primary" id="guardarUsuario">Guardar</button>
+        <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancelar</button>
+      </div>
+    </div>
+  </div>
+</div>

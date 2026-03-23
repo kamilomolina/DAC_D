@@ -1,0 +1,466 @@
+{% extends 'plantilla_final.html' %}
+
+{% block title %}
+
+{% endblock%}
+
+{% block head %}
+
+{% endblock %}
+
+{% block content %}
+<!-- Este bloque contendrá todo el contenido específico de la página de listado de teléfonos -->
+<div class="row p-1">
+    <span class="text-center" style="font-size: 20px;"><b>Listado de motivos de ventas perdidas</b></span>
+</div>
+
+<div class="row d-flex justify-content-end">
+    <div class="col-sm-2">
+        <button class="btn btn-sm btn-secondary create__buttons w-100" data-bs-toggle="modal"
+            data-bs-target="#modal_crear_programacion" id="btnCrearProgramacion" title="Nueva"
+            style="background-color: #0077b6; color: #ffffff;">Nuevo Motivo</button>
+    </div>
+</div>
+
+<hr>
+<div class="row"style="padding-bottom: 10px;">
+    <div class="col-sm-2 filter-column">
+        <label for="filterNombreMotivo">Nombre del motivo</label>
+        <input type="text" class="form-control form-control-sm" id="filterNombreMotivo" placeholder="Nombre del motivo">
+    </div>
+    <div class="col-sm-2 filter-column">
+        <label for="filterDescripcionMotivo">Descripcion del motivo</label>
+        <input type="text" class="form-control form-control-sm" id="filterDescripcionMotivo"
+            placeholder="Descripción del motivo">
+    </div>
+    <div class="col-sm-2 filter-column">
+        <label for="filterDescripcionMotivo">Busqueda Rápida</label>
+        <input type="text" class="form-control form-control-sm" id="filterBusquedaRapida" placeholder="Búsqueda rápida">
+    </div>
+</div>
+
+<div class="unique-table-container">
+    <table id="tabla_programaciones"
+        class="table table-sm table-striped align-middle mb-0 bg-white table-basic custom-table" style="width:100%">
+        <thead>
+            <tr>
+                <th>Id Motivo</th>
+                <th>Nombre Motivo</th>
+                <th>Descripción Motivo</th>
+                <th>Tipo</th>
+                <th>Acciones</th>
+            </tr>
+        </thead>
+        <tbody>
+            <tr>
+
+            </tr>
+        </tbody>
+    </table>
+    </button>
+</div>
+<div class="bottom-container">
+    <!-- Contenedores para los elementos que estarán debajo de la tabla -->
+    <div id="length-changing"></div>
+    <div id="export-buttons"></div>
+</div>
+<div class="row">
+    <div class="col-sm-12 col-md-5">
+        <!-- Contenedor para la información de registros mostrados -->
+        <div id="tabla_programaciones_info" class="dataTables_info" role="status" aria-live="polite"></div>
+    </div>
+    <div class="col-sm-12 col-md-7">
+        <!-- Contenedor para los botones de exportación -->
+        <div id="tabla_programaciones_export" class="dataTables_export"></div>
+        <!-- Contenedor para los controles de paginación -->
+        <div id="tabla_programaciones_paginate" class="dataTables_paginate paging_simple_numbers"></div>
+    </div>
+</div>
+<!-- Modal -->
+
+<div class="modal fade" id="editarMotivo" tabindex="-1" aria-labelledby="modalDjangoContentLabel" aria-hidden="true">
+    <div class="modal-dialog modal-lg">
+        <div class="modal-content">
+            <div class="modal-header" style="background-color: #3d4b7d">
+                <h5 class="modal-title" id="modalDjangoContentLabel" style="color: #fff">EDITAR MOTIVO</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+            </div>
+            <div class="modal-body">
+                <div class="modal-body">
+                    <form>
+                        <div class="row">
+                            <div class="col-md-6" style="display: none;">
+                                <label for="id_motivo_e" class="col-form-label">ID del motivo (oculto):</label>
+                                <input type="text" class="form-control form-control-sm" id="id_motivo_e"
+                                    name="id_motivo_e">
+                            </div>
+                            <div class="col-md-6">
+                                <label for="nombre_motivo_e" class="col-form-label">Nombre del motivo:</label>
+                                <input type="text" class="form-control form-control-sm" id="nombre_motivo_e"
+                                    name="nombre_motivo">
+                            </div>
+                            <div class="col-md-6">
+                                <label for="selectCombo2" class="form-label">Tipo:</label>
+                                <select class="form-select" id="selectCombo2">
+                                    <option value="1">Seleccionable</option>
+                                    <option value="2">No seleccionable</option>
+                                </select>
+                            </div>
+                            <div class="col-12"> <!-- Ajuste para que ocupe toda la línea -->
+                                <label for="descripcion_motivo_e" class="col-form-label">Descripción del motivo:</label>
+                                <textarea class="form-control form-control-sm" id="descripcion_motivo_e"
+                                    name="descripcion_motivo_e"></textarea>
+                            </div>
+                        </div>
+                    </form>
+                </div>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-success" id="btnSaveEdit">Guardar Cambios</button>
+                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cerrar</button>
+
+            </div>
+        </div>
+    </div>
+</div>
+
+<div class="modal fade" id="modal_crear_programacion" tabindex="-1" aria-labelledby="modalDjangoContentLabel"
+    aria-hidden="true">
+    <div class="modal-dialog modal-lg">
+        <div class="modal-content">
+            <div class="modal-header" style="background-color: #3d4b7d">
+                <h5 class="modal-title" id="modalNewVehiculoLabel" style="color: #fff">NUEVO MOTIVO</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+            </div>
+            <div class="modal-body">
+                <form>
+                    <div class="row">
+                        <div class="col-md-6"> <!-- Ajusta el tamaño de columna si es necesario -->
+                            <label for="nombre_motivo" class="col-form-label">Nombre del motivo:</label>
+                            <input type="text" class="form-control form-control-sm" id="nombre_motivo"
+                                name="nombre_motivo">
+                        </div>
+                        <div class="col-md-6"> <!-- Ajusta el tamaño de columna si es necesario -->
+                            <label for="selectCombo" class="form-label">Tipo:</label>
+                            <select class="form-select" id="selectCombo">
+                                <option value="1">Seleccionable</option>
+                                <option value="2">No seleccionable</option>
+                            </select>
+                        </div>
+                        <div class="col-12"> <!-- Aquí hago que ocupe el ancho completo -->
+                            <label for="descripcion_motivo" class="col-form-label">Descripción del motivo:</label>
+                            <textarea class="form-control form-control-sm" id="descripcion_motivo"
+                                name="descripcion_motivo"></textarea> <!-- Cambiado a textarea -->
+                        </div>
+                    </div>
+                </form>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-success" id="guardarCambios">Guardar</button>
+                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cerrar</button>
+            </div>
+        </div>
+    </div>
+</div>
+
+<div class="modal fade" id="borrarMotivo" tabindex="-1" aria-labelledby="modalBorrarMotivoLabel" aria-hidden="true">
+    <div class="modal-dialog">
+        <div class="modal-content">
+            <div class="modal-header" style="background-color: #8b1c1c">
+                <h5 class="modal-title" id="modalBorrarMotivoLabel" style="color: #fff">BORRAR MOTIVO</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+            </div>
+            <div class="modal-body">
+                <p>¿Estás seguro de que quieres borrar el motivo seleccionado?</p>
+                <input type="hidden" id="id_motivo_borrar" value="" name="id_motivo_borrar">
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-danger" id="btnConfirmarBorrado">Borrar</button>
+                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancelar</button>
+            </div>
+        </div>
+    </div>
+</div>
+
+
+
+<!-- jQuery (necesario para Bootstrap y DataTables) -->
+<script src="https://code.jquery.com/jquery-3.5.1.js"></script>
+<!-- Popper.js (necesario para Bootstrap) -->
+<script src="https://cdn.jsdelivr.net/npm/@popperjs/core@2.9.2/dist/umd/popper.min.js" crossorigin="anonymous"></script>
+
+<!-- Bootstrap JS -->
+<script src="https://cdn.jsdelivr.net/npm/bootstrap@5.0.2/dist/js/bootstrap.min.js" crossorigin="anonymous"></script>
+<script src="https://cdn.jsdelivr.net/npm/bootstrap@5.0.2/dist/js/bootstrap.bundle.min.js"
+    crossorigin="anonymous"></script>
+
+<!-- Font Awesome para iconos -->
+<script src="https://kit.fontawesome.com/e716b78aa6.js" crossorigin="anonymous"></script>
+
+<!-- SweetAlert para alertas bonitas -->
+<script src="https://unpkg.com/sweetalert/dist/sweetalert.min.js"></script>
+
+<!-- DataTables y sus plugins -->
+<script src="https://cdnjs.cloudflare.com/ajax/libs/jszip/3.10.1/jszip.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/pdfmake/0.2.7/pdfmake.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/pdfmake/0.2.7/vfs_fonts.js"></script>
+<script src="https://cdn.datatables.net/1.13.8/js/jquery.dataTables.js"></script>
+<script src="https://cdn.datatables.net/buttons/2.4.2/js/dataTables.buttons.js"></script>
+<script src="https://cdn.datatables.net/buttons/2.4.2/js/buttons.html5.js"></script>
+<script src="https://cdn.datatables.net/buttons/2.4.2/js/buttons.print.js"></script>
+<script src="https://cdn.datatables.net/fixedcolumns/4.3.0/js/dataTables.fixedColumns.js"></script>
+<script src="https://cdn.datatables.net/fixedcolumns/4.0.1/js/dataTables.fixedColumns.min.js"></script>
+<script src="https://cdn.datatables.net/fixedheader/3.4.0/js/dataTables.fixedHeader.js"></script>
+<script src="https://cdn.datatables.net/searchpanes/2.2.0/js/dataTables.searchPanes.js"></script>
+<script src="https://cdn.datatables.net/select/1.7.0/js/dataTables.select.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/FileSaver.js/2.0.5/FileSaver.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.17.0/xlsx.full.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/TableExport/5.2.0/js/tableexport.min.js"></script>
+
+
+<!-- Otros plugins y scripts -->
+<script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/chosen/1.8.7/chosen.jquery.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/autonumeric@4.6.0/dist/autoNumeric.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/bootstrap@5.0.0/dist/js/bootstrap.bundle.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/jquery.inputmask/5.0.6/jquery.inputmask.min.js"></script>
+
+<script>
+
+    $(document).ready(function () {
+        $(document).on('click', '.btnEdit', function () {
+            var table = $('#tabla_programaciones').DataTable();
+            var data = table.row($(this).closest('tr')).data();
+
+            var id_motivo = data.id_motivo;
+            var nombre_motivo = data.nombre_motivo;
+            var descripcion_motivo = data.descripcion_motivo;
+            var tipo = data.tipo;
+
+            $('#id_motivo_e').val(id_motivo);
+            $('#nombre_motivo_e').val(nombre_motivo);
+            $('#descripcion_motivo_e').val(descripcion_motivo);
+            $('#selectCombo2').val(tipo); // Establece el valor del select
+
+            $('#editarMotivo').modal('show');
+        });
+
+        $(document).on('click', '.btnBorrar', function () {
+            var table = $('#tabla_programaciones').DataTable();
+            var data = table.row($(this).closest('tr')).data();
+
+            var id_motivo = data.id_motivo;
+
+
+            $('#id_motivo_borrar').val(id_motivo);
+            $('#borrarMotivo').modal('show');
+        });
+
+        $('#guardarCambios').click(function () {
+            var id_motivo = $('#id_motivo').val();
+            var nombre_motivo = $('#nombre_motivo').val().trim();
+            var descripcion_motivo = $('#descripcion_motivo').val().trim();
+            var tipo = $('#selectCombo').val();
+
+            // Comprobar que los campos no están vacíos
+            if (!nombre_motivo || !descripcion_motivo || !tipo) {
+                // Alertar al usuario si algún campo está vacío
+                Swal.fire("Error", "Todos los campos son obligatorios.", "error");
+                return; // No continuar con la solicitud AJAX
+            }
+
+            // Si llegamos aquí, todos los campos tienen algún valor
+            console.log(descripcion_motivo);
+            console.log(tipo);
+
+            $.ajax({
+                url: '/DAC/ventas/guardar_motivo/',
+                type: 'POST',
+                data: JSON.stringify({
+                    'id_motivo': id_motivo,
+                    'nombre_motivo': nombre_motivo,
+                    'descripcion_motivo': descripcion_motivo,
+                    'tipo': tipo,
+                }),
+                contentType: 'application/json; charset=utf-8',
+                success: function (response) {
+                    console.log(response.message);
+                    $('#modal_crear_programacion').modal('hide');
+                    $('#tabla_programaciones').DataTable().ajax.reload();
+                    Swal.fire("", "Motivo agregado exitosamente", "success");
+                },
+                error: function (error) {
+                    Swal.fire("Error", "Error al guardar el motivo", "error");
+                    console.log(error);
+                }
+            });
+        });
+
+
+        $('#borrarMotivo').on('hidden.bs.modal', function () {
+            $('.modal-backdrop').remove();  // Elimina el backdrop
+        });
+
+        $('#modal_crear_programacion').on('hidden.bs.modal', function () {
+            $('.modal-backdrop').remove();  // Elimina el backdrop
+        });
+
+        $('#btnConfirmarBorrado').on('click', function () {
+            var idMotivo = $('#id_motivo_borrar').val(); // Obtiene el ID del motivo a borrar
+            console.log(idMotivo);
+            console.log("alooo");
+
+            $.ajax({
+                url: '/DAC/ventas/borrar_motivo/', // Asegúrate de reemplazar esto con la URL correcta
+                type: 'POST',
+                data: JSON.stringify({ id_motivo: idMotivo }),
+                contentType: 'application/json; charset=utf-8',
+                success: function (response) {
+                    // Cierra el modal
+                    $('#borrarMotivo').modal('hide');
+                    $('#tabla_programaciones').DataTable().ajax.reload();
+                    Swal.fire("", "Motivo eliminado exitosamente", "success");
+                },
+                error: function (error) {
+                    console.error('Error al borrar el motivo:', error);
+                }
+            });
+        });
+
+        $('#btnSaveEdit').click(function () {
+            var id_motivo = $('#id_motivo_e').val();
+            var nombre_motivo = $('#nombre_motivo_e').val();
+            var descripcion_motivo = $('#descripcion_motivo_e').val();
+            var tipo = $('#selectCombo2').val(); // Obtiene el valor seleccionado del select
+
+            $.ajax({
+                url: '/DAC/ventas/editar_motivo/', // Asegúrate de poner la URL correcta aquí
+                type: 'POST',
+                contentType: 'application/json',
+                data: JSON.stringify({
+                    'id_motivo': id_motivo,
+                    'nombre_motivo': nombre_motivo,
+                    'descripcion_motivo': descripcion_motivo,
+                    'tipo': tipo, // Incluye el tipo en los datos enviados
+                }),
+                success: function (response) {
+                    console.log(response.message);
+                    $('#editarMotivo').modal('hide');
+                    $('#tabla_programaciones').DataTable().ajax.reload();
+                    Swal.fire("", "Motivo editado exitosamente", "success");
+
+                },
+                error: function (xhr, status, error) {
+                    console.error(error);
+                }
+            });
+        });
+
+        if ($.fn.DataTable.isDataTable('#tabla_programaciones')) {
+            $('#tabla_programaciones').DataTable().destroy();
+        }
+        var table = $('#tabla_programaciones').DataTable({
+            pageLength: 50,
+
+            ajax: {
+                beforeSend: function (xhr, type) {
+                    if (!type.crossDomain) {
+                        xhr.setRequestHeader(
+                            'X-CSRF-Token',
+                            $(
+                                'meta[name="csrf-token"]'
+                            ).attr('content'));
+                    }
+                },
+                url: '/DAC/ventas/obtener_motivos',
+                dataSrc: 'data'
+            },
+            "dom": '<"top"lf>rt<"bottom"ip><"clear">',
+            "buttons": [
+                'excel', 'pdf', 'print'
+            ],
+            "initComplete": function (settings, json) {
+                // Mover los controles de "Mostrar X registros" al nuevo contenedor
+                $("#length-changing").append($(".dataTables_length"));
+
+                // Mover los botones de exportación al nuevo contenedor
+                $("#export-buttons").append($(table.buttons().container()));
+
+                // Opcional: Ocultar el filtro de búsqueda predeterminado si ya tienes uno personalizado
+                $('.dataTables_filter').hide();
+            },
+            buttons: [{
+                extend: 'excel',
+                text: '<i class="fas fa-file-excel"></i>',
+                titleAttr: 'Excel',
+                className: 'btn btn-success',
+            },
+            {
+                extend: 'pdf',
+                text: '<i class="fas fa-file-pdf"></i>',
+                titleAttr: 'PDF',
+                className: 'btn btn-danger',
+            },
+            {
+                extend: 'print',
+                text: '<i class="fas fa-print"></i>',
+                titleAttr: 'Imprimir',
+                className: 'btn btn-null',
+            }
+            ],
+            language: {
+                url: "//cdn.datatables.net/plug-ins/1.11.5/i18n/es-ES.json",
+            },
+            columns: [
+                {
+                    data: 'id_motivo',
+
+                },
+                {
+                    data: 'nombre_motivo',
+                },
+                {
+                    data: 'descripcion_motivo',
+                },
+                {
+                    data: 'tipo',
+                    render: function (data, type, row) {
+                        if (data === 1) {
+                            return '<span class="badge rounded-pill" style="background-color: green; color: white; font-size: 12px;">Seleccionable</span>';
+                        } else if (data === 2) {
+                            return '<span class="badge rounded-pill" style="background-color: blue; color: white; font-size: 12px;">No seleccionable</span>';
+                        } else {
+                            return data; // O lo que corresponda para otros valores de 'tipo' que no sean 1 o 2
+                        }
+                    }
+                },
+                {
+                    data: 'id_motivo', // Asegúrate de que 'id' sea el nombre del campo que contiene el ID del teléfono
+                    render: function (data, type, row) {
+                        return `
+                    <div class="d-flex">
+                        <a class="btn btn-sm btn-info btnEdit mx-1" data-bs-toggle="modal" 
+                        data-bs-target="#modalProgramacion" data-id="${data}">
+                            <i class="material-icons">edit</i>
+                        </a>
+                        <a class="btn btn-danger btn-sm btnBorrar" data-bs-toggle="modal" 
+                        data-bs-target="#borrarMotivo"  data-id="${data}">
+                        <i class="fas fa-trash"></i>
+                        </a>
+                    `;
+                    },
+                    orderable: false
+                }
+
+            ],
+        });
+
+        $('#filterNombreMotivo').keyup(function () {
+            table.column(1).search(this.value).draw();
+        });
+        $('#filterDescripcionMotivo').keyup(function () {
+            table.column(2).search(this.value).draw();
+        });
+    });
+</script>
+{% endblock %}

@@ -1,0 +1,92 @@
+<!-- MODAL PRESUPUESTO Y PROYECCIONES -->
+<div class="modal fade" id="modal_presupuesto_proyecciones" data-bs-keyboard="false" data-bs-backdrop="static"
+    role="dialog" aria-labelledby="modal_presupuesto_title" aria-hidden="true">
+    <div class="modal-dialog modal-lg">
+        <div class="modal-content">
+            <div class="modal-header" style="background-color: rgb(22, 129, 16);">
+                <h5 class="modal-title" id="modal_presupuesto_title" style="color: #fff">PRESUPUESTO Y PROYECCIONES
+                </h5>
+                <button type="button" class="btn_close_modal_presupuesto"
+                    style="background-color: #ffffff00; border: 0px;" id="btnM_close_Departamento"><i
+                        class="fas fa-times"></i></button>
+            </div>
+            <form id="form_presupuesto_proyeccion">
+                <div class="modal-body">
+
+                    <input type="hidden" id="hidden_centro_id_presupuesto">
+
+                    <div class="row">
+                        <span><b>Presupuesto</b></span>
+                    </div>
+
+                    <div class="row">
+                        <div class="col-lg-4">
+                            <div class="form-group">
+                                <label for="" class="form-label">Presupuesto Proyectado</label>
+                                <input type="text" name="presupuesto_total" id="presupuesto_total"
+                                    class="form-control form-control-sm formattedMoneyInputs" readonly>
+                            </div>
+                        </div>
+                    </div>
+
+                    <hr>
+
+                    <div class="row">
+                        <span><b>Metas</b></span>
+                    </div>
+
+                    <div class="row">
+                        <div class="col-lg-3">
+                            <div class="form-group">
+                                <label for="" class="col-form-label">Costo
+                                    Proyectado:</label>
+                                <input type="text"
+                                    class="form-control form-control-sm proyeccionInputs formattedMoneyInputs"
+                                    id="presupuesto_costo" name="presupuesto_costo" step="0.01" readonly>
+                            </div>
+                        </div>
+
+                        <div class="col-lg-3">
+                            <div class="form-group">
+                                <label for="" class="col-form-label">Venta
+                                    Proyectada:</label>
+                                <input type="text"
+                                    class="form-control form-control-sm proyeccionInputs formattedMoneyInputs"
+                                    id="presupuesto_venta" name="presupuesto_venta" step="0.01">
+                            </div>
+                        </div>
+
+                        <div class="col-lg-3">
+                            <div class="form-group">
+                                <label for="" class="col-form-label">Utilidad
+                                    Proyectada:</label>
+                                <input type="text"
+                                    class="form-control form-control-sm proyeccionInputs formattedMoneyInputs"
+                                    id="presupuesto_utilidad" name="presupuesto_utilidad" readonly step="0.01" readonly>
+                            </div>
+                        </div>
+
+                        <div class="col-lg-3">
+                            <div class="form-group">
+                                <label for="" class="col-form-label">Margen
+                                    Proyectado:</label>
+                                <input type="text"
+                                    class="form-control form-control-sm proyeccionInputs formattedMoneyInputs"
+                                    id="presupuesto_margen" name="presupuesto_margen" step="0.01" value="0.00">
+                            </div>
+                        </div>
+                    </div>
+
+                    <br>
+                    <span><b>Nota:</b> Solo los Centros de Negocios Pueden Tener una Meta Proyectada.</span>
+
+                    <div class="modal-footer">
+                        <button type="submit" id="btn_save_presupuesto" class="btn btn-success">Guardar</button>
+                        <button type="button" class="btn btn-danger btn_close_modal_presupuesto"
+                            id="btnM_cancel_presupuesto" data-dismiss="modal">Cancelar</button>
+                    </div>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>

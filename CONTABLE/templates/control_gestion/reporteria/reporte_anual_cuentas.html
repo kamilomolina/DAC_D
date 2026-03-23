@@ -1,0 +1,698 @@
+{% extends 'componentes/menu_contable.html' %}
+{% load static %}
+
+{% block title %}
+REPORTE ANUAL POR CUENTAS CONTABLES
+{% endblock %}
+
+
+{% block body %}
+
+<div class="row align-items-center border-bottom mb-2 py-1">
+    <div class="col d-flex align-items-center">
+        <button id="toggle-sidebar" class="btn btn-warning btn-sm me-2 btnMenu" title="Mostrar/Ocultar menú">
+            <i class="fas fa-bars"></i>
+        </button>
+        <h6 class="page-title mb-0 fs-6 fw-bold">REPORTE ANUAL POR CUENTAS CONTABLES</h6>
+    </div>
+</div>
+
+<div class="container-fluid mt-1">
+
+    <div class="row d-flex justify-content-start align-items-end">
+
+        <div class="col-sm-2">
+            <div class="form-group">
+                <label class="col-form-label">Periodo</label>
+                <div class="d-flex">
+                    <select class="form-select form-select-sm filterStyle text-nowrap anioPresupuesto"
+                        id="anioPresupuestoHasta"></select>
+                </div>
+            </div>
+        </div>
+
+        <div class="col-sm-2">
+            <label for="">Empresa</label>
+            <select class="form-select form-select-sm" id="filterEmpresaTables">
+                <option value="0">TODAS</option>
+                {% for e in empresasData %}
+                <option value="{{ e.id }}">{{ e.nombre }}</option>
+                {% endfor %}
+            </select>
+        </div>
+
+        <input type="hidden" id="filterTipo" value="Gasto">
+
+        <div class="col-sm-2">
+            <button type="button" class="btn btn-success btn-sm" id="btnGetProyecciones">Cargar</button>
+        </div>
+
+    </div>
+
+    <br>
+
+    <div class="row d-flex justify-content-start">
+        <span><b>Filtros Rápidos</b></span>
+        <div class="mainFilters">
+            <div class="row f-flex justify-content-start">
+                <div class="col-sm-2">
+                    <label for="">Centro</label>
+                    <input type="text" class="form-control form-control-sm tableMainFilters" id="DR_filterCentroTables"
+                        placeholder="Centro">
+                </div>
+                <div class="col-sm-2">
+                    <label for="">Numero Cuenta</label>
+                    <input type="text" class="form-control form-control-sm tableMainFilters"
+                        id="DR_filterNumeroCuentaTables" placeholder="Numero Cuenta">
+                </div>
+                <div class="col-sm-2">
+                    <label for="">Cuenta Contable</label>
+                    <input type="text" class="form-control form-control-sm tableMainFilters"
+                        id="DR_filterDescripcionTables" placeholder="Cuenta Contable">
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div class="row">
+
+        <div class="table-responsive">
+
+            <table id="tablePresupuestoAnual"
+                class="table rounded-4 table-sm table-bordered table-striped align-middle mb-0 bg-white table-basic"
+                style="width:100%">
+
+
+
+                <thead class="table-gradient text-dark">
+                    <tr>
+                        <th class="text-center">#</th>
+                        <th class="text-center">Centro</th>
+                        <th class="text-center">Número Cuenta</th>
+                        <th class="text-center">Cuenta Contable</th>
+
+                        <!-- Columnas de los meses -->
+                        <th class="text-center" colspan="10">Enero</th>
+                        <th class="text-center" colspan="10">Febrero</th>
+                        <th class="text-center" colspan="10">Marzo</th>
+                        <th class="text-center" colspan="10">Abril</th>
+                        <th class="text-center" colspan="10">Mayo</th>
+                        <th class="text-center" colspan="10">Junio</th>
+                        <th class="text-center" colspan="10">Julio</th>
+                        <th class="text-center" colspan="10">Agosto</th>
+                        <th class="text-center" colspan="10">Septiembre</th>
+                        <th class="text-center" colspan="10">Octubre</th>
+                        <th class="text-center" colspan="10">Noviembre</th>
+                        <th class="text-center" colspan="10">Diciembre</th>
+
+                    </tr>
+                    <tr>
+                        <th class="text-center">#</th>
+                        <th class="text-center">Centro</th>
+                        <th class="text-center">Número Cuenta</th>
+                        <th class="text-center">Cuenta Contable</th>
+
+                        <!-- Enero -->
+                        <th class="text-center">Autorizado Anterior</th>
+                        <th class="text-center">Autorizado Actual</th>
+                        <th class="text-center">Autorizado Diferencia</th>
+                        <th class="text-center">Gastado Anterior</th>
+                        <th class="text-center">Gastado Actual</th>
+                        <th class="text-center">Gastado Diferencia</th>
+                        <th class="text-center">Disponible Anterior</th>
+                        <th class="text-center">Disponible Actual</th>
+                        <th class="text-center">Porc. Anterior</th>
+                        <th class="text-center">Porc. Actual</th>
+
+                        <!-- Febrero -->
+                        <th class="text-center">Autorizado Anterior</th>
+                        <th class="text-center">Autorizado Actual</th>
+                        <th class="text-center">Autorizado Diferencia</th>
+                        <th class="text-center">Gastado Anterior</th>
+                        <th class="text-center">Gastado Actual</th>
+                        <th class="text-center">Gastado Diferencia</th>
+                        <th class="text-center">Disponible Anterior</th>
+                        <th class="text-center">Disponible Actual</th>
+                        <th class="text-center">Porc. Anterior</th>
+                        <th class="text-center">Porc. Actual</th>
+
+                        <!-- Marzo -->
+                        <th class="text-center">Autorizado Anterior</th>
+                        <th class="text-center">Autorizado Actual</th>
+                        <th class="text-center">Autorizado Diferencia</th>
+                        <th class="text-center">Gastado Anterior</th>
+                        <th class="text-center">Gastado Actual</th>
+                        <th class="text-center">Gastado Diferencia</th>
+                        <th class="text-center">Disponible Anterior</th>
+                        <th class="text-center">Disponible Actual</th>
+                        <th class="text-center">Porc. Anterior</th>
+                        <th class="text-center">Porc. Actual</th>
+
+                        <!-- Abril -->
+                        <th class="text-center">Autorizado Anterior</th>
+                        <th class="text-center">Autorizado Actual</th>
+                        <th class="text-center">Autorizado Diferencia</th>
+                        <th class="text-center">Gastado Anterior</th>
+                        <th class="text-center">Gastado Actual</th>
+                        <th class="text-center">Gastado Diferencia</th>
+                        <th class="text-center">Disponible Anterior</th>
+                        <th class="text-center">Disponible Actual</th>
+                        <th class="text-center">Porc. Anterior</th>
+                        <th class="text-center">Porc. Actual</th>
+
+                        <!-- Mayo -->
+                        <th class="text-center">Autorizado Anterior</th>
+                        <th class="text-center">Autorizado Actual</th>
+                        <th class="text-center">Autorizado Diferencia</th>
+                        <th class="text-center">Gastado Anterior</th>
+                        <th class="text-center">Gastado Actual</th>
+                        <th class="text-center">Gastado Diferencia</th>
+                        <th class="text-center">Disponible Anterior</th>
+                        <th class="text-center">Disponible Actual</th>
+                        <th class="text-center">Porc. Anterior</th>
+                        <th class="text-center">Porc. Actual</th>
+
+                        <!-- Junio -->
+                        <th class="text-center">Autorizado Anterior</th>
+                        <th class="text-center">Autorizado Actual</th>
+                        <th class="text-center">Autorizado Diferencia</th>
+                        <th class="text-center">Gastado Anterior</th>
+                        <th class="text-center">Gastado Actual</th>
+                        <th class="text-center">Gastado Diferencia</th>
+                        <th class="text-center">Disponible Anterior</th>
+                        <th class="text-center">Disponible Actual</th>
+                        <th class="text-center">Porc. Anterior</th>
+                        <th class="text-center">Porc. Actual</th>
+
+                        <!-- Julio -->
+                        <th class="text-center">Autorizado Anterior</th>
+                        <th class="text-center">Autorizado Actual</th>
+                        <th class="text-center">Autorizado Diferencia</th>
+                        <th class="text-center">Gastado Anterior</th>
+                        <th class="text-center">Gastado Actual</th>
+                        <th class="text-center">Gastado Diferencia</th>
+                        <th class="text-center">Disponible Anterior</th>
+                        <th class="text-center">Disponible Actual</th>
+                        <th class="text-center">Porc. Anterior</th>
+                        <th class="text-center">Porc. Actual</th>
+
+                        <!-- Agosto -->
+                        <th class="text-center">Autorizado Anterior</th>
+                        <th class="text-center">Autorizado Actual</th>
+                        <th class="text-center">Autorizado Diferencia</th>
+                        <th class="text-center">Gastado Anterior</th>
+                        <th class="text-center">Gastado Actual</th>
+                        <th class="text-center">Gastado Diferencia</th>
+                        <th class="text-center">Disponible Anterior</th>
+                        <th class="text-center">Disponible Actual</th>
+                        <th class="text-center">Porc. Anterior</th>
+                        <th class="text-center">Porc. Actual</th>
+
+                        <!-- Septiembre -->
+                        <th class="text-center">Autorizado Anterior</th>
+                        <th class="text-center">Autorizado Actual</th>
+                        <th class="text-center">Autorizado Diferencia</th>
+                        <th class="text-center">Gastado Anterior</th>
+                        <th class="text-center">Gastado Actual</th>
+                        <th class="text-center">Gastado Diferencia</th>
+                        <th class="text-center">Disponible Anterior</th>
+                        <th class="text-center">Disponible Actual</th>
+                        <th class="text-center">Porc. Anterior</th>
+                        <th class="text-center">Porc. Actual</th>
+
+                        <!-- Octubre -->
+                        <th class="text-center">Autorizado Anterior</th>
+                        <th class="text-center">Autorizado Actual</th>
+                        <th class="text-center">Autorizado Diferencia</th>
+                        <th class="text-center">Gastado Anterior</th>
+                        <th class="text-center">Gastado Actual</th>
+                        <th class="text-center">Gastado Diferencia</th>
+                        <th class="text-center">Disponible Anterior</th>
+                        <th class="text-center">Disponible Actual</th>
+                        <th class="text-center">Porc. Anterior</th>
+                        <th class="text-center">Porc. Actual</th>
+
+                        <!-- Noviembre -->
+                        <th class="text-center">Autorizado Anterior</th>
+                        <th class="text-center">Autorizado Actual</th>
+                        <th class="text-center">Autorizado Diferencia</th>
+                        <th class="text-center">Gastado Anterior</th>
+                        <th class="text-center">Gastado Actual</th>
+                        <th class="text-center">Gastado Diferencia</th>
+                        <th class="text-center">Disponible Anterior</th>
+                        <th class="text-center">Disponible Actual</th>
+                        <th class="text-center">Porc. Anterior</th>
+                        <th class="text-center">Porc. Actual</th>
+
+                        <!-- Diciembre -->
+                        <th class="text-center">Autorizado Anterior</th>
+                        <th class="text-center">Autorizado Actual</th>
+                        <th class="text-center">Autorizado Diferencia</th>
+                        <th class="text-center">Gastado Anterior</th>
+                        <th class="text-center">Gastado Actual</th>
+                        <th class="text-center">Gastado Diferencia</th>
+                        <th class="text-center">Disponible Anterior</th>
+                        <th class="text-center">Disponible Actual</th>
+                        <th class="text-center">Porc. Anterior</th>
+                        <th class="text-center">Porc. Actual</th>
+                    </tr>
+                </thead>
+
+                <tbody>
+
+                </tbody>
+
+                <tfoot class="table-active">
+                    <tr>
+                        <th></th>
+                        <th></th>
+                        <th></th>
+                        <th></th>
+
+                        <th></th>
+                        <th></th>
+                        <th></th>
+                        <th></th>
+                        <th></th>
+                        <th></th>
+                        <th></th>
+                        <th></th>
+                        <th></th>
+                        <th></th>
+
+                        <th></th>
+                        <th></th>
+                        <th></th>
+                        <th></th>
+                        <th></th>
+                        <th></th>
+                        <th></th>
+                        <th></th>
+                        <th></th>
+                        <th></th>
+
+                        <th></th>
+                        <th></th>
+                        <th></th>
+                        <th></th>
+                        <th></th>
+                        <th></th>
+                        <th></th>
+                        <th></th>
+                        <th></th>
+                        <th></th>
+
+                        <th></th>
+                        <th></th>
+                        <th></th>
+                        <th></th>
+                        <th></th>
+                        <th></th>
+                        <th></th>
+                        <th></th>
+                        <th></th>
+                        <th></th>
+
+                        <th></th>
+                        <th></th>
+                        <th></th>
+                        <th></th>
+                        <th></th>
+                        <th></th>
+                        <th></th>
+                        <th></th>
+                        <th></th>
+                        <th></th>
+
+                        <th></th>
+                        <th></th>
+                        <th></th>
+                        <th></th>
+                        <th></th>
+                        <th></th>
+                        <th></th>
+                        <th></th>
+                        <th></th>
+                        <th></th>
+
+                        <th></th>
+                        <th></th>
+                        <th></th>
+                        <th></th>
+                        <th></th>
+                        <th></th>
+                        <th></th>
+                        <th></th>
+                        <th></th>
+                        <th></th>
+
+                        <th></th>
+                        <th></th>
+                        <th></th>
+                        <th></th>
+                        <th></th>
+                        <th></th>
+                        <th></th>
+                        <th></th>
+                        <th></th>
+                        <th></th>
+
+                        <th></th>
+                        <th></th>
+                        <th></th>
+                        <th></th>
+                        <th></th>
+                        <th></th>
+                        <th></th>
+                        <th></th>
+                        <th></th>
+                        <th></th>
+
+                        <th></th>
+                        <th></th>
+                        <th></th>
+                        <th></th>
+                        <th></th>
+                        <th></th>
+                        <th></th>
+                        <th></th>
+                        <th></th>
+                        <th></th>
+
+                        <th></th>
+                        <th></th>
+                        <th></th>
+                        <th></th>
+                        <th></th>
+                        <th></th>
+                        <th></th>
+                        <th></th>
+                        <th></th>
+                        <th></th>
+
+                        <th></th>
+                        <th></th>
+                        <th></th>
+                        <th></th>
+                        <th></th>
+                        <th></th>
+                        <th></th>
+                        <th></th>
+                        <th></th>
+                        <th></th>
+
+                    </tr>
+                </tfoot>
+
+            </table>
+
+        </div>
+
+    </div>
+
+
+
+</div>
+
+
+<a href="{% url 'panel_contabilidad' %}">
+    <button class="btn btn-sm btn-danger" id="btnCerrar" title="Cerrar"
+        style="position: fixed; bottom: 20px; right: 20px;">
+        <i class="fa fa-times"></i> Cerrar
+    </button>
+</a>
+
+{% endblock %}
+
+
+{% block scripts %}
+
+
+
+<script>
+    $(document).ready(function () {
+        var csrfToken = "{{ csrf_token }}";
+        var buttons = "Bfrtlip";
+
+        var monthA = "{{ varMonth }}";
+        var varAnio = "{{ varAnio }}";
+
+        var windowSize = $(window).width();
+
+        var cardHeight = $(".card-expanded").height();
+        var tableHeight = cardHeight * 0.5;
+
+        let dollarUSLocale = Intl.NumberFormat("en-US", {
+            minimumFractionDigits: 2,
+            maximumFractionDigits: 2
+        });
+
+        let intergerLocale = Intl.NumberFormat("en-US", {
+            minimumFractionDigits: 0,
+            maximumFractionDigits: 0
+        });
+
+        var toastMixin = Swal.mixin({
+            toast: true,
+            icon: 'success',
+            title: 'General Title',
+            animation: false,
+            position: 'top-right',
+            showConfirmButton: false,
+            timer: 2000,
+            timerProgressBar: true,
+            didOpen: (toast) => {
+                toast.addEventListener('mouseenter', Swal.stopTimer);
+                toast.addEventListener('mouseleave', Swal.resumeTimer);
+            }
+        });
+
+        while (monthA.charAt(0) === '0') {
+            monthA = monthA.substring(1);
+        }
+
+        for (i = new Date().getFullYear() + 1; i >= (new Date().getFullYear() - 5); i--) {
+            $('.anioPresupuesto').append($('<option />').val(i).html(i));
+            $('.anioPresupuesto').val(varAnio).change();
+        }
+
+        var tablePresupuestoAnual;
+
+        tablePresupuestoAnual = $('#tablePresupuestoAnual').DataTable({
+            language: {
+                url: "{% static 'app/th/json/es-ES.json' %}",
+            },
+        });
+
+
+        $('#btnGetProyecciones').click(function (e) {
+            e.preventDefault();
+
+            varMes1 = 1;
+            varAnio1 = $('#anioPresupuestoHasta').val();
+
+            varMes2 = 12;
+            varAnio2 = $('#anioPresupuestoHasta').val();
+
+            tipo = $('#filterTipo').val();
+            empresa = $('#filterEmpresaTables').val();
+
+            $("#tablePresupuestoAnual").DataTable().clear().destroy();
+
+            tablePresupuestoAnual = $('#tablePresupuestoAnual').DataTable({
+                scrollX: true,
+                scrollCollapse: true,
+                scrollY: '400px',
+                pageLength: 50,
+                fixedColumns: {
+                    left: 4,
+                    right: 0
+                },
+                initComplete: function () {
+                    var api = this.api();
+                },
+                footerCallback: function (row, data, start, end, display) {
+                    let dollarUSLocale = Intl.NumberFormat("en-US", {
+                        minimumFractionDigits: 2,
+                        maximumFractionDigits: 2
+                    });
+
+                    var api = this.api();
+
+                    for (var colIndex = 4; colIndex <= 123; colIndex++) {
+                        var columnFooter = $(api.column(colIndex).footer());
+                        var posMes = colIndex - 4;
+                        var tipo = posMes % 10;
+
+                        var indexAutAnterior = colIndex - tipo + 0;
+                        var indexAutActual = colIndex - tipo + 1;
+                        var indexGastoAnterior = colIndex - tipo + 3;
+                        var indexGastoActual = colIndex - tipo + 4;
+
+                        if (tipo === 8) {
+                            // Porcentaje anterior
+                            let totalGastoAnt = api.column(indexGastoAnterior, { search: 'applied' }).data()
+                                .reduce((a, b) => Number(a) + Number(b), 0);
+                            let totalAutAnt = api.column(indexAutAnterior, { search: 'applied' }).data()
+                                .reduce((a, b) => Number(a) + Number(b), 0);
+
+                            let porcAnt = totalAutAnt !== 0 ? ((totalGastoAnt / totalAutAnt) * 100).toFixed(2) + ' %' : '0.00 %';
+                            columnFooter.html(porcAnt);
+
+                        } else if (tipo === 9) {
+                            // Porcentaje actual
+                            let totalGastoAct = api.column(indexGastoActual, { search: 'applied' }).data()
+                                .reduce((a, b) => Number(a) + Number(b), 0);
+                            let totalAutAct = api.column(indexAutActual, { search: 'applied' }).data()
+                                .reduce((a, b) => Number(a) + Number(b), 0);
+
+                            let porcAct = totalAutAct !== 0 ? ((totalGastoAct / totalAutAct) * 100).toFixed(2) + ' %' : '0.00 %';
+                            columnFooter.html(porcAct);
+                        } else {
+                            // Acumulado normal
+                            let total = api.column(colIndex, { search: 'applied' }).data()
+                                .reduce((a, b) => Number(a) + Number(b), 0);
+
+                            columnFooter.html(Intl.NumberFormat("en-US", {
+                                minimumFractionDigits: 2,
+                                maximumFractionDigits: 2
+                            }).format(total));
+                        }
+
+                        columnFooter.css('text-align', 'right');
+                    }
+                },
+                drawCallback: function (settings) {
+                    let api = this.api();
+
+
+                },
+                language: {
+                    url: "{% static 'app/th/json/es-ES.json' %}",
+                },
+                ajax: {
+                    beforeSend: function (xhr, type) {
+                        if (!type.crossDomain) {
+                            xhr.setRequestHeader(
+                                'X-CSRF-Token',
+                                $(
+                                    'meta[name="csrf-token"]'
+                                ).attr('content'));
+                        }
+                    },
+                    url: `{% url 'dataComparativaAnualCuentasContables' %}?anio=${encodeURIComponent(varAnio2)}&empresa=${encodeURIComponent(empresa)}&tipo=${encodeURIComponent(tipo)}`,
+                },
+                dom: buttons,
+                buttons: [{
+                    extend: 'excel',
+                    text: '<i class="fas fa-file-excel"></i>',
+                    titleAttr: 'Excel',
+                    className: 'btn btn-success',
+                },
+                {
+                    extend: 'pdf',
+                    text: '<i class="fas fa-file-pdf"></i>',
+                    titleAttr: 'PDF',
+                    className: 'btn btn-danger',
+                },
+                {
+                    extend: 'print',
+                    text: '<i class="fas fa-print"></i>',
+                    titleAttr: 'Imprimir',
+                    className: 'btn btn-info',
+                }
+                ],
+                columns: [{
+                    data: 'id_cuenta_contable'
+                },
+                {
+                    data: 'nombre_centro'
+                },
+                {
+                    data: 'numero_cuenta'
+                },
+                {
+                    data: 'descripcion_cuenta',
+                    className: 'rightBorderStyle'
+                },
+
+
+                // Generar columnas de Enero a Diciembre
+                ...['Enero', 'Febrero', 'Marzo', 'Abril', 'Mayo', 'Junio', 'Julio',
+                    'Agosto', 'Septiembre', 'Octubre', 'Noviembre', 'Diciembre'
+                ]
+                    .map(mes => ([{
+                        data: `${mes}_Autorizado_1`,
+                        className: 'currency',
+                        render: $.fn.dataTable.render.number(',', '.', 2)
+                    },
+                    {
+                        data: `${mes}_Autorizado`,
+                        className: 'currency',
+                        render: $.fn.dataTable.render.number(',', '.', 2)
+                    },
+                    {
+                        data: `${mes}_Diff_Autorizado`,
+                        className: 'currency',
+                        render: $.fn.dataTable.render.number(',', '.', 2)
+                    },
+                    {
+                        data: `${mes}_Gasto_1`,
+                        className: 'currency',
+                        render: $.fn.dataTable.render.number(',', '.', 2)
+                    },
+                    {
+                        data: `${mes}_Gasto`,
+                        className: 'currency',
+                        render: $.fn.dataTable.render.number(',', '.', 2)
+                    },
+                    {
+                        data: `${mes}_Diff_Gasto`,
+                        className: 'currency',
+                        render: $.fn.dataTable.render.number(',', '.', 2)
+                    },
+                    {
+                        data: `${mes}_Disponible_1`,
+                        className: 'currency disponible',
+                        render: $.fn.dataTable.render.number(',', '.', 2)
+                    },
+                    {
+                        data: `${mes}_Disponible`,
+                        className: 'currency disponible',
+                        render: $.fn.dataTable.render.number(',', '.', 2)
+                    },
+                    {
+                        data: `${mes}_Porc_1`,
+                        className: 'averages porc',
+                        render: $.fn.dataTable.render.number(',', '.', 2)
+                    },
+                    {
+                        data: `${mes}_Porc`,
+                        className: 'averages porc rightBorderStyle',
+                        render: $.fn.dataTable.render.number(',', '.', 2)
+                    }
+                    ])).flat()
+
+
+                ],
+                order: [2, "asc"]
+            });
+        });
+
+        
+        $('#DR_filterCentroTables').keyup(function () {
+            tablePresupuestoAnual.column(1).search(this.value, true, false).draw();
+        });
+        $('#DR_filterNumeroCuentaTables').keyup(function () {
+            tablePresupuestoAnual.column(2).search(this.value, true, false).draw();
+        });
+        $('#DR_filterDescripcionTables').keyup(function () {
+            tablePresupuestoAnual.column(3).search(this.value, true, false).draw();
+        });
+
+
+
+        /*  */
+    });
+</script>
+{% endblock %}

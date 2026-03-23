@@ -1,0 +1,182 @@
+<div class="row">
+    <div class="col-md-9">
+        <form id="empleado-form">
+            {% csrf_token %}
+            <input type="hidden" id="id-empleado" name="id_empleado" value="{{ id_empleado|default:'' }}">
+            <input type="hidden" id="edit-id-empleado" name="edit_id_empleado"
+                value="{{ parametro|default:'' }}">
+            <div class="user-text">
+                <input id="creado-por" name="creado_por" type="hidden" value="{{ userName }}">
+            </div>
+            <div class="row mb-1 align-items-center">
+
+                <div class="col-md-6 d-flex align-items-center">
+                    <label for="puesto-trabajo" class="form-label label-width">Identidad:</label>
+                    <input type="text" id="puesto-trabajo" name="identidad"
+                        style="background-color: #E9ECEF;" class="form-control input-underline"
+                        placeholder="0000-0000-00000">
+                </div>
+
+
+
+                <div class="col-md-6 d-flex align-items-center hidden" id="cod-empleado-container">
+                    <label for="cod-empleado" class="form-label label-width">Código del Empleado:</label>
+                    <input type="text" id="cod-empleado" name="cod-empleado" readonly
+                        style="background-color: #fff;" class="form-control input-underline" placeholder="">
+                </div>
+
+
+            </div>
+            <div class="row mb-1 align-items-center">
+                <div class="col-md-6 d-flex align-items-center">
+                    <label for="nombre-empleado" class="form-label label-width">Nombre del Empleado:</label>
+                    <input type="text" id="nombre-empleado" name="nombre"
+                        class="form-control input-underline" placeholder="Primer Nombre y Segundo Nombre">
+                    <div id="nombre-error" style="color: red; display: none;">Por favor, ingresa solo dos
+                        palabras.</div>
+                </div>
+
+                <div class="col-md-6 d-flex align-items-center">
+                    <label for="apellido-empleado" class="form-label label-width">Apellido del
+                        Empleado:</label>
+                    <input type="text" id="apellido-empleado" name="apellido-empleado"
+                        class="form-control input-underline"
+                        placeholder="Primer Apellido y Segundo Apellido">
+                    <div id="apellido-error" style="color: red; display: none;">Por favor, ingresa solo tres
+                        palabras.</div>
+                </div>
+
+            </div>
+            <div class="row mb-1 align-items-center">
+                <div class="col-md-6 d-flex align-items-center">
+                    <label for="telefono-empresa" class="form-label label-width">Teléfono Empresa:</label>
+                    <input type="tel" id="telefono-empresa" name="telefono-empresa"
+                        class="form-control input-underline" placeholder="xxxx-xxxx">
+                </div>
+
+                <div class="col-md-6 d-flex align-items-center">
+                    <label for="email-trabajo" class="form-label label-width">Correo Empresa:</label>
+                    <input type="email" id="email-trabajo" name="email-trabajo"
+                        class="form-control input-underline" placeholder="xxxxxx@carbajalhn.com">
+                </div>
+            </div>
+            <div class="row mb-1 align-items-center">
+                <div class="col-md-6 d-flex align-items-center">
+                    <label for="fecha-ingreso" class="form-label label-width">Fecha Ingreso:</label>
+                    <input type="date" id="fecha-ingreso" class="form-control input-underline"
+                        placeholder="Fecha Ingreso">
+                </div>
+
+                <div class="col-md-6 d-flex align-items-center pb-4">
+                    <label for="centro" class="form-label label-width">Empresa:</label>
+                    <select id="centro" name="centro" class="form-control input-underline select2"
+                        style="width: 100%;">
+                        <option value=""></option>
+                        {% for empresa in empresas %}
+                        <option value="{{ empresa.id }}">{{ empresa.nombre }}</option>
+                        {% endfor %}
+                    </select>
+                </div>
+
+
+
+            </div>
+            <div class="row mb-1 align-items-center">
+                <div class="col-md-6 d-flex align-items-center">
+                    <label for="departamento-empresa" class="form-label label-width">Departamento:</label>
+                    <select id="departamento-empresa" name="departamento_empresa" style="width: 100%;"
+                        class="form-control input-underline select2" placeholder="Nivel certificado">
+                        <option value=""></option>
+                        <!-- <option value="new-departamento-empresa">Crear nuevo departamento</option> -->
+                        {% for cer in departamentos %}
+                        <option value="{{ cer.0 }}">{{ cer.1 }}</option>
+                        {% endfor %}
+                    </select>
+                </div>
+
+
+                <div class="col-md-6 d-flex align-items-center">
+                    <label for="telefono-trabajo" class="form-label label-width">Sucursal:</label>
+                    <select id="sucursal" name="sucursal" class="form-control input-underline select2"
+                        style="width: 100%;">
+                        <option value=""></option>
+
+                        {% for sucursal in sucursales %}
+                        <option value="{{ sucursal.0 }}">{{ sucursal.6 }}</option>
+                        {% endfor %}
+                    </select>
+                </div>
+            </div>
+
+            <div class="row mb-1 align-items-center mb-4">
+                <div class="col-md-6 d-flex align-items-center">
+                    <label for="areas-empresa" class="form-label label-width">Área:</label>
+                    <select id="areas-empresa" name="id_area" style="width: 100%;"
+                        class="form-control input-underline select2" placeholder="Nivel certificado">
+                        <option value=""></option>
+                        <!-- <option value="new-areas-empresa">Crear nueva area</option> -->
+                        {% for cer in areas %}
+                        <option value="{{ cer.1 }}">{{ cer.7 }}</option>
+                        {% endfor %}
+                    </select>
+                </div>
+                <div class="col-md-6 d-flex align-items-center">
+                    <label for="cargos-empresa" class="form-label label-width">Cargo:</label>
+                    <select id="cargos-empresa" name="id_cargo" style="width: 100%;"
+                        class="form-control input-underline select2" placeholder="Seleccione un cargo">
+                        <option value=""></option>
+                        <!-- <option value="new-cargos-empresa">Crear nuevo cargo</option> -->
+                        {% for cer in cargos_area %}
+                        <option value="{{ cer.0 }}">{{ cer.1 }}</option>
+                        {% endfor %}
+                    </select>
+
+                </div>
+            </div>
+
+            <div class="row mb-1 align-items-center mb-4">
+                <div class="col-md-6 d-flex align-items-center">
+                    <label for="rol-empleado" class="form-label label-width">Rol:</label>
+                    <select id="rol-empleado" name="rol-empleado"
+                        class="form-control input-underline select2" style="width: 100%;">
+                        <option value=""></option>
+                        <option value="new-rol-empleado">Crear nuevo rol</option>
+                        {% for rol in roles %}
+                        <option value="{{ rol.0 }}">{{ rol.1 }}</option>
+                        {% endfor %}
+                    </select>
+                </div>
+                <div class="col-md-6 d-flex align-items-center">
+                    <label for="estado-empleado" class="form-label label-width">Estado:</label>
+                    <select id="estado-empleado" class="form-control input-underline select2"
+                        style="width: 100%;" placeholder="Estado empleado">
+                        <option value=""></option>
+                        <option value="new-estado-empleado">Crear nuevo estado de empleado</option>
+                        {% for est in estados %}
+                        <option value="{{ est.id_estado }}">{{ est.estado_empleado }}</option>
+                        {% endfor %}
+                    </select>
+                </div>
+            </div>
+        </form>
+    </div>
+    <div class="col-md-3 text-center">
+        <div class="text-center">
+            <div class="card-body">
+                <!-- Imagen con animación para indicar que debe subirse una foto -->
+                <img src="{% static 'app/th/images/camara.png' %}" alt="Foto del empleado"
+                    class="img-fluid rounded animated-shake" id="empleado-foto"
+                    style="width: 200px; height: 200px;"
+                    onclick="document.getElementById('foto-input').click();">
+            </div>
+        </div>
+        <input type="file" id="foto-input" class="form-control-file mt-3" style="display: none;"
+            accept="image/*">
+        <input type="hidden" id="foto-ruta" name="foto-ruta">
+        <input type="hidden" id="foto-actual" name="foto_actual">
+
+    </div>
+
+
+
+</div>

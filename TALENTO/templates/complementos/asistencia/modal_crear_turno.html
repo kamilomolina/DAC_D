@@ -1,0 +1,63 @@
+<!-- Modal para crear un nuevo cargo -->
+<div class="modal fade" id="modalCrearTurnos" tabindex="-1" role="dialog" aria-labelledby="exampleModalLabel"
+    data-bs-keyboard="false" data-bs-backdrop="static" aria-hidden="true">
+    <div class="modal-dialog modal-lg" role="document">
+        <div class="modal-content">
+            <div class="modal-header" style="background-color: #304458; color:white">
+                <h5 class="modal-title" id="exampleModalLabelTurnos">Crear Turnos</h5>
+                <button type="button" class="close-turnos" data-bs-dismiss="modal" aria-label="Close">
+                    <span aria-hidden="true">&times;</span>
+                </button>
+            </div>
+            <div class="modal-body">
+                <form id="formCrearTurnos">
+                    {% csrf_token %}
+                    <div class="row">
+                        <!-- Campo oculto para id_turnos -->
+                        <input type="hidden" id="id-turnos" name="id_turnos">
+                        <input type="hidden" id="dia-libre-turno" name="dia-libre-turno" value="0">
+
+                        <!-- Descripción -->
+                        <div class="col-md-4 mb-3">
+                            <label for="nombre-turnos">Nombre turno:</label>
+                            <input type="text" class="form-control" id="nombre-turnos" name="nombre-turnos">
+                        </div>
+
+                        <div class="col-md-4 mb-3">
+                            <label for="require_marcacion"><span style="color: red;">*</span> Requiere Marcacion:</label>
+                            <select class="form-control chosen-select" id="require_marcacion" name="require_marcacion">
+                                <option value="0">Requiere Marcacion</option>
+                                <option value="1">NO Requiere Marcacion</option>
+                            </select>
+                        </div>
+                        <div class="col-md-4 mb-3">
+                            <label for="tolerancia-minutos"><span style="color: red;">*</span>Min. Tolerancia:</label>
+                            <input type="number" class="form-control" id="tolerancia-minutos" name="tolerancia_minutos">
+                        </div>
+                        <!-- <div class="col-md-6 mb-3">
+                            <label for="dia-libre-turno"><span style="color: red;">*</span> Dia libre:</label>
+                            <select class="form-control chosen-select" id="dia-libre-turno" name="dia_libre_turno">
+                                <option value="1">Domingo</option>
+                                <option value="2">Lunes</option>
+                                <option value="3">Martes</option>
+                                <option value="4">Miercoles</option>
+                                <option value="5">Jueves</option>
+                                <option value="6">Viernes</option>
+                                <option value="7">Sabado</option>
+                            </select>
+                        </div> -->
+                    </div>
+
+                    <div class="modal-footer">
+                        <button type="submit" id="guardar-editar-turnos"
+                            class="btn btn-success animate__animated animate__pulse animate__slow animate__infinite">Guardar</button>
+                        <button type="button" class="btn btn-danger close-tipo-turnos"
+                            data-bs-dismiss="modal">Cerrar</button>
+                    </div>
+                </form>
+
+
+            </div>
+        </div>
+    </div>
+</div>

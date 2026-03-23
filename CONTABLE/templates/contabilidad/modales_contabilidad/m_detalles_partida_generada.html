@@ -1,0 +1,630 @@
+<div class="modal fade" id="modalPedidosDetallesCompras" tabindex="-1"
+    aria-labelledby="modalPedidosDetallesComprasLabel" aria-hidden="true" data-bs-keyboard="false"
+    data-bs-backdrop="static">
+    <div class="modal-dialog modal-xl">
+        <div class="modal-content">
+
+            <div class="modal-header bg-info text-dark">
+                <h5 class="modal-title fw-bold" id="titleDetallesCompras">Detalles de Orden de Compra</h5>
+            </div>
+
+            <div class="modal-body">
+
+                <div class="row">
+                    <div class="table-responsive">
+                        <table id="ordenesComprasIngresadasTable"
+                            class="table table-striped table-bordered mb-0 table-sm rounded-4 table-hover align-middle"
+                            style="width: 100%;">
+                            <thead class="table-gradient text-dark">
+                                <tr>
+                                    <th class="text-center">Codigo Articulo</th>
+                                    <th class="text-center">Articulo</th>
+                                    <th class="text-center">Presentacion</th>
+                                    <th class="text-center">Medida Oficial</th>
+                                    <th class="text-center">Cantidad</th>
+                                    <th class="text-center">Precio</th>
+                                    <th class="text-center">Total</th>
+                                    <th class="text-center">Bodega</th>
+                                    <th class="text-center">Sucursal</th>
+                                </tr>
+                            </thead>
+
+                            <tbody>
+
+                            </tbody>
+
+                            <tfoot class="table-active">
+                                <tr>
+                                    <th></th>
+                                    <th></th>
+                                    <th></th>
+                                    <th></th>
+                                    <th></th>
+                                    <th></th>
+                                    <th></th>
+                                    <th></th>
+                                    <th></th>
+                                </tr>
+                            </tfoot>
+
+                        </table>
+                    </div>
+                </div>
+
+            </div>
+
+
+            <div class="modal-footer">
+                <button type="button" class="btn btn-danger btn-sm" data-bs-dismiss="modal">Cerrar</button>
+            </div>
+
+        </div>
+    </div>
+</div>
+
+
+
+
+
+<div class="modal fade" id="modalFacturasDetalleCosto" tabindex="-1" aria-hidden="true" data-bs-keyboard="false"
+    data-bs-backdrop="static">
+
+    <div class="modal-dialog modal-xl">
+        <div class="modal-content">
+
+            <div class="modal-header bg-warning text-dark">
+                <h5 class="modal-title fw-bold">
+                    Detalle de Factura – Costo de Ventas
+                </h5>
+            </div>
+
+            <div class="modal-body">
+
+                <div class="table-responsive">
+                    <table id="facturasDetalleCostoTable"
+                        class="table table-striped table-bordered mb-0 table-sm table-hover align-middle"
+                        style="width:100%">
+
+                        <thead class="table-gradient text-dark">
+                            <tr>
+                                <th>Código</th>
+                                <th>Artículo</th>
+                                <th>Presentación</th>
+
+                                <th>Cantidad</th>
+                                <th>Precio Venta</th>
+                                <th>Subtotal Venta</th>
+                                <th>ISV %</th>
+                                <th>Gravado</th>
+                                <th>Exento</th>
+                                <th>ISV</th>
+
+                                <th>Costo 15%</th>
+                                <th>Costo 18%</th>
+                                <th>Costo Exento</th>
+                                <th>Costo Total</th>
+
+                                <th>Sucursal</th>
+                            </tr>
+                        </thead>
+
+                        <tfoot>
+                            <tr>
+                                <th colspan="3" class="text-end">Totales:</th>
+                                <th></th>
+                                <th></th>
+                                <th></th>
+                                <th></th>
+                                <th></th>
+                                <th></th>
+                                <th></th>
+                                <th></th>
+                                <th></th>
+                                <th></th>
+                                <th></th>
+                                <th></th>
+                            </tr>
+                        </tfoot>
+
+                        <tbody></tbody>
+                    </table>
+                </div>
+
+            </div>
+
+            <div class="modal-footer">
+                <button type="button" class="btn btn-warning btn-sm" data-bs-dismiss="modal">
+                    Cerrar
+                </button>
+            </div>
+
+        </div>
+    </div>
+</div>
+
+
+
+
+
+
+<div class="modal fade" id="modalFacturasDetalle" tabindex="-1" aria-labelledby="modalFacturasDetalleLabel"
+    aria-hidden="true" data-bs-keyboard="false" data-bs-backdrop="static">
+    <div class="modal-dialog modal-xl">
+        <div class="modal-content">
+
+            <div class="modal-header bg-info text-dark">
+                <h5 class="modal-title fw-bold">Detalles de Factura</h5>
+            </div>
+
+            <div class="modal-body">
+
+                <div class="row">
+                    <div class="table-responsive">
+                        <table id="facturasDetalleTable"
+                            class="table table-striped table-bordered mb-0 table-sm rounded-4 table-hover align-middle"
+                            style="width: 100%;">
+                            <thead class="table-gradient text-dark">
+                                <tr>
+                                    <th class="text-center">Codigo Articulo</th>
+                                    <th class="text-center">Articulo</th>
+                                    <th class="text-center">Presentacion</th>
+                                    <th class="text-center">Cantidad</th>
+                                    <th class="text-center">Precio</th>
+                                    <th class="text-center">Total</th>
+                                    <th class="text-center">ISV</th>
+                                    <th class="text-center">Total Grabado</th>
+                                    <th class="text-center">Total Exento</th>
+                                    <th class="text-center">Total Exonerada</th>
+                                    <th class="text-center">Total ISV</th>
+                                    <th class="text-center">Sucursal</th>
+                                </tr>
+                            </thead>
+
+                            <tbody>
+
+                            </tbody>
+
+                            <tfoot class="table-active">
+                                <tr>
+                                    <th></th>
+                                    <th></th>
+                                    <th></th>
+                                    <th></th>
+                                    <th></th>
+                                    <th></th>
+                                    <th></th>
+                                    <th></th>
+                                    <th></th>
+                                    <th></th>
+                                    <th></th>
+                                    <th></th>
+                                </tr>
+                            </tfoot>
+
+                        </table>
+                    </div>
+                </div>
+
+            </div>
+
+
+            <div class="modal-footer">
+                <button type="button" class="btn btn-danger btn-sm" data-bs-dismiss="modal">Cerrar</button>
+            </div>
+
+        </div>
+    </div>
+</div>
+
+
+
+
+
+
+
+
+<div class="modal fade" id="modalDevolDetalle" tabindex="-1" aria-labelledby="modalDevolDetalleLabel" aria-hidden="true"
+    data-bs-keyboard="false" data-bs-backdrop="static">
+    <div class="modal-dialog modal-xl">
+        <div class="modal-content">
+
+            <div class="modal-header bg-info text-dark">
+                <h5 class="modal-title fw-bold">Detalles de Devolucion</h5>
+            </div>
+
+            <div class="modal-body">
+
+                <div class="row">
+                    <div class="table-responsive">
+                        <table id="devolDetalleTable"
+                            class="table table-striped table-bordered mb-0 table-sm rounded-4 table-hover align-middle"
+                            style="width: 100%;">
+                            <thead class="table-gradient text-dark">
+                                <tr>
+                                    <th class="text-center">Codigo Articulo</th>
+                                    <th class="text-center">Articulo</th>
+                                    <th class="text-center">Presentacion</th>
+                                    <th class="text-center">Cantidad</th>
+                                    <th class="text-center">Costo</th>
+                                    <th class="text-center">Precio</th>
+                                    <th class="text-center">Costo Total</th>
+                                    <th class="text-center">Venta Total</th>
+                                    <th class="text-center">ISV</th>
+                                    <th class="text-center">Total Grabado</th>
+                                    <th class="text-center">Total Exento</th>
+                                    <th class="text-center">Total Exonerada</th>
+                                    <th class="text-center">Total ISV</th>
+                                    <th class="text-center">Sucursal</th>
+                                </tr>
+                            </thead>
+
+                            <tbody>
+
+                            </tbody>
+
+                            <tfoot class="table-active">
+                                <tr>
+                                    <th></th>
+                                    <th></th>
+                                    <th></th>
+                                    <th></th>
+                                    <th></th>
+                                    <th></th>
+                                    <th></th>
+                                    <th></th>
+                                    <th></th>
+                                    <th></th>
+                                    <th></th>
+                                    <th></th>
+                                    <th></th>
+                                    <th></th>
+                                </tr>
+                            </tfoot>
+
+                        </table>
+                    </div>
+                </div>
+
+            </div>
+
+
+            <div class="modal-footer">
+                <button type="button" class="btn btn-danger btn-sm" data-bs-dismiss="modal">Cerrar</button>
+            </div>
+
+        </div>
+    </div>
+</div>
+
+
+
+
+
+
+
+
+
+<div class="modal fade" id="modalDepositosBancariosVentas" tabindex="-1"
+    aria-labelledby="modalDepositosBancariosVentasLabel" aria-hidden="true" data-bs-keyboard="false"
+    data-bs-backdrop="static">
+    <div class="modal-dialog modal-xl">
+        <div class="modal-content">
+
+            <div class="modal-header bg-info text-dark">
+                <h5 class="modal-title fw-bold">Detalles de Movimiento Bancario</h5>
+            </div>
+
+            <div class="modal-body">
+
+                <div class="row">
+                    <div class="table-responsive">
+                        <table id="depositosVentaTable"
+                            class="table table-striped table-bordered mb-0 table-sm rounded-4 table-hover align-middle"
+                            style="width: 100%;">
+                            <thead class="table-gradient text-dark">
+                                <tr>
+                                    <th class="text-center">Numero Referencia</th>
+                                    <th class="text-center">Fecha</th>
+                                    <th class="text-center">Valor</th>
+                                    <th class="text-center">Cuenta Bancaria</th>
+                                    <th class="text-center">Tipo Cuenta</th>
+                                    <th class="text-center">Banco</th>
+                                    <th class="text-center">Usuario</th>
+                                </tr>
+                            </thead>
+
+                            <tbody>
+
+                            </tbody>
+
+                            <tfoot class="table-active">
+                                <tr>
+                                    <th></th>
+                                    <th></th>
+                                    <th></th>
+                                    <th></th>
+                                    <th></th>
+                                    <th></th>
+                                    <th></th>
+                                </tr>
+                            </tfoot>
+
+                        </table>
+                    </div>
+                </div>
+
+            </div>
+
+
+            <div class="modal-footer">
+                <button type="button" class="btn btn-danger btn-sm" data-bs-dismiss="modal">Cerrar</button>
+            </div>
+
+        </div>
+    </div>
+</div>
+
+
+
+
+
+
+<div class="modal fade" id="modalMovimientosBancariosDetalles" tabindex="-1"
+    aria-labelledby="modalMovimientosBancariosDetallesLabel" aria-hidden="true" data-bs-keyboard="false"
+    data-bs-backdrop="static">
+    <div class="modal-dialog modal-xl">
+        <div class="modal-content">
+
+            <div class="modal-header bg-danger text-white">
+                <h5 class="modal-title fw-bold">Listado de Movimientos Bancarios</h5>
+            </div>
+
+            <div class="modal-body">
+
+                <div class="row">
+                    <div class="table-responsive">
+                        <table id="movBancariosDetalleTable"
+                            class="table table-striped table-bordered mb-0 table-sm rounded-4 table-hover align-middle"
+                            style="width: 100%;">
+                            <thead class="table-gradient text-dark">
+                                <tr>
+                                    <th class="text-center">Numero</th>
+                                    <th class="text-center">Fecha</th>
+                                    <th class="text-center">Valor</th>
+                                    <th class="text-center">Cuenta Bancaria</th>
+                                    <th class="text-center">Tipo Cuenta</th>
+                                    <th class="text-center">Banco</th>
+                                    <th class="text-center">Usuario</th>
+                                </tr>
+                            </thead>
+
+                            <tbody>
+
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+
+            </div>
+
+
+            <div class="modal-footer">
+                <button type="button" class="btn btn-danger btn-sm" data-bs-dismiss="modal">Cerrar</button>
+            </div>
+
+        </div>
+    </div>
+</div>
+
+
+
+
+
+<div class="modal fade" id="modalSolicitudesGastos" tabindex="-1" aria-labelledby="modalSolicitudesGastosLabel"
+    aria-hidden="true" data-bs-keyboard="false" data-bs-backdrop="static">
+    <div class="modal-dialog modal-xl">
+        <div class="modal-content">
+
+            <div class="modal-header bg-info text-dark">
+                <h5 class="modal-title fw-bold">Detalles de la Solicitud de Gasto</h5>
+            </div>
+
+            <div class="modal-body">
+
+                <div class="row">
+                    <div class="table-responsive">
+                        <table id="solicitudesGastosTable"
+                            class="table table-striped table-bordered mb-0 table-sm rounded-4 table-hover align-middle"
+                            style="width: 100%;">
+                            <thead class="table-gradient text-dark">
+                                <tr>
+                                    <th class="text-center">Cuenta Contable</th>
+                                    <th class="text-center">Valor Unitario</th>
+                                    <th class="text-center">Subtotal</th>
+                                    <th class="text-center">ISV</th>
+                                    <th class="text-center">Total</th>
+                                    <th class="text-center">Concepto</th>
+                                </tr>
+                            </thead>
+
+                            <tbody>
+
+                            </tbody>
+
+                            <tfoot class="table-active">
+                                <tr>
+                                    <th></th>
+                                    <th></th>
+                                    <th></th>
+                                    <th></th>
+                                    <th></th>
+                                    <th></th>
+                                </tr>
+                            </tfoot>
+
+                        </table>
+                    </div>
+                </div>
+
+            </div>
+
+
+            <div class="modal-footer">
+                <button type="button" class="btn btn-danger btn-sm" data-bs-dismiss="modal">Cerrar</button>
+            </div>
+
+        </div>
+    </div>
+</div>
+
+
+
+
+
+
+
+<div class="modal fade" id="modalSolicitudesIngresos" tabindex="-1" aria-labelledby="modalSolicitudesIngresosLabel"
+    aria-hidden="true" data-bs-keyboard="false" data-bs-backdrop="static">
+    <div class="modal-dialog modal-xl">
+        <div class="modal-content">
+
+            <div class="modal-header bg-info text-dark">
+                <h5 class="modal-title fw-bold">Detalles de la Solicitud de Ingreso</h5>
+            </div>
+
+            <div class="modal-body">
+
+                <div class="row">
+                    <div class="table-responsive">
+                        <table id="solicitudesIngresosTable"
+                            class="table table-striped table-bordered mb-0 table-sm rounded-4 table-hover align-middle"
+                            style="width: 100%;">
+                            <thead class="table-gradient text-dark">
+                                <tr>
+                                    <th class="text-center">Cuenta Contable</th>
+                                    <th class="text-center">Valor Unitario</th>
+                                    <th class="text-center">Subtotal</th>
+                                    <th class="text-center">ISV</th>
+                                    <th class="text-center">Total</th>
+                                    <th class="text-center">Concepto</th>
+                                </tr>
+                            </thead>
+
+                            <tbody>
+
+                            </tbody>
+
+                            <tfoot class="table-active">
+                                <tr>
+                                    <th></th>
+                                    <th></th>
+                                    <th></th>
+                                    <th></th>
+                                    <th></th>
+                                    <th></th>
+                                </tr>
+                            </tfoot>
+
+                        </table>
+                    </div>
+                </div>
+
+            </div>
+
+
+            <div class="modal-footer">
+                <button type="button" class="btn btn-danger btn-sm" data-bs-dismiss="modal">Cerrar</button>
+            </div>
+
+        </div>
+    </div>
+</div>
+
+
+
+
+
+
+
+
+
+<div class="modal fade" id="modalProvisionesEmpleados" tabindex="-1" aria-labelledby="modalProvisionesEmpleadosLabel"
+    aria-hidden="true" data-bs-keyboard="false" data-bs-backdrop="static">
+
+    <div class="modal-dialog modal-xl">
+        <div class="modal-content">
+
+            <div class="modal-header bg-info text-dark">
+                <h5 class="modal-title fw-bold">Detalles de Provisiones por Empleado</h5>
+            </div>
+
+            <div class="modal-body">
+
+                <div class="row">
+                    <div class="table-responsive">
+                        <table id="tableProvisionesEmpleados"
+                            class="table table-striped table-bordered mb-0 table-sm rounded-4 table-hover align-middle"
+                            style="width: 100%;">
+                            <thead class="table-gradient text-dark">
+                                <tr>
+                                    <th class="text-center">Identidad</th>
+                                    <th class="text-center">Nombre</th>
+                                    <th class="text-center">Empresa</th>
+                                    <th class="text-center">Salario</th>
+                                    <th class="text-center">Fecha Ingreso</th>
+                                    <th class="text-center">Antiguedad</th>
+                                    <th class="text-center">Salario Diario</th>
+
+                                    <th class="text-center">13vo</th>
+                                    <th class="text-center">14vo</th>
+                                    <th class="text-center">Cesantía</th>
+
+                                    <th class="text-center">Días Preaviso</th>
+                                    <th class="text-center">Preaviso</th>
+
+                                    <th class="text-center">Vacaciones Totales</th>
+                                    <th class="text-center">Tomados</th>
+                                    <th class="text-center">Disponibles</th>
+                                    <th class="text-center">Provisión Vacaciones</th>
+
+                                    <th class="text-center">Centro Costo</th>
+                                </tr>
+                            </thead>
+
+                            <tbody></tbody>
+
+                            <tfoot class="table-active">
+                                <tr>
+                                    <th colspan="3"></th>
+                                    <th></th> <!-- Salario -->
+                                    <th colspan="2"></th>
+
+
+                                    <th></th> <!-- Salario x Dia -->
+                                    <th></th> <!-- 13vo -->
+                                    <th></th> <!-- 14vo -->
+                                    <th></th> <!-- cesantia -->
+                                    <th></th> <!-- dias_preaviso -->
+                                    <th></th> <!-- provision_preaviso -->
+                                    <th></th> <!-- dias vac -->
+                                    <th></th> <!-- tomados -->
+                                    <th></th> <!-- disponibles -->
+                                    <th></th> <!-- prov vac -->
+                                    <th></th>
+
+                                </tr>
+                            </tfoot>
+
+                        </table>
+                    </div>
+                </div>
+
+            </div>
+
+            <div class="modal-footer">
+                <button type="button" class="btn btn-danger btn-sm" data-bs-dismiss="modal">Cerrar</button>
+            </div>
+
+        </div>
+    </div>
+</div>

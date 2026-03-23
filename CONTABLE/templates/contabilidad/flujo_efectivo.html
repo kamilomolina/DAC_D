@@ -1,0 +1,317 @@
+{% extends 'componentes/menu_contable.html' %}
+{% load static %}
+
+{% block title %}
+FLUJO EFECTIVO DE CUENTAS
+{% endblock %}
+
+
+{% block body %}
+
+<div class="row align-items-center border-bottom mb-3 py-2 bg-white shadow-sm mx-0">
+    <div class="col d-flex align-items-center px-0">
+        <button id="toggle-sidebar" class="btn btn-primary btn-sm me-3 border-0 rounded-circle btnMenu"
+            style="width: 32px; height: 32px; padding: 0;" title="Mostrar/Ocultar menú">
+            <i class="fas fa-bars"></i>
+        </button>
+        <h6 class="page-title mb-0 fs-5 fw-bold text-dark">
+            <i class="fas fa-chart-line text-primary me-2"></i>FLUJO EFECTIVO DE CUENTAS
+        </h6>
+    </div>
+</div>
+
+
+<div class="container-fluid px-0 mt-1">
+    <div class="row g-3 d-flex align-items-end mx-0">
+        <div class="col-12 col-md-2 mb-3">
+            <label for="selectEmpresa">Empresa:</label>
+            <select id="selectEmpresa" class="form-select form-select-sm" name="selectEmpresa">
+                {% for e in empresasData %}
+                <option value="{{ e.id }}">{{ e.nombre }}</option>
+                {% endfor %}
+            </select>
+        </div>
+
+        <div class="col-12 col-md-2 mb-3">
+            <label for="datetimeFechaInicial">Desde:</label>
+            <input type="date" value="{{ date1 }}" id="datetimeFechaInicial" class="form-control form-control-sm"
+                name="datetimeFechaInicial">
+        </div>
+
+        <div class="col-12 col-md-2 mb-3">
+            <label for="datetimeFechaFinal">Hasta:</label>
+            <input type="date" value="{{ date2 }}" id="datetimeFechaFinal" class="form-control form-control-sm"
+                name="datetimeFechaFinal">
+        </div>
+
+        <div class="col-12 col-md-3 mb-3">
+            <label>Modo Flujo</label>
+            <select id="selOpc" class="form-select form-select-sm">
+                <option value="1">Sin Movimientos</option>
+                <option value="2" selected>Con Movimientos</option>
+                <option value="3">Todos</option>
+            </select>
+        </div>
+
+        <div class="col-12 col-md-2 mb-3">
+            <button class="btn btn-sm btn-success" id="btnLoadData">Cargar</button>
+        </div>
+    </div>
+
+    <div class="row mx-0 mt-1">
+        <div class="table-responsive px-0">
+            <table id="tableFlujoEfectivo"
+                class="table table-striped table-bordered mb-0 table-sm rounded-4 table-hover align-middle"
+                style="width: 100%;">
+
+                <thead class="table-gradient text-dark">
+                    <tr>
+                        <th>Codigo Cuenta</th>
+                        <th>Concepto Cuenta</th>
+                        <th>Saldo Inicial</th>
+                        <th>Ingresos</th>
+                        <th>Egresos</th>
+                        <th>Saldo Final</th>
+                    </tr>
+                </thead>
+
+                <tbody>
+                </tbody>
+
+                <tfoot class="table-active">
+                    <tr>
+                        <th colspan="2" class="text-end">Totales:</th>
+                        <th class="text-end"></th>
+                        <th class="text-end"></th>
+                        <th class="text-end"></th>
+                        <th class="text-end"></th>
+                    </tr>
+                </tfoot>
+
+            </table>
+        </div>
+    </div>
+</div>
+
+
+<a href="{% url 'panel_contabilidad' %}">
+    <button class="btn btn-sm btn-danger" id="btnCerrar" title="Cerrar"
+        style="position: fixed; bottom: 20px; right: 20px;">
+        <i class="fa fa-times"></i> Cerrar
+    </button>
+</a>
+
+{% endblock %}
+
+
+{% block scripts %}
+
+<script>
+    $(document).ready(function () {
+        var csrfToken = "{{ csrf_token }}";
+        var opcFlujo = "{{ opcFlujo }}";
+
+        var tableFlujoEfectivo;
+
+        var toastMixin = Swal.mixin({
+            toast: true,
+            icon: 'success',
+            title: 'General Title',
+            animation: false,
+            position: 'top-right',
+            showConfirmButton: false,
+            timer: 2000,
+            timerProgressBar: true,
+            didOpen: (toast) => {
+                toast.addEventListener('mouseenter', Swal.stopTimer);
+                toast.addEventListener('mouseleave', Swal.resumeTimer);
+            }
+        });
+
+        let dollarUSLocale = Intl.NumberFormat("en-US", {
+            minimumFractionDigits: 2,
+            maximumFractionDigits: 2
+        });
+
+        let intergerLocale = Intl.NumberFormat("en-US", {
+            minimumFractionDigits: 0,
+            maximumFractionDigits: 0
+        });
+
+
+        id_empresa = 3;
+        $('#selectEmpresa').val(id_empresa).change();
+
+        $("#tableFlujoEfectivo").DataTable({
+            language: {
+                url: "{% static 'app/th/json/es-ES.json' %}",
+            },
+        });
+
+        function showLoadingScreen(text = '') {
+            Swal.fire({
+                title: '',
+                html: `<b>${text}</b>`,
+                didOpen: () => {
+                    Swal.showLoading();
+                },
+                allowOutsideClick: false,
+                showConfirmButton: false
+            });
+        }
+
+        function getFlujoEfectivo(empresa, fechaInicial, fechaFinal, opc) {
+            showLoadingScreen();
+
+
+            $("#tableFlujoEfectivo").DataTable().clear().destroy();
+
+            var cardHeight = $(".card-expanded").height();
+            var tableHeight = cardHeight * 0.5;
+
+            tableFlujoEfectivo = $('#tableFlujoEfectivo').DataTable({
+                autoWidth: false,
+                scrollX: true,
+                scrollY: '350px',
+                scrollCollapse: true,
+                pageLength: 50,
+                dom: 'Brftip',
+                language: {
+                    url: "{% static 'app/th/json/es-ES.json' %}",
+                },
+                initComplete: function () {
+                    Swal.close();
+                },
+                drawCallback: function (settings) {
+                    let dollarUSLocale = Intl.NumberFormat("en-US", {
+                        minimumFractionDigits: 2,
+                        maximumFractionDigits: 2
+                    });
+
+                    let intergerLocale = Intl.NumberFormat("en-US", {
+                        minimumFractionDigits: 0,
+                        maximumFractionDigits: 0
+                    });
+
+                    var api = this.api();
+
+                    // Calcular totales para las columnas 3, 4, 5, y 6
+                    [2, 3, 4, 5].forEach(function (colIndex) {
+                        var total = api
+                            .column(colIndex, {
+                                search: 'applied'
+                            })
+                            .data()
+                            .reduce(function (a, b) {
+                                return Number(a) + Number(b);
+                            }, 0);
+
+                        // Mostrar el total en el pie de página en la columna respectiva
+                        var columnFooter = $(api.column(colIndex).footer());
+                        columnFooter.html(dollarUSLocale.format(total));
+                        columnFooter.css('text-align', 'right');
+                    });
+                },
+                ajax: {
+                    url: `{% url 'dataFlujoEfectivo' %}`,
+                    type: "POST",
+                    dataSrc: 'data',
+                    data: {
+                        empresa: empresa,
+                        fechaInicial: fechaInicial,
+                        fechaFinal: fechaFinal,
+                        opcion: opc,
+                        csrfmiddlewaretoken: csrfToken
+                    },
+                },
+                colReorder: {
+                    realtime: false,
+                },
+                buttons: [
+                    {
+                        extend: 'excel',
+                        text: '<i class="fas fa-file-excel"></i>',
+                        titleAttr: 'Exportar a Excel',
+                        className: 'btn btn-success',
+                    },
+                    {
+                        extend: 'pdf',
+                        text: '<i class="fas fa-file-pdf"></i>',
+                        titleAttr: 'Exportar a PDF',
+                        className: 'btn btn-danger',
+                    },
+                    {
+                        extend: 'print',
+                        text: '<i class="fas fa-print"></i>',
+                        titleAttr: 'Imprimir',
+                        className: 'btn btn-primary',
+                        orientation: 'landscape'
+                    }
+                ],
+                ordering: false,
+                columns: [
+                    {
+                        data: 'Codigo',
+                    },
+                    {
+                        data: 'Nombre',
+                    },
+                    {
+                        data: 'SaldoInicial',
+                        className: 'currency',
+                        render: $.fn.dataTable.render.number(',', '.', 2)
+                    },
+                    {
+                        data: 'Ingresos',
+                        className: 'currency',
+                        render: $.fn.dataTable.render.number(',', '.', 2)
+                    },
+                    {
+                        data: 'Egresos',
+                        className: 'currency',
+                        render: $.fn.dataTable.render.number(',', '.', 2)
+                    },
+                    {
+                        data: 'SaldoFinal',
+                        className: 'currency',
+                        render: $.fn.dataTable.render.number(',', '.', 2)
+                    },
+
+                ],
+            });
+
+
+            //      <button class="btn btn-info btn-sm detallesPartida" data-id="${row.PkEncPartida}" data-npartida="${row.Npartida}"><i class="fas fa-list"></i></button> 
+        }
+
+
+        $('#btnLoadData').click(function (e) {
+            e.preventDefault();
+
+            id_empresa = $('#selectEmpresa').val();
+            varFechaInicial = $('#datetimeFechaInicial').val();
+            varFechaFinal = $('#datetimeFechaFinal').val();
+            opcFlujo = $('#selOpc').val();
+
+            getFlujoEfectivo(id_empresa, varFechaInicial, varFechaFinal, opcFlujo);
+        });
+
+
+        function showLoadingScreen(text = '') {
+            Swal.fire({
+                title: '',
+                html: `<b>${text}</b>`,
+                didOpen: () => {
+                    Swal.showLoading();
+                },
+                allowOutsideClick: false,
+                showConfirmButton: false
+            });
+        }
+
+
+
+
+    });
+</script>
+{% endblock %}

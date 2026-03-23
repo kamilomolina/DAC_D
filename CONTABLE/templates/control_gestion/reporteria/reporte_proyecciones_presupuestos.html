@@ -1,0 +1,1728 @@
+{% extends 'componentes/menu_contable.html' %}
+{% load static %}
+
+{% block title %}
+REPORTE PROYECCIONES Y PRESUPUESTOS
+{% endblock %}
+
+
+{% block body %}
+
+<div class="row align-items-center border-bottom mb-2 py-1">
+    <div class="col d-flex align-items-center">
+        <button id="toggle-sidebar" class="btn btn-warning btn-sm me-2 btnMenu" title="Mostrar/Ocultar menú">
+            <i class="fas fa-bars"></i>
+        </button>
+        <h6 class="page-title mb-0 fs-6 fw-bold">REPORTE PROYECCIONES Y PRESUPUESTOS</h6>
+    </div>
+</div>
+
+<div class="container-fluid mt-1">
+
+    <div class="row d-flex justify-content-start align-items-end">
+
+        {% include 'control_gestion/content_includes/rango_meses.html' %}
+
+        <div class="col-lg-2">
+            <div class="form-group">
+                <label for="filterEmpresaTables">Empresa:</label>
+                <select id="filterEmpresaTables" class="form-select form-select-sm" name="filterEmpresaTables">
+                    <option value="0">TODAS</option>
+                    {% for e in empresasData %}
+                    <option value="{{ e.id }}">{{ e.nombre }}</option>
+                    {% endfor %}
+                </select>
+            </div>
+        </div>
+
+        <div class="col-sm-2">
+            <button type="button" class="btn btn-success btn-sm" id="btnGetProyecciones">Cargar</button>
+        </div>
+
+    </div>
+
+    <br>
+
+    <div class="row">
+        <div class="row text-center">
+            <h5>REPORTE PROYECCION Y PRESUPUESTOS CENTROS DE NEGOCIOS</h5>
+        </div>
+
+        <div class="row d-flex justify-content-end">
+            <span><b>Filtros Rápidos</b></span>
+            <div class="mainFilters">
+                <div class="row f-flex justify-content-end">
+                    <div class="col-sm">
+                        <label for="">Centro</label>
+                        <input type="text" class="form-control form-control-sm tableMainFilters"
+                            id="CN_filterCentroTables" placeholder="Centro">
+                    </div>
+
+                    <div class="col-sm">
+                        <label for="">Tipo</label>
+                        <input type="text" class="form-control form-control-sm tableMainFilters"
+                            id="CN_filterTipoTables" placeholder="Tipo">
+                    </div>
+
+                    <div class="col-sm">
+                        <label for="">Canal</label>
+                        <input type="text" class="form-control form-control-sm tableMainFilters"
+                            id="CN_filterCanalTables" placeholder="Canal">
+                    </div>
+
+                    <div class="col-sm">
+                        <label for="">Departamento</label>
+                        <input type="text" class="form-control form-control-sm tableMainFilters"
+                            id="CN_filterDepartamentoTables" placeholder="Departamento">
+                    </div>
+
+                    <div class="col-sm">
+                        <label for="">Sucursal</label>
+                        <input type="text" class="form-control form-control-sm tableMainFilters"
+                            id="CN_filterSucursalTables" placeholder="Sucursal">
+                    </div>
+
+                    <div class="col-sm-2">
+                        <label for="">Empresa</label>
+                        <select class="form-select form-select-sm" id="CN_filterEmpresaCentroTables">
+                            <option value="">TODAS</option>
+                            {% for e in empresasData %}
+                            <option value="{{ e.nombre }}">{{ e.nombre }}</option>
+                            {% endfor %}
+                        </select>
+                    </div>
+
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div class="row">
+
+        <div class="col-lg-10">
+            <div class="table-responsive">
+                <table id="tbl_CentrosNegocios"
+                    class="table rounded-4 table-sm table-bordered table-striped align-middle mb-0 table-principal"
+                    style="width:100%">
+
+                    <thead class="table-gradient text-dark">
+                        <tr>
+                            <th class="text-center">ID Centro</th>
+                            <th class="text-center">Nombre Centro</th>
+                            <th class="text-center">Canal</th>
+                            <th class="text-center">Tipo Centro</th>
+                            <th class="text-center">Empresa</th>
+
+                            <th class="text-center">Costo Proyectado</th>
+                            <th class="text-center">Venta Proyectada</th>
+                            <th class="text-center">Utilidad Proyectada</th>
+                            <th class="text-center bg-warning">Margen Proyectado</th>
+
+                            <th class="text-center">Costo Logrado</th>
+                            <th class="text-center">% Participacion Costo</th>
+                            <th class="text-center">Venta Lograda</th>
+                            <th class="text-center">% Participacion Ventas</th>
+                            <th class="text-center">Utilidad Lograda</th>
+                            <th class="text-center">% Participacion Utilidad</th>
+                            <th class="text-center bg-warning">Renta Lograda</th>
+
+
+                            <th class="text-center">Gastos Directos</th>
+                            <th class="text-center">% Gastos</th>
+
+                            <th class="text-center">Renta</th>
+                            <th class="text-center bg-warning">% Renta</th>
+
+                            <th class="text-center">Gastos por Servicios Percibidos</th>
+
+                            <th class="text-center">Renta Neta</th>
+                            <th class="text-center bg-warning">% Renta Neta</th>
+
+
+                            <th class="text-center">Costo Neto Dif.</th>
+                            <th class="text-center">Venta Neta Dif.</th>
+                            <th class="text-center">Utilidad Neta Dif.</th>
+                            <th class="text-center bg-warning">Margen Neto Dif.</th>
+
+                            <th class="text-center">Costo Neto Porc. Log.</th>
+                            <th class="text-center">Venta Neta Porc. Log.</th>
+                            <th class="text-center">Utilidad Neta Porc. Log.</th>
+                            <th class="text-center bg-warning">Margen Neto Porc. Log.</th>
+
+                            <th class="text-center">Presupuesto Proyectado</th>
+                            <th class="text-center">Presupuesto Autorizado</th>
+                            <th class="text-center">Presupuesto Indirecto Solicitado a este Centro</th>
+                            <th class="text-center">Gastos Ingresados</th>
+                            <th class="text-center">Proyeccion Disponible</th>
+                            <th class="text-center bg-warning">Proyeccion Disponible Porc</th>
+                            <th class="text-center">Presupuesto Total</th>
+                            <th class="text-center">Presupuesto Disponible</th>
+                            <th class="text-center bg-warning">Presupuesto Disponible Porc</th>
+                            <th class="text-center">Presupuesto de Gasto Disponible</th>
+                            <th class="text-center ">Presupuesto de Gasto Disponible Porc</th>
+
+                            <th class="text-center">Criterio EVA</th>
+
+                            <th class="text-center">Departamento</th>
+                            <th class="text-center">Sucursal</th>
+                            <th class="text-center">Formato</th>
+                            <th class="text-center">Descripción</th>
+
+                            <th class="text-center">Mes</th>
+                            <th class="text-center">Año</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+
+                    </tbody>
+                </table>
+            </div>
+        </div>
+
+
+        <div class="col-lg-2">
+            <br><br>
+
+            <div class="table-responsive">
+                <table
+                    class="table rounded-4 table-sm table-bordered table-striped align-middle mb-0 bg-white table-totales"
+                    style="width:100%">
+
+                    <thead class="table-gradient text-dark">
+                        <tr>
+                            <td colspan="2" class="text-center bg-secondary text-white">
+                                Totales
+                            </td>
+                        </tr>
+
+                    </thead>
+
+                    <tbody>
+
+                        <tr>
+                            <td colspan="2" class="text-center bg-primary">
+                                <span>Totales Proyectado</span>
+                            </td>
+                        </tr>
+
+                        <tr>
+                            <td style="width: 25%"><label for="">Costo Proy. </label></td>
+                            <td colspan="2" class="currency cleanInputs" id="costo_proyectado">
+                            </td>
+                        </tr>
+                        <tr>
+                            <td><label for="">Venta Proy.</label></td>
+                            <td colspan="2" class="currency cleanInputs" id="venta_proyectada">
+                            </td>
+                        </tr>
+                        <tr>
+                            <td><label for="">Util Proy.</label></td>
+                            <td colspan="2" class="currency cleanInputs" id="utilidad_proyectada">
+                            </td>
+                        </tr>
+                        <tr class="bg-warning">
+                            <td><label for="">Margen % Proy.</label></td>
+                            <td colspan="2" class="currency cleanInputs" id="margen_proyectado">
+                            </td>
+                        </tr>
+
+
+                        <tr>
+                            <td colspan="2" class="text-center bg-primary">
+                                <span>Totales Proyectado</span>
+                            </td>
+                        </tr>
+
+                        <tr>
+                            <td><label for="">Costo Logrado. </label></td>
+                            <td colspan="2" class="currency cleanInputs" id="costo_logrado">
+                            </td>
+                        </tr>
+                        <tr class="bg-warning">
+                            <td><label for="">% Part. Costo.</label></td>
+                            <td colspan="2" class="currency cleanInputs" id="participacion_costo">
+                            </td>
+                        </tr>
+                        <tr>
+                            <td><label for="">Venta L.</label></td>
+                            <td colspan="2" class="currency cleanInputs" id="venta_lograda">
+                            </td>
+                        </tr>
+                        <tr class="bg-warning">
+                            <td><label for="">% Part. Venta L.</label></td>
+                            <td colspan="2" class="currency cleanInputs" id="participacion_venta">
+                            </td>
+                        </tr>
+
+                        <tr>
+                            <td><label for="">Util L.</label></td>
+                            <td colspan="2" class="currency cleanInputs" id="utilidad_lograda">
+                            </td>
+                        </tr>
+                        <tr class="bg-warning">
+                            <td><label for="">% Part. Util L.</label></td>
+                            <td colspan="2" class="currency cleanInputs" id="participacion_utilidad">
+                            </td>
+                        </tr>
+
+                        <tr class="bg-warning">
+                            <td><label for="">Margen % L.</label></td>
+                            <td colspan="2" class="currency cleanInputs" id="margen_logrado">
+                            </td>
+                        </tr>
+
+                        <tr>
+                            <td colspan="2" class="text-center bg-primary">
+                                <span>Gastos</span>
+                            </td>
+                        </tr>
+
+                        <tr>
+                            <td><label for="">Gastos Directos</label></td>
+                            <td colspan="2" class="currency cleanInputs" id="gastos_directos">
+                            </td>
+                        </tr>
+
+                        <tr class="bg-warning">
+                            <td><label for="">Gastos %</label></td>
+                            <td colspan="2" class="currency cleanInputs" id="porc_gastos_directos">
+                            </td>
+                        </tr>
+
+                        <tr>
+                            <td colspan="2" class="text-center bg-primary">
+                                <span>Renta</span>
+                            </td>
+                        </tr>
+
+                        <tr>
+                            <td><label for="">Renta</label></td>
+                            <td colspan="2" class="currency cleanInputs" id="renta_bruta">
+                            </td>
+                        </tr>
+
+                        <tr class="bg-warning">
+                            <td><label for="">Renta %</label></td>
+                            <td colspan="2" class="currency cleanInputs" id="porc_renta_bruta">
+                            </td>
+                        </tr>
+
+                        <tr>
+                            <td colspan="2" class="text-center bg-primary">
+                                <span>Gastos por Servicios Percibidos</span>
+                            </td>
+                        </tr>
+
+                        <tr>
+                            <td><label for="">Gastos Indirectos</label></td>
+                            <td colspan="2" class="currency cleanInputs" id="gastos_indirectos">
+                            </td>
+                        </tr>
+
+
+                        <tr>
+                            <td colspan="2" class="text-center bg-primary">
+                                <span>Renta Neta</span>
+                            </td>
+                        </tr>
+
+                        <tr>
+                            <td><label for="">Renta Neta</label></td>
+                            <td colspan="2" class="currency cleanInputs" id="renta_neta">
+                            </td>
+                        </tr>
+
+                        <tr class="bg-warning">
+                            <td><label for="">Renta Neta %</label></td>
+                            <td colspan="2" class="currency cleanInputs" id="porc_renta_neta">
+                            </td>
+                        </tr>
+
+
+                        <tr>
+                            <td colspan="2" class="text-center bg-primary">
+                                <span>Presupuesto</span>
+                            </td>
+                        </tr>
+
+                        <tr>
+                            <td><label for="">Presupuesto Proy.</label></td>
+                            <td colspan="2" class="currency cleanInputs" id="presupuesto_proyectado">
+                            </td>
+                        </tr>
+
+                        <tr>
+                            <td><label for="">Presupuesto Auto.</label></td>
+                            <td colspan="2" class="currency cleanInputs" id="presupuesto_autorizado">
+                            </td>
+                        </tr>
+
+                        <tr>
+                            <td><label for="">Gasto Indirectos a este Centro</label></td>
+                            <td colspan="2" class="currency cleanInputs" id="txt_indirectos_a_este_centro">
+                            </td>
+                        </tr>
+
+                        <tr>
+                            <td><label for="">Gastos Ingresados</label></td>
+                            <td colspan="2" class="currency cleanInputs" id="txt_gastos_ingresados_bancario">
+                            </td>
+                        </tr>
+
+                        <tr>
+                            <td><label for="">Proyeccion Disponible</label></td>
+                            <td colspan="2" class="currency cleanInputs" id="txt_proyeccion_disponible">
+                            </td>
+                        </tr>
+
+                        <tr>
+                            <td><label for="">Proyeccion Disponible Porc</label></td>
+                            <td colspan="2" class="currency cleanInputs" id="txt_proyeccion_disponible_porc">
+                            </td>
+                        </tr>
+
+                        <tr>
+                            <td><label for="">Presupuesto Total</label></td>
+                            <td colspan="2" class="currency cleanInputs" id="txt_presupuesto_total">
+                            </td>
+                        </tr>
+
+                        <tr>
+                            <td><label for="">Presupuesto Disponible</label></td>
+                            <td colspan="2" class="currency cleanInputs" id="txt_presupuesto_disponible">
+                            </td>
+                        </tr>
+
+                        <tr>
+                            <td><label for="">Presupuesto Disponible Porc</label></td>
+                            <td colspan="2" class="currency cleanInputs" id="txt_presupuesto_disponible_porc">
+                            </td>
+                        </tr>
+
+                        <tr>
+                            <td><label for="">Presupuesto de Gasto Disponible</label></td>
+                            <td colspan="2" class="currency cleanInputs" id="txt_presupuesto_gasto_disponible">
+                            </td>
+                        </tr>
+
+                        <tr>
+                            <td><label for="">Presupuesto de Gasto Disponible Porc</label></td>
+                            <td colspan="2" class="currency cleanInputs" id="txt_presupuesto_gasto_disponible_porc">
+                            </td>
+                        </tr>
+
+
+                        <tr>
+                            <td><label for="">EVA</label></td>
+                            <td colspan="2" class="currency cleanInputs" id="eva">
+                            </td>
+                        </tr>
+
+                    </tbody>
+                </table>
+            </div>
+
+        </div>
+
+    </div>
+
+    <hr>
+
+    <div class="row proyeccionVendedor">
+        <div class="col-lg-12">
+            <div class="row">
+                <span class="text-center"><b id="desgloseTitle">PROYECCION POR VENDEDORES</b></span>
+            </div>
+
+            <br>
+
+            <div class="row">
+
+                <div class="col-lg-10">
+                    <div class="table-responsive">
+                        <table id="tableDesgloseVendedores"
+                            class="table rounded-4 table-sm table-bordered table-striped align-middle mb-0 bg-white table-basic"
+                            style="width:100%">
+                            <tfoot class="table-active" style="display: table-header-group;">
+                                <tr class="filterPanelVendedores">
+                                    <th class="text-center"></th>
+                                    <th class="text-center">Vendedor</th>
+
+                                    <th class="text-center"></th>
+                                    <th class="text-center"></th>
+                                    <th class="text-center"></th>
+                                    <th class="text-center"></th>
+
+                                    <th class="text-center"></th>
+                                    <th class="text-center"></th>
+                                    <th class="text-center"></th>
+                                    <th class="text-center"></th>
+
+                                    <th class="text-center"></th>
+                                    <th class="text-center"></th>
+                                    <th class="text-center"></th>
+                                    <th class="text-center"></th>
+
+                                    <th class="text-center"></th>
+                                    <th class="text-center"></th>
+                                    <th class="text-center"></th>
+                                    <th class="text-center"></th>
+
+                                </tr>
+                            </tfoot>
+                            <thead class="table-gradient text-dark">
+                                <tr>
+                                    <th class="text-center">#</th>
+                                    <th class="text-center">Vendedor</th>
+
+                                    <th class="text-center">Costo Proy.</th>
+                                    <th class="text-center">Venta Proy.</th>
+                                    <th class="text-center">Utilidad Proy.</th>
+                                    <th class="text-center bg-warning">Margen Proy.</th>
+
+                                    <th class="text-center">Costo Neto Log.</th>
+                                    <th class="text-center">Venta Neta Log.</th>
+                                    <th class="text-center">Utilidad Neta Log.</th>
+                                    <th class="text-center bg-warning">Margen Neto Log.</th>
+
+                                    <th class="text-center">Costo Neto Dif.</th>
+                                    <th class="text-center">Venta Neta Dif.</th>
+                                    <th class="text-center">Utilidad Neta Dif.</th>
+                                    <th class="text-center bg-warning">Margen Neto Dif.</th>
+
+                                    <th class="text-center">Costo Neto Porc.</th>
+                                    <th class="text-center">Venta Neta Porc.</th>
+                                    <th class="text-center">Utilidad Neta Porc.</th>
+                                    <th class="text-center bg-warning">Margen Neto Porc.</th>
+
+                                </tr>
+                            </thead>
+                            <tbody>
+
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+
+                <div class="col-lg-2">
+                    <div class="table-responsive">
+                        <br><br>
+                        <table
+                            class="table rounded-4 table-sm table-bordered table-striped align-middle mb-0 bg-white table-totales"
+                            style="width:100%">
+
+                            <thead class="table-gradient text-dark">
+                                <tr>
+                                    <td colspan="2" class="text-center bg-secondary text-white">
+                                        Totales
+                                    </td>
+                                </tr>
+
+                            </thead>
+
+                            <tbody>
+
+                                <tr>
+                                    <td colspan="2" class="text-center bg-primary">
+                                        <span>Totales Proyectado</span>
+                                    </td>
+                                </tr>
+
+                                <tr>
+                                    <td style="width: 25%"><label for="">Costo
+                                            Proy.</label></td>
+                                    <td colspan="2" class="currency cleanInputs" id="txt_costo_proyectado">
+                                    </td>
+                                </tr>
+
+                                <tr>
+                                    <td><label for="">Venta Proy.</label></td>
+                                    <td colspan="2" class="currency cleanInputs" id="txt_venta_proyectada">
+                                    </td>
+                                </tr>
+
+                                <tr>
+                                    <td><label for="">Util. Proy.</label></td>
+                                    <td colspan="2" class="currency cleanInputs" id="txt_utilidad_proyectada">
+                                    </td>
+                                </tr>
+
+                                <tr>
+                                    <td><label for="">Margen Proy.</label></td>
+                                    <td colspan="2" class="currency cleanInputs" id="txt_margen_proyectado">
+                                    </td>
+                                </tr>
+
+
+                                <tr>
+                                    <td colspan="2" class="text-center bg-secondary">
+                                        <span>Totales Logrado</span>
+                                    </td>
+                                </tr>
+
+                                <tr>
+                                    <td style="width: 25%"><label for="">Costo
+                                            Log.</label></td>
+                                    <td colspan="2" class="currency cleanInputs" id="txt_costo_logrado">
+                                    </td>
+                                </tr>
+
+                                <tr>
+                                    <td><label for="">Venta Log.</label></td>
+                                    <td colspan="2" class="currency cleanInputs" id="txt_venta_lograda">
+                                    </td>
+                                </tr>
+
+                                <tr>
+                                    <td><label for="">Util. Log.</label></td>
+                                    <td colspan="2" class="currency cleanInputs" id="txt_utilidad_lograda">
+                                    </td>
+                                </tr>
+
+                                <tr>
+                                    <td><label for="">Margen Log.</label></td>
+                                    <td colspan="2" class="currency cleanInputs" id="txt_margen_logrado">
+                                    </td>
+                                </tr>
+
+                                <tr>
+                                    <td colspan="2" class="text-center bg-dark">
+                                    </td>
+                                </tr>
+
+
+                                <tr>
+                                    <td colspan="2" class="text-center bg-secondary">
+                                        <span>Totales Diferencia</span>
+                                    </td>
+                                </tr>
+
+                                <tr>
+                                    <td style="width: 25%"><label for="">Costo
+                                            Dif.</label></td>
+                                    <td colspan="2" class="currency cleanInputs" id="txt_costo_logrado_dif">
+                                    </td>
+                                </tr>
+
+                                <tr>
+                                    <td><label for="">Venta Dif.</label></td>
+                                    <td colspan="2" class="currency cleanInputs" id="txt_venta_lograda_dif">
+                                    </td>
+                                </tr>
+
+                                <tr>
+                                    <td><label for="">Util. Dif.</label></td>
+                                    <td colspan="2" class="currency cleanInputs" id="txt_utilidad_lograda_dif">
+                                    </td>
+                                </tr>
+
+                                <tr>
+                                    <td><label for="">Margen Dif.</label></td>
+                                    <td colspan="2" class="currency cleanInputs" id="txt_margen_logrado_dif">
+                                    </td>
+                                </tr>
+
+                                <tr>
+                                    <td colspan="2" class="text-center bg-dark">
+                                    </td>
+                                </tr>
+
+
+                                <tr>
+                                    <td colspan="2" class="text-center bg-secondary">
+                                        <span>Totales Porcentaje</span>
+                                    </td>
+                                </tr>
+
+                                <tr>
+                                    <td style="width: 25%"><label for="">Costo
+                                            Porc.</label></td>
+                                    <td colspan="2" class="currency cleanInputs" id="txt_costo_logrado_porc">
+                                    </td>
+                                </tr>
+
+                                <tr>
+                                    <td><label for="">Venta Porc.</label></td>
+                                    <td colspan="2" class="currency cleanInputs" id="txt_venta_lograda_porc">
+                                    </td>
+                                </tr>
+
+                                <tr>
+                                    <td><label for="">Util. Porc.</label></td>
+                                    <td colspan="2" class="currency cleanInputs" id="txt_utilidad_lograda_porc">
+                                    </td>
+                                </tr>
+
+                                <tr>
+                                    <td><label for="">Margen Porc.</label></td>
+                                    <td colspan="2" class="currency cleanInputs" id="txt_margen_logrado_porc">
+                                    </td>
+                                </tr>
+
+                                <tr>
+                                    <td colspan="2" class="text-center bg-dark">
+                                    </td>
+                                </tr>
+
+                            </tbody>
+                        </table>
+                    </div>
+
+                </div>
+
+            </div>
+        </div>
+    </div>
+
+
+
+
+
+
+
+
+
+
+
+
+</div>
+
+
+<a href="{% url 'panel_contabilidad' %}">
+    <button class="btn btn-sm btn-danger" id="btnCerrar" title="Cerrar"
+        style="position: fixed; bottom: 20px; right: 20px;">
+        <i class="fa fa-times"></i> Cerrar
+    </button>
+</a>
+
+{% endblock %}
+
+
+{% block scripts %}
+
+
+
+<script>
+    $(document).ready(function () {
+        var csrfToken = "{{ csrf_token }}";
+        var buttons = "Bfrtlip";
+
+        var monthA = "{{ varMonth }}";
+        var varAnio = "{{ varAnio }}";
+
+        var windowSize = $(window).width();
+
+        var cardHeight = $(".card-expanded").height();
+        var tableHeight = cardHeight * 0.5;
+
+        let dollarUSLocale = Intl.NumberFormat("en-US", {
+            minimumFractionDigits: 2,
+            maximumFractionDigits: 2
+        });
+
+        let intergerLocale = Intl.NumberFormat("en-US", {
+            minimumFractionDigits: 0,
+            maximumFractionDigits: 0
+        });
+
+        var toastMixin = Swal.mixin({
+            toast: true,
+            icon: 'success',
+            title: 'General Title',
+            animation: false,
+            position: 'top-right',
+            showConfirmButton: false,
+            timer: 2000,
+            timerProgressBar: true,
+            didOpen: (toast) => {
+                toast.addEventListener('mouseenter', Swal.stopTimer);
+                toast.addEventListener('mouseleave', Swal.resumeTimer);
+            }
+        });
+
+        while (monthA.charAt(0) === '0') {
+            monthA = monthA.substring(1);
+        }
+
+        $('.mesPresupuesto').val(monthA).change();
+
+        for (i = new Date().getFullYear() + 1; i >= (new Date().getFullYear() - 5); i--) {
+            $('.anioPresupuesto').append($('<option />').val(i).html(i));
+            $('.anioPresupuesto').val(varAnio).change();
+        }
+
+        var tbl_CentrosNegocios, tbl_CentrosServicios;
+
+        $('#tbl_CentrosNegocios, #tbl_CentrosServicios').DataTable({
+            language: {
+                url: "{% static 'app/th/json/es-ES.json' %}",
+            },
+        });
+
+
+        $('#btnGetProyecciones').click(function (e) {
+            e.preventDefault();
+
+            varMes1 = $('#mesPresupuestoDesde').val();
+            varAnio1 = $('#anioPresupuestoDesde').val();
+
+            varMes2 = $('#mesPresupuestoHasta').val();
+            varAnio2 = $('#anioPresupuestoHasta').val();
+
+            empresa = $('#filterEmpresaTables').val();
+
+            negocioColumns = [0];
+
+            $(".proyeccionVendedor").css('visibility', 'hidden');
+            $(".proyeccionVendedor").css('height', '0');
+
+            $("#tbl_CentrosNegocios").DataTable().clear().destroy();
+
+            tbl_CentrosNegocios = $('#tbl_CentrosNegocios').DataTable({
+                scrollX: true,
+                scrollCollapse: true,
+                scrollY: '400px',
+                pageLength: 50,
+                fixedColumns: {
+                    left: 3
+                },
+                drawCallback: function () {
+                    let dollarUSLocale = Intl.NumberFormat("en-US", {
+                        minimumFractionDigits: 2,
+                        maximumFractionDigits: 2
+                    });
+
+                    let intergerLocale = Intl.NumberFormat("en-US", {
+                        minimumFractionDigits: 0,
+                        maximumFractionDigits: 0
+                    });
+
+
+                    var apiSumas = this.api();
+
+                    /* ------------ PROMEDIOS ------------ */
+
+                    var costo_proyectado = apiSumas.column(5, {
+                        search: 'applied'
+                    }).data().sum();
+                    var venta_proyectada = apiSumas.column(6, {
+                        search: 'applied'
+                    }).data().sum();
+                    utilidad_proyectada = venta_proyectada - costo_proyectado;
+                    margen_proyectado = ((utilidad_proyectada / costo_proyectado) * 100);;
+
+                    $('#costo_proyectado').text(dollarUSLocale.format(costo_proyectado));
+                    $('#venta_proyectada').text(dollarUSLocale.format(venta_proyectada));
+                    $('#utilidad_proyectada').text(dollarUSLocale.format(
+                        utilidad_proyectada));
+                    $('#margen_proyectado').text(dollarUSLocale.format(margen_proyectado));
+
+
+
+                    var costo_logrado = apiSumas.column(9, {
+                        search: 'applied'
+                    }).data().sum();
+                    participacion_costo = apiSumas.column(10, {
+                        search: 'applied'
+                    }).data().sum();
+
+                    var venta_lograda = apiSumas.column(11, {
+                        search: 'applied'
+                    }).data().sum();
+                    participacion_venta = apiSumas.column(12, {
+                        search: 'applied'
+                    }).data().sum();
+
+                    var utilidad_lograda = apiSumas.column(13, {
+                        search: 'applied'
+                    }).data().sum();
+                    participacion_utilidad = apiSumas.column(14, {
+                        search: 'applied'
+                    }).data().sum();
+
+                    margen_logrado = ((utilidad_lograda / costo_logrado) * 100);
+
+                    $('#costo_logrado').text(dollarUSLocale.format(costo_logrado));
+                    $('#participacion_costo').text(dollarUSLocale.format(
+                        participacion_costo));
+
+                    $('#venta_lograda').text(dollarUSLocale.format(venta_lograda));
+                    $('#participacion_venta').text(dollarUSLocale.format(
+                        participacion_venta));
+
+                    $('#utilidad_lograda').text(dollarUSLocale.format(utilidad_lograda));
+                    $('#participacion_utilidad').text(dollarUSLocale.format(
+                        participacion_utilidad));
+
+                    $('#margen_logrado').text(dollarUSLocale.format(margen_logrado));
+
+
+
+                    gastos_directos = apiSumas.column(16, {
+                        search: 'applied'
+                    }).data().sum();
+                    porc_gastos_directos = ((gastos_directos / costo_logrado) * 100);
+
+                    $('#gastos_directos').text(dollarUSLocale.format(gastos_directos));
+                    $('#porc_gastos_directos').text(dollarUSLocale.format(
+                        porc_gastos_directos));
+
+
+
+                    renta_bruta = apiSumas.column(18, {
+                        search: 'applied'
+                    }).data().sum();
+                    porc_renta_bruta = ((renta_bruta / venta_lograda) * 100);
+
+                    $('#renta_bruta').text(dollarUSLocale.format(renta_bruta));
+                    $('#porc_renta_bruta').text(dollarUSLocale.format(porc_renta_bruta));
+
+
+
+
+
+
+                    gastos_indirectos = apiSumas.column(20, {
+                        search: 'applied'
+                    }).data().sum();
+
+                    $('#gastos_indirectos').text(dollarUSLocale.format(gastos_indirectos));
+
+
+
+
+                    renta_neta = apiSumas.column(21, {
+                        search: 'applied'
+                    }).data().sum();
+                    porc_renta_neta = ((renta_neta / venta_lograda) * 100);
+
+                    $('#renta_neta').text(dollarUSLocale.format(renta_neta));
+                    $('#porc_renta_neta').text(dollarUSLocale.format(porc_renta_neta));
+
+
+
+
+                    presupuesto_proyectado = apiSumas.column(31, {
+                        search: 'applied'
+                    }).data().sum();
+                    presupuesto_autorizado = apiSumas.column(32, {
+                        search: 'applied'
+                    }).data().sum();
+                    indirectos_a_este_centro = apiSumas.column(33, {
+                        search: 'applied'
+                    }).data().sum();
+                    gastos_ingresados = apiSumas.column(34, {
+                        search: 'applied'
+                    }).data().sum();
+                    proyeccion_disponible = apiSumas.column(35, {
+                        search: 'applied'
+                    }).data().sum();
+
+                    proyeccion_disponible_porc = (((venta_proyectada - (
+                        indirectos_a_este_centro + presupuesto_autorizado)) /
+                        venta_proyectada) * 100);
+
+                    presupuesto_total = apiSumas.column(37, {
+                        search: 'applied'
+                    }).data().sum();
+                    presupuesto_disponible = apiSumas.column(38, {
+                        search: 'applied'
+                    }).data().sum();
+
+                    presupuesto_disponible_porc = (((presupuesto_total -
+                        presupuesto_autorizado) / presupuesto_total) * 100);
+
+                    presupuesto_gasto_disponible = apiSumas.column(40, {
+                        search: 'applied'
+                    }).data().sum();
+                    presupuesto_gasto_disponible_porc = (((presupuesto_autorizado -
+                        gastos_ingresados) / presupuesto_autorizado) * 100);
+
+                    $('#presupuesto_proyectado').text(dollarUSLocale.format(
+                        presupuesto_proyectado));
+                    $('#presupuesto_autorizado').text(dollarUSLocale.format(
+                        presupuesto_autorizado));
+
+                    if (presupuesto_autorizado >= gastos_ingresados) {
+                        eva = 'APLICA';
+
+                        $('#eva').css({
+                            'background-color': 'green',
+                            'color': 'white',
+                            'border-style': 'solid',
+                            'border-color': '#bdbdbd',
+                        });
+                    } else {
+                        eva = 'NO APLICA';
+
+                        $('#eva').css({
+                            'background-color': 'red',
+                            'color': 'white',
+                            'border-style': 'solid',
+                            'border-color': '#bdbdbd',
+                        });
+                    }
+
+
+                    $('#txt_indirectos_a_este_centro').text(dollarUSLocale.format(
+                        indirectos_a_este_centro));
+                    $('#txt_gastos_ingresados_bancario').text(dollarUSLocale.format(
+                        gastos_ingresados));
+                    $('#txt_proyeccion_disponible').text(dollarUSLocale.format(
+                        proyeccion_disponible));
+                    $('#txt_proyeccion_disponible_porc').text(dollarUSLocale.format(
+                        proyeccion_disponible_porc));
+                    $('#txt_presupuesto_total').text(dollarUSLocale.format(
+                        presupuesto_total));
+                    $('#txt_presupuesto_disponible').text(dollarUSLocale.format(
+                        presupuesto_disponible));
+                    $('#txt_presupuesto_disponible_porc').text(dollarUSLocale.format(
+                        presupuesto_disponible_porc));
+                    $('#txt_presupuesto_gasto_disponible').text(dollarUSLocale.format(
+                        presupuesto_gasto_disponible));
+                    $('#txt_presupuesto_gasto_disponible_porc').text(dollarUSLocale.format(
+                        presupuesto_gasto_disponible_porc));
+                    $('#eva').text(eva);
+
+
+                },
+                language: {
+                    url: "{% static 'app/th/json/es-ES.json' %}",
+                },
+                ajax: {
+                    beforeSend: function (xhr, type) {
+                        if (!type.crossDomain) {
+                            xhr.setRequestHeader(
+                                'X-CSRF-Token',
+                                $(
+                                    'meta[name="csrf-token"]'
+                                ).attr('content'));
+                        }
+                    },
+                    url: `{% url 'dataReporteEVA' %}?mes1=${encodeURIComponent(varMes1)}&anio1=${encodeURIComponent(varAnio1)}&mes2=${encodeURIComponent(varMes2)}&anio2=${encodeURIComponent(varAnio2)}&empresa=${encodeURIComponent(empresa)}`,
+                },
+                dom: buttons,
+                buttons: [{
+                    extend: 'excel',
+                    text: '<i class="fas fa-file-excel"></i>',
+                    titleAttr: 'Excel',
+                    className: 'btn btn-success',
+                },
+                {
+                    extend: 'pdf',
+                    text: '<i class="fas fa-file-pdf"></i>',
+                    titleAttr: 'PDF',
+                    className: 'btn btn-danger',
+                },
+                {
+                    extend: 'print',
+                    text: '<i class="fas fa-print"></i>',
+                    titleAttr: 'Imprimir',
+                    className: 'btn btn-info',
+                }
+                ],
+                columns: [{
+                    data: 'id_centro'
+                },
+                {
+                    data: 'nombre_centro'
+                },
+                {
+                    data: 'canal_venta',
+                    render: function (data, type, row) {
+                        var badge = "";
+
+                        if (data != "Seleccione una opción") {
+                            badge +=
+                                data;
+                        } else {
+                            badge +=
+                                'N/A';
+                        }
+
+                        return badge;
+                    },
+                },
+                {
+                    data: 'nombre_Tcentro'
+                },
+                {
+                    data: 'empresa',
+                    className: 'rightBorderStyle'
+                },
+
+
+
+                {
+                    data: 'costo',
+                    className: 'currency',
+                    render: $.fn.dataTable.render.number(',', '.', 2)
+                },
+                {
+                    data: 'venta',
+                    className: 'currency',
+                    render: $.fn.dataTable.render.number(',', '.', 2)
+                },
+                {
+                    data: 'utilidad',
+                    className: 'currency',
+                    render: $.fn.dataTable.render.number(',', '.', 2)
+                },
+                {
+                    data: 'margen',
+                    className: 'averages rightBorderStyle',
+                    render: $.fn.dataTable.render.number(',', '.', 2)
+                },
+
+
+
+                {
+                    data: 'costo_neto_logrado',
+                    className: 'currency',
+                    render: $.fn.dataTable.render.number(',', '.', 2)
+                },
+                {
+                    data: 'porc_participacion_costo',
+                    className: 'currency rightBorderStyle',
+                    render: $.fn.dataTable.render.number(',', '.', 2)
+                },
+                {
+                    data: 'venta_neta_lograda',
+                    className: 'currency',
+                    render: $.fn.dataTable.render.number(',', '.', 2)
+                },
+                {
+                    data: 'porc_participacion_venta',
+                    className: 'averages rightBorderStyle',
+                    render: $.fn.dataTable.render.number(',', '.', 2)
+                },
+                {
+                    data: 'utilidad_neta_lograda',
+                    className: 'currency',
+                    render: $.fn.dataTable.render.number(',', '.', 2)
+                },
+                {
+                    data: 'porc_participacion_utilidad',
+                    className: 'averages rightBorderStyle',
+                    render: $.fn.dataTable.render.number(',', '.', 2)
+                },
+                {
+                    data: 'margen_neto_logrado',
+                    className: 'averages rightBorderStyle',
+                    render: $.fn.dataTable.render.number(',', '.', 2)
+                },
+
+
+
+
+                {
+                    data: 'gastos_directos',
+                    className: 'currency',
+                    render: $.fn.dataTable.render.number(',', '.', 2)
+                },
+                {
+                    data: 'porc_gasto',
+                    className: 'averages rightBorderStyle',
+                    render: $.fn.dataTable.render.number(',', '.', 2)
+                },
+
+
+
+
+                {
+                    data: 'renta_bruta',
+                    className: 'currency',
+                    render: $.fn.dataTable.render.number(',', '.', 2)
+                },
+                {
+                    data: 'porc_renta_bruta',
+                    className: 'averages rightBorderStyle',
+                    render: $.fn.dataTable.render.number(',', '.', 2)
+                },
+
+
+                {
+                    data: 'gasto_servicio_recibidos',
+                    className: 'averages rightBorderStyle',
+                    render: $.fn.dataTable.render.number(',', '.', 2)
+                },
+
+
+
+
+
+
+                {
+                    data: 'renta_neta',
+                    className: 'currency',
+                    render: $.fn.dataTable.render.number(',', '.', 2)
+                },
+                {
+                    data: 'porc_renta_neta',
+                    className: 'averages rightBorderStyle',
+                    render: $.fn.dataTable.render.number(',', '.', 2)
+                },
+
+
+                {
+                    data: 'costo_diferencia_logrado',
+                    className: 'currency',
+                    render: $.fn.dataTable.render.number(',', '.', 2)
+                },
+                {
+                    data: 'venta_diferencia_logrado',
+                    className: 'currency',
+                    render: $.fn.dataTable.render.number(',', '.', 2)
+                },
+                {
+                    data: 'utilidad_diferencia_logrado',
+                    className: 'currency',
+                    render: $.fn.dataTable.render.number(',', '.', 2)
+                },
+                {
+                    data: 'margen_diferencia_logrado',
+                    className: 'text-center rightBorderStyle',
+                    render: $.fn.dataTable.render.number(',', '.', 2)
+                },
+
+
+                /* PORC */
+                {
+                    data: 'costo_diferencia_logrado_porc',
+                    className: 'currency',
+                    render: $.fn.dataTable.render.number(',', '.', 2)
+                },
+                {
+                    data: 'venta_diferencia_logrado_porc',
+                    className: 'currency',
+                    render: $.fn.dataTable.render.number(',', '.', 2)
+                },
+                {
+                    data: 'utilidad_diferencia_logrado_porc',
+                    className: 'currency',
+                    render: $.fn.dataTable.render.number(',', '.', 2)
+                },
+                {
+                    data: 'margen_diferencia_logrado_porc',
+                    className: 'text-center rightBorderStyle',
+                    render: $.fn.dataTable.render.number(',', '.', 2)
+                },
+
+
+
+                {
+                    data: 'valor_proyectado',
+                    className: 'currency',
+                    render: $.fn.dataTable.render.number(',', '.', 2)
+                },
+                {
+                    data: 'valor_autorizado',
+                    className: 'currency',
+                    render: $.fn.dataTable.render.number(',', '.', 2)
+                },
+                {
+                    data: 'gasto_indirecto_solicitado_ami',
+                    className: 'currency',
+                    render: $.fn.dataTable.render.number(',', '.', 2)
+                },
+                {
+                    data: 'gastos_ingresados_bancario',
+                    className: 'currency',
+                    render: $.fn.dataTable.render.number(',', '.', 2)
+                },
+                {
+                    data: 'proyeccion_disponible_centro',
+                    className: 'currency',
+                    render: $.fn.dataTable.render.number(',', '.', 2)
+                },
+                {
+                    data: 'proyeccion_disponible_centro_porc',
+                    className: 'averages',
+                    render: $.fn.dataTable.render.number(',', '.', 2)
+                },
+
+                {
+                    data: 'presupuesto_cn',
+                    className: 'currency',
+                    render: $.fn.dataTable.render.number(',', '.', 2)
+                },
+                {
+                    data: 'presupuesto_disponible_cn',
+                    className: 'currency',
+                    render: $.fn.dataTable.render.number(',', '.', 2)
+                },
+                {
+                    data: 'presupuesto_disponible_porc_cn',
+                    className: 'averages',
+                    render: $.fn.dataTable.render.number(',', '.', 2)
+                },
+
+                {
+                    data: 'presupuesto_de_gasto_disponible',
+                    className: 'currency',
+                    render: $.fn.dataTable.render.number(',', '.', 2)
+                },
+                {
+                    data: 'presupuesto_de_gasto_porc',
+                    className: 'averages',
+                    render: $.fn.dataTable.render.number(',', '.', 2)
+                },
+                {
+                    data: 'criterio_eva',
+                    className: 'text-center rightBorderStyle',
+                    render: function (data, type, row) {
+                        var badge = "";
+
+                        if (data == 1) {
+                            badge +=
+                                '<span class="badge rounded-pill badge-success">Aplica</span>';
+                        } else {
+                            badge +=
+                                '<span class="badge rounded-pill badge-danger">NO Aplica</span>';
+                        }
+
+                        return badge;
+                    },
+                },
+
+
+
+
+                {
+                    data: 'nombre_departamento'
+                },
+                {
+                    data: 'nombre_sucursal'
+                },
+                {
+                    data: 'formato'
+                },
+                {
+                    data: 'descripcion_centro'
+                },
+
+                {
+                    data: 'mes_nombre'
+                },
+                {
+                    data: 'anio'
+                },
+                ],
+                columnDefs: [{
+                    targets: negocioColumns,
+                    visible: false,
+                    searchable: true
+                }],
+                createdRow: function (row, data) {
+                    //
+                },
+            });
+
+
+        });
+
+
+        $('#CN_filterCentroTables').keyup(function () {
+            tbl_CentrosNegocios.column(1).search(this.value, true, false).draw();
+        });
+        $('#CN_filterCanalTables').keyup(function () {
+            tbl_CentrosNegocios.column(2).search(this.value, true, false).draw();
+        });
+        $('#CN_filterTipoTables').keyup(function () {
+            tbl_CentrosNegocios.column(3).search(this.value, true, false).draw();
+        });
+        $('#CN_filterEmpresaCentroTables').change(function () {
+            tbl_CentrosNegocios.column(4).search(this.value, true, false).draw();
+        });
+        $('#CN_filterDepartamentoTables').keyup(function () {
+            tbl_CentrosNegocios.column(29).search(this.value, true, false).draw();
+        });
+        $('#CN_filterSucursalTables').keyup(function () {
+            tbl_CentrosNegocios.column(30).search(this.value, true, false).draw();
+        });
+
+
+
+        $(".proyeccionVendedor").css('visibility', 'hidden');
+        $(".proyeccionVendedor").css('height', '0');
+
+
+        $('#tbl_CentrosNegocios').on("dblclick", "tbody td", function () {
+            fila = $(this).closest("tr");
+
+            var data = $("#tbl_CentrosNegocios").DataTable().row(fila).data();
+
+            id_centro = data['id_centro'];
+            centro = data['nombre_centro'];
+            tipo_centro = data['nombre_Tcentro'];
+
+            varMes1 = $('#mesPresupuestoDesde').val();
+            varAnio1 = $('#anioPresupuestoDesde').val();
+
+            varMes2 = $('#mesPresupuestoHasta').val();
+            varAnio2 = $('#anioPresupuestoHasta').val();
+
+            if (tipo_centro == "NEGOCIOS") {
+                $("#tableDesgloseVendedores").DataTable().clear().destroy();
+
+                $(".proyeccionVendedor").css('visibility', 'visible');
+                $(".proyeccionVendedor").css('height', 'auto');
+
+                $('#desgloseTitle').text("PROYECCION DE VENDEDORES DEL CENTRO DE NEGOCIOS " + centro);
+
+                tableDesgloseVendedores = $('#tableDesgloseVendedores').DataTable({
+                    initComplete: function () {
+                        var api = this.api();
+                        // For each column
+                        api
+                            .columns()
+                            .eq(0)
+                            .each(function (colIdx) {
+                                // Set the header cell to contain the input element
+                                var cell = $('.filterPanelVendedores th').eq(
+                                    $(api.column(colIdx).header()).index()
+                                );
+                                var title = $(cell).text();
+
+                                if (title == 'Vendedor') {
+                                    $(cell).html(
+                                        '<input class="form-control form-control-sm" type="text" placeholder="' +
+                                        title +
+                                        '" />');
+                                }
+
+                                // On every keypress in this input
+                                $(
+                                    'input',
+                                    $('.filterPanelVendedores th').eq($(api.column(
+                                        colIdx)
+                                        .header())
+                                        .index())
+                                )
+                                    .off('keyup change')
+                                    .on('change', function (e) {
+                                        // Get the search value
+                                        $(this).attr('title', $(this).val());
+                                        var regexr =
+                                            '({search})'; //$(this).parents('th').find('select').val();
+
+                                        var cursorPosition = this.selectionStart;
+                                        // Search the column for that value
+                                        api
+                                            .column(colIdx)
+                                            .search(
+                                                this.value != '' ?
+                                                    regexr.replace('{search}', '(((' +
+                                                        this
+                                                            .value + ')))') :
+                                                    '',
+                                                this.value != '',
+                                                this.value == ''
+                                            )
+                                            .draw();
+                                    })
+                                    .on('keyup', function (e) {
+                                        e.stopPropagation();
+
+                                        $(this).trigger('change');
+                                        $(this)
+                                            .focus()[0]
+                                            .setSelectionRange(cursorPosition,
+                                                cursorPosition);
+                                    });
+                            });
+                    },
+                    drawCallback: function () {
+                        let dollarUSLocale = Intl.NumberFormat("en-US", {
+                            minimumFractionDigits: 2,
+                            maximumFractionDigits: 2
+                        });
+
+                        let intergerLocale = Intl.NumberFormat("en-US", {
+                            minimumFractionDigits: 0,
+                            maximumFractionDigits: 0
+                        });
+
+
+                        var apiSumas = this.api();
+
+
+                        var txt_costo_proyectado = apiSumas.column(2, {
+                            search: 'applied'
+                        }).data().sum();
+                        var txt_venta_proyectada = apiSumas.column(3, {
+                            search: 'applied'
+                        }).data().sum();
+
+                        txt_utilidad_proyectada = (txt_venta_proyectada -
+                            txt_costo_proyectado);
+                        txt_margen_proyectado = ((txt_utilidad_proyectada /
+                            txt_costo_proyectado) * 100);
+
+                        var txt_costo_logrado = apiSumas.column(6, {
+                            search: 'applied'
+                        }).data().sum();
+                        var txt_venta_lograda = apiSumas.column(7, {
+                            search: 'applied'
+                        }).data().sum();
+
+                        txt_utilidad_lograda = (txt_venta_lograda - txt_costo_logrado);
+                        txt_margen_logrado = ((txt_utilidad_lograda / txt_costo_logrado) *
+                            100);
+
+
+
+
+                        txt_porc_venta_lograda = ((txt_venta_lograda /
+                            txt_venta_proyectada) * 100);
+
+
+                        $('#txt_costo_proyectado').text(dollarUSLocale.format(
+                            txt_costo_proyectado));
+                        $('#txt_venta_proyectada').text(dollarUSLocale.format(
+                            txt_venta_proyectada));
+                        $('#txt_utilidad_proyectada').text(dollarUSLocale.format(
+                            txt_utilidad_proyectada));
+                        $('#txt_margen_proyectado').text(dollarUSLocale.format(isNaN(
+                            txt_margen_proyectado) ? 0 : txt_margen_proyectado));
+
+                        $('#txt_costo_logrado').text(dollarUSLocale.format(
+                            txt_costo_logrado));
+                        $('#txt_venta_lograda').text(dollarUSLocale.format(
+                            txt_venta_lograda));
+                        $('#txt_utilidad_lograda').text(dollarUSLocale.format(
+                            txt_utilidad_lograda));
+                        $('#txt_margen_logrado').text(dollarUSLocale.format(isNaN(
+                            txt_margen_logrado) ? 0 :
+                            txt_margen_logrado));
+
+                        txt_costo_logrado_dif = txt_costo_logrado - txt_costo_proyectado;
+                        txt_venta_lograda_dif = txt_venta_lograda - txt_venta_proyectada;
+                        txt_utilidad_lograda_dif = txt_utilidad_lograda -
+                            txt_utilidad_proyectada;
+                        txt_margen_logrado_dif = txt_margen_logrado - txt_margen_proyectado;
+
+                        txt_costo_logrado_porc = ((txt_costo_logrado /
+                            txt_costo_proyectado) * 100);
+                        txt_venta_lograda_porc = ((txt_venta_lograda /
+                            txt_venta_proyectada) * 100);
+                        txt_utilidad_lograda_porc = ((txt_utilidad_lograda /
+                            txt_utilidad_proyectada) *
+                            100);
+                        txt_margen_logrado_porc = ((txt_margen_logrado /
+                            txt_margen_proyectado) * 100);
+
+                        $('#txt_costo_logrado_dif').text(dollarUSLocale.format(
+                            txt_costo_logrado_dif));
+                        $('#txt_venta_lograda_dif').text(dollarUSLocale.format(
+                            txt_venta_lograda_dif));
+                        $('#txt_utilidad_lograda_dif').text(dollarUSLocale.format(
+                            txt_utilidad_lograda_dif));
+                        $('#txt_margen_logrado_dif').text(dollarUSLocale.format(isNaN(
+                            txt_margen_logrado_dif) ? 0 :
+                            txt_margen_logrado_dif));
+
+                        $('#txt_costo_logrado_porc').text(dollarUSLocale.format(
+                            txt_costo_logrado_porc));
+                        $('#txt_venta_lograda_porc').text(dollarUSLocale.format(
+                            txt_venta_lograda_porc));
+                        $('#txt_utilidad_lograda_porc').text(dollarUSLocale.format(
+                            txt_utilidad_lograda_porc));
+                        $('#txt_margen_logrado_porc').text(dollarUSLocale.format(isNaN(
+                            txt_margen_logrado_porc) ? 0 :
+                            txt_margen_logrado_porc));
+
+                        if (txt_venta_lograda_dif > 0) {
+
+                            $('#txt_costo_logrado_dif, #txt_venta_lograda_dif, #txt_utilidad_lograda_dif, #txt_margen_logrado_dif, #txt_costo_logrado_porc, #txt_venta_lograda_porc, #txt_utilidad_lograda_porc, #txt_margen_logrado_porc')
+                                .css({
+                                    'background-color': 'green',
+                                    'color': 'white',
+                                    'border-style': 'solid',
+                                    'border-color': '#bdbdbd',
+                                });
+                        } else {
+
+                            $('#txt_costo_logrado_dif, #txt_venta_lograda_dif, #txt_utilidad_lograda_dif, #txt_margen_logrado_dif, #txt_costo_logrado_porc, #txt_venta_lograda_porc, #txt_utilidad_lograda_porc, #txt_margen_logrado_porc')
+                                .css({
+                                    'background-color': 'red',
+                                    'color': 'white',
+                                    'border-style': 'solid',
+                                    'border-color': '#bdbdbd',
+                                });
+                        }
+
+
+                    },
+                    language: {
+                        url: "{% static 'app/th/json/es-ES.json' %}",
+                    },
+                    ordering: true,
+                    dom: buttons,
+                    buttons: [{
+                        extend: 'excel',
+                        text: '<i class="fas fa-file-excel"></i>',
+                        titleAttr: 'Excel',
+                        className: 'btn btn-success',
+                    },
+                    {
+                        extend: 'pdf',
+                        text: '<i class="fas fa-file-pdf"></i>',
+                        titleAttr: 'PDF',
+                        className: 'btn btn-danger',
+                    },
+                    {
+                        extend: 'print',
+                        text: '<i class="fas fa-print"></i>',
+                        titleAttr: 'Imprimir',
+                        className: 'btn btn-info',
+                    }
+                    ],
+                    ajax: {
+                        url: `{% url 'dataVendedoresCentro' %}?mes1=${encodeURIComponent(varMes1)}&anio1=${encodeURIComponent(varAnio1)}&mes2=${encodeURIComponent(varMes2)}&anio2=${encodeURIComponent(varAnio2)}&centro=${encodeURIComponent(id_centro)}`,
+                    },
+                    columns: [{
+                        data: 'id_proyeccion_vendedor'
+                    },
+                    {
+                        data: 'nombre_vendedor',
+                        className: 'rightBorderStyle'
+                    },
+
+
+                    {
+                        data: 'costo',
+                        className: 'currency',
+                        render: $.fn.dataTable.render.number(',', '.', 2)
+                    },
+                    {
+                        data: 'ventas',
+                        className: 'currency',
+                        render: $.fn.dataTable.render.number(',', '.', 2)
+                    },
+                    {
+                        data: 'utilidad',
+                        className: 'currency',
+                        render: $.fn.dataTable.render.number(',', '.', 2)
+                    },
+                    {
+                        data: 'margen',
+                        className: 'text-center rightBorderStyle',
+                        render: $.fn.dataTable.render.number(',', '.', 2)
+                    },
+
+
+
+                    {
+                        data: 'total_costo',
+                        className: 'currency',
+                        render: $.fn.dataTable.render.number(',', '.', 2)
+                    },
+                    {
+                        data: 'total_venta',
+                        className: 'currency',
+                        render: $.fn.dataTable.render.number(',', '.', 2)
+                    },
+                    {
+                        data: 'utilidad_total',
+                        className: 'currency',
+                        render: $.fn.dataTable.render.number(',', '.', 2)
+                    },
+                    {
+                        data: 'porc_utilidad',
+                        className: 'text-center rightBorderStyle',
+                        render: $.fn.dataTable.render.number(',', '.', 2)
+                    },
+
+
+
+
+                    {
+                        data: 'dif_costo',
+                        className: 'currency',
+                        render: $.fn.dataTable.render.number(',', '.', 2)
+                    },
+                    {
+                        data: 'dif_venta',
+                        className: 'currency',
+                        render: $.fn.dataTable.render.number(',', '.', 2)
+                    },
+                    {
+                        data: 'dif_utilidad',
+                        className: 'currency',
+                        render: $.fn.dataTable.render.number(',', '.', 2)
+                    },
+                    {
+                        data: 'dif_margen',
+                        className: 'text-center rightBorderStyle',
+                        render: $.fn.dataTable.render.number(',', '.', 2)
+                    },
+
+
+
+
+                    {
+                        data: 'porc_costo_logrado',
+                        className: 'currency',
+                        render: $.fn.dataTable.render.number(',', '.', 2)
+                    },
+                    {
+                        data: 'porc_venta_lograda',
+                        className: 'currency',
+                        render: $.fn.dataTable.render.number(',', '.', 2)
+                    },
+                    {
+                        data: 'porc_util_logrado',
+                        className: 'currency',
+                        render: $.fn.dataTable.render.number(',', '.', 2)
+                    },
+                    {
+                        data: 'porc_margen_logrado',
+                        className: 'text-center rightBorderStyle',
+                        render: $.fn.dataTable.render.number(',', '.', 2)
+                    },
+
+
+                    ],
+                    order: [8, "desc"],
+                    createdRow: function (row, data) {
+                        /* CLIENTES */
+                        if (parseFloat(data.porc_venta_lograda) >= 100) {
+                            $('td', row).css({
+                                'background-color': 'green',
+                                'color': 'white',
+                                'border-style': 'solid',
+                                'border-color': '#bdbdbd',
+                            });
+                        }
+
+                        if (parseFloat(data.porc_venta_lograda) < 100) {
+                            $('td', row).css({
+                                'background-color': 'red',
+                                'color': 'white',
+                                'border-style': 'solid',
+                                'border-color': '#bdbdbd',
+                            });
+                        }
+                    },
+
+                });
+            } else {
+                $(".proyeccionVendedor").css('visibility', 'hidden');
+                $(".proyeccionVendedor").css('height', '0');
+            }
+
+        });
+
+
+
+
+
+
+
+
+
+        /*  */
+    });
+</script>
+{% endblock %}

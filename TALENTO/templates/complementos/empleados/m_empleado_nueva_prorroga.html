@@ -1,0 +1,61 @@
+<div class="modal fade" id="modalContratos" tabindex="-1" role="dialog" aria-labelledby="exampleModalLabel"
+    data-bs-keyboard="false" data-bs-backdrop="static" aria-hidden="true">
+    <div class="modal-dialog modal-lg" role="document">
+        <div class="modal-content">
+            <div class="modal-header" style="background-color: #304458; color:white">
+                <h5 class="modal-title" id="exampleModalLabel">
+                    <i class="material-icons me-2 text-gray">description</i> Nueva Prórroga Contrato
+                </h5>
+                <button type="button" class="close" data-dismiss="modal" aria-label="Close">
+                    <span aria-hidden="true">&times;</span>
+                </button>
+            </div>
+            <form id="formContratos">
+
+                <div class="modal-body">
+                    <div class="row">
+                        <div class="col-lg-6">
+                            <div class="form-group">
+                                <label for="" class="col-form-label">Inicio Prórroga:</label>
+                                <input type="date" class="form-control" id="inicioContrato">
+                            </div>
+                        </div>
+                        <div class="col-lg-6">
+                            <div class="form-group">
+                                <label for="" class="col-form-label">Final Prórroga:</label>
+                                <input type="date" class="form-control" id="finalContrato">
+                            </div>
+                        </div>
+                    </div>
+                    <div class="row">
+                        <div class="form-group">
+                            <label for="" class="col-form-label">Descripción:</label>
+                            <textarea class="form-control form-control-sm" name="descripcion" id="descripcion"
+                                rows="3"></textarea>
+                        </div>
+                    </div>
+                </div>
+                <div class="modal-footer">
+                    <div class="modal-footer">
+                        <button type="submit" id="btnGuardar" class="btn btn-success">Guardar</button>
+                        <button type="button" class="btn btn-danger close" data-dismiss="modal"
+                            id="cerrarProrroga">Cerrar</button>
+
+                    </div>
+
+                </div>
+            </form>
+        </div>
+    </div>
+</div>
+
+<script>
+    $(document).ready(function () {
+        // Cuando se hace clic en el botón con id "btnCerrar"
+        $('#cerrarProrroga').on('click', function (e) {
+            e.preventDefault(); // Evita el comportamiento predeterminado
+            $("#modalProrrogasContrato").modal("show");
+        });
+    });
+
+</script>

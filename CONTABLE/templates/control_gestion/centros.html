@@ -1,0 +1,1980 @@
+{% extends 'componentes/menu_contable.html' %}
+{% load static %}
+
+{% block title %}
+CENTROS EMPRESARIALES
+{% endblock %}
+
+
+{% block body %}
+
+<div class="row align-items-center border-bottom mb-2 py-1">
+    <div class="col d-flex align-items-center">
+        <button id="toggle-sidebar" class="btn btn-warning btn-sm me-2 btnMenu" title="Mostrar/Ocultar menú">
+            <i class="fas fa-bars"></i>
+        </button>
+        <h6 class="page-title mb-0 fs-6 fw-bold">CENTROS</h6>
+    </div>
+
+    {% if acceso_crear_centros == 1 or adminIT == 1 %}
+    <div class="col-auto text-end float-end ms-auto download-grp">
+        <button class="btn btn-sm btn-success" id="btnNuevoCentro" title="Crear Nuevo"><i class="fas fa-plus me-2"></i>
+            Nuevo</button>
+    </div>
+    {% endif %}
+</div>
+
+
+
+<div class="container-fluid mt-1">
+
+    <div class="row d-flex align-items-end">
+
+        <div class="col-sm-2">
+            <div class="form-group">
+                <label class="col-form-label">Tipo Centro: </label>
+                <select class="form-select form-select-sm filterStyle text-nowrap pickedPeriodo tipoCentro"
+                    id="tipoCentro">
+                    <option value="1">CENTROS DE NEGOCIOS</option>
+                    <option value="2">CENTROS DE SERVICIOS</option>
+                </select>
+            </div>
+        </div>
+
+        <div class="col-sm-2">
+            <div class="form-group">
+                <label class="col-form-label">Mes Presupuesto: </label>
+                <select class="form-select form-select-sm filterStyle text-nowrap pickedPeriodo mesPresupuesto"
+                    id="mesPresupuesto">
+                    <option value="1">ENERO</option>
+                    <option value="2">FEBRERO</option>
+                    <option value="3">MARZO</option>
+                    <option value="4">ABRIL</option>
+                    <option value="5">MAYO</option>
+                    <option value="6">JUNIO</option>
+                    <option value="7">JULIO</option>
+                    <option value="8">AGOSTO</option>
+                    <option value="9">SEPTIEMBRE</option>
+                    <option value="10">OCTUBRE</option>
+                    <option value="11">NOVIEMBRE</option>
+                    <option value="12">DICIEMBRE</option>
+                </select>
+            </div>
+        </div>
+
+        <div class="col-sm-2">
+            <div class="form-group">
+                <label class="col-form-label">Año Presupuesto: </label>
+                <select class="form-select form-select-sm filterStyle text-nowrap pickedPeriodo anioPresupuesto"
+                    id="anioPresupuesto">
+                </select>
+            </div>
+        </div>
+
+        <div class="col-sm-4">
+
+            {% if cierre_mensualVAIC == 1 or adminIT == 1 %}
+            <button type="button" class="btn btn-sm btn-danger btnRealizarCierre" id="btnRealizarCierre">Realizar
+                Cierre
+            </button>
+            {% endif %}
+
+            <button type="button" class="btn btn-sm btn-info btnActualizar" id="btnReload">Recargar
+            </button>
+
+        </div>
+
+    </div>
+
+
+
+    <br>
+
+
+
+    <div class="row p-2">
+        <div class="row d-flex justify-content-end">
+            <span><b>Filtros Rápidos</b></span>
+            <div class="mainFilters">
+                <div class="row f-flex justify-content-end">
+                    <div class="col-sm">
+                        <label for="">Nombre</label>
+                        <input type="text" class="form-control form-control-sm tableMainFilters"
+                            id="CN_filterNombreTables" placeholder="Nombre">
+                    </div>
+
+                    <div class="col-sm">
+                        <label for="">Tipo</label>
+                        <input type="text" class="form-control form-control-sm tableMainFilters"
+                            id="CN_filterTipoTables" placeholder="Tipo">
+                    </div>
+
+                    <div class="col-sm">
+                        <label for="">Sucursal</label>
+                        <input type="text" class="form-control form-control-sm tableMainFilters"
+                            id="CN_filterSucursalTables" placeholder="Sucursal">
+                    </div>
+
+                    <div class="col-sm">
+                        <label for="">Departamento</label>
+                        <input type="text" class="form-control form-control-sm tableMainFilters"
+                            id="CN_filterDepartamentoTables" placeholder="Departamento">
+                    </div>
+
+                    <div class="col-sm">
+                        <label for="">Empresa</label>
+                        <select class="form-select form-select-sm" id="CN_filterEmpresaTables">
+                            <option value="">TODAS</option>
+                            {% for e in empresasData %}
+                            <option value="{{ e.nombre }}">{{ e.nombre }}</option>
+                            {% endfor %}
+                        </select>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+
+    <div class="row" id="contenedorNegocios">
+        <div class="table-responsive">
+
+            <table id="tbl_CentrosNegocios"
+                class="table table-striped table-bordered mb-0 table-sm rounded-4 table-hover align-middle"
+                style="width: 100%;">
+                <thead class="table-gradient text-dark">
+                    <tr>
+                        <th class="text-center">#</th>
+                        <th class="text-center">Nombre</th>
+                        <th class="text-center">Descripción</th>
+                        <th class="text-center">ID Tipo</th>
+                        <th class="text-center">Tipo</th>
+                        <th class="text-center">ID Departamento</th>
+                        <th class="text-center">Departamento</th>
+                        <th class="text-center">Sucursal</th>
+                        <th class="text-center">Empresa</th>
+                        <th class="text-center">ID Formato</th>
+                        <th class="text-center">Formato</th>
+                        <th class="text-center">ID Canal</th>
+                        <th class="text-center">Canal</th>
+
+                        <th class="text-center">Presupuesto Proyectado</th>
+                        <th class="text-center">Presupuesto Autorizado</th>
+                        <th class="text-center">Presupuesto Indirecto Solicitado a este Centro</th>
+                        <th class="text-center">Gastos Ingresados</th>
+
+                        <th class="text-center">Utilidad Proy.</th>
+                        <th class="text-center">Presupuesto Indirecto Solicitado a este Centro</th>
+                        <th class="text-center">Presupuesto Autorizado</th>
+                        <th class="text-center">Proyeccion Disponible</th>
+                        <th class="text-center">Proyeccion Disponible Porc</th>
+
+                        <th class="text-center">Presupuesto Autorizado</th>
+                        <th class="text-center">Gastos Ingresados</th>
+
+                        <th class="text-center">Otros Ingreos Proyectados</th>
+                        <th class="text-center">Otros Ingresos Logrados</th>
+
+                        <th class="text-center">Presupuesto de Gasto Disponible</th>
+                        <th class="text-center">Presupuesto de Gasto Disponible Porc</th>
+                        <th class="text-center">Criterio EVA</th>
+
+                        <th class="text-center">Costo Proy.</th>
+                        <th class="text-center">Venta Proy.</th>
+                        <th class="text-center">Utilidad Proy.</th>
+                        <th class="text-center bg-warning">Margen Proy.</th>
+
+                        <th class="text-center">Costo Neto Log.</th>
+                        <th class="text-center">Venta Neta Log.</th>
+                        <th class="text-center">Utilidad Neta Log.</th>
+                        <th class="text-center bg-warning">Margen Neto Log.</th>
+
+                        <th class="text-center">Costo Neto Dif.</th>
+                        <th class="text-center">Venta Neta Dif.</th>
+                        <th class="text-center">Utilidad Neta Dif.</th>
+                        <th class="text-center bg-warning">Margen Neto Dif.</th>
+
+                        <th class="text-center">Costo Neto Porc. Log.</th>
+                        <th class="text-center">Venta Neta Porc. Log.</th>
+                        <th class="text-center">Utilidad Neta Porc. Log.</th>
+                        <th class="text-center bg-warning">Margen Neto Porc. Log.</th>
+
+
+                        <th class="text-center">Costo Anterior</th>
+                        <th class="text-center">Venta Anterior</th>
+                        <th class="text-center">Utilidad Anterior</th>
+                        <th class="text-center bg-warning">Margen Anterior</th>
+
+                        <th class="text-center">Acciones</th>
+                    </tr>
+                </thead>
+
+                <tbody>
+
+                </tbody>
+            </table>
+
+        </div>
+    </div>
+
+    <div class="row" id="contenedorServicios" class="d-none">
+        <div class="table-responsive">
+
+            <table id="tbl_CentrosServicios"
+                class="table table-striped table-bordered mb-0 table-sm rounded-4 table-hover align-middle"
+                style="width: 100%;">
+                <thead class="table-gradient text-dark">
+                    <tr>
+                        <th class="text-center">#</th>
+                        <th class="text-center">Nombre</th>
+                        <th class="text-center">Descripción</th>
+                        <th class="text-center">ID Tipo</th>
+                        <th class="text-center">Tipo</th>
+                        <th class="text-center">ID Departamento</th>
+                        <th class="text-center">Departamento</th>
+                        <th class="text-center">Sucursal</th>
+                        <th class="text-center">Empresa</th>
+
+                        <th class="text-center">Presupuesto Proyectado</th>
+                        <th class="text-center">Presupuesto Autorizado</th>
+                        <th class="text-center">Presupuesto Indirecto Solicitado a este Centro</th>
+                        <th class="text-center">Gastos Ingresados</th>
+
+                        <th class="text-center">Presupuesto Total</th>
+                        <th class="text-center">Presupuesto Autorizado</th>
+                        <th class="text-center">Presupuesto Disponible</th>
+                        <th class="text-center">Presupuesto Disponible Porc</th>
+
+                        <th class="text-center">Presupuesto Autorizado</th>
+                        <th class="text-center">Gastos Ingresados</th>
+
+                        <th class="text-center">Otros Ingreos Proyectados</th>
+                        <th class="text-center">Otros Ingresos Logrados</th>
+
+                        <th class="text-center">Presupuesto de Gasto Disponible</th>
+                        <th class="text-center">Presupuesto de Gasto Disponible Porc</th>
+                        <th class="text-center">Criterio EVA</th>
+
+                        <th class="text-center">Acciones</th>
+                    </tr>
+                </thead>
+
+                <tbody>
+
+                </tbody>
+            </table>
+
+        </div>
+    </div>
+</div>
+
+
+<a href="{% url 'panel_contabilidad' %}">
+    <button class="btn btn-sm btn-danger" id="btnCerrar" title="Cerrar"
+        style="position: fixed; bottom: 20px; right: 20px;">
+        <i class="fa fa-times"></i> Cerrar
+    </button>
+</a>
+
+
+
+{% include 'control_gestion/complementos/m_reponsables_centros.html' %}
+{% include 'control_gestion/complementos/m_centros.html' %}
+{% include 'control_gestion/complementos/m_presupuesto_proyecciones.html' %}
+{% include 'control_gestion/complementos/m_modal_autorizacion.html' %}
+
+{% endblock %}
+
+
+{% block scripts %}
+
+<script>
+    $(document).ready(function () {
+        var csrfToken = "{{ csrf_token }}";
+        var buttons = "Bfrtlip";
+
+        var monthA = "{{ varMonth }}";
+        var varAnio = "{{ varAnio }}";
+
+        var windowSize = $(window).width();
+
+        var cardHeight = $(".card-expanded").height();
+        var tableHeight = cardHeight * 0.5;
+
+        let dollarUSLocale = Intl.NumberFormat("en-US", {
+            minimumFractionDigits: 2,
+            maximumFractionDigits: 2
+        });
+
+        let intergerLocale = Intl.NumberFormat("en-US", {
+            minimumFractionDigits: 0,
+            maximumFractionDigits: 0
+        });
+
+        var toastMixin = Swal.mixin({
+            toast: true,
+            icon: 'success',
+            title: 'General Title',
+            animation: false,
+            position: 'top-right',
+            showConfirmButton: false,
+            timer: 2000,
+            timerProgressBar: true,
+            didOpen: (toast) => {
+                toast.addEventListener('mouseenter', Swal.stopTimer);
+                toast.addEventListener('mouseleave', Swal.resumeTimer);
+            }
+        });
+
+        while (monthA.charAt(0) === '0') {
+            monthA = monthA.substring(1);
+        }
+
+        $('#mesPresupuesto').val(monthA).change();
+
+        for (i = new Date().getFullYear() + 1; i >= (new Date().getFullYear() - 5); i--) {
+            $('.anioPresupuesto').append($('<option />').val(i).html(i));
+            $('.anioPresupuesto').val(varAnio).change();
+        }
+
+
+        if (windowSize <= 960) {
+            fixedColumnsCentros = 2;
+        } else if (windowSize > 960) {
+            fixedColumnsCentros = 4;
+        }
+
+
+        $('#tipoCentro').val(1).change();
+        $('#contenedorNegocios').removeClass('d-none');
+        $('#contenedorServicios').addClass('d-none');
+
+        $('#tipoCentro').change(function () {
+            const tipoCentro = $(this).val();
+
+            if (tipoCentro == 1) {
+                $('#contenedorNegocios').removeClass('d-none');
+                $('#contenedorServicios').addClass('d-none');
+                $('#tbl_CentrosNegocios').DataTable().columns.adjust().draw(false);
+            } else {
+                $('#contenedorNegocios').addClass('d-none');
+                $('#contenedorServicios').removeClass('d-none');
+                $('#tbl_CentrosServicios').DataTable().columns.adjust().draw(false);
+            }
+        });
+
+
+        $('#btnReload').click(function (e) {
+            e.preventDefault();
+
+            listCentroNegocios();
+            listCentroServicios();
+        });
+
+        $('.pickedPeriodo').change(function (e) {
+            e.preventDefault();
+
+            listCentroNegocios();
+            listCentroServicios();
+        });
+
+        listCentroNegocios();
+        listCentroServicios();
+
+        function listCentroNegocios() {
+            varMes = $('#mesPresupuesto').val();
+            varAnio = $('#anioPresupuesto').val();
+
+            $("#tbl_CentrosNegocios").DataTable().clear().destroy();
+
+            var negocioColumns = [3, 5, 9, 11, 43, 44, 45, 46];
+
+            tbl_CentrosNegocios = $('#tbl_CentrosNegocios').DataTable({
+                scrollX: true,
+                scrollCollapse: true,
+                scrollY: '350px',
+                pageLength: 50,
+                fixedColumns: {
+                    left: fixedColumnsCentros,
+                    right: 1
+                },
+                language: {
+                    url: "{% static 'app/th/json/es-ES.json' %}",
+                },
+                ajax: {
+                    url: `{% url 'dataCentros' %}`,
+                    type: "POST",
+                    dataSrc: 'data',
+                    data: {
+                        mes: varMes,
+                        anio: varAnio,
+                        tipo: 1,
+                        csrfmiddlewaretoken: csrfToken
+                    },
+                },
+                dom: buttons,
+                buttons: [{
+                    extend: 'excel',
+                    text: '<i class="fas fa-file-excel"></i>',
+                    titleAttr: 'Excel',
+                    className: 'btn btn-success',
+                },
+                {
+                    extend: 'pdf',
+                    text: '<i class="fas fa-file-pdf"></i>',
+                    titleAttr: 'PDF',
+                    className: 'btn btn-danger',
+                },
+                {
+                    extend: 'print',
+                    text: '<i class="fas fa-print"></i>',
+                    titleAttr: 'Imprimir',
+                    className: 'btn btn-info',
+                }
+                ],
+                columns: [{
+                    data: 'codigo_contable'
+                },
+                {
+                    data: 'nombre_centro',
+                    className: 'text-nowrap'
+                },
+                {
+                    data: 'descripcion_centro',
+                    className: 'text-nowrap'
+                },
+                {
+                    data: 'id_tipo_centro',
+                    className: 'text-nowrap'
+                },
+                {
+                    data: 'nombre_Tcentro',
+                    className: 'text-nowrap'
+                },
+                {
+                    data: 'id_departamento',
+                    className: 'text-nowrap'
+                },
+                {
+                    data: 'nombre_departamento',
+                    className: 'text-nowrap'
+                },
+                {
+                    data: 'nombre_sucursal',
+                    className: 'text-nowrap'
+                },
+                {
+                    data: 'empresa',
+                    className: 'text-nowrap'
+                },
+                {
+                    data: 'id_formato',
+                    className: 'text-nowrap'
+                },
+                {
+                    data: 'formato',
+                    className: 'text-nowrap'
+                },
+                {
+                    data: 'id_canal_venta',
+                    className: 'text-nowrap'
+                },
+                {
+                    data: 'canal_venta',
+                    className: 'text-nowrap'
+                },
+
+
+
+
+                {
+                    data: 'valor_proyectado',
+                    className: 'currency',
+                    render: $.fn.dataTable.render.number(',', '.', 2)
+                },
+                {
+                    data: 'valor_autorizado',
+                    className: 'currency',
+                    render: $.fn.dataTable.render.number(',', '.', 2)
+                },
+                {
+                    data: 'gasto_indirecto_solicitado_ami',
+                    className: 'currency',
+                    render: $.fn.dataTable.render.number(',', '.', 2)
+                },
+                {
+                    data: 'gastos_ingresados_bancario',
+                    className: 'currency rightBorderStyle',
+                    render: $.fn.dataTable.render.number(',', '.', 2)
+                },
+
+
+
+                {
+                    data: 'utilidad',
+                    className: 'currency',
+                    render: $.fn.dataTable.render.number(',', '.', 2)
+                },
+                {
+                    data: 'gasto_indirecto_solicitado_ami',
+                    className: 'currency',
+                    render: $.fn.dataTable.render.number(',', '.', 2)
+                },
+                {
+                    data: 'valor_autorizado',
+                    className: 'currency',
+                    render: $.fn.dataTable.render.number(',', '.', 2)
+                },
+                {
+                    data: 'proyeccion_disponible_centro',
+                    className: 'currency',
+                    render: $.fn.dataTable.render.number(',', '.', 2)
+                },
+                {
+                    data: 'proyeccion_disponible_centro_porc',
+                    className: 'averages rightBorderStyle',
+                    render: $.fn.dataTable.render.number(',', '.', 2)
+                },
+
+
+                /* NUEVO */
+                {
+                    data: 'valor_autorizado',
+                    className: 'currency',
+                    render: $.fn.dataTable.render.number(',', '.', 2)
+                },
+                {
+                    data: 'gastos_ingresados_bancario',
+                    className: 'currency rightBorderStyle',
+                    render: $.fn.dataTable.render.number(',', '.', 2)
+                },
+
+
+                {
+                    data: 'VALOR_INGRESO_META',
+                    className: 'currency',
+                    render: $.fn.dataTable.render.number(',', '.', 2)
+                },
+                {
+                    data: 'VALOR_INGRESO_LOGRADO',
+                    className: 'currency',
+                    render: $.fn.dataTable.render.number(',', '.', 2)
+                },
+
+
+
+                {
+                    data: 'presupuesto_de_gasto_disponible',
+                    className: 'currency',
+                    render: $.fn.dataTable.render.number(',', '.', 2)
+                },
+                {
+                    data: 'presupuesto_de_gasto_porc',
+                    className: 'averages rightBorderStyle',
+                    render: $.fn.dataTable.render.number(',', '.', 2)
+                },
+                {
+                    data: 'criterio_eva',
+                    className: 'text-center rightBorderStyle',
+                    render: function (data, type, row) {
+                        var badge = "";
+
+                        if (data == 1) {
+                            badge +=
+                                '<span class="badge rounded-pill bg-success">Aplica</span>';
+                        } else {
+                            badge +=
+                                '<span class="badge rounded-pill bg-danger">NO Aplica</span>';
+                        }
+
+                        return badge;
+                    },
+                },
+
+
+                /* PROYECTADO */
+                {
+                    data: 'costo',
+                    className: 'currency',
+                    render: $.fn.dataTable.render.number(',', '.', 2)
+                },
+                {
+                    data: 'venta',
+                    className: 'currency',
+                    render: $.fn.dataTable.render.number(',', '.', 2)
+                },
+                {
+                    data: 'utilidad',
+                    className: 'currency',
+                    render: $.fn.dataTable.render.number(',', '.', 2)
+                },
+                {
+                    data: 'margen',
+                    className: 'text-center rightBorderStyle',
+                    render: $.fn.dataTable.render.number(',', '.', 2)
+                },
+
+                /* LOGRADO */
+                {
+                    data: 'costo_neto_logrado',
+                    className: 'currency',
+                    render: $.fn.dataTable.render.number(',', '.', 2)
+                },
+                {
+                    data: 'venta_neta_lograda',
+                    className: 'currency',
+                    render: $.fn.dataTable.render.number(',', '.', 2)
+                },
+                {
+                    data: 'utilidad_neta_lograda',
+                    className: 'currency',
+                    render: $.fn.dataTable.render.number(',', '.', 2)
+                },
+                {
+                    data: 'margen_neto_logrado',
+                    className: 'text-center rightBorderStyle',
+                    render: $.fn.dataTable.render.number(',', '.', 2)
+                },
+
+                /* DIFERENCIA */
+                {
+                    data: 'costo_diferencia_logrado',
+                    className: 'currency',
+                    render: $.fn.dataTable.render.number(',', '.', 2)
+                },
+                {
+                    data: 'venta_diferencia_logrado',
+                    className: 'currency',
+                    render: $.fn.dataTable.render.number(',', '.', 2)
+                },
+                {
+                    data: 'utilidad_diferencia_logrado',
+                    className: 'currency',
+                    render: $.fn.dataTable.render.number(',', '.', 2)
+                },
+                {
+                    data: 'margen_diferencia_logrado',
+                    className: 'text-center rightBorderStyle',
+                    render: $.fn.dataTable.render.number(',', '.', 2)
+                },
+
+
+                /* PORC */
+                {
+                    data: 'costo_diferencia_logrado_porc',
+                    className: 'currency',
+                    render: $.fn.dataTable.render.number(',', '.', 2)
+                },
+                {
+                    data: 'venta_diferencia_logrado_porc',
+                    className: 'currency',
+                    render: $.fn.dataTable.render.number(',', '.', 2)
+                },
+                {
+                    data: 'utilidad_diferencia_logrado_porc',
+                    className: 'currency',
+                    render: $.fn.dataTable.render.number(',', '.', 2)
+                },
+                {
+                    data: 'margen_diferencia_logrado_porc',
+                    className: 'text-center rightBorderStyle',
+                    render: $.fn.dataTable.render.number(',', '.', 2)
+                },
+
+                {
+                    data: 'costo_a',
+                    className: 'currency',
+                    render: $.fn.dataTable.render.number(',', '.', 2)
+                },
+                {
+                    data: 'venta_a',
+                    className: 'currency',
+                    render: $.fn.dataTable.render.number(',', '.', 2)
+                },
+                {
+                    data: 'utilidad_a',
+                    className: 'currency',
+                    render: $.fn.dataTable.render.number(',', '.', 2)
+                },
+                {
+                    data: 'margen_a',
+                    className: 'text-center',
+                    render: $.fn.dataTable.render.number(',', '.', 2)
+                },
+                {
+                    data: null,
+                    className: 'text-center',
+                    render: function (data, type, row) {
+                        return `<div class='text-center'><div class='btn-group'><button name='btnEditNegocio' data-id="${row.id_centro}" class='btn btn-sm btnEditNegocio btnEdit bg-warning text-white' title='Editar Centro'><i class='material-icons'>edit</i></button><button name='btnAddResponsable' data-id="${row.id_centro}" class='btn btn-sm btnAddResponsable bg-dark text-white' title='Responsables'> <i class='material-icons'>group</i></button> <button data-id="${row.id_centro}" class='btn btn-sm btnGestionar btn-primary' title='Gestionar Gastos'><i class='material-icons'>settings</i></button></div></div>`;
+                    }
+                },
+                ],
+                columnDefs: [{
+                    targets: negocioColumns,
+                    visible: false,
+                    searchable: true
+                }],
+                createdRow: function (row, data) {
+                    if (parseFloat(data.proyeccion_disponible_centro_porc) > 0) {
+                        $('td', row).eq(16).css({
+                            'background-color': 'green',
+                            'color': 'white',
+                            'border-style': 'solid',
+                            'border-color': '#bdbdbd',
+                        });
+                        $('td', row).eq(17).css({
+                            'background-color': 'green',
+                            'color': 'white',
+                            'border-style': 'solid',
+                            'border-color': '#bdbdbd',
+                        });
+                    } else if (parseFloat(data.proyeccion_disponible_centro_porc) < 0) {
+                        $('td', row).eq(16).css({
+                            'background-color': 'red',
+                            'color': 'white',
+                            'border-style': 'solid',
+                            'border-color': '#bdbdbd',
+                        });
+                        $('td', row).eq(17).css({
+                            'background-color': 'red',
+                            'color': 'white',
+                            'border-style': 'solid',
+                            'border-color': '#bdbdbd',
+                        });
+                    } else if (parseFloat(data.proyeccion_disponible_centro_porc) == 0) {
+                        $('td', row).eq(16).css({
+                            'background-color': 'yellow',
+                            'color': 'black',
+                            'border-style': 'solid',
+                            'border-color': '#bdbdbd',
+                        });
+                        $('td', row).eq(17).css({
+                            'background-color': 'yellow',
+                            'color': 'black',
+                            'border-style': 'solid',
+                            'border-color': '#bdbdbd',
+                        });
+                    }
+
+
+
+                    if (parseFloat(data.presupuesto_de_gasto_porc) > 0) {
+                        $('td', row).eq(22).css({
+                            'background-color': 'green',
+                            'color': 'white',
+                            'border-style': 'solid',
+                            'border-color': '#bdbdbd',
+                        });
+                        $('td', row).eq(23).css({
+                            'background-color': 'green',
+                            'color': 'white',
+                            'border-style': 'solid',
+                            'border-color': '#bdbdbd',
+                        });
+                    } else if (parseFloat(data.presupuesto_de_gasto_porc) < 0) {
+                        $('td', row).eq(22).css({
+                            'background-color': 'red',
+                            'color': 'white',
+                            'border-style': 'solid',
+                            'border-color': '#bdbdbd',
+                        });
+                        $('td', row).eq(23).css({
+                            'background-color': 'red',
+                            'color': 'white',
+                            'border-style': 'solid',
+                            'border-color': '#bdbdbd',
+                        });
+                    } else if (parseFloat(data.presupuesto_de_gasto_porc) == 0) {
+                        $('td', row).eq(22).css({
+                            'background-color': 'yellow',
+                            'color': 'black',
+                            'border-style': 'solid',
+                            'border-color': '#bdbdbd',
+                        });
+                        $('td', row).eq(23).css({
+                            'background-color': 'yellow',
+                            'color': 'black',
+                            'border-style': 'solid',
+                            'border-color': '#bdbdbd',
+                        });
+                    }
+
+
+
+                    if (data.venta_diferencia_logrado >= 0) {
+                        $('td', row).eq(33).css({
+                            'background-color': 'green',
+                            'color': 'black',
+                            'border-style': 'solid',
+                            'border-color': '#bdbdbd',
+                        });
+                        $('td', row).eq(34).css({
+                            'background-color': 'green',
+                            'color': 'black',
+                            'border-style': 'solid',
+                            'border-color': '#bdbdbd',
+                        });
+                        $('td', row).eq(35).css({
+                            'background-color': 'green',
+                            'color': 'black',
+                            'border-style': 'solid',
+                            'border-color': '#bdbdbd',
+                        });
+                        $('td', row).eq(36).css({
+                            'background-color': 'green',
+                            'color': 'black',
+                            'border-style': 'solid',
+                            'border-color': '#bdbdbd',
+                        });
+
+                        $('td', row).eq(37).css({
+                            'background-color': 'green',
+                            'color': 'black',
+                            'border-style': 'solid',
+                            'border-color': '#bdbdbd',
+                        });
+                        $('td', row).eq(38).css({
+                            'background-color': 'green',
+                            'color': 'black',
+                            'border-style': 'solid',
+                            'border-color': '#bdbdbd',
+                        });
+                        $('td', row).eq(39).css({
+                            'background-color': 'green',
+                            'color': 'black',
+                            'border-style': 'solid',
+                            'border-color': '#bdbdbd',
+                        });
+                        $('td', row).eq(40).css({
+                            'background-color': 'green',
+                            'color': 'black',
+                            'border-style': 'solid',
+                            'border-color': '#bdbdbd',
+                        });
+                    } else {
+                        $('td', row).eq(33).css({
+                            'background-color': 'red',
+                            'color': 'white',
+                            'border-style': 'solid',
+                            'border-color': '#bdbdbd',
+                        });
+                        $('td', row).eq(34).css({
+                            'background-color': 'red',
+                            'color': 'white',
+                            'border-style': 'solid',
+                            'border-color': '#bdbdbd',
+                        });
+                        $('td', row).eq(35).css({
+                            'background-color': 'red',
+                            'color': 'white',
+                            'border-style': 'solid',
+                            'border-color': '#bdbdbd',
+                        });
+                        $('td', row).eq(36).css({
+                            'background-color': 'red',
+                            'color': 'white',
+                            'border-style': 'solid',
+                            'border-color': '#bdbdbd',
+                        });
+
+                        $('td', row).eq(37).css({
+                            'background-color': 'red',
+                            'color': 'white',
+                            'border-style': 'solid',
+                            'border-color': '#bdbdbd',
+                        });
+                        $('td', row).eq(38).css({
+                            'background-color': 'red',
+                            'color': 'white',
+                            'border-style': 'solid',
+                            'border-color': '#bdbdbd',
+                        });
+                        $('td', row).eq(39).css({
+                            'background-color': 'red',
+                            'color': 'white',
+                            'border-style': 'solid',
+                            'border-color': '#bdbdbd',
+                        });
+                        $('td', row).eq(40).css({
+                            'background-color': 'red',
+                            'color': 'white',
+                            'border-style': 'solid',
+                            'border-color': '#bdbdbd',
+                        });
+                    }
+
+                },
+            });
+        }
+
+
+        function listCentroServicios() {
+            varMes = $('#mesPresupuesto').val();
+            varAnio = $('#anioPresupuesto').val();
+
+            $("#tbl_CentrosServicios").DataTable().clear().destroy();
+
+            servicioColumns = [3, 5];
+
+            tbl_CentrosServicios = $('#tbl_CentrosServicios').DataTable({
+                scrollX: true,
+                scrollCollapse: true,
+                scrollY: '400px',
+                pageLength: 50,
+                fixedColumns: {
+                    left: fixedColumnsCentros,
+                    right: 1
+                },
+                language: {
+                    url: "{% static 'app/th/json/es-ES.json' %}",
+                },
+                ajax: {
+                    url: `{% url 'dataCentros' %}`,
+                    type: "POST",
+                    dataSrc: 'data',
+                    data: {
+                        mes: varMes,
+                        anio: varAnio,
+                        tipo: 2,
+                        csrfmiddlewaretoken: csrfToken
+                    },
+                },
+                dom: buttons,
+                buttons: [{
+                    extend: 'excel',
+                    text: '<i class="fas fa-file-excel"></i>',
+                    titleAttr: 'Excel',
+                    className: 'btn btn-success',
+                },
+                {
+                    extend: 'pdf',
+                    text: '<i class="fas fa-file-pdf"></i>',
+                    titleAttr: 'PDF',
+                    className: 'btn btn-danger',
+                },
+                {
+                    extend: 'print',
+                    text: '<i class="fas fa-print"></i>',
+                    titleAttr: 'Imprimir',
+                    className: 'btn btn-info',
+                }
+                ],
+                columns: [{
+                    data: 'codigo_contable'
+                },
+                {
+                    data: 'nombre_centro',
+                    className: 'text-nowrap'
+                },
+                {
+                    data: 'descripcion_centro',
+                    className: 'text-nowrap'
+                },
+                {
+                    data: 'id_tipo_centro',
+                    className: 'text-nowrap'
+                },
+                {
+                    data: 'nombre_Tcentro',
+                    className: 'text-nowrap'
+                },
+                {
+                    data: 'id_departamento',
+                    className: 'text-nowrap'
+                },
+                {
+                    data: 'nombre_departamento',
+                    className: 'text-nowrap'
+                },
+                {
+                    data: 'nombre_sucursal',
+                    className: 'text-nowrap'
+                },
+                {
+                    data: 'empresa',
+                    className: 'text-nowrap'
+                },
+
+
+                {
+                    data: 'valor_proyectado',
+                    className: 'currency',
+                    render: $.fn.dataTable.render.number(',', '.', 2)
+                },
+                {
+                    data: 'valor_autorizado',
+                    className: 'currency',
+                    render: $.fn.dataTable.render.number(',', '.', 2)
+                },
+                {
+                    data: 'gasto_indirecto_solicitado_ami',
+                    className: 'currency',
+                    render: $.fn.dataTable.render.number(',', '.', 2)
+                },
+                {
+                    data: 'gastos_ingresados_bancario',
+                    className: 'currency rightBorderStyle',
+                    render: $.fn.dataTable.render.number(',', '.', 2)
+                },
+
+
+
+                {
+                    data: 'presupuesto_cn',
+                    className: 'currency',
+                    render: $.fn.dataTable.render.number(',', '.', 2)
+                },
+                {
+                    data: 'valor_autorizado',
+                    className: 'currency',
+                    render: $.fn.dataTable.render.number(',', '.', 2)
+                },
+                {
+                    data: 'presupuesto_disponible_cn',
+                    className: 'currency',
+                    render: $.fn.dataTable.render.number(',', '.', 2)
+                },
+                {
+                    data: 'presupuesto_disponible_porc_cn',
+                    className: 'averages rightBorderStyle',
+                    render: $.fn.dataTable.render.number(',', '.', 2)
+                },
+
+
+                {
+                    data: 'valor_autorizado',
+                    className: 'currency',
+                    render: $.fn.dataTable.render.number(',', '.', 2)
+                },
+                {
+                    data: 'gastos_ingresados_bancario',
+                    className: 'currency',
+                    render: $.fn.dataTable.render.number(',', '.', 2)
+                },
+
+
+                {
+                    data: 'VALOR_INGRESO_META',
+                    className: 'currency',
+                    render: $.fn.dataTable.render.number(',', '.', 2)
+                },
+                {
+                    data: 'VALOR_INGRESO_LOGRADO',
+                    className: 'currency',
+                    render: $.fn.dataTable.render.number(',', '.', 2)
+                },
+
+
+
+                {
+                    data: 'presupuesto_de_gasto_disponible',
+                    className: 'currency',
+                    render: $.fn.dataTable.render.number(',', '.', 2)
+                },
+                {
+                    data: 'presupuesto_de_gasto_porc',
+                    className: 'averages rightBorderStyle',
+                    render: $.fn.dataTable.render.number(',', '.', 2)
+                },
+
+
+
+
+
+
+                {
+                    data: 'criterio_eva',
+                    className: 'text-center',
+                    render: function (data, type, row) {
+                        var badge = "";
+
+                        if (data == 1) {
+                            badge +=
+                                '<span class="badge rounded-pill badge-success">Aplica</span>';
+                        } else {
+                            badge +=
+                                '<span class="badge rounded-pill badge-danger">NO Aplica</span>';
+                        }
+
+                        return badge;
+                    },
+                },
+                {
+                    data: null,
+                    className: 'text-center',
+                    render: function (data, type, row) {
+                        return `<div class='text-center'><div class='btn-group'><button name='btnEditServicio' data-id="${row.id_centro}" class='btn btn-sm btnEditServicio btnEdit bg-warning text-white' title='Editar Centro'><i class='material-icons'>edit</i></button> <button name='btnAddResponsable' data-id="${row.id_centro}" class='btn btn-sm btnAddResponsable bg-dark text-white' title='Responsables'> <i class='material-icons'>group</i></button> <button data-id="${row.id_centro}" class='btn btn-sm btnGestionar btn-primary' title='Gestionar Gastos'><i class='material-icons'>settings</i></button></div></div>`;
+                    }
+                },
+                ],
+                columnDefs: [{
+                    targets: servicioColumns,
+                    visible: false,
+                    searchable: true
+                }],
+                createdRow: function (row, data) {
+                    if (parseFloat(data.presupuesto_disponible_porc_cn) > 0) {
+                        $('td', row).eq(13).css({
+                            'background-color': 'green',
+                            'color': 'white',
+                            'border-style': 'solid',
+                            'border-color': '#bdbdbd',
+                        });
+                        $('td', row).eq(14).css({
+                            'background-color': 'green',
+                            'color': 'white',
+                            'border-style': 'solid',
+                            'border-color': '#bdbdbd',
+                        });
+                    } else if (parseFloat(data.presupuesto_disponible_porc_cn) < 0) {
+                        $('td', row).eq(13).css({
+                            'background-color': 'red',
+                            'color': 'white',
+                            'border-style': 'solid',
+                            'border-color': '#bdbdbd',
+                        });
+                        $('td', row).eq(14).css({
+                            'background-color': 'red',
+                            'color': 'white',
+                            'border-style': 'solid',
+                            'border-color': '#bdbdbd',
+                        });
+                    } else if (parseFloat(data.presupuesto_disponible_porc_cn) == 0) {
+                        $('td', row).eq(13).css({
+                            'background-color': 'yellow',
+                            'color': 'black',
+                            'border-style': 'solid',
+                            'border-color': '#bdbdbd',
+                        });
+                        $('td', row).eq(14).css({
+                            'background-color': 'yellow',
+                            'color': 'black',
+                            'border-style': 'solid',
+                            'border-color': '#bdbdbd',
+                        });
+                    }
+
+
+
+                    if (parseFloat(data.presupuesto_de_gasto_porc) > 0) {
+                        $('td', row).eq(19).css({
+                            'background-color': 'green',
+                            'color': 'white',
+                            'border-style': 'solid',
+                            'border-color': '#bdbdbd',
+                        });
+                        $('td', row).eq(20).css({
+                            'background-color': 'green',
+                            'color': 'white',
+                            'border-style': 'solid',
+                            'border-color': '#bdbdbd',
+                        });
+                    } else if (parseFloat(data.presupuesto_de_gasto_porc) < 0) {
+                        $('td', row).eq(19).css({
+                            'background-color': 'red',
+                            'color': 'white',
+                            'border-style': 'solid',
+                            'border-color': '#bdbdbd',
+                        });
+                        $('td', row).eq(20).css({
+                            'background-color': 'red',
+                            'color': 'white',
+                            'border-style': 'solid',
+                            'border-color': '#bdbdbd',
+                        });
+                    } else if (parseFloat(data.presupuesto_de_gasto_porc) == 0) {
+                        $('td', row).eq(19).css({
+                            'background-color': 'yellow',
+                            'color': 'black',
+                            'border-style': 'solid',
+                            'border-color': '#bdbdbd',
+                        });
+                        $('td', row).eq(20).css({
+                            'background-color': 'yellow',
+                            'color': 'black',
+                            'border-style': 'solid',
+                            'border-color': '#bdbdbd',
+                        });
+                    }
+                },
+            });
+        }
+
+
+        $('#CN_filterNombreTables').keyup(function () {
+            tbl_CentrosNegocios.column(1).search(this.value, true, false).draw();
+        });
+        $('#CN_filterTipoTables').keyup(function () {
+            tbl_CentrosNegocios.column(4).search(this.value, true, false).draw();
+        });
+        $('#CN_filterSucursalTables').keyup(function () {
+            tbl_CentrosNegocios.column(7).search(this.value, true, false).draw();
+        });
+        $('#CN_filterDepartamentoTables').keyup(function () {
+            tbl_CentrosNegocios.column(6).search(this.value, true, false).draw();
+        });
+        $('#CN_filterEmpresaTables').change(function () {
+            tbl_CentrosNegocios.column(8).search(this.value, true, false).draw();
+        });
+
+
+        // FILTROS CENTROS SERVICIOS
+        $('#CS_filterNombreTables').keyup(function () {
+            tbl_CentrosServicios.column(1).search(this.value, true, false).draw();
+        });
+        $('#CS_filterTipoTables').keyup(function () {
+            tbl_CentrosServicios.column(4).search(this.value, true, false).draw();
+        });
+        $('#CS_filterSucursalTables').keyup(function () {
+            tbl_CentrosServicios.column(7).search(this.value, true, false).draw();
+        });
+        $('#CS_filterDepartamentoTables').keyup(function () {
+            tbl_CentrosServicios.column(6).search(this.value, true, false).draw();
+        });
+        $('#CS_filterEmpresaTables').change(function () {
+            tbl_CentrosServicios.column(8).search(this.value, true, false).draw();
+        });
+
+
+
+        $('#modal_centros').on('shown.bs.modal', function (e) {
+            $("#responsable_centro").chosen({
+                width: "100%"
+            });
+        });
+
+
+        $("#responsablesSection").css('visibility', 'visible');
+        $("#responsablesSection").css('height', 'auto');
+
+        $("#disponiblesSection").css('visibility', 'hidden');
+        $("#disponiblesSection").css('height', '0');
+
+
+        $('.menu-item-head-responsables').click(function (e) {
+            e.preventDefault();
+
+            clickedMenu = this.id;
+
+            if (clickedMenu == 'responsablesMenu') {
+                $("#responsablesSection").css('visibility', 'visible');
+                $("#responsablesSection").css('height', 'auto');
+
+                $("#disponiblesSection").css('visibility', 'hidden');
+                $("#disponiblesSection").css('height', '0');
+            } else {
+                $("#responsablesSection").css('visibility', 'hidden');
+                $("#responsablesSection").css('height', '0');
+
+                $("#disponiblesSection").css('visibility', 'visible');
+                $("#disponiblesSection").css('height', 'auto');
+            }
+        });
+
+
+
+
+        $(document).on('click', '.btnAddResponsable', function () {
+            fila = $(this).closest("tr");
+
+            centro_id = $(this).data('id');
+            centro_name = fila.find("td:eq(1)").text();
+
+            $("#tableResponsablesDisponibles").DataTable().clear().destroy();
+
+            tableResponsablesDisponibles = $('#tableResponsablesDisponibles').DataTable({
+                initComplete: function () {
+                    var api = this.api();
+
+                },
+                language: {
+                    url: "{% static 'app/th/json/es-ES.json' %}",
+                },
+                ajax: {
+                    url: `{% url 'dataResponsablesDisponibles' %}`,
+                    type: "POST",
+                    dataSrc: 'data',
+                    data: {
+                        centro_id: centro_id,
+                        csrfmiddlewaretoken: csrfToken
+                    },
+                },
+                ordering: true,
+                dom: 'Bfrtlip',
+                buttons: [{
+                    extend: 'excel',
+                    text: '<i class="fas fa-file-excel"></i>',
+                    titleAttr: 'Excel',
+                    className: 'btn btn-success',
+                },
+                {
+                    extend: 'pdf',
+                    text: '<i class="fas fa-file-pdf"></i>',
+                    titleAttr: 'PDF',
+                    className: 'btn btn-danger',
+                },
+                {
+                    extend: 'print',
+                    text: '<i class="fas fa-print"></i>',
+                    titleAttr: 'Imprimir',
+                    className: 'btn btn-info',
+                }
+                ],
+                columns: [{
+                    data: 'Usuario',
+                    width: '15%'
+                },
+                {
+                    data: 'Nombre'
+                },
+                {
+                    defaultContent: "<div class='text-center'><div class='btn-group'><button class='btn btn-add btn-sm btnAñadirResponsable' title='Añadir' alt='Añadir'><i class='material-icons'>add</i></button></div></div>"
+                }
+                ],
+                order: [1, "asc"]
+
+            });
+
+            $("#tableResponsablesCentro").DataTable().clear().destroy();
+
+            tableResponsablesCentro = $('#tableResponsablesCentro').DataTable({
+                initComplete: function () {
+                    var api = this.api();
+
+                },
+                language: {
+                    url: "{% static 'app/th/json/es-ES.json' %}",
+                },
+                ajax: {
+                    url: `{% url 'dataResponsablesCentro' %}`,
+                    type: "POST",
+                    dataSrc: 'data',
+                    data: {
+                        centro_id: centro_id,
+                        csrfmiddlewaretoken: csrfToken
+                    },
+                },
+                ordering: true,
+                dom: 'Bfrtlip',
+                buttons: [{
+                    extend: 'excel',
+                    text: '<i class="fas fa-file-excel"></i>',
+                    titleAttr: 'Excel',
+                    className: 'btn btn-success',
+                },
+                {
+                    extend: 'pdf',
+                    text: '<i class="fas fa-file-pdf"></i>',
+                    titleAttr: 'PDF',
+                    className: 'btn btn-danger',
+                },
+                {
+                    extend: 'print',
+                    text: '<i class="fas fa-print"></i>',
+                    titleAttr: 'Imprimir',
+                    className: 'btn btn-info',
+                }
+                ],
+                columns: [{
+                    data: 'id_secuencia'
+                },
+                {
+                    data: 'usuario_responsable'
+                },
+                {
+                    data: 'Nombre'
+                },
+                {
+                    defaultContent: "<div class='text-center'><div class='btn-group'><button class='btn btn-danger btn-sm btnQuitarResponsable' title='Eliminar' alt='Rechazar'><i class='material-icons'>delete</i></button></div></div>"
+                }
+                ],
+                order: [2, "asc"]
+
+            });
+
+            $('#hidden_centro_id_responsables').val(centro_id);
+            $('#mainTitleResponsables').text('RESPONSABLES DEL CENTRO ' + centro_name);
+            $('#modal_responsables_centro').modal("show");
+        });
+
+
+        $(document).on('click', '.btnAñadirResponsable', function () {
+            fila = $(this).closest("tr");
+
+            centro_id = $('#hidden_centro_id_responsables').val();
+
+            usuario = fila.find("td:eq(0)").text();
+
+            try {
+                $.ajax({
+                    url: `{% url 'addResponsablesCentro' %}`,
+                    type: "POST",
+                    dataSrc: 'data',
+                    data: {
+                        centro_id: centro_id,
+                        userName: usuario,
+                        csrfmiddlewaretoken: csrfToken
+                    },
+                    dataType: "json",
+                    success: function (data) {
+                        if (data.save == 1) {
+                            Swal.fire("", "Responsable Agregado", "success");
+
+                            tableResponsablesCentro.ajax.reload(null, false);
+                            tableResponsablesDisponibles.ajax.reload(null, false);
+                        } else {
+                            Swal.fire("", "Error L: " + data.error, "error");
+                        }
+                    }
+                });
+            } catch (error) {
+
+                Swal.fire("", "Error A: " + error, "error");
+            }
+
+        });
+
+
+        $(document).on('click', '.btnQuitarResponsable', function () {
+            fila = $(this).closest("tr");
+
+            centro_id = $('#hidden_centro_id_responsables').val();
+
+            secuencia_id = fila.find("td:eq(0)").text();
+
+            try {
+                $.ajax({
+                    url: `{% url 'removeResponsablesCentro' %}`,
+                    type: "POST",
+                    dataSrc: 'data',
+                    data: {
+                        secuencia_id: secuencia_id,
+                        csrfmiddlewaretoken: csrfToken
+                    },
+                    dataType: "json",
+                    success: function (data) {
+                        if (data.save == 1) {
+                            Swal.fire("", "Responsable Eliminado", "success");
+
+                            tableResponsablesCentro.ajax.reload(null, false);
+                            tableResponsablesDisponibles.ajax.reload(null, false);
+                        } else {
+                            Swal.fire("", "Error L: " + data.error, "error");
+                        }
+                    }
+                });
+            } catch (error) {
+
+                Swal.fire("", "Error A: " + error, "error");
+            }
+
+        });
+
+
+        $('.btn_close_modal_responsables').click(function (e) {
+            e.preventDefault();
+
+            $('#modal_responsables_centro').modal("hide");
+        });
+
+
+        $('#btnNuevoCentro').click(function (e) {
+            e.preventDefault();
+
+            $("#form_centro_vaic").trigger("reset");
+            $("#modal_centros").modal("show");
+
+            btn_clicked = $('#tipoCentro').val();
+
+            $('#centro_id').val(null);
+            $('#centro_opcion').val(1);
+
+            if (btn_clicked == 1) {
+                $('#centro_tipo').val(1);
+                $('#modal_centro_title').text('CREAR NUEVO CENTRO DE NEGOCIO');
+
+                $('#centro_formato').prop('disabled', false);
+                $('#centro_canal').prop('disabled', false);
+
+                $('#modal_centro_header').css("background-color", "#a8a832");
+
+                $(".negociosSetionModal").css('visibility', 'visible');
+                $(".negociosSetionModal").css('height', 'auto');
+
+                $(".serviciosSectionModal").css('visibility', 'hidden');
+                $(".serviciosSectionModal").css('height', '0');
+            } else {
+                $('#centro_tipo').val(2);
+                $('#modal_centro_title').text('CREAR NUEVO CENTRO DE SERVICIO');
+
+                $('#centro_formato').prop('disabled', true);
+                $('#centro_canal').prop('disabled', true);
+
+                $('#modal_centro_header').css("background-color", "#324ca8");
+
+
+                $(".negociosSetionModal").css('visibility', 'hidden');
+                $(".negociosSetionModal").css('height', '0');
+
+                $(".serviciosSectionModal").css('visibility', 'visible');
+                $(".serviciosSectionModal").css('height', 'auto');
+            }
+        });
+
+        $(".btn_cerrar_centro").click(function () {
+            $("#modal_centros").modal("hide");
+
+            $("#form_centro_vaic").trigger("reset");
+            $("#modal_centros").modal("show");
+        });
+
+
+
+        $('#centro_formato').change(function (e) {
+            e.preventDefault();
+
+            var formato = $(this).val();
+
+            $.ajax({
+                url: `{% url 'dataCanalesFormato' %}`,
+                type: "POST",
+                dataSrc: 'data',
+                data: {
+                    formato: formato,
+                    csrfmiddlewaretoken: csrfToken
+                },
+                dataType: "json",
+                success: function (response) {
+                    $('#centro_canal').empty();
+
+                    $('#centro_canal').append(
+                        `<option value="0">Seleccione un Canal</option>`
+                    );
+
+                    if (response.data && response.data.length > 0) {
+                        response.data.forEach(function (item) {
+                            $('#centro_canal').append(
+                                `<option value="${item.id_canal}">${item.nombre_canal}</option>`
+                            );
+                        });
+
+                        $('#centro_canal').val($('#centro_canal option:first').val()).change();
+                    }
+                }
+            });
+
+        });
+
+
+
+
+        $(document).on("click", ".btnEditNegocio, .btnEditServicio", function () {
+            fila = $(this).closest("tr");
+
+            $("#form_centro_vaic").trigger("reset");
+            $("#modal_centros").modal("show");
+
+            centro_id = $(this).data('id');
+
+            var btn_clicked = this.name;
+            $('#centro_id').val(centro_id);
+            $('#centro_opcion').val(2);
+
+            if (btn_clicked == "btnEditNegocio") {
+                $('#centro_tipo').val(1);
+
+                $('#centro_formato').prop('disabled', false);
+                $('#centro_canal').prop('disabled', false);
+
+                var data = $("#tbl_CentrosNegocios").DataTable().row(fila).data();
+
+                $('#centro_nombre').val(data['nombre_centro']);
+                $('#centro_descripcion').val(data['descripcion_centro']);
+                $('#centro_departamento').val(data['id_departamento']).change();
+                $('#centro_formato').val(data['id_formato']).change();
+
+                $('#centro_empresa option').each(function () {
+                    if ($.trim($(this).text()) == $.trim(data['empresa'])) {
+                        $(this).prop('selected', true);
+                    }
+                });
+
+                setTimeout(() => {
+                    $('#centro_canal').val(data['id_canal_venta']).change();
+                }, 1000);
+
+                $('#centro_cuenta').val(data['id_cuenta_analitica']).change();
+                $('#modal_centro_header').css("background-color", "#a8a832");
+                $('#modal_centro_title').text('EDITAR CENTRO DE NEGOCIO ' + data['nombre_centro']);
+            } else {
+                $('#centro_tipo').val(2);
+
+                $('#centro_formato').prop('disabled', true);
+                $('#centro_canal').prop('disabled', true);
+
+                var data = $("#tbl_CentrosServicios").DataTable().row(fila).data();
+
+                $('#centro_nombre').val(data['nombre_centro']);
+                $('#centro_descripcion').val(data['descripcion_centro']);
+                $('#centro_departamento').val(data['id_departamento']).change();
+                $('#centro_cuenta').val(data['id_cuenta_analitica']).change();
+
+                $('#centro_empresa option').each(function () {
+                    if ($.trim($(this).text()) == $.trim(data['empresa'])) {
+                        $(this).prop('selected', true);
+                    }
+                });
+
+                $('#modal_centro_header').css("background-color", "#324ca8");
+                $('#modal_centro_title').text('EDITAR CENTRO DE SERVICIO ' + data['nombre_centro']);
+            }
+        });
+
+
+
+
+        $('#form_centro_vaic').submit(function (e) {
+            e.preventDefault();
+
+            centro_id = $('#centro_id').val();
+            centro_opcion = $('#centro_opcion').val();
+            centro_nombre = $('#centro_nombre').val();
+            centro_tipo = $('#centro_tipo').val();
+            centro_departamento = $('#centro_departamento').val();
+            centro_formato = $('#centro_formato').val();
+            centro_canal = $('#centro_canal').val();
+            centro_canal_text = $('#centro_canal option:selected').text();
+            centro_descripcion = $('#centro_descripcion').val();
+            responsable_centro = $('#responsable_centro').val();
+            centro_cuenta = $('#centro_cuenta').val();
+            centro_empresa = $('#centro_empresa').val();
+
+            if (centro_tipo == 1 && (!$('#centro_nombre').val() || centro_empresa == '#' || centro_cuenta == '#' || $('#centro_departamento')
+                .val() == 0 || $(
+                    '#centro_formato').val() == 0 || $('#centro_canal').val() == 0 || !$('#centro_descripcion')
+                        .val())) {
+                Swal.fire("", "Debes llenar y seleccionar TODOS los Campos!", "warning");
+            } else if (centro_tipo == 2 && (!$('#centro_nombre').val() || centro_empresa == '#' || centro_cuenta == '#' || $(
+                '#centro_departamento').val() == 0 || !
+                $('#centro_descripcion').val())) {
+                Swal.fire("", "Debes llenar y seleccionar TODOS los Campos!", "warning");
+            } else {
+
+
+                if (centro_opcion == 1 && responsable_centro == '#') {
+                    Swal.fire("", "Debes Seleccionar un Responsable!", "warning");
+                } else {
+                    try {
+                        $.ajax({
+                            type: "POST",
+                            url: `{% url 'insert_update_centro_vaic' %}`,
+                            async: false,
+                            data: {
+                                centro_id: centro_id,
+                                centro_opcion: centro_opcion, // OPCION 1 NUEVO || OPCION 2 EDITAR
+                                centro_nombre: centro_nombre,
+                                centro_tipo: centro_tipo,
+                                centro_departamento: centro_departamento,
+                                centro_formato: centro_formato,
+                                centro_canal: centro_canal,
+                                centro_cuenta: centro_cuenta,
+                                centro_canal_text: centro_canal_text,
+                                centro_descripcion: centro_descripcion,
+                                responsable_centro: responsable_centro,
+                                centro_empresa: centro_empresa,
+                                csrfmiddlewaretoken: csrfToken,
+                            },
+                            dataSrc: 'data',
+                            dataType: "json",
+                            success: function (data) {
+
+                                if (data.save == 1) {
+                                    if (data.existe == 1) {
+                                        Swal.fire("",
+                                            "Ya EXISTE un Centro con Este Nombre y Asociado a este Canal de Venta",
+                                            "warning");
+                                    } else {
+                                        Swal.fire("", (centro_opcion == 1) ? 'Centro Creado!' : 'Centro Editado!', "success");
+
+                                        document.getElementById('responsable_centro').selectedIndex = 0;
+                                        $('#responsable_centro').trigger('chosen:updated');
+                                        $('#modal_centros').modal("hide");
+
+                                        tbl_CentrosNegocios.ajax.reload(null, false);
+                                        tbl_CentrosServicios.ajax.reload(null, false);
+
+                                        $('#centro_id').val(null);
+                                        $('#centro_opcion').val(0);
+                                    }
+                                } else {
+                                    Swal.fire("", "Error L: " + data.error, "error");
+                                }
+                            }
+                        });
+                    } catch (error) {
+                        Swal.fire("", "Error A: " + error, "error");
+                    }
+                }
+
+            }
+
+        });
+
+
+        $(document).on("click", ".btnPresupuesto", function () {
+            fila = $(this).closest("tr");
+
+            $("#form_presupuesto_proyeccion").trigger("reset");
+
+            centro_id = $(this).data('id');
+            centro_nombre = fila.find("td:eq(1)").text();
+
+            var btn_clicked = this.name;
+
+            $('#hidden_centro_id_presupuesto').val(centro_id);
+            mesSelected = $('#mesPresupuesto').val();
+
+            $('#modal_presupuesto_title').text('PRESUPUESTO Y PROYECCION DEL CENTRO DE NEGOCIOS ' +
+                centro_nombre);
+
+            $('#centro_tipo').val(1);
+
+            var data = $("#tbl_CentrosNegocios").DataTable().row(fila).data();
+
+            console.log(data['costo_a']);
+
+            $('#presupuesto_total').val(data['valor_proyectado']);
+            $('#presupuesto_costo').val(data['costo_a']);
+            $('#presupuesto_venta').val(data['venta_a']);
+            $('#presupuesto_utilidad').val(data['utilidad_a']);
+            $('#presupuesto_margen').val(data['margen_a']);
+
+            if (btn_clicked == "btnPresupuestoNegocio") {
+
+                monthFilter = $('#mesPresupuesto').val();
+                anioFilter = $('#anioPresupuesto').val();
+
+                mesActual = monthA;
+                while (mesActual.charAt(0) === '0') {
+                    mesActual = mesActual.substring(1);
+                }
+
+                anioActual = varAnio;
+
+                var fechaSeleccionada = anioFilter * 100 + monthFilter;
+                var fechaActual = anioActual * 100 + mesActual;
+
+                if (fechaSeleccionada >= fechaActual) {
+                    if (data['costo'] <= 0) {
+                        $("#modal_presupuesto_proyecciones").modal("show");
+                    } else {
+                        Swal.fire("", "Ya has Creado una Proyeccion a este Centro de Negocios!", "warning");
+                    }
+                } else {
+                    //Swal.fire("", "No puedes Crear Proyección a Meses Pasados!", "warning");
+                    $('#formAutorizacion').trigger('reset');
+                    $('#modalAutorizacion').modal('show');
+                    $('#modalAutorizacionLabel').text(
+                        'PARA PROYECTAR MESES PASADOS DEBES SOLICITAR AUTORIZACION!');
+                    $('#tipo_autorizacion').val(1);
+                }
+
+
+
+            } else {
+                $('#modal_presupuesto_title').text('PRESUPUESTO DEL CENTRO DE SERVICIOS ' + centro_nombre);
+
+
+
+                $('#centro_tipo').val(2);
+
+                var data = $("#tbl_CentrosServicios").DataTable().row(fila).data();
+
+                $('#centro_nombre_autorizacion').val(centro_nombre);
+                $('#valor_autorizacion').val(data['valor_proyectado']);
+
+                $('#presupuesto_total').val(data['valor_proyectado']);
+                $('#presupuesto_costo').val('0.00');
+                $('#presupuesto_venta').val('0.00');
+                $('#presupuesto_utilidad').val('0.00');
+                $('#presupuesto_margen').val('0.00');
+
+                if (data['valor_proyectado'] <= 0) {
+                    $("#modal_presupuesto_proyecciones").modal("show");
+                } else {
+                    Swal.fire("", "Ya has Creado un Presupuesto a este Centro de Servicios", "warning");
+                }
+            }
+
+            $('#presupuesto_mes').val(mesSelected).change();
+        });
+
+
+
+        $('#formAutorizacion').submit(function (e) {
+            e.preventDefault();
+
+            username = $('#username').val();
+            password = $('#password').val();
+            tipo_autorizacion = $('#tipo_autorizacion').val();
+
+            try {
+                $.ajax({
+                    type: "POST",
+                    url: `{% url 'validate_autorizacion_tipo' %}`,
+                    async: false,
+                    data: {
+                        tipo_autorizacion: tipo_autorizacion,
+                        username: username,
+                        password: password,
+                        csrfmiddlewaretoken: csrfToken,
+                    },
+                    dataSrc: 'data',
+                    dataType: "json",
+                    success: function (data) {
+                        if (data.save == 1) {
+
+                            if (data.existe == 1) {
+                                Swal.fire("", "AUTORIZADO!", "success");
+
+                                $('#modalAutorizacion').modal('hide');
+
+                                $("#modal_presupuesto_proyecciones").modal("show");
+
+                            } else {
+                                Swal.fire("", "SIN AUTORIZACION!", "warning");
+                            }
+
+
+                        } else {
+                            Swal.fire("", "Error L: " + data.error, "error");
+
+                        }
+                    },
+                });
+            } catch (error) {
+                Swal.fire("", "Error A: " + error, "error")
+            }
+
+        });
+
+
+        $('.proyeccionInputs').keyup(function (e) {
+            venta = $('#presupuesto_venta').val() || 0;
+            margen = $('#presupuesto_margen').val() || 0;
+
+            venta = venta.replace(/,/g, "");
+            margen = margen.replace(/,/g, "");
+
+            utilidad = venta * (margen / 100);
+
+            costo = venta - utilidad;
+
+            $('#presupuesto_costo').val(dollarUSLocale.format(costo));
+            $('#presupuesto_utilidad').val(dollarUSLocale.format(utilidad));
+        });
+
+        $(document).on("click", ".btn_close_modal_presupuesto", function () {
+            $("#form_presupuesto_proyeccion").trigger("reset");
+            $("#modal_presupuesto_proyecciones").modal("hide");
+        });
+
+
+        $(document).on('click', '.btnGestionar', function () {
+
+            let fila = $(this).closest("tr");
+
+            let centro_id = $(this).data('id');
+            let mes = $('#mesPresupuesto').val();
+            let anio = $('#anioPresupuesto').val();
+
+            let urlGestionCentroBase = "{% url 'ctrl_gestion_centro' 999 888 777 %}";
+
+            let nuevaURL = urlGestionCentroBase
+                .replace('999', centro_id)
+                .replace('888', mes)
+                .replace('777', anio);
+
+            window.location.href = nuevaURL;
+        });
+
+
+
+        $('#btnRealizarCierre').click(function (e) {
+            e.preventDefault();
+
+            varMes = $('#mesPresupuesto').val();
+            varAnio = $('#anioPresupuesto').val();
+
+            Swal.fire({
+                title: "Estás SEGURO de Realizar el CIERRE de este PERIODO?",
+                text: "Al Finalizar ya no podran ingresar Gastos, etc.",
+                icon: "warning",
+                showCancelButton: true,
+                confirmButtonColor: '#3085d6',
+                cancelButtonColor: '#d33',
+                confirmButtonText: 'Confirmar!'
+            }).then((result) => {
+                if (result.isConfirmed) {
+                    //
+
+                    try {
+                        $.ajax({
+                            type: "POST",
+                            url: `{% url 'ctrl_gestion_realizar_cierre_centros' %}`,
+                            async: false,
+                            data: {
+                                varMes: varMes,
+                                varAnio: varAnio,
+                                csrfmiddlewaretoken: csrfToken,
+                            },
+                            dataType: "json",
+                            success: function (data) {
+                                if (data.save == 1) {
+                                    let mensajeModificado = data.message.replace(/\s\|\s/g,
+                                        '<br><br>');
+
+                                    if (data.cierre == 0 && data.realizado == 0) {
+                                        Swal.fire({
+                                            title: "CIERRE REALIZADO!",
+                                            html: mensajeModificado,
+                                            icon: "warning"
+                                        });
+
+                                        window.location.reload();
+                                    } else if (data.cierre == 1 && data.realizado == 1) {
+                                        Swal.fire("NO PUEDE REALIZAR CIERRE",
+                                            "YA REALIZASTE EL CIERRE!", "warning");
+
+                                    } else if (data.cierre == 1 && data.realizado == 0) {
+
+
+                                        Swal.fire({
+                                            title: "NO PUEDE REALIZAR CIERRE!",
+                                            html: mensajeModificado,
+                                            icon: "warning"
+                                        });
+                                    }
+                                } else {
+                                    Swal.fire("", "Error L: " + data.error, "error");
+                                }
+                            }
+                        });
+                    } catch (error) {
+                        Swal.fire("", "Error A: " + error, "error");
+                    }
+
+                    //
+                }
+            });
+
+
+
+        });
+
+
+
+        /*  */
+    });
+</script>
+{% endblock %}

@@ -1,0 +1,1163 @@
+{% extends 'componentes/menu_contable.html' %}
+{% load static %}
+
+{% block title %}
+INGRESO DE GASTOS
+{% endblock %}
+
+
+{% block body %}
+
+<div class="row align-items-center border-bottom mb-2 py-1">
+    <div class="col d-flex align-items-center">
+        <button id="toggle-sidebar" class="btn btn-warning btn-sm me-2 btnMenu" title="Mostrar/Ocultar menú">
+            <i class="fas fa-bars"></i>
+        </button>
+        <h6 class="page-title mb-0 fs-6 fw-bold">INGRESO DE GASTOS</h6>
+    </div>
+
+    <div class="col-auto text-end float-end ms-auto download-grp">
+        {% if aprobarIngresoGastos == 13054 or adminIT == 1 %}
+        <button type="button" class="btn btn-sm btn-secondary" id="btnAprobarFueraPresupuesto">Aprobar Gastos Fuera de
+            Presupuesto</button>
+        {% endif %}
+
+        {% if finalizarIngresoGastos_VAIC == 13060 or adminIT == 1 %}
+        <button type="button" class="btn btn-sm btn-danger" id="btnFinalizarIngresoGastos">Finalizar Ingreso de
+            Gastos</button>
+        {% endif %}
+    </div>
+</div>
+
+
+<div class="container-fluid mt-1">
+    <div class="row d-flex justify-content-start align-items-end">
+
+        <div class="col-lg-2">
+            <label for="periodoInicio">Desde</label>
+            <input type="date" class="form-control form-control-sm pickedDate" name="periodoInicio" id="periodoInicio"
+                value="{{ date1 }}" disabled>
+        </div>
+
+        <div class="col-lg-2">
+            <label for="periodoFinal">Hasta</label>
+            <input type="date" class="form-control form-control-sm pickedDate" name="periodoFinal" id="periodoFinal"
+                value="{{ date }}" disabled>
+        </div>
+
+        <div class="col-sm-2">
+            <div class="form-group">
+                <label class="col-form-label" for="mesGastoIngresar">Mes a Ingresar Gasto: </label>
+                <select class="form-select form-select-sm filterStyle text-nowrap mes_gasto pickedPeriodoIngreso"
+                    id="mesGastoIngresar">
+                    <option value="1">Enero</option>
+                    <option value="2">Febrero</option>
+                    <option value="3">Marzo</option>
+                    <option value="4">Abril</option>
+                    <option value="5">Mayo</option>
+                    <option value="6">Junio</option>
+                    <option value="7">Julio</option>
+                    <option value="8">Agosto</option>
+                    <option value="9">Septiembre</option>
+                    <option value="10">Octubre</option>
+                    <option value="11">Noviembre</option>
+                    <option value="12">Diciembre</option>
+                </select>
+            </div>
+        </div>
+
+        <div class="col-sm-2">
+            <div class="form-group">
+                <label class="col-form-label" for="anioGastoIngresar">Año a Ingresar Gasto: </label>
+                <select class="form-select form-select-sm filterStyle text-nowrap anio_gasto pickedPeriodoIngreso"
+                    id="anioGastoIngresar">
+                </select>
+            </div>
+        </div>
+
+
+    </div>
+
+    <br>
+
+    <div class="row">
+        <div class="row d-flex justify-content-end">
+            <span><b>Filtros Rápidos</b></span>
+            <div class="mainFilters">
+                <div class="row f-flex justify-content-end">
+                    <div class="col-sm">
+                        <label for="">Encabezado</label>
+                        <input type="text" class="form-control form-control-sm tableMainFilters" id="EncabezadoFilter"
+                            placeholder="Encabezado">
+                    </div>
+                    <div class="col-sm">
+                        <label for="">Concepto</label>
+                        <input type="text" class="form-control form-control-sm tableMainFilters" id="ConceptoFilter"
+                            placeholder="Concepto">
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <br>
+
+    <div class="row">
+        <div class="table-responsive">
+            <table id="tablePagosAcreedores"
+                class="table rounded-4 table-sm table-bordered table-striped align-middle mb-0 table-principal"
+                style="width:100%">
+
+                <thead class="table-gradient text-dark">
+                    <tr>
+                        <th class="text-center">#</th>
+                        <th class="text-center">Encabezado</th>
+                        <th class="text-center">Fecha Pago</th>
+                        <th class="text-center">Fecha Documento</th>
+                        <th class="text-center">Concepto</th>
+                        <th class="text-center">Tipo Documento</th>
+                        <th class="text-center">Total Gasto</th>
+                        <th class="text-center">Total Gasto Asignado</th>
+                        <th class="text-center">Total Gasto Disponible para Asignar</th>
+                        <th class="text-center">Acciones</th>
+                    </tr>
+                </thead>
+
+                <tbody>
+
+                </tbody>
+
+                <tfoot class="table-active" style="display: table-header-group;">
+                    <tr>
+                        <th class="text-right"></th>
+                        <th class="text-right"></th>
+                        <th class="text-right"></th>
+                        <th class="text-right"></th>
+                        <th class="text-right"></th>
+                        <th class="text-right"></th>
+                        <th class="text-right"></th>
+                        <th class="text-right"></th>
+                        <th class="text-right"></th>
+                        <th class="text-right"></th>
+                    </tr>
+                </tfoot>
+
+            </table>
+        </div>
+    </div>
+</div>
+
+
+<a href="{% url 'panel_contabilidad' %}">
+    <button class="btn btn-sm btn-danger" id="btnCerrar" title="Cerrar"
+        style="position: fixed; bottom: 20px; right: 20px;">
+        <i class="fa fa-times"></i> Cerrar
+    </button>
+</a>
+
+{% include 'control_gestion/complementos/m_ingresar_gastos.html' %}
+
+{% endblock %}
+
+
+{% block scripts %}
+
+
+<script>
+    $(document).ready(function () {
+        var csrfToken = "{{ csrf_token }}";
+        var buttons = "Bfrtlip";
+
+        var monthA = "{{ varMonth }}";
+        var varAnio = "{{ varAnio }}";
+
+        var tablePagosAcreedores, tableGastosNOPresupuesto, tableDesgloseGastoBnk;
+
+        var windowSize = $(window).width();
+
+        var cardHeight = $(".card-expanded").height();
+        var tableHeight = cardHeight * 0.5;
+
+        let dollarUSLocale = Intl.NumberFormat("en-US", {
+            minimumFractionDigits: 2,
+            maximumFractionDigits: 2
+        });
+
+        let intergerLocale = Intl.NumberFormat("en-US", {
+            minimumFractionDigits: 0,
+            maximumFractionDigits: 0
+        });
+
+        var toastMixin = Swal.mixin({
+            toast: true,
+            icon: 'success',
+            title: 'General Title',
+            animation: false,
+            position: 'top-right',
+            showConfirmButton: false,
+            timer: 2000,
+            timerProgressBar: true,
+            didOpen: (toast) => {
+                toast.addEventListener('mouseenter', Swal.stopTimer);
+                toast.addEventListener('mouseleave', Swal.resumeTimer);
+            }
+        });
+
+        while (monthA.charAt(0) === '0') {
+            monthA = monthA.substring(1);
+        }
+
+
+        $('#mesGastoIngresar').val(monthA).change();
+
+        for (i = new Date().getFullYear() + 1; i >= (new Date().getFullYear() - 5); i--) {
+            $('.anio_gasto').append($('<option />').val(i).html(i));
+            $('.anio_gasto').val(varAnio).change();
+        }
+
+        function showLoadingScreen(text = '') {
+            Swal.fire({
+                title: '',
+                html: `<b>${text}</b>`,
+                didOpen: () => {
+                    Swal.showLoading();
+                },
+                allowOutsideClick: false,
+                showConfirmButton: false
+            });
+        }
+
+        $('.btn_close_fuera_presupuesto').click(function (e) {
+            e.preventDefault();
+
+            $('#modalGastosFueraPresupuesto').modal("hide");
+        });
+
+
+        $('#modalAsignarCentro').on('shown.bs.modal', function (e) {
+            $("#centro_asignar").chosen({
+                width: "100%"
+            });
+        });
+
+        $('#btnAprobarFueraPresupuesto').click(function (e) {
+            e.preventDefault();
+
+            getFueraPresupuesto();
+
+            $('#modalGastosFueraPresupuesto').modal("show");
+        });
+
+        $('.periodGasto').change(function (e) {
+            e.preventDefault();
+
+            getFueraPresupuesto();
+        });
+
+
+        function getFueraPresupuesto() {
+            mes = $('#mes_gasto').val();
+            anio = $('#anio_gasto').val();
+
+            $("#tableGastosNOPresupuesto").DataTable().clear().destroy();
+
+            tableGastosNOPresupuesto = $('#tableGastosNOPresupuesto').DataTable({
+                initComplete: function () {
+                    var api = this.api();
+                },
+                scrollX: true,
+                fixedHeader: true,
+                scrollY: '350px',
+                scrollCollapse: true,
+                pageLength: 50,
+                ordering: true,
+                language: {
+                    url: "{% static 'app/th/json/es-ES.json' %}",
+                },
+                dom: 'Bfrtlip',
+                buttons: [{
+                    extend: 'excel',
+                    text: '<i class="fas fa-file-excel"></i>',
+                    titleAttr: 'Excel',
+                    className: 'btn btn-success',
+                },
+                {
+                    extend: 'pdf',
+                    text: '<i class="fas fa-file-pdf"></i>',
+                    titleAttr: 'PDF',
+                    className: 'btn btn-danger',
+                },
+                {
+                    extend: 'print',
+                    text: '<i class="fas fa-print"></i>',
+                    titleAttr: 'Imprimir',
+                    className: 'btn btn-info',
+                }
+                ],
+                ajax: {
+                    url: `{% url 'fill_table_gastos_fuera_presupuesto' %}?mes=${encodeURIComponent(mes)}&anio=${encodeURIComponent(anio)}`
+                },
+                columns: [{
+                    data: 'pkMov_Acreedores'
+                },
+                {
+                    data: 'pkBancario'
+                },
+                {
+                    data: 'fecha_gasto'
+                },
+                {
+                    data: 'cuenta_contable'
+                },
+                {
+                    data: 'descripcion_cuenta'
+                },
+                {
+                    data: 'descripcion'
+                },
+                {
+                    data: 'nombre_centro'
+                },
+                {
+                    data: 'valor',
+                    className: 'currency',
+                    render: $.fn.dataTable.render.number(',', '.', 2)
+                },
+
+
+                {
+                    data: 'valor_presupuesto_cuenta',
+                    className: 'currency',
+                    render: $.fn.dataTable.render.number(',', '.', 2)
+                },
+                {
+                    data: 'valor_gastado_cuenta',
+                    className: 'currency',
+                    render: $.fn.dataTable.render.number(',', '.', 2)
+                },
+                {
+                    data: 'disponible',
+                    className: 'currency',
+                    render: $.fn.dataTable.render.number(',', '.', 2)
+                },
+                {
+                    data: 'diferencia',
+                    className: 'currency',
+                    render: $.fn.dataTable.render.number(',', '.', 2)
+                },
+
+
+                {
+                    data: null,
+                    render: function (data, type, row) {
+                        var badge = "";
+
+                        if (data.cierre_ingreso == 0) {
+                            if (data.cerrado == 0 && data.validacion_gasto == 0) {
+                                badge +=
+                                    "<div class='text-center'><div class='btn-group'><button class='btn btn-secondary btn-sm btnAutorizar' data-id='" +
+                                    data.id_gasto +
+                                    "' title='Autorizar' alt='Autorizar'><i class='material-icons'>check</i></button><button class='btn btn-danger btn-sm btnRetirarGastoFuera btn-danger' title='Retirar Gasto' data-id'" +
+                                    data.id_gasto +
+                                    "' id='btnRetirarGastoFuera'><i class='material-icons'>delete</i></button></div></div>";
+                            } else if (data.cerrado == 0 && data.validacion_gasto == 1) {
+                                badge +=
+                                    "<div class='text-center'><div class='btn-group'><span class='badge rounded-pill badge-disabled'>Gasto Gestionado</span></div></div>";
+                            } else {
+                                badge +=
+                                    "<div class='text-center'><div class='btn-group'><span class='badge rounded-pill badge-disabled'>Cierre Realizado</span></div></div>";
+                            }
+                        } else {
+                            badge +=
+                                "<div class='text-center'><div class='btn-group'><span class='badge rounded-pill badge-disabled'>Ingreso de Gastos Finalizado</span></div></div>";
+                        }
+
+
+                        return badge;
+                    },
+                },
+                ],
+                order: [6, "desc"]
+
+            });
+
+        }
+
+        $('#NumeroNOFilter').keyup(function () {
+            tableGastosNOPresupuesto.column(3).search(this.value).draw();
+        });
+        $('#CuentaNOFilter').keyup(function () {
+            tableGastosNOPresupuesto.column(4).search(this.value).draw();
+        });
+        $('#ConceptoNOFilter').keyup(function () {
+            tableGastosNOPresupuesto.column(5).search(this.value).draw();
+        });
+        $('#CentroNOFilter').keyup(function () {
+            tableGastosNOPresupuesto.column(6).search(this.value).draw();
+        });
+
+
+        periodoInicio = $('#periodoInicio').val();
+        periodoFinal = $('#periodoFinal').val();
+
+        var windowSize = $(window).width();
+
+        if (windowSize <= 960) {
+            leftFixedColumnsWidSize = 0;
+        } else if (windowSize > 960) {
+            leftFixedColumnsWidSize = 2;
+        }
+
+
+        tablePagosAcreedores = $('#tablePagosAcreedores').DataTable({
+            scrollX: true,
+            scrollCollapse: true,
+            scrollY: '350px',
+            pageLength: 50,
+            fixedColumns: {
+                left: leftFixedColumnsWidSize,
+                right: 1
+            },
+            initComplete: function () {
+                var api = this.api();
+
+                tablePagosAcreedores.columns.adjust().draw();
+            },
+            drawCallback: function (settings) {
+                let dollarUSLocale = Intl.NumberFormat("en-US", {
+                    minimumFractionDigits: 2,
+                    maximumFractionDigits: 2
+                });
+
+                let intergerLocale = Intl.NumberFormat("en-US", {
+                    minimumFractionDigits: 0,
+                    maximumFractionDigits: 0
+                });
+
+                var api = this.api();
+
+                // Variables para almacenar los totales de las columnas 5 y 6
+                var totalColumn5 = 0;
+                var totalColumn6 = 0;
+
+                // Calcular totales para las columnas 3, 4, 5, y 6
+                [6, 7, 8].forEach(function (colIndex) {
+                    var total = api
+                        .column(colIndex, {
+                            search: 'applied'
+                        })
+                        .data()
+                        .reduce(function (a, b) {
+                            return Number(a) + Number(b);
+                        }, 0);
+
+                    var columnFooter = $(api.column(colIndex).footer());
+                    columnFooter.html(dollarUSLocale.format(total));
+                    columnFooter.css('text-align', 'right');
+                    columnFooter.addClass('currency');
+                });
+            },
+            language: {
+                url: "{% static 'app/th/json/es-ES.json' %}",
+            },
+            ordering: true,
+            dom: 'Bfrtlip',
+            buttons: [{
+                extend: 'excel',
+                text: '<i class="fas fa-file-excel"></i>',
+                titleAttr: 'Excel',
+                className: 'btn btn-success',
+            },
+            {
+                extend: 'pdf',
+                text: '<i class="fas fa-file-pdf"></i>',
+                titleAttr: 'PDF',
+                className: 'btn btn-danger',
+            },
+            {
+                extend: 'print',
+                text: '<i class="fas fa-print"></i>',
+                titleAttr: 'Imprimir',
+                className: 'btn btn-info',
+            }
+            ],
+            ajax: {
+                url: `{% url 'fill_table_gastos_bancario' %}?date1=${encodeURIComponent(periodoInicio)}&date2=${encodeURIComponent(periodoFinal)}`
+            },
+            columns: [{
+                data: 'PkDetalleSolicitudPagoAD'
+            },
+            {
+                data: 'concepto_encabezado',
+                className: 'text-wrap'
+            },
+            {
+                data: 'FechaPago',
+                className: 'text-wrap'
+            },
+            {
+                data: 'FechaDocumento',
+                className: 'text-wrap'
+            },
+            {
+                data: 'Concepto',
+                className: 'text-wrap'
+            },
+            {
+                data: 'TipoDocumento',
+                className: 'text-wrap'
+            },
+            {
+                data: 'TotalLps',
+                className: 'currency',
+                render: $.fn.dataTable.render.number(',', '.', 2)
+            },
+            {
+                data: 'saldo_ingresado',
+                className: 'currency',
+                render: $.fn.dataTable.render.number(',', '.', 2)
+            },
+            {
+                data: 'saldo_disponible',
+                className: 'currency',
+                render: $.fn.dataTable.render.number(',', '.', 2)
+            },
+            {
+                defaultContent: "<div class='text-center'><div class='btn-group'><button class='btn btn-null btn-sm btnAsignarGasto btn-success' title='Asignar Gasto' id='btnAsignarGasto'><i class='material-icons'>add</i></button><button class='btn btn-danger btn-sm btnVerIngresados btn-info' title='Listar Gastos Ingresados' id='btnVerIngresados'><i class='material-icons'>visibility</i></button></div></div>"
+            },
+            ],
+            order: [6, "desc"]
+
+        });
+
+        $('#EncabezadoFilter').keyup(function () {
+            tablePagosAcreedores.column(1).search(this.value).draw();
+        });
+        $('#ConceptoFilter').keyup(function () {
+            tablePagosAcreedores.column(4).search(this.value).draw();
+        });
+
+
+        $(document).on('click', '.btnAutorizar', function () {
+            fila = $(this).closest("tr");
+
+            id_gasto = $(this).data('id');
+
+            pkHistorial = fila.find("td:eq(0)").text();
+            pkAcreedor = fila.find("td:eq(1)").text();
+
+            $.ajax({
+                beforeSend: function (xhr, type) {
+                    if (!type.crossDomain) {
+                        xhr.setRequestHeader(
+                            'X-CSRF-Token',
+                            $(
+                                'meta[name="csrf-token"]'
+                            ).attr('content'));
+                    }
+                },
+                type: "POST",
+                url: `{% url 'aprobar_gasto_no_presupuesto_vaic' %}`,
+                data: {
+                    pkHistorial: pkHistorial,
+                    pkAcreedor: pkAcreedor,
+                    id_gasto: id_gasto,
+                    csrfmiddlewaretoken: csrfToken
+                },
+                dataType: "json",
+                success: function (data) {
+                    if (data.save == 1) {
+                        toastMixin.fire({
+                            animation: true,
+                            title: 'Autorizado!'
+                        });
+                        tableGastosNOPresupuesto.ajax.reload(null, false);
+                        tablePagosAcreedores.ajax.reload(null, false);
+                    } else {
+                        Swal.fire("", "Error L: " + data.error, "error");
+                    }
+                }
+            });
+        });
+
+        $(document).on('click', '.btnAsignarGasto', function () {
+            fila = $(this).closest("tr");
+
+            $('#formAsignarCentro').trigger('reset');
+
+            fkBancario = fila.find("td:eq(0)").text();
+            encabezado_gasto = fila.find("td:eq(1)").text();
+            FechaDocumento = fila.find("td:eq(3)").text();
+            detalle_gasto = fila.find("td:eq(4)").text();
+
+            valor_gasto = fila.find("td:eq(8)").text();
+
+            valor_gasto = valor_gasto.replace(/,/g, "");
+
+            if (valor_gasto == 0) {
+                Swal.fire("", "Ya has asignado el Total de Gasto Disponible, Disponible: 0.00", "warning");
+                return false;
+            }
+
+
+            $('#fkBancario').val(fkBancario);
+            $('#encabezado_gasto').val(encabezado_gasto);
+            $('#FechaDocumento').val(FechaDocumento).change();
+            $('#detalle_gasto').val(detalle_gasto);
+            $('#valor_gasto').val(valor_gasto);
+
+            $('.modal-title-ingresar-gasto').text('INGRESAR GASTO ' + encabezado_gasto + ' | ' + detalle_gasto);
+            $('#modalAsignarCentro').modal('show');
+        });
+
+
+
+        $('.btn_cancelar_asignar_centro').click(function (e) {
+            e.preventDefault();
+
+            $('#formAsignarCentro').trigger('reset');
+            $('#modalAsignarCentro').modal('hide');
+            document.getElementById('centro_asignar')
+                .selectedIndex = 0;
+            $('#centro_asignar').trigger(
+                'chosen:updated');
+        });
+
+
+        $('#centro_asignar').change(function (e) {
+            e.preventDefault();
+
+            val = $(this).val();
+            mes = $('#mesGastoIngresar').val();
+            anio = $('#anioGastoIngresar').val();
+
+            $.ajax({
+                beforeSend: function (xhr, type) {
+                    if (!type.crossDomain) {
+                        xhr.setRequestHeader(
+                            'X-CSRF-Token',
+                            $(
+                                'meta[name="csrf-token"]'
+                            ).attr('content'));
+                    }
+
+                    showLoadingScreen();
+                },
+                type: "POST",
+                url: `{% url 'fill_select_cuentas_centro' %}`,
+                data: {
+                    centro_id: val,
+                    mes: mes,
+                    anio: anio,
+                    csrfmiddlewaretoken: csrfToken
+                },
+                dataType: "json",
+                success: function (data) {
+                    Swal.close();
+
+                    $('#cuenta_gasto_asignar').html(data);
+                }
+            });
+
+        });
+
+
+        $('#cuenta_gasto_asignar').change(function (e) {
+            e.preventDefault();
+
+            val = $(this).val();
+            centro_id = $('#centro_asignar').val();
+            mes = $('#mes_gasto').val();
+            anio = $('#anio_gasto').val();
+
+
+            $.ajax({
+                beforeSend: function (xhr, type) {
+                    if (!type.crossDomain) {
+                        xhr.setRequestHeader(
+                            'X-CSRF-Token',
+                            $(
+                                'meta[name="csrf-token"]'
+                            ).attr('content'));
+                    }
+
+                    showLoadingScreen();
+                },
+                type: "POST",
+                url: `{% url 'get_data_presupuesto' %}`,
+                data: {
+                    presupuesto_id: val,
+                    centro_id: centro_id,
+                    mes: mes,
+                    anio: anio,
+                    csrfmiddlewaretoken: csrfToken
+                },
+                dataType: "json",
+                success: function (data) {
+                    Swal.close();
+
+                    $('#hidden_id_cuenta_contable').val(data.id_cuenta_contable);
+                    $('#hidden_numero_cuenta').val(data.numero_cuenta);
+                    $('#presupuesto_cuenta_disponible').val(dollarUSLocale.format(data
+                        .valor_autorizado));
+                    $('#hidden_mes_cuenta').val(data.mes);
+                    $('#hidden_anio_cuenta').val(data.anio);
+                }
+            });
+        });
+
+
+        $('#btnFinalizarIngresoGastos').click(function (e) {
+            e.preventDefault();
+
+            try {
+                $.ajax({
+                    beforeSend: function (xhr, type) {
+                        if (!type.crossDomain) {
+                            xhr.setRequestHeader(
+                                'X-CSRF-Token',
+                                $(
+                                    'meta[name="csrf-token"]'
+                                ).attr('content'));
+                        }
+                    },
+                    type: "POST",
+                    url: `{% url 'validate_existe_gastos_fuera_presupuesto' %}`,
+                    dataType: "json",
+                    success: function (data) {
+                        if (data.save == 1) {
+                            if (data.existe == 0) {
+                                try {
+                                    $.ajax({
+                                        beforeSend: function (xhr, type) {
+                                            if (!type.crossDomain) {
+                                                xhr.setRequestHeader(
+                                                    'X-CSRF-Token',
+                                                    $(
+                                                        'meta[name="csrf-token"]'
+                                                    ).attr('content'));
+                                            }
+                                        },
+                                        type: "POST",
+                                        url: `{% url 'finalizar_ingreso_gastos_vaic' %}`,
+                                        dataType: "json",
+                                        success: function (data) {
+                                            if (data.save == 1) {
+                                                if (data.existe == 0) {
+                                                    Swal.fire("", "No hay Presupuestos Disponibles para Realizar un Cierre de Ingreso de Gastos!", "warning");
+                                                } else {
+                                                    Swal.fire("", "Ingreso de Gastos Finalizado!", "success");
+
+                                                    tablePagosAcreedores.ajax.reload(null, false);
+                                                    tableGastosNOPresupuesto.ajax.reload(null, false);
+                                                }
+                                            } else {
+                                                Swal.fire("", "Error L: " + data.error, "error");
+                                            }
+                                        }
+                                    });
+                                } catch (error) {
+                                    Swal.fire("", "Error A 2: " + error, "error");
+                                }
+
+                            } else {
+                                Swal.fire("",
+                                    "Todavía hay Gastos Fuera de Presupuesto sin Gestionar!",
+                                    "warning");
+                            }
+                        } else {
+                            Swal.fire("", "Error L: " + data.error,
+                                "error");
+                        }
+                    }
+                });
+            } catch (error) {
+                Swal.fire("", "Error A 1: " + error, "error");
+            }
+
+        });
+
+
+
+        $('#valor_ingresar_gasto').keyup(function (e) {
+
+            presupuesto_cuenta_disponible = $('#presupuesto_cuenta_disponible').val();
+            valor_gasto = $('#valor_gasto').val();
+            valor_ingresar_gasto = $('#valor_ingresar_gasto').val();
+            valor_balance_gasto = $('#valor_balance_gasto').val();
+
+            presupuesto_cuenta_disponible = presupuesto_cuenta_disponible.replace(/,/g, "");
+            valor_gasto = valor_gasto.replace(/,/g, "");
+            valor_ingresar_gasto = valor_ingresar_gasto.replace(/,/g, "");
+
+            balance = valor_gasto - valor_ingresar_gasto;
+
+            if (parseFloat(valor_ingresar_gasto) > parseFloat(valor_gasto)) {
+                balance = valor_gasto;
+                $('#valor_ingresar_gasto').val(balance);
+            }
+
+            $('#valor_balance_gasto').val(balance);
+
+        });
+
+
+
+        $('#formAsignarCentro').on('submit', function (e) {
+            e.preventDefault();
+
+            // --- Obtener y normalizar valores ---
+            const strip = v => (v || '').toString().replace(/,/g, '');
+            const fkBancario = $('#fkBancario').val();
+            const hidden_id_cuenta_contable = $('#hidden_id_cuenta_contable').val();
+            const hidden_numero_cuenta = $('#hidden_numero_cuenta').val();
+            const centro_asignar = $('#centro_asignar').val();
+            const centro_asignar_text = $('#centro_asignar option:selected').text();
+            const cuenta_gasto_asignar = $('#cuenta_gasto_asignar').val();
+            const cuenta_gasto_asignar_text = $('#cuenta_gasto_asignar option:selected').text();
+
+            const presupuesto_cuenta_disponible = strip($('#presupuesto_cuenta_disponible').val());
+            const valor_gasto_total = strip($('#valor_gasto').val());
+            const valor_ingresar_gasto = strip($('#valor_ingresar_gasto').val());
+            const valor_balance_gasto = strip($('#valor_balance_gasto').val());
+
+            const FechaDocumento = $('#FechaDocumento').val();
+            const encabezado_gasto = $('#encabezado_gasto').val();
+            const detalle_gasto = $('#detalle_gasto').val();
+            const concepto = (encabezado_gasto || '') + ' | ' + (detalle_gasto || '');
+
+            const mes = $('#hidden_mes_cuenta').val();
+            const anio = $('#hidden_anio_cuenta').val();
+            const tipo_ingreso = 0;
+
+            // --- Validaciones mínimas ---
+            if (centro_asignar == 0 || cuenta_gasto_asignar == 0 || parseFloat(valor_ingresar_gasto) <= 0 || !$('#valor_ingresar_gasto').val()) {
+                Swal.fire("", "Debes Seleccionar un CENTRO, una Cuenta de Gasto e Ingresar el Valor del Gasto!", "warning");
+                return;
+            }
+
+            // --- URL del endpoint ---
+            let urlInsert = "{% url 'insert_gasto_bancario_presupuesto' %}";
+
+            // --- Construir payload en un solo lugar ---
+            const buildPayload = (validacion) => ({
+                fkBancario: fkBancario,
+                FechaDocumento: FechaDocumento,
+                hidden_id_cuenta_contable: hidden_id_cuenta_contable,
+                hidden_numero_cuenta: hidden_numero_cuenta,
+                centro_asignar: centro_asignar,
+                centro_asignar_text: centro_asignar_text,
+                cuenta_gasto_asignar: cuenta_gasto_asignar,
+                cuenta_gasto_asignar_text: cuenta_gasto_asignar_text,
+                presupuesto_cuenta_disponible: presupuesto_cuenta_disponible,
+                TotalGasto: valor_gasto_total,
+                valor_gasto: valor_ingresar_gasto,
+                SaldoGasto: valor_balance_gasto,
+                encabezado_gasto: encabezado_gasto,
+                detalle_gasto: detalle_gasto,
+                concepto: concepto,
+                validacion: validacion,   // <— solo cambia este flag
+                mes: mes,
+                anio: anio,
+                tipo_ingreso: tipo_ingreso,
+                csrfmiddlewaretoken: csrfToken
+            });
+
+            // --- Un solo POST AJAX ---
+            const enviarGasto = (validacion) => {
+                try {
+                    $.ajax({
+                        beforeSend: function (xhr, type) {
+                            if (!type.crossDomain) {
+                                xhr.setRequestHeader('X-CSRF-Token', $('meta[name="csrf-token"]').attr('content'));
+                            }
+                        },
+                        type: "POST",
+                        url: urlInsert,
+                        data: buildPayload(validacion),
+                        dataType: "json",
+                        success: function (data) {
+                            if (data.save == 1) {
+                                Swal.fire("", "Gasto Ingresado Correctamente!", "success");
+                                $('#formAsignarCentro').trigger('reset');
+                                $('#modalAsignarCentro').modal('hide');
+                                document.getElementById('centro_asignar').selectedIndex = 0;
+                                $('#centro_asignar').trigger('chosen:updated');
+                                tablePagosAcreedores.ajax.reload(null, false);
+                            } else {
+                                Swal.fire("", "Error L: " + data.error, "error");
+                            }
+                        },
+                        error: function (xhr) {
+                            Swal.fire("", "Error HTTP: " + (xhr.responseText || xhr.statusText), "error");
+                        }
+                    });
+                } catch (error) {
+                    Swal.fire("", "Error A: " + error, "error");
+                }
+            };
+
+            // --- Lógica de confirmación / flujo ---
+            if (parseFloat(presupuesto_cuenta_disponible) < parseFloat(valor_ingresar_gasto)) {
+                Swal.fire({
+                    title: "INGRESARÁS UN GASTO SIN PRESUPUESTO DISPONIBLE EN EL CENTRO!",
+                    icon: "warning",
+                    showCancelButton: true,
+                    confirmButtonText: 'Confirmar!',
+                }).then((result) => {
+                    if (result.isConfirmed) {
+                        enviarGasto(1); // excede presupuesto
+                    }
+                });
+            } else {
+                enviarGasto(0); // dentro de presupuesto
+            }
+        });
+
+
+
+
+        $(document).on('click', '.btnVerIngresados', function () {
+
+
+            fila = $(this).closest("tr");
+
+
+            gasto_acreedor_id = fila.find("td:eq(0)").text();
+            gasto_acreedor_name = fila.find("td:eq(1)").text();
+
+
+
+
+            $("#tableDesgloseGastoBnk").DataTable().clear().destroy();
+
+            tableDesgloseGastoBnk = $('#tableDesgloseGastoBnk').DataTable({
+                initComplete: function () {
+                    var api = this.api();
+
+                },
+                scrollX: true,
+                fixedHeader: true,
+                scrollY: '350px',
+                scrollCollapse: true,
+                pageLength: 50,
+                language: {
+                    url: "{% static 'app/th/json/es-ES.json' %}",
+                },
+                ordering: true,
+                dom: 'Bfrtlip',
+                buttons: [{
+                    extend: 'excel',
+                    text: '<i class="fas fa-file-excel"></i>',
+                    titleAttr: 'Excel',
+                    className: 'btn btn-success',
+                },
+                {
+                    extend: 'pdf',
+                    text: '<i class="fas fa-file-pdf"></i>',
+                    titleAttr: 'PDF',
+                    className: 'btn btn-danger',
+                },
+                {
+                    extend: 'print',
+                    text: '<i class="fas fa-print"></i>',
+                    titleAttr: 'Imprimir',
+                    className: 'btn btn-info',
+                }
+                ],
+                ajax: {
+                    url: `{% url 'fill_table_desglose_gastos' %}?acc_id=${encodeURIComponent(gasto_acreedor_id)}`
+                },
+                columns: [{
+                    data: 'PKAsignado'
+                },
+                {
+                    data: 'FkDetalleSolicitudPagoAD'
+                },
+                {
+                    data: 'FechaDocumento'
+                },
+                {
+                    data: 'CuentaContable'
+                },
+                {
+                    data: 'Concepto'
+                },
+                {
+                    data: 'Centro'
+                },
+                {
+                    data: 'ValorIngreso',
+                    className: 'currency',
+                    render: $.fn.dataTable.render.number(',', '.', 2)
+                },
+                {
+                    data: null,
+                    className: 'text-center',
+                    render: function (data, type, row) {
+                        var badge = "";
+
+                        if (data.validacion == 1) {
+                            badge +=
+                                '<span class="badge rounded-pill badge-success">Ingresado</span>';
+                        } else if (data.validacion == 0) {
+                            badge +=
+                                '<span class="badge rounded-pill badge-danger">Ingresado y Espera Aprobación</span>';
+                        }
+
+                        return badge;
+                    },
+                },
+                {
+                    data: 'IngresadoPor'
+                },
+                {
+                    data: 'gasto_adicional',
+                    className: 'text-center',
+                    render: function (data, type, row) {
+                        var badge = "";
+
+                        if (data == 1) {
+                            badge +=
+                                '<span class="badge rounded-pill badge-success">Aplica</span>';
+                        } else {
+                            badge +=
+                                '<span class="badge rounded-pill badge-danger">NO Aplica</span>';
+                        }
+
+                        return badge;
+                    },
+                },
+                {
+                    data: 'gasto_adicional_aprueba'
+                },
+
+                {
+                    data: null,
+                    render: function (data, type, row) {
+                        var badge = "";
+
+                        if (data.cierre == 1) {
+                            badge +=
+                                "<div class='text-center'><div class='btn-group'><span class='badge rounded-pill badge-disabled'>Cierre Realizado</span></div></div>";
+                        } else {
+                            badge +=
+                                "<div class='text-center'><div class='btn-group'>   <button data-id='0' class='btn btn-danger btn-sm btnRetirarGastoAc btn-danger' title='Retirar Gasto' id='btnRetirarGastoAc'><i class='material-icons'>delete</i></button>    </div></div>";
+                        }
+
+
+                        return badge;
+                    },
+                },
+                ],
+                order: [6, "desc"]
+
+            });
+
+
+            $('#titleIngresoGasto').text("LISTADO DE GASTOS INGRESADOS DEL GASTO " +
+                gasto_acreedor_name);
+            $('#modalIngresoGasto').modal("show");
+
+        });
+
+        $('#CuentaFilter').keyup(function () {
+            tableDesgloseGastoBnk.column(3).search(this.value).draw();
+        });
+        $('#Concepto2Filter').keyup(function () {
+            tableDesgloseGastoBnk.column(4).search(this.value).draw();
+        });
+        $('#CentroFilter').keyup(function () {
+            tableDesgloseGastoBnk.column(5).search(this.value).draw();
+        });
+
+
+        $('.btn_close_modal_desglose_gastos').click(function (e) {
+            e.preventDefault();
+
+            $('#modalIngresoGasto').modal("hide");
+        });
+
+
+
+        $(document).on('click', '.btnRetirarGastoAc, .btnRetirarGastoFuera', function () {
+
+            fila = $(this).closest("tr");
+
+            id_gasto = $(this).data('id');
+
+            pkHistorial = fila.find("td:eq(0)").text();
+            pkAcreedor = fila.find("td:eq(1)").text();
+
+            varID = this.id;
+
+            Swal.fire({
+                title: "Estás seguro de RETIRAR este Gasto Asignado?",
+                text: "",
+                icon: "warning",
+                showCancelButton: true,
+                confirmButtonColor: '#3085d6',
+                cancelButtonColor: '#d33',
+                confirmButtonText: 'Confirmar!'
+            }).then((result) => {
+                if (result.isConfirmed) {
+
+
+                    $.ajax({
+                        beforeSend: function (xhr, type) {
+                            if (!type.crossDomain) {
+                                xhr.setRequestHeader(
+                                    'X-CSRF-Token',
+                                    $(
+                                        'meta[name="csrf-token"]'
+                                    ).attr('content'));
+                            }
+                        },
+                        type: "POST",
+                        url: `{% url 'retirar_gasto_vaic' %}`,
+                        data: {
+                            pkHistorial: pkHistorial,
+                            pkAcreedor: pkAcreedor,
+                            id_gasto: id_gasto,
+                            csrfmiddlewaretoken: csrfToken
+                        },
+                        dataType: "json",
+                        success: function (data) {
+                            if (data.save == 1) {
+                                toastMixin.fire({
+                                    animation: true,
+                                    title: 'Gasto Retirado!'
+                                });
+
+                                tableDesgloseGastoBnk.ajax.reload(null, false);
+                                tableGastosNOPresupuesto.ajax.reload(null, false);
+                                tablePagosAcreedores.ajax.reload(null, false);
+
+                            } else {
+                                Swal.fire("", "Error L: " + data.error, "error");
+                            }
+                        }
+                    });
+
+
+                }
+            });
+
+        });
+
+
+        
+
+
+
+
+
+
+
+
+
+
+        /*  */
+    });
+</script>
+{% endblock %}

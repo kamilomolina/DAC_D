@@ -1,0 +1,90 @@
+{% load static %}
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Tabla Detallada</title>
+<link rel="stylesheet" href="style.css">
+<link rel="stylesheet" href="{% static 'app/css/style.css' %}">
+<style>
+   .unique-table-container {
+  margin: 20px;
+  overflow-x: auto; /* Asegura que la tabla sea desplazable horizontalmente en pantallas pequeñas */
+}
+
+.unique-styled-table {
+  width: 100%;
+  border-collapse: collapse;
+  margin: 25px 0;
+  font-size: 0.9em;
+  min-width: 400px;
+  border-radius: 5px 5px 0 0;
+  overflow: hidden;
+  box-shadow: 0 0 20px rgba(0, 0, 0, 0.15);
+}
+
+.unique-styled-table thead tr {
+  background-color: #4a536b; /* Color único para el encabezado */
+  color: #ffffff;
+  text-align: left;
+}
+
+.unique-styled-table th,
+.unique-styled-table td {
+  padding: 12px 15px;
+}
+
+.unique-styled-table tbody tr {
+  border-bottom: 1px solid #cccccc;
+}
+
+.unique-styled-table tbody tr:nth-of-type(even) {
+  background-color: #e3e6f0; /* Color único para las filas pares */
+}
+
+.unique-styled-table tbody tr:last-of-type {
+  border-bottom: 2px solid #4a536b; /* Color único para la última fila */
+}
+
+.unique-styled-table tbody tr.active-row {
+  font-weight: bold;
+  color: #4a536b; /* Color único para filas activas */
+}
+
+</style>
+</head>
+<body>
+<div class="unique-table-container">
+    <table class="unique-styled-table">
+        <thead>
+            <tr>
+                <th>Fecha</th>
+                <th>N. Orden</th>
+                <th>Destinatario</th>
+                <th>Origen</th>
+                <th>Destino</th>
+                <th>Placa Vehículo</th>
+                <th>Conductor</th>
+                <th>Estado</th>
+                <th>Creada por</th>
+            </tr>
+        </thead>
+        <tbody>
+            <tr>
+                <td>15/03/2024</td>
+                <td>12345</td>
+                <td>Juan Perez</td>
+                <td>Madrid</td>
+                <td>Barcelona</td>
+                <td>XYZ-123</td>
+                <td>Pedro Gomez</td>
+                <td>En tránsito</td>
+                <td>Maria Lopez</td>
+            </tr>
+            <!-- Más filas aquí -->
+        </tbody>
+    </table>
+</div>
+</body>
+</html>

@@ -1,0 +1,302 @@
+{% extends 'menu_nomina.html' %}
+{% load static %}
+
+{% block title %}
+CONFIG. PREAVISO RANGO DÍAS
+{% endblock %}
+
+{% block body %}
+
+<body>
+
+    <div class="card p-2 crear-container">
+        <div class="row">
+            <div class="col-md-12">
+                <div class="card">
+                    <div class="card-body" style="background-color: #f4f6f9;">
+                        <div class="d-flex justify-content-between align-items-center mb-4 mt-2">
+                            <h4 class="text-primary">Configuración Preaviso (Rango de Meses / Días)</h4>
+
+                            <button type="button" id="btnNuevoRangoPreaviso"
+                                class="btn btn-add-adicional animate__animated animate__pulse animate__slow animate__infinite"
+                                style="background-color: #f5c542; color: #ffffff;" data-bs-toggle="modal"
+                                data-bs-target="#modalRangoPreaviso">
+                                <i class="material-icons">add</i>
+                            </button>
+                        </div>
+
+                        <div class="table-responsive">
+                            <table id="tablaRangosPreaviso"
+                                class="table table-striped table-bordered table-top-border table-sm" style="width:100%">
+                                <thead>
+                                    <tr>
+                                        <th>ID</th>
+                                        <th>Meses desde</th>
+                                        <th>Meses hasta</th>
+                                        <th>Días preaviso</th>
+                                        <th>Estado</th>
+                                        <th>Acciones</th>
+                                    </tr>
+                                </thead>
+                                <tbody></tbody>
+                            </table>
+                        </div>
+
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+
+    <div class="modal fade" id="modalRangoPreaviso" tabindex="-1" aria-labelledby="modalRangoPreavisoLabel"
+        aria-hidden="true" data-bs-keyboard="false" data-bs-backdrop="static">
+        <div class="modal-dialog modal-md">
+            <div class="modal-content">
+
+                <div class="modal-header bg-info text-dark">
+                    <h5 class="modal-title fw-bold" id="modalRangoPreavisoLabel">Nuevo Rango de Preaviso</h5>
+                </div>
+
+                <form id="formRangoPreaviso">
+                    <div class="modal-body">
+                        <input type="hidden" name="opc" id="opc" value="1">
+                        <input type="hidden" name="id_rango" id="id_rango">
+
+                        <div class="mb-3">
+                            <label for="meses_min" class="form-label fw-bold">Meses desde</label>
+                            <input type="number" min="0" class="form-control form-control-sm" id="meses_min"
+                                name="meses_min" required>
+                        </div>
+
+                        <div class="mb-3">
+                            <label for="meses_max" class="form-label fw-bold">
+                                Meses hasta
+                                <small class="text-muted">(dejar vacío = sin límite)</small>
+                            </label>
+                            <input type="number" min="0" class="form-control form-control-sm" id="meses_max"
+                                name="meses_max" placeholder="Ej: 2, 5, 11...">
+                        </div>
+
+                        <div class="mb-3">
+                            <label for="dias" class="form-label fw-bold">Días de preaviso</label>
+                            <input type="number" min="0" class="form-control form-control-sm" id="dias" name="dias"
+                                required>
+                        </div>
+
+                    </div>
+
+                    <div class="modal-footer">
+                        <button type="submit" class="btn btn-primary btn-sm">Guardar</button>
+                        <button type="button" class="btn btn-secondary btn-sm" data-bs-dismiss="modal">Cerrar</button>
+                    </div>
+                </form>
+
+            </div>
+        </div>
+    </div>
+
+</body>
+{% endblock %}
+
+{% block scripts %}
+<script>
+    $(document).ready(function () {
+        const csrfToken = "{{ csrf_token }}";
+
+        // ==========================
+        // Toast
+        // ==========================
+        const toastMixin = Swal.mixin({
+            toast: true,
+            icon: 'success',
+            title: 'Acción realizada',
+            animation: false,
+            position: 'top-right',
+            showConfirmButton: false,
+            timer: 2000,
+            timerProgressBar: true,
+            didOpen: (toast) => {
+                toast.addEventListener('mouseenter', Swal.stopTimer);
+                toast.addEventListener('mouseleave', Swal.resumeTimer);
+            }
+        });
+
+        
+        // ==========================
+        // DataTable
+        // ==========================
+        const dtRangos = $('#tablaRangosPreaviso').DataTable({
+            ajax: {
+                url: "{% url 'nomina_listar_rangos_preaviso' %}",
+                type: "POST",
+                data: {
+                    csrfmiddlewaretoken: csrfToken
+                },
+                dataSrc: function (json) {
+                    if (!json.success) return [];
+                    return json.data;
+                }
+            },
+            columns: [
+                { data: "id_rango" },
+                { data: "meses_min" },
+                {
+                    data: "meses_max",
+                    render: function (data) {
+                        return (data === null || data === undefined) ? '∞' : data;
+                    }
+                },
+                { data: "dias" },
+                {
+                    data: "estado",
+                    render: function (data) {
+                        if (data === 3)
+                            return '<span class="badge bg-danger">INACTIVO</span>';
+                        return '<span class="badge bg-success">ACTIVO</span>';
+                    }
+                },
+                {
+                    data: null,
+                    orderable: false,
+                    render: function (row) {
+                        return `
+                            <div class="btn-group">
+                                <button type="button"
+                                        class="btn btn-sm btn-warning js-edit"
+                                        data-id="${row.id_rango}"
+                                        data-min="${row.meses_min}"
+                                        data-max="${row.meses_max === null ? '' : row.meses_max}"
+                                        data-dias="${row.dias}">
+                                    <i class="material-icons">edit</i>
+                                </button>
+                                <button type="button"
+                                        class="btn btn-sm btn-danger js-estado"
+                                        data-id="${row.id_rango}">
+                                    <i class="material-icons">change_circle</i>
+                                </button>
+                            </div>`;
+                    }
+                }
+            ],
+            language: { url: "//cdn.datatables.net/plug-ins/1.13.6/i18n/es-ES.json" }
+        });
+
+        // ==========================
+        // Modal: nuevo
+        // ==========================
+        $('#btnNuevoRangoPreaviso').on('click', function () {
+            const form = document.getElementById('formRangoPreaviso');
+            form.reset();
+
+            $('#opc').val('1');
+            $('#id_rango').val('');
+
+            $('#modalRangoPreavisoLabel').text('Nuevo Rango de Preaviso');
+        });
+
+        // ==========================
+        // Modal: editar
+        // ==========================
+        $(document).on('click', '.js-edit', function () {
+            const btn = this.dataset;
+            const form = document.getElementById('formRangoPreaviso');
+
+            form.reset();
+
+            $('#opc').val('2');
+            $('#id_rango').val(btn.id);
+            $('#meses_min').val(btn.min);
+            $('#meses_max').val(btn.max);
+            $('#dias').val(btn.dias);
+
+            $('#modalRangoPreavisoLabel').text('Editar Rango de Preaviso');
+
+            $('#modalRangoPreaviso').modal('show');
+        });
+
+        // ==========================
+        // Guardar (crear / editar)
+        // ==========================
+        $('#formRangoPreaviso').on('submit', function (e) {
+            e.preventDefault();
+
+            const form = this;
+
+            const formData = {
+                csrfmiddlewaretoken: csrfToken,
+                opc: $('#opc').val(),
+                id_rango: $('#id_rango').val(),
+                meses_min: $('#meses_min').val(),
+                meses_max: $('#meses_max').val(),   // puede ir vacío => NULL en el view
+                dias: $('#dias').val()
+            };
+
+            $.ajax({
+                url: "{% url 'nomina_guardar_rango_preaviso' %}",
+                type: "POST",
+                data: formData,
+                success: function (data) {
+                    if (data.save == 1) {
+                        $('#modalRangoPreaviso').modal('hide');
+                        dtRangos.ajax.reload(null, false);
+                        toastMixin.fire({
+                            icon: 'success',
+                            title: ($('#opc').val() == '1'
+                                ? 'Rango creado!'
+                                : 'Rango actualizado!')
+                        });
+                    } else {
+                        Swal.fire('Error', (data.error || '') + ' No se pudo guardar', 'error');
+                    }
+                },
+                error: function () {
+                    Swal.fire('Error', 'Error de comunicación con el servidor', 'error');
+                }
+            });
+        });
+
+        // ==========================
+        // Cambiar estado
+        // ==========================
+        $(document).on('click', '.js-estado', function () {
+            const id = $(this).data('id');
+
+            Swal.fire({
+                title: '¿Cambiar estado?',
+                text: 'Se habilitará / deshabilitará este rango de preaviso.',
+                icon: 'warning',
+                showCancelButton: true,
+                confirmButtonText: 'Sí, continuar',
+                cancelButtonText: 'Cancelar'
+            }).then((result) => {
+                if (!result.isConfirmed) return;
+
+                $.ajax({
+                    url: "{% url 'nomina_cambiar_estado_rango_preaviso' %}",
+                    type: "POST",
+                    data: {
+                        csrfmiddlewaretoken: csrfToken,
+                        id_rango: id
+                    },
+                    success: function (data) {
+                        if (data.save == 1) {
+                            dtRangos.ajax.reload(null, false);
+                            toastMixin.fire({
+                                icon: 'success',
+                                title: 'Estado actualizado'
+                            });
+                        } else {
+                            Swal.fire('Error', data.error || 'No se pudo actualizar el estado', 'error');
+                        }
+                    },
+                    error: function () {
+                        Swal.fire('Error', 'Error de comunicación con el servidor', 'error');
+                    }
+                });
+            });
+        });
+
+    });
+</script>
+{% endblock %}

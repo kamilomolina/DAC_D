@@ -1,0 +1,70 @@
+<div class="modal fade" id="modalPreviewPartida" tabindex="-1" aria-labelledby="modalPreviewPartidaLabel"
+    aria-hidden="true" data-bs-keyboard="false" data-bs-backdrop="static">
+    <div class="modal-dialog modal-xl">
+        <div class="modal-content">
+
+            <div class="modal-header bg-primary text-white">
+                <h5 class="modal-title fw-bold">
+                    Previsualización de Partida Manual
+                </h5>
+            </div>
+
+            <div class="modal-body">
+
+                <div class="row mb-3">
+                    <div class="col-md-4">
+                        <p><strong>Sinopsis:</strong> <span id="prevSinopsis"></span></p>
+                        <p><strong>Fecha:</strong> <span id="prevFecha"></span></p>
+                    </div>
+                    <div class="col-md-4">
+                        <p><strong>Empresa:</strong> <span id="prevEmpresa"></span></p>
+                        <p><strong>Sucursal:</strong> <span id="prevSucursal"></span></p>
+                    </div>
+                    <div class="col-md-4">
+                        <p><strong>Usuario:</strong> <span id="prevUsuario"></span></p>
+                        <p><strong>Tasa de Cambio:</strong> <span id="prevTasa"></span></p>
+                    </div>
+                </div>
+
+                <div class="table-responsive">
+                    <table class="table table-sm table-bordered table-hover" style="width: 100%;">
+                        <thead class="table-light">
+                            <tr>
+                                <th>Código</th>
+                                <th>Cuenta</th>
+                                <th>Sinopsis</th>
+                                <th class="text-center">Debe</th>
+                                <th class="text-center">Haber</th>
+                                <th class="text-center">Gasto?</th>
+                                <th>Centro Costo</th>
+                            </tr>
+                        </thead>
+                        <tbody id="tablaPreviewBody"></tbody>
+                        <tfoot>
+                            <tr class="table-secondary fw-bold">
+                                <td colspan="3" class="text-end">Totales:</td>
+                                <td id="previewTotalDebe" class="text-center">0.00</td>
+                                <td id="previewTotalHaber" class="text-center">0.00</td>
+                                <td colspan="2"></td>
+                            </tr>
+                        </tfoot>
+                    </table>
+                </div>
+
+                <div class="text-end">
+                    <p class="fw-bold">
+                        Balance: <span id="previewBalance" class="ms-2"></span>
+                    </p>
+                </div>
+            </div>
+
+            <div class="modal-footer">
+                <button type="button" class="btn btn-success btn-sm" id="btnConfirmarGuardar">
+                    <i class="fas fa-save me-1"></i>Guardar Partida
+                </button>
+                <button type="button" class="btn btn-danger btn-sm" data-bs-dismiss="modal">Cerrar</button>
+            </div>
+
+        </div>
+    </div>
+</div>

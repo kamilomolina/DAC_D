@@ -1,0 +1,299 @@
+<div class="modal fade" id="solicitudModal" tabindex="-1" aria-labelledby="solicitudModalLabel" aria-hidden="true"
+    data-bs-backdrop="static">
+    <div class="modal-dialog modal-fullscreen">
+        <div class="modal-content">
+            <div class="modal-header" style="background-color: aqua">
+                <h5 class="modal-title" id="solicitudModalLabel" style="color: black">CREAR SOLICITUD DE INGRESO</h5>
+                <button type="button" class="btn-close close_modal_solicitud" data-bs-dismiss="modal"
+                    aria-label="Close"></button>
+            </div>
+
+            <form id="formSolicitud">
+                <div class="modal-body">
+
+                    <div class="row">
+
+                        <div class="col-lg-3">
+                            <div class="form-group">
+                                <label for="">Empresa:</label>
+                                <select id="empresaPartida" class="form-select form-select-sm" name="empresaPartida">
+                                    {% for e in empresasData %}
+                                    <option value="{{ e.id }}">{{ e.nombre }}</option>
+                                    {% endfor %}
+                                </select>
+                            </div>
+                        </div>
+
+                        <div class="col-lg-3">
+                            <div class="form-group">
+                                <label for="">Sucursal:</label>
+                                <select id="sucursalPartida" class="form-select form-select-sm" name="sucursalPartida">
+                                    {% for s in sucursalesData %}
+                                    <option value="{{ s.PKsucursal }}">{{ s.NombreSucursal }}</option>
+                                    {% endfor %}
+                                </select>
+                            </div>
+                        </div>
+
+                        <div class="col-lg-2">
+                            <div class="form-group">
+                                <label for="solicitud_fecha_doc">Fecha Doc.</label>
+                                <input type="date" class="form-control form-control-sm" name="solicitud_fecha_doc"
+                                    id="solicitud_fecha_doc" value="{{date}}">
+                            </div>
+                        </div>
+
+                        <div class="col-lg-2">
+                            <div class="form-group">
+                                <label for="solicitud_fecha_pago">Fecha Pago</label>
+                                <input type="date" class="form-control form-control-sm" name="solicitud_fecha_pago"
+                                    id="solicitud_fecha_pago" value="{{date}}">
+                            </div>
+                        </div>
+
+                        <div class="col-lg-2">
+                            <div class="form-group">
+                                <label for="solicitud_tipo_doc">Tipo Doc.</label>
+                                <select class="form-select form-select-sm" name="solicitud_tipo_doc"
+                                    id="solicitud_tipo_doc">
+                                    <option value="#">Seleccione un Tipo</option>
+                                    <option value="RECIBO">RECIBO</option>
+                                    <option value="FACTURA">FACTURA</option>
+                                </select>
+                            </div>
+                        </div>
+
+                    </div>
+
+                    <br>
+
+                    <div class="row">
+                        <div class="col-lg-12">
+                            <div class="form-group">
+                                <label for="concepto_principal"><b>Concepto General (Sinopsis)</b></label>
+                                <textarea class="form-control form-control-sm" name="concepto_principal"
+                                    id="concepto_principal"></textarea>
+                            </div>
+                        </div>
+                    </div>
+
+                    <hr>
+
+                    <div class="row shadow-lg border m-2 rounded-4">
+
+                        <div class="row p-2">
+                            <span><b>Detalles de la Solicitud de Ingreso</b></span>
+                        </div>
+
+                        <div class="row p-2" style="max-height: 350px; overflow-y: auto;">
+                            <div class="table-responsive">
+                                <table id="tbl_desglose_solicitud_gasto"
+                                    class="table table-hover table-center table-bordered table-striped table-v1"
+                                    style="width:100%">
+                                    <thead class="thead-light">
+                                        <tr>
+                                            <th class="text-center col-sm">Concepto</th>
+                                            <th class="text-center col-sm">Debe (Valor con ISV)</th>
+                                            <th class="text-center col-sm">Haber</th>
+                                            <th class="text-center col-sm">Tiene ISV</th>
+                                            <th class="text-center col-sm">Valor Ingreso SIN ISV</th>
+                                            <th class="text-center col-sm">Valor ISV</th>
+                                            <th class="text-center col-sm">Centro</th>
+                                            <th class="text-center col-sm">Cuenta Contable</th>
+                                            <th class="text-center col-sm">Acción</th>
+                                        </tr>
+                                    </thead>
+                                    <tbody id="tbody_desglose">
+
+                                        <tr>
+                                            <td>
+                                                <div class="form-group">
+                                                    <label for="">Proveedor:</label>
+                                                    <select id="acreedorSelect" class="form-select form-select-sm"
+                                                        name="acreedorSelect">
+                                                        {% for p in proveedoresData %}
+                                                        <option value="{{ p.Pkprovee }}">{{ p.NombreComercial }}</option>
+                                                        {% endfor %}
+                                                    </select>
+                                                </div>
+                                            </td>
+                                            <td></td>
+                                            <td>
+                                                <div class="form-group">
+                                                    <label for="solicitud_valor">Ingreso Total</label>
+                                                    <input type="text"
+                                                        class="form-control form-control-sm formattedMoneyInputs"
+                                                        placeholder="0.00" value="0.00" name="solicitud_valor"
+                                                        id="solicitud_valor">
+                                                </div>
+                                            </td>
+                                            <td></td>
+                                            <td></td>
+                                            <td></td>
+                                            <td></td>
+                                            <td>
+                                                <div class="form-group">
+                                                    <label for="">Cuenta Acredita:</label>
+                                                    <select id="cuentaSelect" class="form-select form-select-sm"
+                                                        name="cuentaSelect">
+                                                        {% for cta in cuentasContablesData %}
+                                                        <option value="{{cta.CodigoCuenta}}">{{ cta.CodigoCuenta }} |
+                                                            {{cta.Concepto}}</option>
+                                                        {% endfor %}
+                                                    </select>
+                                                </div>
+                                            </td>
+                                            <td></td>
+
+                                        </tr>
+
+                                        <tr class="desgloseSolicitudGasto">
+                                            <td>
+                                                <input type="hidden" value="1" class="hidden_value_desglose"
+                                                    name="hidden_value_desglose">
+                                                <textarea
+                                                    class="form-control-sm form-control txt_desglose_solicitud desglose_solicitud desglose_concepto"
+                                                    id="desglose_concepto" name="desglose_concepto" cols="30"
+                                                    rows="3"></textarea>
+                                            </td>
+
+                                            <td>
+                                                <input
+                                                    class="form-control-sm form-control txt_desglose_solicitud desglose_solicitud desglose_valor formattedMoneyInputs"
+                                                    id="desglose_valor" name="desglose_valor" placeholder="0.00"
+                                                    type="text">
+                                            </td>
+
+                                            <td>
+
+                                            </td>
+
+                                            <td class="d-flex justify-content-center">
+                                                <div class="btn-group">
+                                                    <input type="checkbox" class="isv-checkbox" name="isv-checkbox">
+                                                </div>
+                                            </td>
+
+                                            <td>
+                                                <input
+                                                    class="form-control-sm form-control txt_desglose_solicitud desglose_solicitud desglose_valor_sin_isv formattedMoneyInputs"
+                                                    id="desglose_valor_sin_isv" name="desglose_valor_sin_isv"
+                                                    placeholder="0.00" type="text" disabled>
+                                            </td>
+                                            <td>
+                                                <input
+                                                    class="form-control-sm form-control txt_desglose_solicitud desglose_solicitud desglose_valor_isv formattedMoneyInputs"
+                                                    id="desglose_valor_isv" name="desglose_valor_isv" placeholder="0.00"
+                                                    type="text" disabled>
+                                            </td>
+
+                                            <td>
+                                                <select name="desglose_centro" id="desglose_centro"
+                                                    class="form-select form-select-sm txt_desglose_solicitud desglose_solicitud desglose_centro">
+                                                    <option value="#" selected>Seleccione un Centro</option>
+                                                    {% for centro in centrosData %}
+                                                    <option value="{{ centro.id_centro }}">{{ centro.nombre_centro }}
+                                                    </option>
+                                                    {% endfor %}
+                                                </select>
+                                            </td>
+
+                                            <td>
+                                                <select name="desglose_cuenta" id="desglose_cuenta_1"
+                                                    class="form-select form-select-sm txt_desglose_solicitud desglose_solicitud desglose_cuenta">
+                                                    <option value="0" selected>Seleccione una Cuenta</option>
+                                                </select>
+                                            </td>
+
+                                            <td></td>
+                                        </tr>
+
+                                    </tbody>
+                                </table>
+                            </div>
+                        </div>
+
+                        <div class="row d-flex justify-content-end align-items-end p-4">
+                            <div class="col-lg-3">
+                                <div class="form-group">
+                                    <label for="solicitud_valor_actual">Gasto Ingresado</label>
+                                    <input type="text" class="form-control form-control-sm formattedMoneyInputs"
+                                        value="0" name="solicitud_valor_actual" id="solicitud_valor_actual" readonly>
+                                </div>
+                            </div>
+
+                            <div class="col-lg-3">
+                                <div class="form-group">
+                                    <label for="solicitud_diferencia">Diferencia</label>
+                                    <input type="text" class="form-control form-control-sm formattedMoneyInputs"
+                                        value="0" name="solicitud_diferencia" id="solicitud_diferencia" readonly>
+                                </div>
+                            </div>
+
+                            <div class="col-lg-2">
+                                <button type="button" class="btn bg-success text-white w-100" onclick="addRow()"
+                                    id="btn_add_detalle">
+                                    <i class="fas fa-arrow-down"></i> Añadir
+                                </button>
+                            </div>
+                        </div>
+
+                    </div>
+
+                    <br>
+
+                </div>
+
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-primary" id="btnGuardarSolicitudIngreso">Guardar</button>
+                    <button type="button" class="btn btn-danger close_modal_solicitud"
+                        data-bs-dismiss="modal">Cerrar</button>
+                </div>
+            </form>
+
+        </div>
+    </div>
+</div>
+
+
+
+<!-- 
+<div class="col-lg-2">
+    <div class="form-group">
+        <label for="">Acreedor:</label>
+        <select id="acreedorSelect" class="form-select form-select-sm" name="acreedorSelect">
+            {% for a in acreedoresData %}
+            <option value="{{ a.Pkacree }}">{{ a.NombreComercial }}</option>
+            {% endfor %}
+        </select>
+    </div>
+</div> 
+
+<div class="col-lg-2">
+    <div class="form-group">
+        <label for="">Cuenta Acredita:</label>
+        <select id="cuentaSelect" class="form-select form-select-sm" name="cuentaSelect">
+            {% for cta in cuentasContablesData %}
+            <option value="{{cta.CodigoCuenta}}">{{ cta.CodigoCuenta }} | {{ cta.Concepto }}
+            </option>
+            {% endfor %}
+        </select>
+    </div>
+</div>
+
+<div class="col-lg-3">
+    <div class="form-group">
+        <label for="solicitud_valor_actual">Gasto Ingresado</label>
+        <input type="text" class="form-control form-control-sm formattedMoneyInputs" value="0"
+            name="solicitud_valor_actual" id="solicitud_valor_actual" readonly>
+    </div>
+</div>
+
+<div class="col-lg-3">
+    <div class="form-group">
+        <label for="solicitud_diferencia">Diferencia</label>
+        <input type="text" class="form-control form-control-sm formattedMoneyInputs" value="0"
+            name="solicitud_diferencia" id="solicitud_diferencia" readonly>
+    </div>
+</div>
+-->

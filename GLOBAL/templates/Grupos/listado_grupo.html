@@ -1,0 +1,321 @@
+{% extends 'componentes/menu_global_security.html' %}
+{% load static %}
+
+{% block title %}
+LISTADO DE GRUPOS
+{% endblock %}
+
+{% block body %}
+
+<div class="container-fluid mt-1">
+  <div class="card shadow-lg card-expanded">
+
+    <!-- Encabezado con título y menú de selección -->
+    <div class="row align-items-center justify-content-between">
+      <div class="row align-items-center">
+        <div class="col d-flex align-items-center">
+          <button id="toggle-sidebar" class="me-3" title="Mostrar/Ocultar Menu"></button>
+          <i class="material-icons d-block">person</i>
+          <h4 class="page-title mb-0">LISTADO DE GRUPOS</h4>
+        </div>
+
+        <div class="col-auto d-flex">
+          <div class="d-flex flex-row align-items-center me-3">
+            <label for="selectModulo" class="form-label mb-0 me-2">MODULOS</label>
+            <select id="selectModulo" class="form-select form-select-sm w-auto mt-2" name="selectModulo">
+              <option value="" data-description="">Seleccione un Modulo</option>
+              {% for m in modulos %}
+              <option value="{{ m.PKmodulo }}" data-description="{{ m.Descripcion }}">
+                {{ m.Nombre }}
+              </option>
+              {% endfor %}
+            </select>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Contenido de la tabla de Grupos -->
+      <div class="row mt-1">
+        <div class="row mt-1 justify-content-center">
+
+          <div class="col-12 col-md-9">
+
+            <div class="table-responsive mt-1 shadow bg-blanco" style="display: flex; flex-direction: column;">
+              <button id="btnAgregarGrupo" class="btn btn-info mb-2" title="Agregar Grupo">
+                <i class="fa fa-user-plus"></i>
+              </button>
+              <table id="tableListadoGrupos"
+                class="table table-striped table-bordered mb-0 table-sm rounded-4 table-hover align-middle">
+                <thead class="bg-blanco text-dark">
+                  <tr>
+                    <th>Nombre</th>
+                    <th>Descripción</th>
+                    <th>Gestiones</th>
+                  </tr>
+                </thead>
+                <tbody>
+                </tbody>
+              </table>
+            </div>
+          </div>
+      </div>
+    </div>
+
+  </div>
+</div>
+
+
+
+{% include 'grupos/modales_grupos/m_listado_grupo_agregar_grupo.html' %}
+{% include 'grupos/modales_grupos/m_listado_grupo_editar_grupo.html' %}
+
+
+<a href="{% url 'global_main' %}">
+  <button class="btn btn-sm btn-danger" id="btnCerrar" title="Cerrar"
+    style="position: fixed; bottom: 20px; right: 20px;">
+    <i class="fa fa-times"></i> Cerrar
+  </button>
+</a>
+
+
+
+{% endblock %}
+
+{% block scripts %}
+<script>
+  $(document).ready(function () {
+    var csrfToken = "{{ csrf_token }}";
+    var selectedGrupoId = null, id_modulo = null;
+
+
+    $('#btnAgregarGrupo').on('click', function () {
+      $('#modalAgregarGrupo').modal('show');
+    });
+    var toastMixin = Swal.mixin({
+      toast: true,
+      icon: 'success',
+      title: 'General Title',
+      animation: false,
+      position: 'top-right',
+      showConfirmButton: false,
+      timer: 2000,
+      timerProgressBar: true,
+      didOpen: (toast) => {
+        toast.addEventListener('mouseenter', Swal.stopTimer);
+        toast.addEventListener('mouseleave', Swal.resumeTimer);
+      }
+    });
+    /* MENU ID Y SUBMENU ID */
+    $('#usuariosMenu, #gruposUsuario_submenu').addClass('active');
+
+
+    $('#selectModulo').select2({
+      templateResult: function (data) {
+        if (!data.id) { return data.text; }
+        let description = $(data.element).data('description');
+        return $('<div><strong>' + data.text + '</strong><br><small>' + description + '</small></div>');
+      },
+      templateSelection: function (data) {
+        let description = $(data.element).data('description');
+        return data.text + " | " + description;
+      },
+      width: 'resolve'
+    });
+
+    $('#selectModulo').change(function () {
+      id_modulo = $(this).val();
+      getGrupos();
+    });
+
+    id_modulo = $("#selectModulo").val();
+    getGrupos()
+    function getGrupos() {
+
+      $("#tableListadoGrupos").DataTable().clear().destroy();
+      var cardHeight = $(".card-expanded").height();
+      var tableHeight = cardHeight * 0.5;
+
+      tableListadoGrupos = $('#tableListadoGrupos').DataTable({
+        autoWidth: false,
+        scrollX: true,
+        scrollY: tableHeight + 'px',
+        scrollCollapse: true,
+        pageLength: 50,
+        dom: 'rftip',
+        language: {
+          url: "{% static 'app/th/json/es-ES.json' %}",
+        },
+        ajax: {
+          url: `{% url 'obtener_grupos_data' %}`,
+          type: "POST",
+          dataSrc: 'data',
+          data: {
+            csrfmiddlewaretoken: csrfToken,
+            modulo_id: id_modulo
+          },
+        },
+        colReorder: {
+          realtime: false,
+        },
+        buttons: [
+          {
+            extend: 'excel',
+            text: '<i class="fas fa-file-excel"></i>',
+            titleAttr: 'Exportar a Excel',
+            className: 'btn btn-success',
+          },
+          {
+            extend: 'pdf',
+            text: '<i class="fas fa-file-pdf"></i>',
+            titleAttr: 'Exportar a PDF',
+            className: 'btn btn-danger',
+          },
+          {
+            extend: 'print',
+            text: '<i class="fas fa-print"></i>',
+            titleAttr: 'Imprimir',
+            className: 'btn btn-primary',
+            orientation: 'landscape'
+          }
+        ],
+        columns: [
+          { data: 'Nombre' },
+          { data: 'Descripcion' },
+          {
+            data: null,
+            orderable: false,
+            render: function (data, type, row) {
+
+              return '<button title="Editar Grupo" class="btn btn-sm btn-secondary me-1">' +
+                '<i class="fa fa-edit"></i>' +
+                '</button>' +
+                '<button title="Eliminar Grupo" class="btn btn-sm btn-danger me-1">' +
+                '<i class="fa fa-trash"></i>' +
+                '</button>';
+            }
+          }
+        ]
+      });
+    }
+
+    $('#tableListadoGrupos tbody').on('click', 'tr', function () {
+      $('#tableListadoGrupos tbody tr').removeClass('selected');
+      $(this).addClass('selected');
+      selectedGrupoId = tableListadoGrupos.row(this).data().PKgrupo;
+    });
+
+    // Delegación de eventos para los botones de la tabla
+    $('#tableListadoGrupos tbody').on('click', 'button', function () {
+      var action = $(this).attr('title');
+      var data = tableListadoGrupos.row($(this).parents('tr')).data();
+      if (action === "Editar Grupo") {
+        $('#Nombre').val(data.Nombre);
+        $('#Descripcion').val(data.Descripcion);
+        $('#modalEditarGrupo').data('grupo', data);
+        $('#modalEditarGrupo').modal('show');
+      } else if (action === "Eliminar Grupo") {
+        var data = tableListadoGrupos.row($(this).parents('tr')).data();
+        var Nombre = data.Nombre;
+        var GrupoID = data.PKgrupo;
+        Swal.fire({
+          title: `¿Deseas eliminar a este grupo?`,
+          text: `El Grupo ${Nombre}, será ELIMINADO`,
+          icon: 'warning',
+          showCancelButton: true,
+          confirmButtonColor: '#3085d6',
+          cancelButtonColor: '#d33',
+          confirmButtonText: `Sí, Eliminar`
+        }).then((result) => {
+          if (result.isConfirmed) {
+            $.ajax({
+              url: `{% url 'delete_grupo' %}`,
+              type: 'POST',
+              data: {
+                grupo_id: GrupoID,
+                csrfmiddlewaretoken: "{{ csrf_token }}"
+              },
+              success: function (response) {
+                Swal.fire('Éxito', `El grupo ha sido ELMINADO correctamente`, 'success');
+                getGrupos(); // Recargar la tabla después del cambio
+              },
+              error: function (xhr, status, error) {
+                Swal.fire('Error', `No se pudo ELIMINAR al usuario`, 'error');
+              }
+            });
+          }
+        });
+      }
+    });
+
+
+    $('#guardarGrupoEditado').on('click', function () {
+      var Descripcion = $('#Descripcion').val()
+      var Nombre = $('#Nombre').val()
+      if (Nombre.trim() === '') {
+        Swal.fire('Error', 'El nuevo nombre no puede estar vacío', 'error');
+        return;
+      }
+      var grupo = $('#modalEditarGrupo').data('grupo');
+
+      $.ajax({
+        url: `{% url 'update_grupo' %}`,
+        type: 'POST',
+        data: {
+          grupo_id: grupo.PKgrupo,
+          nombre: Nombre,
+          descripcion: Descripcion,
+          modulo_id: id_modulo,
+
+          csrfmiddlewaretoken: "{{ csrf_token }}"
+        },
+        success: function (response) {
+          Swal.fire('Éxito', 'El grupo ha sido actualizado correctamente', 'success');
+          $('#modalEditarGrupo').modal('hide');
+          getGrupos();
+        },
+        error: function (xhr, status, error) {
+          Swal.fire('Error', 'No se pudo actualizar el grupo', 'error');
+        },
+        complete: function () {
+          $('#modalCambiarNombre').modal('hide');
+        }
+
+      });
+
+    });
+
+
+    //SE AGREGO CONSULTA PARA ESTE INSERT , NO HABIA SP
+    $('#guardarNuevoGrupo').on('click', function () {
+      var NombreAdd = $('#NombreAdd').val().trim();
+      var DescripcionAdd = $('#DescripcionAdd').val().trim();
+
+      if (!Nombre || !Descripcion) {
+        Swal.fire('Error', 'Todos los campos son obligatorios', 'error');
+        return;
+      }
+
+
+      $.ajax({
+        url: `{% url 'insert_grupo' %}`,
+        type: 'POST',
+        data: {
+          nombre: NombreAdd,
+          descripcion: DescripcionAdd,
+          modulo_id: id_modulo,
+          csrfmiddlewaretoken: "{{ csrf_token }}"
+        },
+        success: function (response) {
+          Swal.fire('Éxito', 'Grupo agregado correctamente', 'success');
+          $('#modalAgregarGrupo').modal('hide');
+          getGrupos();
+        },
+        error: function (xhr, status, error) {
+          Swal.fire('Error', 'No se pudo agregar el grupo', 'error');
+        }
+      });
+    });
+  });
+</script>
+{% endblock %}

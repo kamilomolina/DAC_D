@@ -1,0 +1,324 @@
+{% extends 'componentes/menu_contable.html' %}
+{% load static %}
+
+{% block title %}
+LIBRO MAYOR
+{% endblock %}
+
+
+{% block body %}
+
+
+<div class="row align-items-center border-bottom mb-3 py-2 bg-white shadow-sm mx-0">
+    <div class="col d-flex align-items-center px-0">
+        <button id="toggle-sidebar" class="btn btn-primary btn-sm me-3 border-0 rounded-circle btnMenu"
+            style="width: 32px; height: 32px; padding: 0;" title="Mostrar/Ocultar menú">
+            <i class="fas fa-bars"></i>
+        </button>
+        <h6 class="page-title mb-0 fs-5 fw-bold text-dark">
+            <i class="fas fa-book-open text-primary me-2"></i>LIBRO MAYOR
+        </h6>
+    </div>
+</div>
+
+
+<div class="container-fluid px-0 mt-1">
+    <div class="card shadow-sm rounded-4 mb-3 border-0 mx-0">
+        <div class="card-body py-3">
+            <div class="row d-flex align-items-end mx-0">
+
+                <div class="col-lg-2">
+                    <div class="form-group">
+                        <label for="empresaPartida">Empresa:</label>
+                        <select id="empresaPartida" class="form-select form-select-sm" name="empresaPartida">
+                            {% for e in empresasData %}
+                            <option value="{{ e.id }}">{{ e.nombre }}</option>
+                            {% endfor %}
+                        </select>
+                    </div>
+                </div>
+
+                <div class="col-lg-2">
+                    <div class="form-group">
+                        <label for="codigoCuenta">Cuenta Contable:</label>
+                        <select class="form-select form-select-sm codigoCuenta" id="codigoCuenta">
+                            <option value="" disabled selected>Seleccione una Cuenta</option>
+                            {% for cta in cuentasData %}
+                            <option value="{{cta.CodigoCuenta}}">{{ cta.CodigoCuenta }} - {{ cta.Concepto }}</option>
+                            {% endfor %}
+                        </select>
+                    </div>
+                </div>
+
+                <div class="col-lg-2">
+                    <div class="form-group">
+                        <label for="modoBusqueda">Modo de Búsqueda:</label>
+                        <select class="form-select form-select-sm" id="modoBusqueda" name="modoBusqueda">
+                            <option value="1">Cuenta Específica</option>
+                            <option value="2">Grupo/Subgrupo de Cuentas</option>
+                        </select>
+                    </div>
+                </div>
+
+                <div class="col-lg-2">
+                    <div class="form-group">
+                        <label for="periodoInicio">Desde:</label>
+                        <input type="date" id="periodoInicio" class="form-control form-control-sm pickedDate"
+                            value="{{ date1 }}">
+                    </div>
+                </div>
+
+                <div class="col-lg-2">
+                    <div class="form-group">
+                        <label for="periodoFinal">Hasta:</label>
+                        <input type="date" id="periodoFinal" class="form-control form-control-sm pickedDate"
+                            value="{{ date2 }}">
+                    </div>
+                </div>
+
+                <div class="col-lg-2">
+                    <button type="button" class="btn btn-success btn-sm" id="btnLoadData">Cargar</button>
+                </div>
+
+            </div>
+        </div>
+
+        <div class="card shadow-sm rounded-4 border-0 mx-0">
+            <div class="card-body p-2">
+                <div class="row mx-0">
+                    <div class="table-responsive px-0">
+
+                        <table id="tableLibroMayor"
+                            class="table table-striped table-bordered mb-0 table-sm rounded-4 table-hover align-middle"
+                            style="width: 100%;">
+                            <thead class="table-gradient text-dark">
+                                <tr>
+                                    <th>Fecha</th>
+                                    <th>N° Partida</th>
+                                    <th>Cuenta</th>
+                                    <th>Nombre Cuenta</th>
+                                    <th>Sinopsis</th>
+                                    <th>Debe</th>
+                                    <th>Haber</th>
+                                    <th>Saldo Acumulado</th>
+                                </tr>
+                            </thead>
+                            <tbody></tbody>
+
+                            <tfoot>
+                                <tr>
+                                    <th colspan="7" class="text-end">Saldo final:</th>
+                                    <th id="saldoFinalReferencia" class="text-end fw-bold"></th>
+                                </tr>
+                            </tfoot>
+
+                        </table>
+
+                    </div>
+                </div>
+            </div>
+        </div>
+
+
+        <a href="{% url 'panel_contabilidad' %}">
+            <button class="btn btn-sm btn-danger" id="btnCerrar" title="Cerrar"
+                style="position: fixed; bottom: 20px; right: 20px;">
+                <i class="fa fa-times"></i> Cerrar
+            </button>
+        </a>
+
+        {% endblock %}
+
+
+
+        {% block scripts %}
+
+        <script>
+            $(document).ready(function () {
+                var csrfToken = "{{ csrf_token }}";
+                var empresa_id = "{{ empresa }}";
+
+                $('#empresaPartida').val(empresa_id).change();
+
+                function showLoadingScreen(text = '') {
+                    Swal.fire({
+                        title: '',
+                        html: `<b>${text}</b>`,
+                        didOpen: () => {
+                            Swal.showLoading();
+                        },
+                        allowOutsideClick: false,
+                        showConfirmButton: false
+                    });
+                }
+
+                var toastMixin = Swal.mixin({
+                    toast: true,
+                    icon: 'success',
+                    title: 'General Title',
+                    animation: false,
+                    position: 'top-right',
+                    showConfirmButton: false,
+                    timer: 2000,
+                    timerProgressBar: true,
+                    didOpen: (toast) => {
+                        toast.addEventListener('mouseenter', Swal.stopTimer);
+                        toast.addEventListener('mouseleave', Swal.resumeTimer);
+                    }
+                });
+
+                let dollarUSLocale = Intl.NumberFormat("en-US", {
+                    minimumFractionDigits: 2,
+                    maximumFractionDigits: 2
+                });
+
+                let intergerLocale = Intl.NumberFormat("en-US", {
+                    minimumFractionDigits: 0,
+                    maximumFractionDigits: 0
+                });
+
+
+                $('#codigoCuenta').select2({ width: '100%' });
+
+                $('#empresaPartida').change(function (e) {
+                    e.preventDefault();
+
+                    const empresa = $(this).val();
+
+                    const nuevaURL = "{% url 'conta_libro_mayor' 2 %}".replace(2, empresa);
+
+                    window.location.href = nuevaURL;
+                });
+
+                $('#btnLoadData').click(function (e) {
+                    e.preventDefault();
+
+
+                    fillTableLibroMayor();
+                });
+
+                $("#tableLibroMayor").DataTable({
+                    language: {
+                        url: "{% static 'app/th/json/es-ES.json' %}",
+                    },
+                });
+
+                function fillTableLibroMayor() {
+                    const empresa = $('#empresaPartida').val();
+                    const codigo = $('#codigoCuenta').val();
+                    const date1 = $('#periodoInicio').val();
+                    const date2 = $('#periodoFinal').val();
+                    const modo_busqueda = $('#modoBusqueda').val(); // el nuevo select
+
+                    showLoadingScreen();
+
+                    $("#tableLibroMayor").DataTable().clear().destroy();
+
+                    const cardHeight = $(".card-expanded").height();
+                    const tableHeight = cardHeight * 0.5;
+
+                    $("#tableLibroMayor").DataTable({
+                        drawCallback: function (settings) {
+                            const api = this.api();
+                            const allData = api.rows({ search: 'applied' }).data().toArray();
+
+                            if (allData.length > 0) {
+                                const lastRow = allData[allData.length - 1];
+                                const saldoFinal = parseFloat(lastRow.SaldoAcumulado).toFixed(2).replace(/\d(?=(\d{3})+\.)/g, '$&,');
+                                $('#saldoFinalReferencia').text(saldoFinal);
+                            } else {
+                                $('#saldoFinalReferencia').text('0.00');
+                            }
+                        },
+                        initComplete: function () {
+                            Swal.close();
+                        },
+                        autoWidth: false,
+                        scrollX: true,
+                        scrollY: '50vh',
+                        scrollCollapse: true,
+                        pageLength: -1,
+                        dom: 'Brftip',
+                        language: {
+                            url: "{% static 'app/th/json/es-ES.json' %}",
+                        },
+                        ajax: {
+                            url: `{% url 'dataLibroMayor' %}`,
+                            type: "POST",
+                            dataSrc: 'data',
+                            data: {
+                                codigo,
+                                date1,
+                                date2,
+                                empresa,
+                                modo_busqueda,
+                                csrfmiddlewaretoken: csrfToken
+                            }
+                        },
+                        colReorder: {
+                            realtime: false,
+                        },
+                        ordering: false,
+                        buttons: [
+                            {
+                                extend: 'excel',
+                                text: '<i class="fas fa-file-excel"></i>',
+                                titleAttr: 'Exportar a Excel',
+                                className: 'btn btn-success',
+                            },
+                            {
+                                extend: 'pdf',
+                                text: '<i class="fas fa-file-pdf"></i>',
+                                titleAttr: 'Exportar a PDF',
+                                className: 'btn btn-danger',
+                            },
+                            {
+                                extend: 'print',
+                                text: '<i class="fas fa-print"></i>',
+                                titleAttr: 'Imprimir',
+                                className: 'btn btn-info',
+                                orientation: 'landscape'
+                            }
+                        ],
+                        columns: [
+                            { data: 'FechaPartida' },
+                            { data: 'Npartida' },
+                            { data: 'CodigoCuenta' },
+                            { data: 'ConceptoCuenta' },
+                            {
+                                data: 'Sinopsis',
+                                className: 'text-wrap'
+                            },
+                            {
+                                data: 'Debe',
+                                className: 'text-end',
+                                render: $.fn.dataTable.render.number(',', '.', 2)
+                            },
+                            {
+                                data: 'Haber',
+                                className: 'text-end',
+                                render: $.fn.dataTable.render.number(',', '.', 2)
+                            },
+                            {
+                                data: 'SaldoAcumulado',
+                                className: 'text-end',
+                                render: $.fn.dataTable.render.number(',', '.', 2)
+                            }
+                        ],
+                    });
+                }
+
+
+
+
+
+
+
+
+
+
+
+                /*  */
+            });
+        </script>
+        {% endblock %}

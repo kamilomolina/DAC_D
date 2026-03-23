@@ -1,0 +1,36 @@
+<div class="modal fade" id="modalAsociaciones" tabindex="-1" role="dialog" aria-labelledby="exampleModalLabel" data-bs-keyboard="false" data-bs-backdrop="static"
+    aria-hidden="true">
+    <div class="modal-dialog modal-lg" role="document">
+        <div class="modal-content">
+            <div class="modal-header" style="background-color: #304458; color:white">
+                <h5 class="modal-title" id="exampleModalLabel" style="color: #ffffff;">
+                    <i class="material-icons me-2 text-gray">group</i> Asociaciones
+                </h5>
+                <button type="button" class="close" data-dismiss="modal" aria-label="Close">
+                    <span aria-hidden="true">&times;</span>
+                </button>
+            </div>
+            <div class="modal-body">
+                <form id="formCrearAsociaciones">
+                    <div class="col-md-12 d-flex align-items-center mb-3 mt-3 ">
+                        <label for="nuevo-descripcion-asociacion" class="form-label label-width">Asociaciones:</label>
+                        <select id="nuevo-descripcion-asociacion" name="nuevo-descripcion-asociacion" style="width: 100%;"
+                            class="form-control input-underline select2" placeholder="Nivel certificado">
+                            <option value="">Seleccione una opción</option>
+                            <option value="new-descripcion-asociacion">Crear nueva asociacion</option>
+                            {% for cer in asociaciones %}
+                            <option value="{{ cer.0 }}">{{ cer.1 }}</option>
+                            {% endfor %}
+                        </select>
+                    </div>
+
+                    <div class="modal-footer">
+                        <button type="submit" class="btn btn-success animate__animated animate__pulse animate__slow animate__infinite">Guardar</button>
+                        <button type="button" class="btn btn-danger close" data-dismiss="modal">Cerrar</button>
+                    </div>
+                </form>
+            </div>
+
+        </div>
+    </div>
+</div>

@@ -1,0 +1,212 @@
+html,
+body {
+  height: 100vh;
+}
+
+body {
+  display: flex;
+  flex-direction: column;
+  background-color: #f8f9fa; /* Fondo gris claro */
+}
+
+.navbar {
+  background-color: #87cefa; /* Azul suave */
+  box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
+}
+.navbar .navbar-brand-text {
+  color: #004080; /* Azul oscuro */
+  font-weight: 700;
+}
+
+.navbar .nav-link,
+.navbar .navbar-brand {
+  color: #ffffff; /* Blanco */
+  font-weight: 700;
+}
+
+.navbar .nav-link:hover,
+.navbar .navbar-brand:hover {
+  color: #004080; /* Azul oscuro */
+}
+
+.navbar-brand {
+  display: flex;
+  align-items: center;
+}
+
+
+.navbar-brand:hover .material-icons::before {
+  content: 'arrow_back';
+}
+
+.navbar-brand .material-icons {
+  cursor: pointer;
+}
+.navbar .dropdown-menu {
+  background-color: #e0ffff; /* Verde suave */
+}
+
+.navbar .dropdown-menu .dropdown-item {
+  color: #004080; /* Azul oscuro */
+  font-weight: 600;
+}
+
+.navbar .dropdown-menu .dropdown-item:hover {
+  background-color: #b0e0e6; /* Azul pastel */
+}
+
+#sidebar {
+  width: 250px;
+  transition: all 0.3s;
+  background-color: #b0c4de; /* Azul grisáceo */
+  color: #004080; /* Azul oscuro */
+  height: 100%;
+  padding: 10px; /* Padding adicional para mejor apariencia */
+}
+
+#sidebar .nav-link {
+  width: 100%; /* Asegura que los enlaces llenen el ancho de la barra lateral */
+  color: #4682b4; /* Azul acero */
+  padding: 10px 20px; /* Añade padding para cubrir el ancho de la barra */
+}
+
+#sidebar .nav-link:hover {
+  background-color: #b0e0e6; /* Azul pastel */
+  color: #ffffff; /* Blanco */
+}
+
+#sidebar.active {
+  margin-left: -250px;
+}
+
+@media (max-width: 768px) {
+  #sidebar {
+    margin-left: -250px;
+  }
+
+  #sidebar.active {
+    margin-left: 0;
+  }
+}
+
+.table-actions {
+  display: flex;
+  justify-content: space-around;
+}
+
+.table-actions .material-icons {
+  cursor: pointer;
+  color: #4682b4; /* Azul acero */
+}
+
+.sticky-column {
+  position: -webkit-sticky; /* For Safari */
+  position: sticky;
+  right: 0;
+  background-color: #ffffff; /* Blanco */
+  z-index: 1;
+}
+
+.search-bar {
+  padding: 10px 20px;
+  background-color: #f8f9fa; /* Gris claro */
+  border-bottom: 1px solid #ddd;
+}
+
+.search-bar form {
+  flex-grow: 1;
+  display: flex;
+}
+
+.search-bar input {
+  flex: 1;
+  border: 1px solid #87cefa; /* Azul suave */
+  border-radius: 4px;
+}
+
+.search-bar button {
+  margin-left: 10px;
+}
+
+#employees-table {
+  background-color: #ffffff; /* Blanco */
+  border: 1px solid #87cefa; /* Azul suave */
+}
+
+#employees-table th {
+  background-color: #e6f7ff; /* Azul claro */
+}
+
+#employees-table td {
+  background-color: #f0f8ff; /* Azul muy claro */
+}
+
+#employees-table tbody tr:nth-child(even) {
+  background-color: #e0ffff; /* Verde suave */
+}
+
+.btn-primary {
+  background-color: #87cefa; /* Azul suave */
+  border-color: #87cefa; /* Azul suave */
+}
+
+.btn-primary:hover {
+  background-color: #4682b4; /* Azul acero */
+  border-color: #4682b4; /* Azul acero */
+}
+
+.btn-outline-success {
+  color: #4682b4; /* Azul acero */
+  border-color: #4682b4; /* Azul acero */
+}
+
+.btn-outline-success:hover {
+  background-color: #4682b4; /* Azul acero */
+  color: #ffffff; /* Blanco */
+}
+
+footer {
+  background-color: #f0f8ff; /* Azul muy claro */
+  padding: 10px;
+  position: absolute;
+  bottom: 0;
+  width: 100%;
+  text-align: center;
+}
+.btn-group {
+  display: flex;
+}
+
+.btn {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  border: none;
+  padding: 5px;
+  margin: 2px;
+  cursor: pointer;
+  font-size: 16px;
+}
+
+.btn-orange {
+  background-color: #FFA500; /* Naranja */
+  color: white;
+}
+
+.btn-orange:hover {
+  background-color: #e69500;
+}
+
+.btn-danger {
+  background-color: #dc3545;
+  color: white;
+}
+
+.btn-danger:hover {
+  background-color: #b02a37;
+}
+
+.material-icons {
+  font-size: 25px;
+}
+

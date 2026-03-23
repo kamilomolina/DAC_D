@@ -1,0 +1,526 @@
+{% extends 'componentes/menu_bancario.html' %}
+{% load static %}
+
+{% block title %}
+LIQUIDACIÓN DE TURNOS
+{% endblock %}
+
+{% block body %}
+
+<div class="row align-items-center border-bottom mb-3 py-2 bg-white shadow-sm mx-0">
+    <div class="col d-flex align-items-center px-0">
+        <button id="toggle-sidebar" class="btn btn-primary btn-sm me-3 border-0 rounded-circle btnMenu"
+            style="width: 32px; height: 32px; padding: 0;">
+            <i class="fas fa-bars"></i>
+        </button>
+
+        <h6 class="page-title mb-0 fs-5 fw-bold text-dark">
+            <i class="fas fa-cash-register text-primary me-2"></i>LIQUIDACIÓN DE CAJA TURNOS
+        </h6>
+    </div>
+</div>
+
+<input type="hidden" id="id_empresa" value="{{ id_empresa }}">
+
+<div class="container-fluid px-0 mt-1">
+
+    <!-- ================= FILTROS ================= -->
+    <div class="card p-2 mb-2">
+        <div class="row g-2 align-items-end">
+
+            <!-- EMPRESA -->
+            <div class="col-lg-2">
+                <label class="fw-bold">Empresa:</label>
+                <select id="filtroEmpresa" class="form-select form-select-sm">
+                    {% for e in empresasData %}
+                    <option value="{{ e.PkEmpresa }}">{{ e.NombreEmpresa }}</option>
+                    {% endfor %}
+                </select>
+            </div>
+
+            <!-- SUCURSAL -->
+            <div class="col-lg-2">
+                <label class="fw-bold">Sucursal:</label>
+                <select id="filtroSucursal" class="form-select form-select-sm">
+                    {% for s in sucursalesData %}
+                    <option value="{{ s.PKsucursal }}">{{ s.NombreSucursal }}</option>
+                    {% endfor %}
+                </select>
+            </div>
+
+            <!-- TIPO -->
+            <div class="col-lg-2">
+                <label class="fw-bold">Tipo a Liquidar:</label>
+                <select id="filtroTipo" class="form-select form-select-sm">
+                    <option value="1">EFECTIVO</option>
+                    <option value="2">TARJETA POS</option>
+                </select>
+            </div>
+
+
+            <!-- DESDE -->
+            <div class="col-lg-2">
+                <label class="fw-bold">Desde:</label>
+                <input type="date" id="fechaDesde" class="form-control form-control-sm" value="{{date2}}">
+            </div>
+
+            <!-- HASTA -->
+            <div class="col-lg-2">
+                <label class="fw-bold">Hasta:</label>
+                <input type="date" id="fechaHasta" class="form-control form-control-sm" value="{{date2}}">
+            </div>
+
+            <div class="col-lg-1">
+                <button id="btnCargarTurnos" class="btn btn-success btn-sm w-100">Cargar</button>
+            </div>
+
+        </div>
+    </div>
+
+
+    <!-- ================= CARDS INFORMATIVOS ================= -->
+
+    <div class="row mb-2">
+
+        <div class="col-md-3">
+            <div class="card text-center shadow-sm p-2">
+                <small>Total Turnos Cerrados</small>
+                <h6 id="cardTotalTurnos" class="fw-bold text-primary">0.00</h6>
+            </div>
+        </div>
+
+        <div class="col-md-3">
+            <div class="card text-center shadow-sm p-2">
+                <small>Total Turnos Liquidado</small>
+                <h6 id="cardTurnosLiquidado" class="fw-bold text-success">0.00</h6>
+            </div>
+        </div>
+
+        <div class="col-md-3">
+            <div class="card text-center shadow-sm p-2">
+                <small>Total Depósitos</small>
+                <h6 id="cardTotalDepositos" class="fw-bold text-info">0.00</h6>
+            </div>
+        </div>
+
+        <div class="col-md-3">
+            <div class="card text-center shadow-sm p-2">
+                <small>Saldo Depósito Pendiente</small>
+                <h6 id="cardSaldoPendiente" class="fw-bold text-danger">0.00</h6>
+            </div>
+        </div>
+
+    </div>
+
+
+
+    <div class="card p-2">
+
+        <div class="row">
+            <!-- ================= TABLA TURNOS ================= -->
+            <div class="col-md-5">
+
+                <h6 class="fw-bold mb-2">
+                    Turnos del Período
+                </h6>
+
+                <div class="table-responsive">
+                    <table class="table table-sm table-bordered" id="tablaTurnos">
+
+                        <thead>
+                            <tr>
+                                <th>Fecha</th>
+                                <th>No Turno</th>
+                                <th>Cajero</th>
+                                <th>Total</th>
+                                <th>Estado</th>
+                                <th style="width:80px">Acción</th>
+                            </tr>
+                        </thead>
+
+                        <tbody></tbody>
+
+                        <tfoot>
+                            <tr class="fw-bold">
+                                <td colspan="3" class="text-end">Total:</td>
+                                <td id="tfootTotalTurnos" class="text-end">0.00</td>
+                                <td colspan="2"></td>
+                            </tr>
+                        </tfoot>
+
+                    </table>
+                </div>
+            </div>
+
+            <!-- ================= TABLA DEPOSITOS ================= -->
+            <div class="col-md-7">
+
+                <h6 class="fw-bold mb-2">
+                    Depósitos del Período
+                </h6>
+
+                <div class="table-responsive">
+                    <table class="table table-sm table-bordered" id="tablaDepositos">
+
+                        <thead>
+                            <tr>
+                                <th>Procedencia</th>
+                                <th>Referencia</th>
+                                <th>Fecha</th>
+                                <th class="text-end">Valor</th>
+                            </tr>
+                        </thead>
+
+                        <tbody></tbody>
+
+                        <tfoot>
+                            <tr class="fw-bold">
+                                <td colspan="3" class="text-end">Total Depósitos:</td>
+                                <td id="tfootTotalDepositos" class="text-end">0.00</td>
+                            </tr>
+                        </tfoot>
+
+                    </table>
+                </div>
+
+            </div>
+        </div>
+
+    </div>
+
+</div>
+
+<a href="{% url 'panel_bancario' %}">
+    <button class="btn btn-sm btn-danger" id="btnCerrar" title="Cerrar"
+        style="position: fixed; bottom: 20px; right: 20px;">
+        <i class="fa fa-times"></i> Cerrar
+    </button>
+</a>
+
+
+{% endblock %}
+
+
+{% block scripts %}
+
+<script>
+
+    $(function () {
+
+        var csrfToken = "{{ csrf_token }}";
+        var id_empresa = "{{ id_empresa }}";
+        var buttons = "Bfrtlip";
+
+        let saldoDepositoDisponible = 0;
+        let totalTurnosPendientes = 0;
+        let totalTurnosLiquidados = 0;
+
+        let dollar = Intl.NumberFormat("en-US", {
+            minimumFractionDigits: 2,
+            maximumFractionDigits: 2
+        });
+
+
+        $('#filtroEmpresa').val(id_empresa);
+
+        $("#filtroEmpresa").change(function () {
+            let emp = $(this).val();
+
+            $("form").each(function () { this.reset(); });
+            $(this).val(emp);
+
+            cargarSucursales();
+        });
+
+        function cargarSucursales() {
+            let empresa = $("#filtroEmpresa").val();
+
+            showLoadingScreen("Actualizando sucursales...");
+
+            $.get("{% url 'api_get_sucursales_usuario' %}", { empresa: empresa }, function (resp) {
+                Swal.close();
+                let html = '<option value="0">Seleccione...</option>';
+                if (resp.success && resp.data) {
+                    resp.data.forEach(function (s) {
+                        html += `<option value="${s.PKsucursal}">${s.NombreSucursal}</option>`;
+                    });
+                }
+                $("#filtroSucursal").html(html);
+            }).fail(function () {
+                Swal.close();
+                appToast.error("Error al obtener sucursales.");
+            });
+        }
+
+        let tablaTurnos = $("#tablaTurnos").DataTable({
+            autoWidth: false,
+            scrollX: true,
+            scrollY: '300px',
+            scrollCollapse: true,
+            paging: true,
+            ordering: false,
+            data: [],
+            columns: [
+                { data: "FechaText" },
+                { data: "NoTurno" },
+                { data: "Cajero" },
+                {
+                    data: "ValorTurno",
+                    className: "text-end",
+                    render: function (data) {
+                        return dollar.format(data || 0);
+                    }
+                },
+                {
+                    data: null,
+                    render: function (row) {
+
+                        let tipo = $("#filtroTipo").val();
+
+                        if (tipo == 1) {
+                            return row.LiquidadoEfectivo == 1
+                                ? `<span class="badge bg-success">LIQUIDADO</span>`
+                                : `<span class="badge bg-warning">PENDIENTE</span>`;
+                        }
+
+                        if (tipo == 2) {
+                            return row.LiquidadoPOS == 1
+                                ? `<span class="badge bg-success">LIQUIDADO</span>`
+                                : `<span class="badge bg-warning">PENDIENTE</span>`;
+                        }
+
+                    }
+                },
+                {
+                    data: null,
+                    render: function (row) {
+
+                        let tipo = $("#filtroTipo").val();
+
+                        if (tipo == 1 && row.LiquidadoEfectivo == 0) {
+                            return `<button class="btn btn-success btn-sm btnLiquidar"
+                                data-id="${row.PKturno}">
+                                Liquidar
+                            </button>`;
+                        }
+
+                        if (tipo == 2 && row.LiquidadoPOS == 0) {
+                            return `<button class="btn btn-success btn-sm btnLiquidar"
+                                data-id="${row.PKturno}">
+                                Liquidar
+                            </button>`;
+                        }
+
+                        return `<span class="badge bg-success">LIQUIDADO</span>`;
+                    }
+                }
+
+            ]
+        });
+
+        let tablaDepositos = $("#tablaDepositos").DataTable({
+            autoWidth: false,
+            scrollX: true,
+            scrollY: '300px',
+            scrollCollapse: true,
+            paging: true,
+            ordering: false,
+            data: [],
+            columns: [
+                { data: "ProcedenciaDMov" },
+                { data: "Referencia" },
+                {
+                    data: "FechaText",
+                    render: function (data) {
+                        return data ? data.split("T")[0] : "";
+                    }
+                },
+                {
+                    data: "valor_movimiento",
+                    className: "text-end",
+                    render: function (data) {
+                        return dollar.format(data || 0);
+                    }
+                }
+            ]
+        });
+
+
+        $("#btnCargarTurnos").click(function () {
+
+            let sucursal = $("#filtroSucursal").val();
+            let desde = $("#fechaDesde").val();
+            let hasta = $("#fechaHasta").val();
+            let tipo = $("#filtroTipo").val();
+
+            if (sucursal == 0) {
+                Swal.fire("", "Seleccione una sucursal", "warning");
+                return;
+            }
+
+            // ===== TURNOS =====
+            $.get("{% url 'getDataTurnosLiquidar' %}", {
+                sucursal: sucursal,
+                date1: desde,
+                date2: hasta,
+                tipo: tipo,
+                csrfmiddlewaretoken: csrfToken
+            }, function (resp) {
+
+                tablaTurnos.clear().rows.add(resp.data).draw();
+                recalcularTotalesTurnos(resp.data);
+            });
+
+            // ===== DEPOSITOS =====
+            $.get("{% url 'getDataLiquidacionMovDiario' %}", {
+                sucursal: sucursal,
+                date1: desde,
+                date2: hasta,
+                tipo: tipo,
+                csrfmiddlewaretoken: csrfToken,
+            }, function (resp) {
+
+                tablaDepositos.clear().rows.add(resp.data).draw();
+                recalcularTotalesDepositos(resp.data);
+            });
+
+        });
+
+        function recalcularTotalesTurnos(data) {
+
+            totalTurnosPendientes = 0;
+            totalTurnosLiquidados = 0;
+
+            let tipo = $("#filtroTipo").val();
+
+            data.forEach(t => {
+
+                let monto = parseFloat(t.ValorTurno || 0);
+
+                if (tipo == 1) {
+                    if (t.LiquidadoEfectivo == 0) totalTurnosPendientes += monto;
+                    if (t.LiquidadoEfectivo == 1) totalTurnosLiquidados += monto;
+                }
+
+                if (tipo == 2) {
+                    if (t.LiquidadoPOS == 0) totalTurnosPendientes += monto;
+                    if (t.LiquidadoPOS == 1) totalTurnosLiquidados += monto;
+                }
+
+            });
+
+            $("#cardTotalTurnos").text(dollar.format(totalTurnosPendientes));
+            $("#cardTurnosLiquidado").text(dollar.format(totalTurnosLiquidados));
+            $("#tfootTotalTurnos").text(dollar.format(totalTurnosPendientes));
+        }
+
+
+
+        function recalcularTotalesDepositos(data) {
+
+            let total = 0;
+
+            data.forEach(d => {
+                total += parseFloat(d.valor_movimiento || 0);
+            });
+
+            saldoDepositoDisponible = total;
+
+            $("#cardTotalDepositos").text(dollar.format(total));
+            $("#tfootTotalDepositos").text(dollar.format(total));
+            $("#cardSaldoPendiente").text(dollar.format(total));
+        }
+
+
+        $(document).on("click", ".btnLiquidar", function () {
+
+            let tipo = $("#filtroTipo").val();
+
+            let row = tablaTurnos.row($(this).parents("tr"));
+            let data = row.data();
+
+            let monto = parseFloat(data.ValorTurno || 0);
+
+            // 🔴 VALIDACIÓN 1: monto 0
+            if (monto == 0) {
+                Swal.fire("", "Turno sin Valor", "warning");
+                return;
+            }
+
+            // 🔴 VALIDACIÓN 2: saldo suficiente
+            if (saldoDepositoDisponible < monto) {
+                Swal.fire("", "Saldo de depósitos insuficiente.", "warning");
+                return;
+            }
+
+            Swal.fire({
+                title: "¿Liquidar turno?",
+                text: "Se marcará como liquidado.",
+                icon: "question",
+                showCancelButton: true,
+                confirmButtonText: "Sí, liquidar"
+            }).then((r) => {
+
+                if (!r.isConfirmed) return;
+
+                $.post("{% url 'actualizar_turno_liquidacion' %}", {
+                    pkturno: data.PKturno,
+                    tipo: tipo,
+                    csrfmiddlewaretoken: csrfToken
+                }, function (resp) {
+
+                    if (resp.save != 1) {
+                        Swal.fire("", resp.mensaje, "warning");
+                        return;
+                    }
+
+                    // ==============================
+                    // UPDATE EN MEMORIA
+                    // ==============================
+
+                    if (tipo == 1) {
+                        data.LiquidadoEfectivo = 1;
+                    }
+
+                    if (tipo == 2) {
+                        data.LiquidadoPOS = 1;
+                    }
+
+                    row.data(data).invalidate();
+
+                    // ==============================
+                    // ACTUALIZAMOS SALDOS
+                    // ==============================
+
+                    saldoDepositoDisponible -= monto;
+                    totalTurnosPendientes -= monto;
+                    totalTurnosLiquidados += monto;
+
+                    $("#cardSaldoPendiente").text(dollar.format(saldoDepositoDisponible));
+                    $("#cardTotalTurnos").text(dollar.format(totalTurnosPendientes));
+                    $("#cardTurnosLiquidado").text(dollar.format(totalTurnosLiquidados));
+                    $("#tfootTotalTurnos").text(dollar.format(totalTurnosPendientes));
+
+                    tablaTurnos.draw(false);
+
+                    Swal.fire("", resp.mensaje, "success");
+
+                });
+
+
+            });
+
+        });
+
+
+
+
+
+
+
+
+    });
+
+</script>
+
+{% endblock %}

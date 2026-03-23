@@ -1,0 +1,220 @@
+@import url("https://fonts.googleapis.com/css2?family=Poppins:wght@200;300;400;500;600;700;800&display=swap");
+
+:root {
+  --navbar-color: #1e2a38;
+  --main-color: #bf6040;
+
+  --primary-color: #4a90e2;
+  --secondary-color: #8e44ad;
+
+  --success-color: #27ae60;
+  --danger-color: #e94e77;
+  --warning-color: #f5a623;
+  --disabled-color: #7d7d7d;
+  --highlight-color: #fdeb71;
+
+  --table1-color: #a4d5d7;
+  --table2-color: #e9bfa7;
+  --table3-color: #d1c1e2;
+  --table4-color: #f7cc92;
+  --table5-color: #aedff2;
+
+  --background-color: #1e2a38;
+
+  --black-color: #151111;
+  --hover-color: #4a90e2;
+  --green-color: #27ae60;
+  --link-navbar: #f4f5f7;
+}
+
+*,
+*::before,
+*::after {
+  padding: 0;
+  margin: 0;
+  box-sizing: border-box;
+}
+
+h1,
+h2,
+h3,
+h4,
+h5 {
+  color: var(--black-color);
+  font-family: 'Poppins', sans-serif;
+}
+
+body {
+  margin: 0 0 55px 0;
+  font-family: "Poppins", sans-serif;
+}
+
+table {
+  font-size: 12px;
+}
+
+.filterControl {
+  font-size: 12px;
+}
+
+.currency {
+  text-align: right;
+}
+
+.averages {
+  text-align: center;
+}
+
+thead,
+tbody,
+tr,
+td {
+  border: 1px solid #00000060;
+  border-collapse: collapse;
+}
+
+/* TABLE PRINCIPAL STRIPPED COLOR */
+.table-principal tr:nth-child(even) {
+  background-color: #0f5ae545;
+}
+
+.table-principal tr:nth-child(odd) {
+  background-color: #e55e0f18;
+}
+
+/* TABLE DETAILS STRIPPED COLOR */
+.table-details tr:nth-child(even) {
+  background-color: #e5880f45;
+}
+
+.table-details tr:nth-child(odd) {
+  background-color: #2f0fe518;
+}
+
+/* TABLE TOTALES STRIPPED COLOR */
+.table-totales tr:nth-child(even) {
+  background-color: #e2113e3b;
+}
+
+.table-totales tr:nth-child(odd) {
+  background-color: #10631018;
+}
+
+/* TABLE BASIC STRIPPED COLOR */
+.table-basic tr:nth-child(even) {
+  background-color: #4cc3c3;
+}
+
+.table-basic tr:nth-child(odd) {
+  background-color: #ffffff;
+}
+
+.table tr:hover {
+  background-color: #00000051;
+  color: #000000;
+}
+
+
+.tableText {
+  width: 15%;
+}
+
+.tableSoli {
+  width: 15%;
+}
+
+.tableDate {
+  width: 10%;
+}
+
+.custom-table th,
+.custom-table td {
+  border: 1px solid black; /* Aplica bordes negros a todas las celdas y encabezados de la tabla */
+  padding: 8px; /* Espacio interior para el contenido de las celdas */
+  color: black; /* Color del texto para las celdas de datos */
+}
+
+
+/* Si deseas que solo las líneas verticales sean visibles, puedes usar el siguiente estilo */
+.custom-table th {
+  border-left: 1px solid black; /* Líneas verticales entre columnas */
+  border-right: 1px solid black; /* Líneas verticales entre columnas */
+}
+
+.custom-table th:first-child,
+.custom-table td:first-child {
+  border-left: none; /* Elimina el borde izquierdo para la primera celda de cada fila */
+}
+
+.custom-table th:last-child,
+.custom-table td:last-child {
+  border-right: none; /* Elimina el borde derecho para la última celda de cada fila */
+}
+
+.filter-column {
+  padding-bottom: 0 !important;
+  margin-bottom: 0 !important;
+}
+
+.tabla-contenedor {
+    max-height: 500px; /* Ajusta este valor según sea necesario */
+    overflow-y: auto;
+}
+
+.btn-olive {
+  background-color: #556B2F;
+  color: #FFFFFF;
+}
+
+.btn-olive:hover {
+  background-color: #8FBC8F;
+  color: #FFFFFF;
+}
+
+/* Estilos para pantallas pequeñas (menos de 768px de ancho) */
+@media (max-width: 767px) {
+  .modal .form-control {
+    margin-bottom: 10px; /* Añade espacio adicional en la parte inferior de cada input/select */
+  }
+
+  .modal .btn-block {
+    width: 100%; /* Asegúrate de que los botones se expandan al ancho completo */
+    margin-bottom: 10px; /* Espacio adicional debajo de los botones */
+  }
+}
+
+/* Estilos para pantallas más pequeñas (menos de 576px de ancho) */
+@media (max-width: 575px) {
+  .modal .form-control {
+    margin-bottom: 15px; /* Más espacio para pantallas aún más pequeñas */
+  }
+
+  .modal .btn-block {
+    margin-bottom: 15px; /* Más espacio debajo de los botones */
+  }
+}
+
+body {
+    background-color: #ece8da;
+    padding: 10px; /* Beige pálido para el fondo del cuerpo */
+}
+
+.unique-table-container {
+    padding-top: 10px; /* Añade padding en la parte superior */
+}
+
+.table {
+    color: #0077b6; /* Azul más oscuro para los textos dentro de la tabla */
+    background-color: #72d4e7; /* Celeste para el fondo de las filas de la tabla */
+}
+
+.table thead th {
+    background-color: #0077b6; /* Azul más oscuro para el fondo de los encabezados de la tabla */
+    color: #ffffff; /* Blanco para el texto de los encabezados de la tabla */
+}
+
+.btn-primary {
+    background-color: #90e0ef; /* Azul claro para botones primarios */
+    border-color: #90e0ef; /* Azul claro para bordes de botones primarios */
+    /* Asegúrate de ajustar también los estados :hover, :focus, etc. */
+}

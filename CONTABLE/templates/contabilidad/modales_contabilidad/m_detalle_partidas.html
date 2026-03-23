@@ -1,0 +1,57 @@
+<div class="modal fade" id="modalDetallePartidas" tabindex="-1" aria-labelledby="modalDetallePartidasLabel" aria-hidden="true"
+    data-bs-keyboard="false" data-bs-backdrop="static">
+    <div class="modal-dialog modal-xl">
+        <div class="modal-content">
+            <div class="modal-header" style="background-color: #feffd6; color: #ffffff;">
+                <h5 class="modal-title modalDetallePartidasLabel" id="modalDetallePartidasLabel" style="color: #525252;">
+                    <i class="material-icons me-2 text-gray">list</i>
+                </h5>
+
+                <button type="button" class="close" data-bs-dismiss="modal" aria-label="Close"><span
+                        aria-hidden="true">&times;</span></button>
+
+            </div>
+
+            <form id="formDetallesPartidas">
+                <div class="row">
+                    <div class="table-responsive">
+                        <table id="tableDetallePartidasAutomaticas"
+                            class="table table-striped table-bordered mb-0 table-sm rounded-4 table-hover align-middle"
+                            style="width: 100%;">
+
+                            <tfoot class="table-active" style="display: table-header-group;">
+                                <tr>
+                                    <th></th>
+                                    <th></th>
+                                    <th></th>
+                                    <th></th>
+                                    <th></th>
+                                    <th></th>
+                                </tr>
+                            </tfoot>
+
+                            <thead class="table-gradient text-dark">
+                                <tr>
+                                    <th>Codigo</th>
+                                    <th>Cuenta</th>
+                                    <th>Sinopsis</th>
+                                    <th>Debe</th>
+                                    <th>Haber</th>
+                                    <th>Estado</th>
+                                </tr>
+                            </thead>
+                
+                            <tbody>
+                
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-danger btn-sm" data-bs-dismiss="modal">Cerrar</button>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>

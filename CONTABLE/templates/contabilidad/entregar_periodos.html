@@ -1,0 +1,238 @@
+{% extends 'componentes/menu_contable.html' %}
+{% load static %}
+
+{% block title %}
+ENTREGAR PERIODOS
+{% endblock %}
+
+
+{% block body %}
+
+<div class="row align-items-center border-bottom mb-3 py-2 bg-white shadow-sm mx-0">
+    <div class="col d-flex align-items-center px-0">
+        <button id="toggle-sidebar" class="btn btn-primary btn-sm me-3 border-0 rounded-circle btnMenu"
+            style="width: 32px; height: 32px; padding: 0;" title="Mostrar/Ocultar Menú">
+            <i class="fas fa-bars"></i>
+        </button>
+        <h6 class="page-title mb-0 fs-5 fw-bold text-dark">
+            <i class="fas fa-calendar-check text-primary me-2"></i>ENTREGAR PERIODOS
+        </h6>
+    </div>
+</div>
+
+
+<div class="container-fluid px-0 mt-1">
+    <div class="card shadow p-4" style="max-width: 600px; width: auto; margin: 0 auto;">
+        <div class="row d-flex align-items-end mx-0">
+
+            <div class="col-lg-12 mb-3">
+                <div class="form-group">
+                    <label for="">Empresa:</label>
+                    <select id="empresaPartida" class="form-select form-select-sm" name="empresaPartida">
+                        {% for e in empresasData %}
+                        <option value="{{ e.id }}">{{ e.nombre }}</option>
+                        {% endfor %}
+                    </select>
+                </div>
+            </div>
+
+            <div class="col-lg-6 mb-3">
+                <div class="form-group">
+                    <label>Mes Inicio:</label>
+                    <input type="text" id="mesInicio" class="form-control form-control-sm" value="{{ mesInicial_Text }}"
+                        readonly>
+                </div>
+            </div>
+
+            <div class="col-lg-6 mb-3">
+                <div class="form-group">
+                    <label>Año Inicio:</label>
+                    <input type="number" id="anioInicio" class="form-control form-control-sm" value="{{ AnioInicial }}"
+                        readonly>
+                </div>
+            </div>
+
+            <div class="col-lg-6 mb-3">
+                <div class="form-group">
+                    <label>Mes Finaliza:</label>
+                    <input type="text" id="mesFinaliza" class="form-control form-control-sm" value="{{ mesFinal_Text }}"
+                        readonly>
+                </div>
+            </div>
+
+            <div class="col-lg-6 mb-3">
+                <div class="form-group">
+                    <label>Año Finaliza:</label>
+                    <input type="number" id="anioFinaliza" class="form-control form-control-sm" value="{{ AnioFinal }}"
+                        readonly>
+                </div>
+            </div>
+
+            <div class="col-lg-6 mb-3">
+                <div class="form-group">
+                    <label>Fecha Partida:</label>
+                    <input type="date" id="fechaPartida" class="form-control form-control-sm" value="{{ fechaPartida }}"
+                        readonly>
+                </div>
+            </div>
+
+        </div>
+
+        <div class="row mx-0">
+            <div class="col text-end mt-3 px-0">
+                <button type="button" class="btn btn-success btn-sm" id="btnAutorizar">Autorizar</button>
+            </div>
+        </div>
+    </div>
+</div>
+
+
+
+<a href="{% url 'panel_contabilidad' %}">
+    <button class="btn btn-sm btn-danger" id="btnCerrar" title="Cerrar"
+        style="position: fixed; bottom: 20px; right: 20px;">
+        <i class="fa fa-times"></i> Cerrar
+    </button>
+</a>
+
+
+{% endblock %}
+
+
+
+{% block scripts %}
+
+<script>
+
+    $(document).ready(function () {
+        var csrfToken = "{{ csrf_token }}";
+        var empresa_id = "{{ empresa }}";
+
+        $('#empresaPartida').val(empresa_id).change();
+
+        var toastMixin = Swal.mixin({
+            toast: true,
+            icon: 'success',
+            title: 'General Title',
+            animation: false,
+            position: 'top-right',
+            showConfirmButton: false,
+            timer: 2000,
+            timerProgressBar: true,
+            didOpen: (toast) => {
+                toast.addEventListener('mouseenter', Swal.stopTimer);
+                toast.addEventListener('mouseleave', Swal.resumeTimer);
+            }
+        });
+
+        let dollarUSLocale = Intl.NumberFormat("en-US", {
+            minimumFractionDigits: 2,
+            maximumFractionDigits: 2
+        });
+
+        let intergerLocale = Intl.NumberFormat("en-US", {
+            minimumFractionDigits: 0,
+            maximumFractionDigits: 0
+        });
+
+
+        $('#empresaPartida').change(function (e) {
+            e.preventDefault();
+
+            const empresa = $(this).val();
+
+            const nuevaURL = "{% url 'conta_entregar_periodos' 2 %}".replace(2, empresa);
+
+            window.location.href = nuevaURL;
+        });
+
+
+
+
+
+
+
+        function generarPartida(mes_inicio, anio_inicio, mes_final, anio_final, mesValidar, anioValidar) {
+            $.ajax({
+                url: "{% url 'generar_partida_entregar_periodo' %}",
+                type: "POST",
+                data: {
+                    empresa: empresa,
+                    mes_inicio: mes_inicio,
+                    anio_inicio: anio_inicio,
+                    mes_final: mes_final,
+                    anio_final: anio_final,
+                    mesValidar: mesValidar,
+                    anioValidar: anioValidar,
+                    csrfmiddlewaretoken: csrfToken
+                },
+                success: function (data) {
+                    if (data.save == 1) {
+                        if (data.msjValue == 1) {
+                            Swal.fire("", "Proceso Completado!", "success");
+                        } else {
+                            Swal.fire("", data.mensaje, "warning");
+                        }
+                    } else {
+                        Swal.fire("", "Error D: " + data.error, "error");
+                    }
+                }
+            });
+        }
+
+
+
+
+        $('#btnAutorizar').click(function (e) {
+            e.preventDefault();
+
+            empresa = $('#empresaPartida').val();
+            mes_inicio = $('#mesInicioVal').val();
+            anio_inicio = $('#anioInicio').val();
+            mes_final = $('#mesFinalVal').val();
+            anio_final = $('#anio_final').val();
+
+            $.ajax({
+                url: "{% url 'autorizar_entregar_periodos' %}",
+                type: "POST",
+                data: {
+                    empresa: empresa,
+                    mes_inicio: mes_inicio,
+                    anio_inicio: anio_inicio,
+                    mes_final: mes_final,
+                    anio_final: anio_final,
+                    csrfmiddlewaretoken: csrfToken
+                },
+                success: function (data) {
+                    if (data.save == 1) {
+                        if (data.msjValue == 1) {
+                            mesValidar = data.mesValidar
+                            anioValidar = data.anioValidar
+
+                            generarPartida(mes_inicio, anio_inicio, mes_final, anio_final, mesValidar, anioValidar);
+
+                        } else {
+                            Swal.fire("", data.mensaje, "warning");
+                        }
+                    } else {
+                        Swal.fire("", "Error D: " + data.error, "error");
+                    }
+                }
+            });
+
+        });
+
+
+
+
+
+
+
+
+        /*  */
+    });
+
+
+
+</script>
+{% endblock %}

@@ -1,0 +1,54 @@
+<div class="row">
+    <div class="col-md-8">
+        <div class="card" style="background-color: #f4f6f9;">
+            <div class="card-body d-flex justify-content-end align-items-center">
+                <h4 class="section-title text-primary animate__animated animate__fadeInDown">Curriculum</h4>
+                <button type="button" class="btn btn-add-curriculum animate__animated animate__pulse animate__slow animate__infinite" style="background-color: #f5c542; color: #ffffff;"
+                    data-toggle="modal" data-target="#modalCurriculum">
+                    <i class="material-icons">add</i>
+                </button>
+            </div>
+            <div class="card-body">
+                <div class="table-responsive">
+                <table id="curriculum-table" class="table table-striped table-bordered table-top-border"
+                    style="width:100%">
+                    <thead>
+                        <tr>
+                            <th>Título</th>
+                            <th>Tipo de Curriculum</th>
+                            <th>Descripción</th>
+                            <th>Fecha de Inicio</th>
+                            <th>Fecha de Final</th>
+                            <!-- <th>Acciones</th> -->
+                        </tr>
+                    </thead>
+                    <tbody>
+                    </tbody>
+                </table>
+                </div>
+            </div>
+        </div>
+    </div>
+
+
+    <div class="col-md-4">
+        <div class="card">
+            <div class="card-body" style="background-color: #f4f6f9;">
+                <h4
+                    class="card-title d-flex justify-content-between align-items-center text-primary animate__animated animate__fadeInDown">
+                    Habilidades Personales
+                    <button type="button"
+                        class="btn btn-add-habilidades animate__animated animate__pulse animate__slow animate__infinite"
+                        style="background-color: #f5c542; color: #ffffff;" data-toggle="modal"
+                        data-target="#modalHabilidades">
+                        <i class="material-icons">add</i>
+                    </button>
+
+                </h4>
+                <div id="habilidades-container" class="d-flex flex-wrap"> <!-- Contenedor para las píldoras -->
+                    <span class="text-center" id="no-habilidades-msg">Ingresa una competencia en el botón "+".</span>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>

@@ -1,0 +1,606 @@
+{% extends 'componentes/menu_bancario.html' %}
+{% load static %}
+
+{% block title %}LISTADO ANTICIPOS CLIENTES{% endblock %}
+
+{% block body %}
+
+<style>
+    /* ancho SOLO del dropdown */
+    .select2-container--default .select2-dropdown {
+        width: 400px !important;
+        /* ajustá a gusto */
+    }
+
+    /* opcional: texto completo sin cortarse */
+    .select2-results__option {
+        white-space: nowrap;
+    }
+</style>
+
+<div class="row align-items-center border-bottom mb-3 py-2 bg-white shadow-sm mx-0">
+    <div class="col d-flex align-items-center px-0">
+        <button id="toggle-sidebar" class="btn btn-primary btn-sm me-3 border-0 rounded-circle btnMenu"
+            style="width: 32px; height: 32px; padding: 0;">
+            <i class="fas fa-bars"></i>
+        </button>
+        <h6 class="page-title mb-0 fs-5 fw-bold text-dark">
+            <i class="fas fa-list-alt text-primary me-2"></i>LISTADO ANTICIPOS CLIENTES
+        </h6>
+    </div>
+</div>
+
+<div class="container-fluid px-0 mt-1">
+
+    <div class="card card-banco p-2 mb-2">
+        <div class="row g-2 align-items-end">
+
+            <div class="col-md-2">
+                <label class="fw-semibold">Empresa</label>
+                <select id="fEmpresa" class="form-select form-select-sm">
+                    {% for e in empresasData %}
+                    <option value="{{ e.PkEmpresa }}">{{ e.NombreEmpresa }}</option>
+                    {% endfor %}
+                </select>
+            </div>
+
+            <div class="col-md-2">
+                <label class="fw-semibold">Banco</label>
+                <select id="fBanco" class="form-select form-select-sm">
+                    <option value="0">Todos</option>
+                    {% for b in bancosData %}
+                    <option value="{{ b.PkCatBanco }}">{{ b.Banco }}</option>
+                    {% endfor %}
+                </select>
+            </div>
+
+            <div class="col-md-2">
+                <label class="fw-semibold">Cta. Bancaria</label>
+                <select id="fCuenta" class="form-select form-select-sm">
+                    <option value="0">Todas</option>
+                </select>
+            </div>
+
+            <div class="col-md-2">
+                <label class="fw-semibold">Desde</label>
+                <input type="date" id="fDesde" class="form-control form-control-sm" value="{{date1}}">
+            </div>
+
+            <div class="col-md-2">
+                <label class="fw-semibold">Hasta</label>
+                <input type="date" id="fHasta" class="form-control form-control-sm" value="{{date2}}">
+            </div>
+
+            <div class="col-md-2">
+                <label class="fw-semibold">Estado</label>
+                <select id="fEstado" class="form-select form-select-sm">
+                    <option value="0">Todos</option>
+                    <option value="1">Pendientes</option>
+                    <option value="2">Autorizados</option>
+                </select>
+            </div>
+
+            <div class="col-md-12 d-flex justify-content-end gap-2 mt-2">
+                <button type="button" id="btnCargar" class="btn btn-success btn-sm">Cargar</button>
+                <button type="button" id="btnSeleccionarTodo" class="btn btn-secondary btn-sm">Seleccionar Todo</button>
+                <button type="button" id="btnAutorizar" class="btn btn-primary btn-sm">Autorizar Abonos
+                    Seleccionados</button>
+                <button type="button" id="btnAbrirModalDescarga" class="btn btn-outline-success btn-sm">Descargar
+                    Lotes</button>
+            </div>
+
+        </div>
+    </div>
+
+    <div class="card card-banco p-2">
+        <div class="table-responsive">
+            <table class="table table-sm table-bordered" id="tablaListado" style="width:100%;">
+                <thead class="table-light">
+                    <tr>
+                        <th style="width:35px;" class="text-center">
+                            <input type="checkbox" id="chkAll">
+                        </th>
+                        <th>Empresa</th>
+                        <th>Banco</th>
+                        <th>Cta. Bancaria</th>
+                        <th>Ref</th>
+                        <th>Fecha</th>
+                        <th>Cliente</th>
+                        <th>Documento</th>
+                        <th>Fecha Documento</th>
+                        <th class="text-end">Saldo</th>
+                        <th class="text-end">Abono</th>
+                        <th>Autorizado</th>
+                        <th># Aut</th>
+                        <th>Autorizó</th>
+                        <th>Fecha Aut</th>
+                        <th>PKDetalle</th>
+                        <th>PKLote</th>
+                    </tr>
+                </thead>
+                <tbody></tbody>
+            </table>
+        </div>
+    </div>
+
+</div>
+
+
+
+<div class="modal fade" id="modalDescargarLotes" tabindex="-1" aria-labelledby="modalDescargarLotesLabel"
+    aria-hidden="true" data-bs-keyboard="false" data-bs-backdrop="static">
+    <div class="modal-dialog modal-fullscreen">
+        <div class="modal-content">
+
+            <div class="modal-header bg-success text-white">
+                <h5 class="modal-title">Descargar Lotes Autorizados</h5>
+                <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"></button>
+            </div>
+
+            <div class="modal-body">
+
+                <div class="row mb-3">
+                    <div class="col-md-6">
+                        <label>Seleccionar Lotes</label>
+                        <select id="selectLotesDescarga" class="form-select form-select-sm" multiple>
+                            <option value="0">Seleccione un Lote</option>
+                        </select>
+                    </div>
+
+                    <div class="col-md-6 d-flex align-items-end">
+                        <button type="button" id="btnDescargarSeleccionados" class="btn btn-success btn-sm">
+                            Descargar Excel
+                        </button>
+                    </div>
+                </div>
+
+                <div class="table-responsive">
+                    <table class="table table-sm table-bordered" id="tablaLotesPreview" style="width:100%;">
+                        <thead class="table-light">
+                            <tr>
+                                <th style="width:35px;"></th>
+                                <th>Código AUT</th>
+                                <th>Empresa</th>
+                                <th>Banco</th>
+                                <th>Cuenta</th>
+                                <th>Fecha</th>
+                                <th class="text-end">Total</th>
+                            </tr>
+                        </thead>
+                        <tbody></tbody>
+                    </table>
+
+                </div>
+
+            </div>
+
+
+            <div class="modal-footer">
+                <button type="button" class="btn btn-danger btn-sm" data-bs-dismiss="modal">Cerrar</button>
+            </div>
+
+        </div>
+    </div>
+</div>
+
+<a href="{% url 'panel_bancario' %}">
+    <button class="btn btn-sm btn-danger" id="btnCerrar" title="Cerrar"
+        style="position: fixed; bottom: 20px; right: 20px;">
+        <i class="fa fa-times"></i> Cerrar
+    </button>
+</a>
+
+
+{% endblock %}
+
+{% block scripts %}
+<script>
+    $(function () {
+
+        var csrfToken = "{{ csrf_token }}";
+
+        function showLoadingScreen(text = '') {
+            Swal.fire({
+                title: '',
+                html: `<b>${text}</b>`,
+                didOpen: () => Swal.showLoading(),
+                allowOutsideClick: false,
+                showConfirmButton: false
+            });
+        }
+
+        let dollarUSLocale = Intl.NumberFormat("en-US", { minimumFractionDigits: 2, maximumFractionDigits: 2 });
+
+        // Cargar cuentas por banco+empresa (reusás tu endpoint get_cuentas_bancarias)
+        function cargarCuentasFiltro() {
+            let empresa = $("#fEmpresa").val();
+            let banco = $("#fBanco").val();
+
+            $.get("{% url 'get_cuentas_bancarias' %}", {
+                empresa: empresa,
+                status: 1,
+                banco: banco,
+                csrfmiddlewaretoken: csrfToken
+            }, function (resp) {
+                let html = '<option value="0">Todas</option>';
+
+                (resp.data || []).forEach(function (c) {
+                    html += `<option value="${c.PkCatCuentaBancaria}" data-cuenta="${c.CuentaBancaria}">
+                    ${c.CuentaBancaria} - ${c.Moneda}
+                    </option>`;
+                });
+
+                $("#fCuenta").html(html);
+            });
+        }
+
+        $("#fBanco, #fEmpresa").on("change", function () {
+            cargarCuentasFiltro();
+        });
+
+        cargarCuentasFiltro();
+
+        // ✅ lógica: si marco una vez un lote, se auto-marcan los del lote SOLO la primera vez
+        let loteAutoMarcado = {}; // { PKLote: true }
+
+        function badgeAut(aut) {
+            if (parseInt(aut || 0) === 1) return `<span class="badge bg-success">SI</span>`;
+            return `<span class="badge bg-secondary">NO</span>`;
+        }
+
+        let tabla = $("#tablaListado").DataTable({
+            dom: '<"top"f>rt<"bottom"lip>',
+            paging: false,
+            ordering: true,
+            searching: true,
+            language: {
+                search: "Buscar:",
+                zeroRecords: "No hay registros",
+                emptyTable: "Use filtros y presione Cargar"
+            },
+            columns: [
+                { orderable: false }, // checkbox
+                null, null, null, null, null, null, null, null,
+                { className: "text-end" },
+                { className: "text-end" },
+                null, null, null, null,
+                { visible: false }, // PKDetalle
+                { visible: false }  // PKLote
+            ]
+        });
+
+        function cargarListado() {
+            showLoadingScreen("Cargando...");
+
+            $.ajax({
+                url: "{% url 'bk_get_lote_abonos_listado' %}",
+                type: "GET",
+                data: {
+                    idEmpresa: $("#fEmpresa").val(),
+                    idBanco: $("#fBanco").val(),
+                    idCuenta: $("#fCuenta").val(),
+                    desde: $("#fDesde").val(),
+                    hasta: $("#fHasta").val(),
+                    estado: $("#fEstado").val()
+                },
+                success: function (resp) {
+                    Swal.close();
+
+                    tabla.clear();
+                    loteAutoMarcado = {}; // reset cada carga
+
+                    if (!resp.success) {
+                        Swal.fire("", resp.error || "Error al cargar.", "error");
+                        tabla.draw(false);
+                        return;
+                    }
+
+                    (resp.data || []).forEach(function (r) {
+
+                        let autorizado = parseInt(r.Autorizado || 0);
+
+                        let chk = `<input type="checkbox"
+                        class="rowCheck"
+                        data-pkdetalle="${r.PKDetalle}"
+                        data-pklote="${r.PKLote}"
+                        ${autorizado === 1 ? 'disabled' : ''}>`;
+
+                        tabla.row.add([
+                            `<div class="text-center">${chk}</div>`,
+                            (r.EmpresaNombre || ''),
+                            (r.BancoNombre || ''),
+                            (r.CuentaBancaria || ''),
+                            (r.NumeroReferenciaBanco || ''),
+                            (r.Fecha || ''),
+                            (r.NombreCliente || ''),
+                            (r.NoDocumento || ''),
+                            (r.FechaDocumentoText || ''),
+                            dollarUSLocale.format(parseFloat(r.SaldoDocumento || 0)),
+                            dollarUSLocale.format(parseFloat(r.ValorAbono || 0)),
+                            badgeAut(r.Autorizado),
+                            (r.CodigoAutorizacion || ''),
+                            (r.AutorizadoPor || ''),
+                            (r.FechaHoraAutorizado || ''),
+                            r.PKDetalle,
+                            r.PKLote
+                        ]);
+
+                    });
+
+                    tabla.draw(false);
+                },
+                error: function (xhr) {
+                    Swal.close();
+                    console.log(xhr.responseText);
+                    Swal.fire("", "Error de servidor.", "error");
+                }
+            });
+        }
+
+        $("#btnCargar").on("click", function () {
+            cargarListado();
+        });
+
+        // ✅ Si marco una fila: si el lote nunca fue auto-marcado, marco todas las filas del mismo PKLote
+        $(document).on("change", ".rowCheck", function () {
+            let checked = $(this).prop("checked");
+            let pkLote = $(this).data("pklote");
+
+            if (checked) {
+                if (!loteAutoMarcado[pkLote]) {
+                    loteAutoMarcado[pkLote] = true;
+
+                    $(".rowCheck").each(function () {
+                        if ($(this).data("pklote") == pkLote && !$(this).prop("disabled")) {
+                            $(this).prop("checked", true);
+                        }
+                    });
+                }
+            }
+
+            // no hacemos auto-check cuando vuelven a marcar una del mismo lote (porque ya se tocó)
+        });
+
+        // Seleccionar todo (solo no autorizados)
+        $("#btnSeleccionarTodo").on("click", function () {
+            $(".rowCheck").each(function () {
+                if (!$(this).prop("disabled")) {
+                    $(this).prop("checked", true);
+                }
+            });
+        });
+
+        $("#chkAll").on("change", function () {
+            let v = $(this).prop("checked");
+            $(".rowCheck").each(function () {
+                if (!$(this).prop("disabled")) {
+                    $(this).prop("checked", v);
+                }
+            });
+        });
+
+        // Autorizar seleccionados
+        $("#btnAutorizar").on("click", function () {
+
+            let ids = [];
+            $(".rowCheck:checked").each(function () {
+                if (!$(this).prop("disabled")) {
+                    ids.push($(this).data("pkdetalle"));
+                }
+            });
+
+            if (ids.length === 0) {
+                Swal.fire("", "No hay registros seleccionados.", "warning");
+                return;
+            }
+
+            showLoadingScreen("Autorizando...");
+
+            $.ajax({
+                url: "{% url 'bk_autorizar_abonos_detalle' %}",
+                type: "POST",
+                data: {
+                    csrfmiddlewaretoken: csrfToken,
+                    "ids[]": ids
+                },
+                success: function (resp) {
+                    Swal.close();
+
+                    if (resp.success) {
+                        Swal.fire("", "Autorizado con código: <b>" + resp.codigo + "</b>", "success");
+                        cargarListado();
+                    } else {
+                        Swal.fire("", resp.error || "Error al autorizar.", "error");
+                    }
+                },
+                error: function (xhr) {
+                    Swal.close();
+                    console.log(xhr.responseText);
+                    Swal.fire("", "Error de servidor.", "error");
+                }
+            });
+
+        });
+
+
+
+
+        $('#selectLotesDescarga').select2({
+            placeholder: "Seleccionar Lotes",
+            closeOnSelect: false,
+            width: '100%',
+            dropdownParent: $('#modalDescargarLotes')
+        });
+
+
+        let tablaLotes = $("#tablaLotesPreview").DataTable({
+            paging: false,
+            searching: false,
+            info: false,
+            ordering: false,
+            language: {
+                emptyTable: "No hay lotes"
+            }
+        });
+
+        let cacheDetalleLotes = {};
+
+        $("#btnAbrirModalDescarga").on("click", function () {
+
+
+            // { AUT-000001 : [array detalle], AUT-000002 : [...] }
+
+            $.get("{% url 'bk_get_lotes_autorizados' %}", {
+                idEmpresa: $("#fEmpresa").val(),
+                desde: $("#fDesde").val(),
+                hasta: $("#fHasta").val()
+            }, function (resp) {
+
+                if (!resp.success) {
+                    Swal.fire("", resp.error, "error");
+                    return;
+                }
+
+                tablaLotes.clear();
+                cacheDetalleLotes = {};
+
+                // 🔹 Reset select2 correctamente
+                $("#selectLotesDescarga").empty().trigger('change');
+
+                resp.data.forEach(function (r) {
+
+                    // Agregar a tabla
+                    tablaLotes.row.add([
+                        `<button class="btn btn-sm btn-outline-primary btnExpand"
+                                data-codigo="${r.CodigoAutorizacion}">
+                            <i class="fas fa-plus"></i>
+                        </button>`,
+                        r.CodigoAutorizacion,
+                        r.EmpresaNombre,
+                        r.BancoNombre,
+                        r.CuentaBancaria,
+                        r.FechaAut,
+                        `<div class="text-end">${dollarUSLocale.format(r.TotalAbonos)}</div>`
+                    ]);
+
+                    // Agregar al select2
+                    let newOption = new Option(
+                        r.CodigoAutorizacion,
+                        r.CodigoAutorizacion,
+                        false,
+                        false
+                    );
+
+                    $("#selectLotesDescarga").append(newOption);
+                });
+
+                tablaLotes.draw(false);
+                $("#selectLotesDescarga").trigger('change');
+
+                $("#modalDescargarLotes").modal("show");
+            });
+        });
+
+        $('#tablaLotesPreview tbody').on('click', '.btnExpand', function () {
+
+            let tr = $(this).closest('tr');
+            let row = tablaLotes.row(tr);
+            let btn = $(this);
+            let codigo = btn.data('codigo');
+
+            if (row.child.isShown()) {
+
+                row.child.hide();
+                btn.html('<i class="fas fa-plus"></i>');
+                return;
+            }
+
+            // 🔹 Si ya está en cache, NO pegarle al servidor
+            if (cacheDetalleLotes[codigo]) {
+
+                row.child(renderDetalleHTML(cacheDetalleLotes[codigo])).show();
+                btn.html('<i class="fas fa-minus"></i>');
+                return;
+            }
+
+            // 🔹 Si no está en cache, traerlo
+            $.get("{% url 'bk_get_detalle_lote_aut' %}", {
+                codigo: codigo
+            }, function (resp) {
+
+                if (!resp.success) {
+                    Swal.fire("", resp.error, "error");
+                    return;
+                }
+
+                cacheDetalleLotes[codigo] = resp.data; // 🔥 guardamos en memoria
+
+                row.child(renderDetalleHTML(resp.data)).show();
+                btn.html('<i class="fas fa-minus"></i>');
+            });
+
+        });
+
+
+        function renderDetalleHTML(data) {
+
+            let html = `
+                <div class="p-2 bg-light">
+                    <table class="table table-sm table-bordered mb-0">
+                        <thead class="table-secondary">
+                            <tr>
+                                <th>Cliente</th>
+                                <th>Documento</th>
+                                <th>Fecha</th>
+                                <th class="text-end">Saldo</th>
+                                <th class="text-end">Abono</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+            `;
+
+            data.forEach(function (d) {
+
+                html += `
+                    <tr>
+                        <td>${d.NombreCliente}</td>
+                        <td>${d.NoDocumento}</td>
+                        <td>${d.FechaDocumento}</td>
+                        <td class="text-end">${dollarUSLocale.format(d.SaldoDocumento)}</td>
+                        <td class="text-end">${dollarUSLocale.format(d.ValorAbono)}</td>
+                    </tr>
+                `;
+            });
+
+            html += `
+                        </tbody>
+                    </table>
+                </div>
+            `;
+
+            return html;
+        }
+
+
+
+        $("#btnDescargarSeleccionados").on("click", function () {
+
+            let lotes = $("#selectLotesDescarga").val();
+
+            if (!lotes || lotes.length === 0) {
+                Swal.fire("", "Seleccione al menos un lote.", "warning");
+                return;
+            }
+
+            window.open(
+                "{% url 'bk_descargar_anticipos_clientes_autorizados' %}?lotes=" + lotes.join(","),
+                "_blank"
+            );
+
+        });
+
+
+
+    });
+</script>
+{% endblock %}

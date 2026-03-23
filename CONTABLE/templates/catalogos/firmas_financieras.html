@@ -1,0 +1,459 @@
+{% extends 'componentes/menu_contable.html' %}
+{% load static %}
+
+{% block title %}
+FIRMAS FINANCIERAS
+{% endblock %}
+
+
+{% block body %}
+
+<div class="row align-items-center border-bottom mb-3 py-2 bg-white shadow-sm mx-0">
+    <div class="col d-flex align-items-center px-0">
+        <button id="toggle-sidebar" class="btn btn-primary btn-sm me-3 border-0 rounded-circle btnMenu"
+            style="width: 32px; height: 32px; padding: 0;" title="Mostrar/Ocultar menú">
+            <i class="fas fa-bars"></i>
+        </button>
+        <h6 class="page-title mb-0 fs-5 fw-bold text-dark">
+            <i class="fas fa-signature text-primary me-2"></i>FIRMAS FINANCIERAS
+        </h6>
+    </div>
+
+    <div class="col-auto text-end float-end ms-auto download-grp px-0">
+        <button class="btn btn-sm btn-success" id="btnNuevo" title="Crear Nuevo"><i class="fas fa-plus me-2"></i>
+            Nuevo</button>
+    </div>
+</div>
+
+
+<div class="container-fluid px-0 mt-1">
+    <div class="row mx-0">
+
+        <div class="col-lg-4">
+            <label for="">Empresa:</label>
+            <select id="selectEmpresa" class="form-select form-select-sm" name="selectEmpresa">
+                {% for e in empresasData %}
+                <option value="{{ e.id }}">{{ e.nombre }}</option>
+                {% endfor %}
+            </select>
+        </div>
+
+    </div>
+
+    <br>
+
+    <div class="row mx-0">
+        <div class="table-responsive">
+            <table id="tableFirmas"
+                class="table table-striped table-bordered mb-0 table-sm rounded-4 table-hover align-middle"
+                style="width: 100%;">
+                <thead class="table-gradient text-dark">
+                    <tr>
+                        <th>#</th>
+                        <th>Tipo Firma</th>
+                        <th>Usuario Firma</th>
+                        <th>Cargo</th>
+                        <th>Empresa</th>
+                        <th>Estado</th>
+                        <th>Acciones</th>
+                    </tr>
+                </thead>
+
+                <tbody>
+
+                </tbody>
+            </table>
+        </div>
+    </div>
+</div>
+
+
+<a href="{% url 'panel_contabilidad' %}">
+    <button class="btn btn-sm btn-danger" id="btnCerrar" title="Cerrar"
+        style="position: fixed; bottom: 20px; right: 20px;">
+        <i class="fa fa-times"></i> Cerrar
+    </button>
+</a>
+
+
+{% include 'catalogos/modales_catalogos/m_firmas_financieras.html' %}
+{% include 'catalogos/modales_catalogos/m_crear_tipo_de_firma.html' %}
+
+{% endblock %}
+
+
+
+{% block scripts %}
+
+<script>
+    $(document).ready(function () {
+
+        var csrfToken = "{{ csrf_token }}";
+        var tableFirmas, firma_id;
+
+        var toastMixin = Swal.mixin({
+            toast: true,
+            icon: 'success',
+            title: 'General Title',
+            animation: false,
+            position: 'top-right',
+            showConfirmButton: false,
+            timer: 2000,
+            timerProgressBar: true,
+            didOpen: (toast) => {
+                toast.addEventListener('mouseenter', Swal.stopTimer);
+                toast.addEventListener('mouseleave', Swal.resumeTimer);
+            }
+        });
+
+
+        $('#selectEmpresa').change(function (e) {
+            e.preventDefault();
+
+            id_empresa = $(this).val();
+            getFirmasEmpresa($(this).val());
+        });
+
+        id_empresa = (2)
+        getFirmasEmpresa(2);
+
+        function getFirmasEmpresa(empresa) {
+
+            var cardHeight = $(".card-expanded").height();
+            var tableHeight = cardHeight * 0.5;
+
+            $("#tableFirmas").DataTable().clear().destroy();
+
+            tableFirmas = $('#tableFirmas').DataTable({
+                autoWidth: false,
+                scrollX: true,
+                scrollY: '350px',
+                scrollCollapse: true,
+                pageLength: 50,
+                dom: 'Brftip',
+                language: {
+                    url: "{% static 'app/th/json/es-ES.json' %}",
+                },
+                ajax: {
+                    url: `{% url 'dataFirmasFinancieras' %}`,
+                    type: "POST",
+                    dataSrc: 'data',
+                    data: {
+                        empresa: empresa,
+                        opcion: 0,
+                        csrfmiddlewaretoken: csrfToken
+                    },
+                },
+                colReorder: {
+                    realtime: false,
+                },
+                buttons: [
+                    {
+                        extend: 'excel',
+                        text: '<i class="fas fa-file-excel"></i>',
+                        titleAttr: 'Exportar a Excel',
+                        className: 'btn btn-success',
+                    },
+                    {
+                        extend: 'pdf',
+                        text: '<i class="fas fa-file-pdf"></i>',
+                        titleAttr: 'Exportar a PDF',
+                        className: 'btn btn-danger',
+                    },
+                    {
+                        extend: 'print',
+                        text: '<i class="fas fa-print"></i>',
+                        titleAttr: 'Imprimir',
+                        className: 'btn btn-primary',
+                        orientation: 'landscape'
+                    }
+                ],
+                columns: [
+                    {
+                        data: 'id_firma',
+                    },
+                    {
+                        data: 'nombre_numero_firma',
+                    },
+                    {
+                        data: 'nombre_completo',
+                    },
+                    {
+                        data: 'cargo'
+                    },
+                    {
+                        data: 'empresa',
+                        className: 'text-wrap'
+                    },
+                    {
+                        data: 'estado',
+                        className: 'text-center',
+                        render: function (data, type, row) {
+                            var badge = "";
+                            if (data == 3) {
+                                badge +=
+                                    '<span class="badge badge-pill bg-danger">DESHABILITADO</span>';
+                            } else {
+                                badge +=
+                                    '<span class="badge badge-pill bg-success">ACTIVO</span>';
+                            }
+
+                            return badge;
+                        },
+                    },
+                    {
+                        data: null,
+                        width: '3%',
+                        title: "Acciones",
+                        render: function (data, type, row) {
+                            return `
+                            <div class="text-center">
+                                <div class="btn-group">
+                                    
+                                    <button class="btn btn-warning btn-sm editarFirma" data-id="${row.id_firma}" data-empleado="${row.id_empleado}" data-numero_firma="${row.id_numero_firma}" data-empresa="${row.fk_empresa}">
+                                        <i class="fas fa-edit"></i>
+                                    </button> 
+                                    <button class="btn btn-danger btn-sm statusFirma" data-id="${row.id_firma}">
+                                        <i class="fas fa-sync-alt"></i>
+                                    </button> 
+                                
+                                </div>
+                            </div>
+                            `;
+                        }
+                    }
+                ],
+                order: [[1, "asc"]],
+            });
+
+        }
+
+
+        $('#btnNuevo').click(function (e) {
+            e.preventDefault();
+
+            $('#formFirmas').trigger('reset');
+            $('#modalFirmasFFLabel').text('CREAR NUEVA CLASIFICACION');
+            $('#modalFirmasFF').modal('show');
+
+            opcion = 1;
+            clasificacion_id = null;
+            firma_id = null;
+
+            $('#firma_empleado').val('#').change();
+            $('#firma_tipo_firma').val('#').change();
+            fillTipoFirmasFinancieras();
+        });
+
+        $(document).on('click', '.editarFirma', function () {
+            $('#formFirmas').trigger('reset');
+
+            opcion = 2;
+
+            firma_id = $(this).data('id');
+            firma_empleado = $(this).data('empleado');
+            firma_tipo_firma = $(this).data('numero_firma');
+            id_empresa = $(this).data('empresa');
+
+
+            $('#firma_empleado').val(firma_empleado).change();
+            $('#firma_tipo_firma').val(firma_tipo_firma).change();
+
+            $('#modalFirmasFFLabel').text('EDITAR Firma');
+            $('#modalFirmasFF').modal('show');
+        });
+
+        $(document).on('click', '.statusFirma', function () {
+            $('#formFirmas').trigger('reset');
+
+            firma_id = $(this).data('id');
+
+            $.ajax({
+                url: "{% url 'update_status_firmas' %}",
+                type: "POST",
+                data: {
+                    firma_id: firma_id,
+                    csrfmiddlewaretoken: csrfToken
+                },
+                success: function (data) {
+                    if (data.save == 1) {
+                        toastMixin.fire({
+                            animation: true,
+                            title: 'El estado de la Firma ha sido editado!'
+                        });
+                        tableFirmas.ajax.reload(null, false);
+                    } else {
+                        Swal.fire("", "Error D: " + data.error, "error");
+                    }
+                }
+            });
+        });
+
+
+        $('#firma_tipo_firma').change(function (e) {
+            e.preventDefault();
+
+            if ($(this).val() == 'new') {
+
+                $('#formCrearTipoFirma').trigger('reset');
+                $('#modalCrearTipoFirmaLabel').text('NUEVO TIPO DE FIRMA');
+                $('#modalCrearTipoFirma').modal('show');
+
+            }
+
+        });
+
+        $('#formFirmas').submit(function (e) {
+            e.preventDefault();
+
+            firmaEmpleado = $("#firma_empleado").val();
+            tipoFirma = $('#firma_tipo_firma').val();
+
+
+            if (firmaEmpleado == '') {
+
+                Swal.fire("", "Debes seleccionar un empleado!", "warning");
+
+            } else if (tipoFirma == '') {
+
+                Swal.fire("", "Debes seleccionar un tipo de firma!", "warning");
+
+            } else {
+                $.ajax({
+                    url: "{% url 'insert_update_firma_empresa' %}",
+                    type: "POST",
+                    data: {
+                        varId: firma_id,
+                        varTipoFirma: tipoFirma,
+                        varFirmaEmpleado: firmaEmpleado,
+                        varEmpresa: id_empresa,
+                        opc: opcion,
+                        csrfmiddlewaretoken: csrfToken
+                    },
+                    success: function (data) {
+                        if (data.save == 1) {
+                            if (opcion == 1) {
+                                if (data.existe == 0) {
+                                    $('#modalCrearTipoFirma').modal('hide');
+
+                                    toastMixin.fire({
+                                        animation: true,
+                                        title: 'Firma Creada!'
+                                    });
+                                    $('#modalFirmasFF').modal('hide');
+                                } else {
+                                    Swal.fire("", "Ya existe una Firma con ese Empleado!", "warning");
+                                }
+                                tableFirmas.ajax.reload(null, false);
+                            } else {
+                                $('#modalFirmasFF').modal('hide');
+
+                                toastMixin.fire({
+                                    animation: true,
+                                    title: 'Firma Editada!'
+                                });
+                                tableFirmas.ajax.reload(null, false);
+                            }
+                        } else {
+                            Swal.fire("", "Error D: " + data.error, "error");
+                        }
+                    }
+                });
+            }
+        });
+
+
+
+        $('#formCrearTipoFirma').submit(function (e) {
+            e.preventDefault();
+
+            descripcionFirma = $('#descripcionFirma').val();
+
+            if (descripcionFirma == '') {
+                Swal.fire("", "Debes seleccionar una descripcion!", "warning");
+            } else {
+                $.ajax({
+                    url: "{% url 'insert_new_firma' %}",
+                    type: "POST",
+                    data: {
+                        descripcion: descripcionFirma,
+                        csrfmiddlewaretoken: csrfToken
+                    },
+                    success: function (data) {
+                        if (data.save == 1) {
+                            if (data.existe == 0) {
+                                $('#modalCrearTipoFirma').modal('hide');
+
+                                toastMixin.fire({
+                                    animation: true,
+                                    title: 'Firma Creada!'
+                                });
+                                fillTipoFirmasFinancieras(data.ultimoId);
+                            } else {
+                                Swal.fire("", "Ya existe una Firma con esa descripcion!", "warning");
+
+                            }
+                            tableFirmas.ajax.reload(null, false);
+                        } else {
+                            Swal.fire("", "Error D: " + data.error, "error");
+                        }
+                    }
+                });
+            }
+        });
+
+
+        $('#modalFirmasFF').on('shown.bs.modal', function (e) {
+            if ($.fn.select2 && $('#firma_empleado').hasClass('select2-hidden-accessible')) {
+                $('#firma_empleado').select2('destroy');
+            }
+
+            $("#firma_empleado").select2({
+                placeholder: "Seleccione un Empleado",
+                width: "100%",
+                allowClear: true,
+                dropdownParent: $('#modalFirmasFF')
+            });
+        });
+
+
+        fillTipoFirmasFinancieras();
+
+        function fillTipoFirmasFinancieras(id = 0) {
+            $.ajax({
+                url: "{% url 'get_tipos_firmas_numeracion' %}",
+                type: "POST",
+                data: {
+                    csrfmiddlewaretoken: csrfToken
+                },
+                success: function (response) {
+
+                    $('#firma_tipo_firma').empty();
+                    $('#firma_tipo_firma').append(
+                        `<option value="#">Seleccione un Tipo de Firma</option>`
+                    );
+                    $('#firma_tipo_firma').append(
+                        `<option value="new">--- CREAR NUEVA SECUENCIA FIRMA ---</option>`
+                    );
+
+                    if (response.data && response.data.length > 0) {
+                        response.data.forEach(function (item) {
+                            $('#firma_tipo_firma').append(
+                                `<option value="${item.id_numero_firma}">${item.descripcion}</option>`
+                            );
+                        });
+                    }
+
+
+                    if (id != 0) {
+                        $('#firma_tipo_firma').val(id).change();
+                    }
+                }
+            });
+        }
+        /*  */
+    });
+
+
+</script>
+{% endblock %}

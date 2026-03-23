@@ -1,0 +1,31 @@
+<div class="modal fade" id="commentModal" tabindex="-1" role="dialog" aria-labelledby="commentModalLabel"
+    aria-hidden="true" data-bs-keyboard="false" data-bs-backdrop="static">
+    <div class="modal-dialog modal-xl" role="document">
+        <div class="modal-content">
+            <div class="modal-header" id="modalComentarioHeader">
+                <h5 class="modal-title text-uppercase" id="commentModalLabel">COMENTARIO TITLE</h5>
+            </div>
+            <div class="modal-body">
+
+                <form id="formComentario" method="POST">
+                    <input type="text" id="id_tarea_hidden" name="tarea_id" >
+                    <div class="row">
+                        <div class="form-group">
+                            <label for="descripcion">Comentario:</label>
+                            <textarea class="form-control form-control-sm" id="comentario_estado" name="comentario_estado" rows="3"></textarea>
+                        </div>
+                    </div>
+
+                    <br>
+                    <div class="modal-footer">
+                        <button type="submit" class="btn btn-success">Guardar</button>
+                    </div>
+                    <input type="hidden" name="csrfmiddlewaretoken" value="{{ csrf_token }}">
+                </form>
+
+            </div>
+
+        </div>
+    </div>
+</div>
+

@@ -1,0 +1,636 @@
+{% extends 'componentes/menu_global_security.html' %}
+{% load static %}
+
+{% block title %}
+MENUS DEL USUARIO
+{% endblock %}
+
+{% block body %}
+
+<div class="container-fluid mt-1">
+
+    <div class="card shadow-lg card-expanded">
+
+        <div class="row align-items-center justify-content-between">
+            <div class="col-auto d-flex align-items-center">
+                <button id="toggle-sidebar" class="hamburger btnMenu me-3" title="Mostrar/Ocultar Menu">
+                    <i class="fas fa-bars"></i>
+                </button>
+                <h4 class="page-title mb-0">MENUS DEL USUARIO </h4>
+            </div>
+
+            <div class="col-auto d-flex">
+                <div class="d-flex flex-column align-items-start me-3">
+                    <label for="selectModulo" class="fw-bold">Sistema:</label>
+                    <select id="selectModulo" class="form-select form-select-sm">
+                        <option value="" data-description="">Seleccione un Modulo</option>
+                        {% for m in modulos %}
+                        <option value="{{ m.PKmodulo }}" data-description="{{ m.Descripcion }}">
+                            {{ m.Nombre }}
+                        </option>
+                        {% endfor %}
+                    </select>
+                </div>
+
+                <div class="d-flex flex-column align-items-start">
+                    <label for="selectUsuario" class="fw-bold">Usuario:</label>
+                    <select id="selectUsuario" class="form-select form-select-sm">
+                        <option value="" data-description="Sin Usuario">Seleccione un Usuario</option>
+                    </select>
+                </div>
+            </div>
+        </div>
+
+
+        <div class="row mt-1">
+            <div class="col-6">
+                <div class="table-responsive shadow bg-blanco">
+                    <table id="tableMenusDisponibles"
+                        class="table table-striped table-bordered table-sm rounded-4 table-hover align-middle">
+                        <thead class="bg-primary text-white">
+                            <tr>
+                                <th>Nombre Página</th>
+                                <th>Grupo</th>
+                                <th>Autorizado</th>
+                                <th>Permiso</th>
+                                <th>Nombre</th>
+                                <th>Boton</th>
+                                <th>Posicion</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+
+            <!-- Tabla de Grupos y Descripción -->
+            <div class="col-6">
+                <div class="table-responsive shadow bg-light">
+                    <table id="tableGruposAsignados" class="table table-bordered table-sm rounded-4">
+                        <thead class="bg-success text-white">
+                            <tr>
+                                <th>Grupos</th>
+                                <th>Descripción</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+
+
+
+
+        <div class="row mt-3">
+            <div class="col-12 d-flex flex-column align-items-center">
+                <div class="w-75">
+                    <div class="progress">
+                        <div class="progress-bar bg-success" style="width: 25%;">Acceso Autorizado por Grupo</div>
+                        <div class="progress-bar bg-success" style="width: 25%;">Acceso Autorizado Directo</div>
+                        <div class="progress-bar bg-danger" style="width: 25%;">Acceso Denegado Directo</div>
+                        <div class="progress-bar bg-secondary" style="width: 25%;">Sin Acceso</div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<a href="{% url 'global_main' %}">
+    <button class="btn btn-sm btn-danger" id="btnCerrar" title="Cerrar"
+        style="position: fixed; bottom: 20px; right: 20px;">
+        <i class="fa fa-times"></i> Cerrar
+    </button>
+</a>
+
+{% endblock %}
+
+{% block scripts %}
+
+<script>
+    $(document).ready(function () {
+
+        var csrfToken = "{{ csrf_token }}";
+        var tableFirmas, firma_id;
+
+        var toastMixin = Swal.mixin({
+            toast: true,
+            icon: 'success',
+            title: 'General Title',
+            animation: false,
+            position: 'top-right',
+            showConfirmButton: false,
+            timer: 2000,
+            timerProgressBar: true,
+            didOpen: (toast) => {
+                toast.addEventListener('mouseenter', Swal.stopTimer);
+                toast.addEventListener('mouseleave', Swal.resumeTimer);
+            }
+        });
+
+        /* MENU ID Y SUBMENU ID */
+        $('#usuariosMenu, #menusUsuario_submenu').addClass('active');
+
+        $('#selectModulo').select2({
+            templateResult: function (data) {
+                if (!data.id) { return data.text; }
+                let description = $(data.element).data('description');
+                return $('<div><strong>' + data.text + '</strong><br><small>' + description + '</small></div>');
+            },
+            templateSelection: function (data) {
+                let description = $(data.element).data('description');
+                return data.text + " | " + description;
+            },
+            width: 'resolve'
+        });
+
+
+        id_Modulo = $('#selectModulo').val();
+        id_Usuario = null
+        var table = $('#tableMenusDisponibles').DataTable();
+
+
+        $("#selectUsuario").select2({
+            placeholder: "Seleccione un Usuario",
+            width: "100%",
+            allowClear: true
+        });
+
+        $('#selectModulo').change(function (e) {
+            e.preventDefault();
+
+            id_Modulo = $(this).val();
+
+            if (id_Modulo != null && id_Modulo != "") {
+                getUsuariosMenusUsuario(id_Modulo);
+                getMenusDisponibles(id_Modulo);
+            }
+
+        });
+
+        $('#selectUsuario').change(function (e) {
+            e.preventDefault();
+
+            id_Usuario = $(this).val();
+
+            getGruposMenusUsuario(id_Modulo, id_Usuario)
+                .then(() => {
+
+                    ListarMenusGrupo()
+                })
+                .catch((error) => {
+                    console.error("Error al obtener los grupos y menús de usuario:", error);
+                });
+
+        });
+
+        if (id_Modulo != null && id_Modulo != "") {
+            getUsuariosMenusUsuario($('#selectModulo').val())
+            getMenusDisponibles($('#selectModulo').val())
+        }
+
+
+        $('#tableMenusDisponibles tbody').on('dblclick', 'tr', function () {
+            table = $('#tableMenusDisponibles').DataTable();
+            var rowData = table.row($(this)).data();
+            var index = table.row($(this)).index();
+
+            if (!rowData) {
+                console.error("No se pudo obtener los datos de la fila.");
+                return;
+            }
+
+            ActualizarMenu(rowData, index);
+        });
+
+
+
+
+        function getUsuariosMenusUsuario(menusModulo) {
+
+            if (menusModulo != "") {
+                $.ajax({
+                    url: "{% url 'get_usuarios_menus_usuarios' %}",
+                    type: "POST",
+                    data: {
+                        varModulo: menusModulo,
+                        csrfmiddlewaretoken: csrfToken
+                    },
+                    success: function (data) {
+                        if (data.data.length > 0) {
+                            $("#selectUsuario").empty();
+
+                            $("#selectUsuario").append('<option value="">Seleccione un usuario</option>');
+
+                            data.data.forEach(function (usuario) {
+                                $("#selectUsuario").append(
+                                    `<option value="${usuario.fkUsuario}" data-description="${usuario.Nombres}">${usuario.Usuario}</option>`
+                                );
+                            });
+
+                            $('#selectUsuario').select2({
+                                templateResult: function (data) {
+                                    if (!data.id) { return data.text; }
+                                    let description = $(data.element).data('description');
+                                    return $('<div><strong>' + data.text + '</strong><br><small>' + description + '</small></div>');
+                                },
+                                templateSelection: function (data) {
+                                    let description = $(data.element).data('description');
+                                    return data.text + " | " + description;
+                                },
+                                width: 'resolve'
+                            });
+
+                        } else {
+                            $("#selectUsuario").html('<option value="">No hay usuarios disponibles</option>');
+                        }
+                    },
+                    error: function (xhr, status, error) {
+                        console.log("Error al obtener usuarios:", error);
+                    }
+                });
+            }
+        }
+
+
+        function getMenusDisponibles(menuModuloSeleccionado) {
+
+            $("#tableMenusDisponibles").DataTable().clear().destroy();
+
+            var cardHeight = $(".card-expanded").height();
+            var tableHeight = cardHeight * 0.5;
+            tableMenusDisponibles = $('#tableMenusDisponibles').DataTable({
+                autoWidth: false,
+                scrollX: true,
+                scrollY: tableHeight + 'px',
+                scrollCollapse: true,
+                pageLength: 50,
+                dom: 'rftip',
+                language: {
+                    url: "{% static 'app/th/json/es-ES.json' %}",
+                },
+                ajax: {
+                    url: `{% url 'data_menus_disponibles' %}`,
+                    type: "POST",
+                    dataSrc: 'data',
+                    data: {
+                        varModulo: menuModuloSeleccionado,
+                        csrfmiddlewaretoken: csrfToken
+                    },
+                },
+                colReorder: {
+                    realtime: false,
+                },
+                buttons: [
+                    {
+                        extend: 'excel',
+                        text: '<i class="fas fa-file-excel"></i>',
+                        titleAttr: 'Exportar a Excel',
+                        className: 'btn btn-success',
+                    },
+                    {
+                        extend: 'pdf',
+                        text: '<i class="fas fa-file-pdf"></i>',
+                        titleAttr: 'Exportar a PDF',
+                        className: 'btn btn-danger',
+                    },
+                    {
+                        extend: 'print',
+                        text: '<i class="fas fa-print"></i>',
+                        titleAttr: 'Imprimir',
+                        className: 'btn btn-primary',
+                        orientation: 'landscape'
+                    }
+                ],
+                columns: [
+                    { data: 'NombrePagina' },
+                    { data: 'Grupo', visible: false },
+                    // { data: 'Autorizado', visible: true},
+                    {
+                        data: 'Autorizado',
+                        title: 'Grupo',
+                        className: 'text-center',
+                        render: function (data, type, row) {
+                            var badge = "";
+                            if (data == true) {
+                                badge += '<i class="fa-regular fa-circle-check" style="color: #b8ffd5;"></i>';
+                            } else {
+                                badge += '<i class="fa-regular fa-circle-xmark" style="color: #ff0d0d;"></i>';
+                            }
+                            return badge;
+                        },
+                    },
+                    {
+                        data: 'Permiso',
+                        className: 'text-center',
+                        render: function (data, type, row) {
+                            var badge = "";
+                            if (data == 0) {
+                                badge += '<i class="fa-solid fa-circle-xmark" style="color: #fa575b;"></i>';
+                            } else if (data == 1) {
+                                badge += '<i class="fa-solid fa-circle-check" style="color: #45f588;"></i>';
+                            } else {
+                                badge += '<i class="fa-solid fa-circle-info" style="color: #b0aeae;"></i>';
+                            }
+                            return badge;
+                        },
+                    },
+                    { data: 'Nombre' },
+                    { data: 'Boton' },
+                    { data: 'Posicion' },
+                ],
+                createdRow: function (row, data, dataIndex) {
+                    if (data.Autorizado == true) {
+                        $(row).css('background-color', '#42c277');
+                    } else {
+                        if (data.Permiso == 0) {
+                            $(row).css('background-color', '#faa7a9');
+                        } else if (data.Permiso == 1) {
+                            $(row).css('background-color', '#abf5de');
+                        } else {
+                            $(row).css('background-color', '');
+                        }
+                    }
+                },
+                order: [[5, "asc"]],
+            });
+
+        }
+
+
+        function getGruposMenusUsuario(menuModuloSeleccionado, menuUsuarioSeleccionado) {
+            return new Promise((resolve, reject) => {
+                $("#tableGruposAsignados").DataTable().clear().destroy();
+                var cardHeight = $(".card-expanded").height();
+                var tableHeight = cardHeight * 0.5;
+
+                tableGruposAsignados = $('#tableGruposAsignados').DataTable({
+                    autoWidth: false,
+                    scrollX: true,
+                    scrollY: tableHeight + 'px',
+                    scrollCollapse: true,
+                    pageLength: 50,
+                    dom: 'rftip',
+                    language: {
+                        url: "{% static 'app/th/json/es-ES.json' %}",
+                    },
+                    ajax: {
+                        url: `{% url 'data_grupos_usuarios_menus_usuarios' %}`,
+                        type: "POST",
+                        data: {
+                            varModulo: menuModuloSeleccionado,
+                            varUsuario: menuUsuarioSeleccionado,
+                            csrfmiddlewaretoken: csrfToken
+                        },
+                        success: function (data) {
+                            tableGruposAsignados.clear().rows.add(data.data).draw();
+                            resolve();
+                        },
+                        error: function (xhr, status, error) {
+                            reject(error);
+                        }
+                    },
+                    colReorder: {
+                        realtime: false,
+                    },
+                    buttons: [
+                        {
+                            extend: 'excel',
+                            text: '<i class="fas fa-file-excel"></i>',
+                            titleAttr: 'Exportar a Excel',
+                            className: 'btn btn-success',
+                        },
+                        {
+                            extend: 'pdf',
+                            text: '<i class="fas fa-file-pdf"></i>',
+                            titleAttr: 'Exportar a PDF',
+                            className: 'btn btn-danger',
+                        },
+                        {
+                            extend: 'print',
+                            text: '<i class="fas fa-print"></i>',
+                            titleAttr: 'Imprimir',
+                            className: 'btn btn-primary',
+                            orientation: 'landscape'
+                        }
+                    ],
+                    columns: [
+                        { data: 'fkgrupo', visible: false },
+                        { data: 'Nombres' },
+                        { data: 'Descripcion' }
+                    ],
+                    order: [[1, "asc"]],
+                });
+            });
+        }
+
+
+        function ListarMenusGrupo() {
+            let menusDT = $('#tableMenusDisponibles').DataTable();
+            let menusRows = menusDT.rows().data();
+
+            menusRows.each(function (rowData, index) {
+                rowData.Permiso = -1
+                rowData.Autorizado = false
+            });
+
+            menusDT.clear().rows.add(menusRows).draw();
+
+            document.querySelectorAll("#tableGruposAsignados tbody tr").forEach((row, index) => {
+                let columns = row.querySelectorAll("td");
+                let filaData = [];
+
+                let table = $('#tableGruposAsignados').DataTable();
+                let rowData = table.row(row).data();
+
+                if (rowData != null) {
+
+                    let id_Grupo = rowData.fkgrupo;
+
+                    columns.forEach(cell => {
+                        filaData.push(cell.innerText);
+                    });
+
+                    $.ajax({
+                        url: "{% url 'data_menus_grupo' %}",
+                        type: "POST",
+                        data: {
+                            varGrupo: id_Grupo,
+                            varModulo: id_Modulo,
+                            csrfmiddlewaretoken: csrfToken
+                        },
+                        success: function (data) {
+                            let menusGrupo = data.data;
+
+                            let table = $('#tableMenusDisponibles').DataTable();
+                            let rows = table.rows().data();
+
+                            rows.each(function (rowData, index) {
+                                menusGrupo.forEach(menuGrupo => {
+                                    if (rowData.PKMenu == menuGrupo.fkMenu) {
+                                        rowData.Autorizado = true;
+                                    }
+                                });
+                            });
+
+                            table.clear().rows.add(rows).draw();
+
+                        },
+                        error: function (xhr, status, error) {
+                            console.log("Error al obtener menús del grupo:", error);
+                        }
+                    });
+                }
+
+            });
+
+            ListarMenusUsuario()
+        }
+
+
+        function ListarMenusUsuario() {
+            $.ajax({
+                url: "{% url 'data_menus_usuario' %}",
+                type: "POST",
+                data: {
+                    varUsuario: id_Usuario,
+                    varModulo: id_Modulo,
+                    csrfmiddlewaretoken: csrfToken
+                },
+                success: function (data) {
+                    let menusUsuario = data.data;
+
+                    let table = $('#tableMenusDisponibles').DataTable();
+                    let rows = table.rows().data();
+
+                    rows.each(function (rowData, index) {
+                        menusUsuario.forEach(menuUsuario => {
+                            if (rowData.PKMenu === menuUsuario.fkMenu) {
+                                rowData.Permiso = menuUsuario.Permiso;
+                            }
+                        });
+                    });
+
+                    table.clear().rows.add(rows).draw();
+                },
+                error: function (xhr, status, error) {
+                    console.log("Error al obtener menús del usuario:", error);
+                }
+            });
+        }
+
+
+        function ActualizarMenu(filaData, filaIndex) {
+            var table = $('#tableMenusDisponibles').DataTable();
+            var rows = table.rows().data();
+
+            if (rows.length === 0) {
+                console.log("No hay filas disponibles en la tabla.");
+                return;
+            }
+
+            if (!filaData) {
+                console.log("No se pudieron obtener los datos del menú.");
+                return;
+            }
+
+            var PKmenu = filaData.PKMenu;
+            var ValorPermiso = filaData.Permiso;
+            var Siguiente;
+            var ElGrupo = filaData.TipoMenu;
+
+            if (ValorPermiso == -1) {
+                Siguiente = 1;
+            } else if (ValorPermiso == 1) {
+                Siguiente = 0;
+            } else {
+                Siguiente = -1;
+            }
+
+            if (ElGrupo == 2) {
+                var codigoGrupo = filaData.Boton;
+                if (codigoGrupo.length > 4) {
+                    codigoGrupo = codigoGrupo.substring(0, 4);
+                }
+
+                let table = $('#tableMenusDisponibles').DataTable();
+                let rows = table.rows().data();
+
+                rows.each(function (rowData, index) {
+                    var codigoBoton = rowData.Boton;
+                    if (rowData.Boton.length > 4) {
+                        codigoBoton = rowData.Boton.substring(0, 4);
+                    }
+
+                    if (codigoGrupo == codigoBoton) {
+                        $.ajax({
+                            url: "{% url 'delete_insert_menu_usuario' %}",
+                            type: "POST",
+                            data: {
+                                varIdRegistro: id_Usuario,
+                                varPKMenu: PKmenu,
+                                varSiguiente: Siguiente,
+                                csrfmiddlewaretoken: csrfToken
+                            },
+                            success: function (data) {
+                                console.log("Menú actualizado exitosamente.");
+                            },
+                            error: function (xhr, status, error) {
+                                console.error("Error al actualizar el menú:", error);
+                            }
+                        });
+                    }
+                });
+            } else {
+
+                $.ajax({
+                    url: "{% url 'delete_insert_menu_usuario' %}",
+                    type: "POST",
+                    data: {
+                        varIdRegistro: id_Usuario,
+                        varPKMenu: PKmenu,
+                        varSiguiente: Siguiente,
+                        csrfmiddlewaretoken: csrfToken
+                    },
+                    success: function (data) {
+                        console.log("Menú actualizado exitosamente.");
+                    },
+                    error: function (xhr, status, error) {
+                        console.error("Error al actualizar el menú:", error);
+                    }
+                });
+
+            }
+
+            filaData.Permiso = Siguiente;
+            table.row(filaIndex).data(filaData).draw();
+        }
+
+
+        function quitarTodoUsuario() {
+            $.ajax({
+                url: "{% url 'delete_menus_usuario' %}",
+                type: "POST",
+                data: {
+                    varIdRegistro: id_Usuario,
+                    csrfmiddlewaretoken: csrfToken
+                },
+                success: function (data) {
+
+                },
+                error: function (xhr, status, error) {
+
+                }
+            });
+        }
+
+    });
+
+
+
+</script>
+
+{% endblock %}

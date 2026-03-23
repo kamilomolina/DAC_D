@@ -1,0 +1,39 @@
+    <div class="modal fade" id="modalCrearTipoDeduccionBanco" tabindex="-1" role="dialog"
+        aria-labelledby="modalCrearTipoDeduccionLabel" data-bs-keyboard="false" data-bs-backdrop="static"
+        aria-hidden="true">
+        <div class="modal-dialog" role="document">
+            <div class="modal-content">
+                <!-- Encabezado del Modal -->
+                <div class="modal-header" style="background-color: #304458; color:white">
+                    <h5 class="modal-title" id="modalCrearTipoDeduccionLabel">Crear Nuevo Tipo de Deducción</h5>
+                    <button type="button" class="close-banco" data-dismiss="modal" aria-label="Close">
+                        <span aria-hidden="true">&times;</span>
+                    </button>
+                </div>
+
+                <!-- Cuerpo del Modal -->
+                <div class="modal-body">
+                    <!-- Formulario para crear el tipo de deducción -->
+                    <form id="formCrearTipoDeduccionBanco">
+                        {% csrf_token %}
+
+
+                        <div class="form-group">
+                            <label for="nombre-tipo-banco"><span style="color: red;">*</span> Nombre del Tipo de
+                                Deducción:</label>
+                            <input type="text" class="form-control" id="nombre-tipo-banco" name="nombre_tipo" >
+                        </div>
+
+                        <!-- Pie del Modal -->
+                        <div class="modal-footer">
+                            <button type="submit" class="btn btn-success">Guardar</button>
+                            <button type="button" class="btn btn-danger close-banco"
+                                data-dismiss="modal">Cerrar</button>
+
+                        </div>
+
+                    </form>
+                </div>
+            </div>
+        </div>
+    </div>

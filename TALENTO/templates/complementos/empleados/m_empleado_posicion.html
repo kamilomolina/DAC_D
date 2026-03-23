@@ -1,0 +1,30 @@
+<div class="modal fade" id="modalCrearPosicion" tabindex="-1" role="dialog" aria-labelledby="exampleModalLabel" data-bs-keyboard="false" data-bs-backdrop="static"
+    aria-hidden="true">
+    <div class="modal-dialog modal-lg" role="document">
+        <div class="modal-content">
+            <div class="modal-header" style="background-color: #304458; color:white">
+                <h5 class="modal-title" id="exampleModalLabel">Crear nueva posición</h5>
+                <button type="button" class="close" data-dismiss="modal" aria-label="Close">
+                    <span aria-hidden="true">&times;</span>
+                </button>
+            </div>
+            <div class="modal-body">
+                <form id="formCrearPosicion">
+                    <div class="user-text">
+                        <input id="creado_por" name="creado_por" type="hidden" value="{{ userName }}">
+                    </div>
+                    <div class="mb-3">
+                        <label for="nuevo-posicion">Nombre de la Posición:</label>
+                        <input type="text" class="form-control" id="nuevo-posicion" name="posicion">
+                    </div>
+                    <input type="hidden" name="csrfmiddlewaretoken" value="{{ csrf_token }}">
+                    <div class="modal-footer">
+                        <button type="submit" class="btn btn-success animate__animated animate__pulse animate__slow animate__infinite">Guardar</button>
+                        <button type="button" class="btn btn-danger close" data-dismiss="modal">Cerrar</button>
+                    </div>
+
+                </form>
+            </div>
+        </div>
+    </div>
+</div>

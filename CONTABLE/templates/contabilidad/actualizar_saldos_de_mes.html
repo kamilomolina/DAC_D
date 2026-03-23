@@ -1,0 +1,325 @@
+{% extends 'componentes/menu_contable.html' %}
+{% load static %}
+
+{% block title %}
+ACTUALIZAR SALDOS DE MESES
+{% endblock %}
+
+
+{% block body %}
+
+
+<div class="row align-items-center border-bottom mb-3 py-2 bg-white shadow-sm mx-0">
+    <div class="col d-flex align-items-center px-0">
+        <button id="toggle-sidebar" class="btn btn-primary btn-sm me-3 border-0 rounded-circle btnMenu"
+            style="width: 32px; height: 32px; padding: 0;" title="Mostrar/Ocultar menú">
+            <i class="fas fa-bars"></i>
+        </button>
+        <h6 class="page-title mb-0 fs-5 fw-bold text-dark">
+            <i class="fas fa-calendar-check text-primary me-2"></i>ACTUALIZAR SALDOS DE MESES
+        </h6>
+    </div>
+</div>
+
+
+<div class="container-fluid px-0 mt-1">
+    <div class="row g-3 d-flex align-items-end mx-0">
+        <div class="col-12 col-md-2 mb-3">
+            <label for="selectEmpresa">Empresa:</label>
+            <select id="selectEmpresa" class="form-select form-select-sm" name="selectEmpresa">
+                {% for e in empresasData %}
+                <option value="{{ e.id }}">{{ e.nombre }}</option>
+                {% endfor %}
+            </select>
+        </div>
+
+        <div class="col-12 col-md-2 mb-3">
+            <label for="selectMes">Mes:</label>
+            <select id="selectMes" class="form-select form-select-sm">
+                <option value="1">Enero</option>
+                <option value="2">Febrero</option>
+                <option value="3">Marzo</option>
+                <option value="4">Abril</option>
+                <option value="5">Mayo</option>
+                <option value="6">Junio</option>
+                <option value="7">Julio</option>
+                <option value="8">Agosto</option>
+                <option value="9">Septiembre</option>
+                <option value="10">Octubre</option>
+                <option value="11">Noviembre</option>
+                <option value="12">Diciembre</option>
+            </select>
+        </div>
+
+        <div class="col-12 col-md-2 mb-3">
+            <label for="selectAnio">Año:</label>
+            <select id="selectAnio" class="form-select form-select-sm">
+                <!-- años se llenan con jQuery -->
+            </select>
+        </div>
+
+        <div class="col-12 col-md-2 mb-3">
+            <button class="btn btn-sm btn-success" id="btnLoadData">Cargar</button>
+            <button class="btn btn-sm btn-danger" id="btnUpdateSaldos">Actualizar</button>
+        </div>
+    </div>
+
+    <hr>
+
+    <div class="row mx-0">
+        <h5 class="text-center">Saldos de Cuentas del Periodo</h5>
+    </div>
+
+    <div class="row mx-0 mt-1">
+        <div class="table-responsive">
+
+            <table id="saldosCuentasTable"
+                class="table table-striped table-bordered table-sm rounded-4 table-hover align-middle"
+                style="width: 100%;">
+                <thead class="table-gradient text-dark">
+                    <tr>
+                        <th>Codigo Cuenta</th>
+                        <th>Nombre</th>
+                        <th>Saldo</th>
+                        <th>Mes</th>
+                        <th>Año</th>
+                        <th>Fecha Hora Creado</th>
+                    </tr>
+                </thead>
+                <tbody></tbody>
+            </table>
+
+        </div>
+    </div>
+</div>
+
+
+<a href="{% url 'panel_contabilidad' %}">
+    <button class="btn btn-sm btn-danger" id="btnCerrar" title="Cerrar"
+        style="position: fixed; bottom: 20px; right: 20px;">
+        <i class="fa fa-times"></i> Cerrar
+    </button>
+</a>
+
+{% endblock %}
+
+
+{% block scripts %}
+
+<script>
+    $(document).ready(function () {
+
+        var csrfToken = "{{ csrf_token }}";
+        var tableFirmas, firma_id, TipoDocto = null, NumeroDocto = null;
+        var mes = "{{mes}}";
+        var saldosCuentasTable;
+
+        var toastMixin = Swal.mixin({
+            toast: true,
+            icon: 'success',
+            title: 'General Title',
+            animation: false,
+            position: 'top-right',
+            showConfirmButton: false,
+            timer: 2000,
+            timerProgressBar: true,
+            didOpen: (toast) => {
+                toast.addEventListener('mouseenter', Swal.stopTimer);
+                toast.addEventListener('mouseleave', Swal.resumeTimer);
+            }
+        });
+
+        let dollarUSLocale = Intl.NumberFormat("en-US", {
+            minimumFractionDigits: 2,
+            maximumFractionDigits: 2
+        });
+
+        let intergerLocale = Intl.NumberFormat("en-US", {
+            minimumFractionDigits: 0,
+            maximumFractionDigits: 0
+        });
+
+        id_empresa = 3;
+        $('#selectEmpresa').val(id_empresa).change();
+        $('#selectMes').val(mes).change();
+
+        function showLoadingScreen(text = '') {
+            Swal.fire({
+                title: '',
+                html: `<b>${text}</b>`,
+                didOpen: () => {
+                    Swal.showLoading();
+                },
+                allowOutsideClick: false,
+                showConfirmButton: false
+            });
+        }
+
+        const anioActual = new Date().getFullYear();
+        const selectAnio = $('#selectAnio');
+
+        for (let i = 0; i <= 5; i++) {
+            const anio = anioActual - i;
+            selectAnio.append(`<option value="${anio}">${anio}</option>`);
+        }
+
+
+        $("#saldosCuentasTable").DataTable({
+            language: {
+                url: "{% static 'app/th/json/es-ES.json' %}"
+            }
+        });
+
+        let yaCargo = false;
+
+        $('#btnLoadData').click(function () {
+            const empresa = $('#selectEmpresa').val();
+            const mes = $('#selectMes').val();
+            const anio = $('#selectAnio').val();
+
+            if (!empresa || !mes || !anio) {
+                Swal.fire('', 'Debe seleccionar empresa, mes y año.', 'warning');
+                return;
+            }
+
+            const cardHeight = $(".card-expanded").height();
+            const tableHeight = cardHeight * 0.5;
+
+            showLoadingScreen();
+
+            $("#saldosCuentasTable").DataTable().clear().destroy();
+
+            saldosCuentasTable = $('#saldosCuentasTable').DataTable({
+                initComplete: function () {
+                    Swal.close();
+                },
+                autoWidth: false,
+                scrollX: true,
+                scrollY: '350px',
+                scrollCollapse: true,
+                pageLength: 50,
+                dom: 'Brftip',
+                buttons: [
+                    {
+                        extend: 'excel',
+                        text: '<i class="fas fa-file-excel"></i>',
+                        titleAttr: 'Excel',
+                        className: 'btn btn-success',
+                    },
+                    {
+                        extend: 'pdf',
+                        text: '<i class="fas fa-file-pdf"></i>',
+                        titleAttr: 'PDF',
+                        className: 'btn btn-danger',
+                    },
+                    {
+                        extend: 'print',
+                        text: '<i class="fas fa-print"></i>',
+                        titleAttr: 'Imprimir',
+                        className: 'btn btn-info',
+                        orientation: 'landscape'
+                    }
+                ],
+                language: {
+                    url: "{% static 'app/th/json/es-ES.json' %}",
+                },
+                ajax: {
+                    url: "{% url 'get_saldos_contables_mes' %}",
+                    type: "POST",
+                    data: {
+                        empresa: empresa,
+                        mes: mes,
+                        anio: anio,
+                        csrfmiddlewaretoken: csrfToken,
+                    },
+                    dataSrc: 'data'
+                },
+                columns: [
+                    { data: 'codigo' },
+                    { data: 'nombre_cuenta' },
+                    {
+                        data: 'saldo',
+                        className: 'text-end',
+                        render: $.fn.dataTable.render.number(',', '.', 2)
+                    },
+                    {
+                        data: 'mes',
+                        render: function (data) {
+                            const meses = [
+                                "", "Enero", "Febrero", "Marzo", "Abril", "Mayo", "Junio",
+                                "Julio", "Agosto", "Septiembre", "Octubre", "Noviembre", "Diciembre"
+                            ];
+                            return meses[data];
+                        }
+                    },
+                    { data: 'anio' },
+                    { data: 'fecha_hora_creado' },
+                ],
+                ordering: false,
+            });
+
+            yaCargo = true;
+            $('#btnUpdateSaldos').prop('disabled', false);
+        });
+
+
+
+        $('#btnUpdateSaldos').click(function () {
+            if (!yaCargo) {
+                Swal.fire('', 'Primero debes cargar los datos.', 'info');
+                return;
+            }
+
+            const empresa = $('#selectEmpresa').val();
+            const nombreEmpresa = $('#selectEmpresa option:selected').text();
+            const mes = $('#selectMes').val();
+            const anio = $('#selectAnio').val();
+
+            Swal.fire({
+                title: '¿Deseas actualizar los Saldos?',
+                text: `Empresa ${nombreEmpresa}, mes ${mes}, año ${anio}`,
+                icon: 'question',
+                showCancelButton: true,
+                confirmButtonText: 'Sí, actualizar',
+                cancelButtonText: 'Cancelar'
+            }).then((result) => {
+                if (result.isConfirmed) {
+                    $.ajax({
+                        url: "{% url 'actualizar_saldos_contables_mes' %}",
+                        type: "POST",
+                        data: {
+                            empresa,
+                            mes,
+                            anio,
+                            csrfmiddlewaretoken: csrfToken
+                        },
+                        success: function (data) {
+                            if (data.save == 1) {
+
+                                if (data.periodo_cerrado == 1) {
+                                    Swal.fire('Periodo Cerrado', 'NO puedes Actualizar Saldos!', 'warning');
+                                    saldosCuentasTable.ajax.reload(null, false);
+                                } else {
+                                    Swal.fire('', 'Saldos actualizados correctamente.', 'success');
+                                    saldosCuentasTable.ajax.reload(null, false);
+                                }
+
+                            } else {
+                                Swal.fire('', data.error || 'Error al actualizar.', 'error');
+                            }
+                        }
+                    });
+                }
+            });
+        });
+
+
+
+
+
+
+
+
+    });
+</script>
+{% endblock %}

@@ -1,0 +1,31 @@
+
+.toast-success {
+    background-color: #51A351 !important;
+}
+
+.toast-message {
+    color: #FFFFFF !important;
+}
+
+.navbar-nav .dropdown-menu {
+    margin-left: -10px;
+    /* Ajusta según sea necesario */
+}
+
+.navbar-nav .user-header {
+    text-align: center;
+}
+
+.navbar-nav .avatar-sm {
+    margin: 0 auto 10px;
+}
+
+.navbar-nav .user-text h6 {
+    margin: 0;
+}
+
+
+
+
+
+

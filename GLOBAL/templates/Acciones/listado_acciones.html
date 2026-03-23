@@ -1,0 +1,328 @@
+{% extends 'componentes/menu_global_security.html' %}
+{% load static %}
+
+{% block title %}
+LISTADO DE ACCIONES
+{% endblock %}
+
+{% block body %}
+
+<div class="container-fluid mt-1">
+    <div class="card shadow-lg card-expanded">
+
+        <!-- Encabezado con título y menú de selección -->
+        <div class="row align-items-center justify-content-between">
+            <div class="row align-items-center">
+                <div class="col d-flex align-items-center">
+                    <button id="toggle-sidebar" class="me-3" title="Mostrar/Ocultar Menu"></button>
+                    <i class="material-icons d-block">person</i>
+                    <h4 class="page-title mb-0">LISTADO DE ACCIONES</h4>
+                </div>
+
+                <div class="col-auto d-flex">
+                    <div class="d-flex flex-row align-items-center me-3">
+                        <label for="selectModulo" class="form-label mb-0 me-2">MODULOS</label>
+                        <select id="selectModulo" class="form-select form-select-sm w-auto mt-2" name="selectModulo">
+                            <option value="" data-description="">Seleccione un Modulo</option>
+                            {% for m in modulos %}
+                            <option value="{{ m.PKmodulo }}" data-description="{{ m.Descripcion }}">
+                                {{ m.Nombre }}
+                            </option>
+                            {% endfor %}
+                        </select>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Contenido de la tabla de Acciones -->
+        <div class="container-fluid pt-1">
+            <div class="row mt-1 justify-content-center">
+                <div class="col-12 col-md-9">
+
+                    <div class="table-responsive mt-1 shadow bg-blanco" style="display: flex; flex-direction: column;">
+                        <button id="btnAgregarAccion" class="btn btn-primary mb-2" title="Agregar Accion">
+                            <i class="fa fa-user-plus"></i>
+                        </button>
+                        <div class="d-flex justify-content-center">
+                            <table id="tableListadoAcciones"
+                                class="table table-striped table-bordered mb-0 table-sm rounded-4 table-hover align-middle">
+                                <thead class="bg-blanco text-dark">
+                                    <tr>
+                                        <th>Indice</th>
+                                        <th>Nombre</th>
+                                        <th>Descripcion</th>
+                                        <th>Acciones</th>
+                                    </tr>
+                                </thead>
+                                <tbody>
+                                </tbody>
+                            </table>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+    </div>
+</div>
+
+
+<a href="{% url 'global_main' %}">
+    <button class="btn btn-sm btn-danger" id="btnCerrar" title="Cerrar"
+        style="position: fixed; bottom: 20px; right: 20px;">
+        <i class="fa fa-times"></i> Cerrar
+    </button>
+</a>
+
+{% include 'acciones/modales_acciones/m_edit_listado_acciones.html' %}
+{% include 'acciones/modales_acciones/m_add_listado_acciones.html' %}
+
+{% endblock %}
+
+{% block scripts %}
+<script>
+    $(document).ready(function () {
+        var csrfToken = "{{ csrf_token }}";
+        var selectedAccionId = null, id_modulo = null;
+
+
+        $('#btnAgregarAccion').on('click', function () {
+
+            $('#NombreAdd').val("");
+            $('#DescripcionAdd').val("");
+            $('#modalAgregarAccion').modal('show');
+
+        });
+
+        var toastMixin = Swal.mixin({
+            toast: true,
+            icon: 'success',
+            title: 'General Title',
+            animation: false,
+            position: 'top-right',
+            showConfirmButton: false,
+            timer: 2000,
+            timerProgressBar: true,
+            didOpen: (toast) => {
+                toast.addEventListener('mouseenter', Swal.stopTimer);
+                toast.addEventListener('mouseleave', Swal.resumeTimer);
+            }
+        });
+        /* MENU ID Y SUBMENU ID */
+        $('#accionesMenu, #listadoAcciones_submenu').addClass('active');
+
+        $('#selectModulo').select2({
+            templateResult: function (data) {
+                if (!data.id) { return data.text; }
+                let description = $(data.element).data('description');
+                return $('<div><strong>' + data.text + '</strong><br><small>' + description + '</small></div>');
+            },
+            templateSelection: function (data) {
+                let description = $(data.element).data('description');
+                return data.text + " | " + description;
+            },
+            width: 'resolve'
+        });
+
+        $('#selectModulo').change(function () {
+            id_modulo = $(this).val();
+            getAcciones();
+        });
+
+        id_modulo = $("#selectModulo").val();
+        if (id_modulo != "" && id_modulo != null) {
+            getAcciones()
+        }
+
+
+        function getAcciones() {
+
+            $("#tableListadoAcciones").DataTable().clear().destroy();
+            var cardHeight = $(".card-expanded").height();
+            var tableHeight = cardHeight * 0.5;
+
+            tableListadoAcciones = $('#tableListadoAcciones').DataTable({
+                autoWidth: false,
+                scrollX: true,
+                scrollY: tableHeight + 'px',
+                scrollCollapse: true,
+                pageLength: 50,
+                dom: 'rftip',
+                language: {
+                    url: "{% static 'app/th/json/es-ES.json' %}",
+                },
+                ajax: {
+                    url: `{% url 'get_listado_acciones_data' %}`,
+                    type: "POST",
+                    dataSrc: 'data',
+                    data: {
+                        csrfmiddlewaretoken: csrfToken,
+                        varModulo: id_modulo
+                    },
+                },
+                colReorder: {
+                    realtime: false,
+                },
+                buttons: [
+                    {
+                        extend: 'excel',
+                        text: '<i class="fas fa-file-excel"></i>',
+                        titleAttr: 'Exportar a Excel',
+                        className: 'btn btn-success',
+                    },
+                    {
+                        extend: 'pdf',
+                        text: '<i class="fas fa-file-pdf"></i>',
+                        titleAttr: 'Exportar a PDF',
+                        className: 'btn btn-danger',
+                    },
+                    {
+                        extend: 'print',
+                        text: '<i class="fas fa-print"></i>',
+                        titleAttr: 'Imprimir',
+                        className: 'btn btn-primary',
+                        orientation: 'landscape'
+                    }
+                ],
+                columns: [
+                    { data: 'PKaccion' },
+                    { data: 'Nombre' },
+                    { data: 'Descripcion' },
+                    {
+                        data: null,
+                        orderable: false,
+                        render: function (data, type, row) {
+
+                            return `<button title="Editar Accion" class="btn btn-sm btn-secondary me-1">
+                                    <i class="fa fa-edit"></i>
+                                </button>
+                                <button title="Eliminar Accion" class="btn btn-sm btn-danger me-1">
+                                    <i class="fa fa-trash"></i>
+                                </button>`;
+                        }
+                    }
+                ]
+            });
+        }
+
+        $('#tableListadoAcciones tbody').on('click', 'tr', function () {
+            $('#tableListadoAcciones tbody tr').removeClass('selected');
+            $(this).addClass('selected');
+            selectedAccionId = tableListadoAcciones.row(this).data().PKaccion;
+        });
+
+
+        $('#tableListadoAcciones tbody').on('click', 'button', function () {
+            var action = $(this).attr('title');
+            var data = tableListadoAcciones.row($(this).parents('tr')).data();
+            if (action === "Editar Accion") {
+                // $('#Id').val(data.PKaccion);
+                $('#Nombre').val(data.Nombre);
+                $('#Descripcion').val(data.Descripcion);
+                $('#modalEditarAccion').data('acciones', data);
+                $('#modalEditarAccion').modal('show');
+            } else if (action === "Eliminar Accion") {
+                var data = tableListadoAcciones.row($(this).parents('tr')).data();
+                var Nombre = data.Nombre;
+                var AccionID = data.PKaccion;
+                Swal.fire({
+                    title: `¿Deseas eliminar a esta accion?`,
+                    text: `El la accion ${Nombre}, será ELIMINADO`,
+                    icon: 'warning',
+                    showCancelButton: true,
+                    confirmButtonColor: '#3085d6',
+                    cancelButtonColor: '#d33',
+                    confirmButtonText: `Sí, Eliminar`
+                }).then((result) => {
+                    if (result.isConfirmed) {
+                        $.ajax({
+                            url: `{% url 'delete_accion' %}`,
+                            type: 'POST',
+                            data: {
+                                varAccion: AccionID,
+                                csrfmiddlewaretoken: "{{ csrf_token }}"
+                            },
+                            success: function (response) {
+                                Swal.fire('Éxito', `La Accion ha sido ELMINADA correctamente`, 'success');
+                                getAcciones();
+                            },
+                            error: function (xhr, status, error) {
+                                Swal.fire('Error', `No se pudo ELIMINAR la Accion`, 'error');
+                            }
+                        });
+                    }
+                });
+            }
+        });
+
+
+        $('#guardarAccionEditada').on('click', function () {
+            var Descripcion = $('#Descripcion').val()
+            var Nombre = $('#Nombre').val()
+            if (Nombre.trim() === '') {
+                Swal.fire('Error', 'El nuevo nombre no puede estar vacío', 'error');
+                return;
+            }
+            var accion = $('#modalEditarAccion').data('acciones');
+
+            $.ajax({
+                url: `{% url 'update_accion' %}`,
+                type: 'POST',
+                data: {
+                    varAccion: accion.PKaccion,
+                    varNombre: Nombre,
+                    varDescripcion: Descripcion,
+                    varModulo: id_modulo,
+
+                    csrfmiddlewaretoken: "{{ csrf_token }}"
+                },
+                success: function (response) {
+                    Swal.fire('Éxito', 'La accion ha sido actualizada correctamente', 'success');
+                    $('#modalEditarAccion').modal('hide');
+                    getAcciones();
+                },
+                error: function (xhr, status, error) {
+                    Swal.fire('Error', 'No se pudo actualizar la accion', 'error');
+                },
+                complete: function () {
+                    $('#modalCambiarNombre').modal('hide');
+                }
+
+            });
+
+        });
+
+
+        //SE AGREGO CONSULTA PARA ESTE INSERT , NO HABIA SP
+        $('#guardarNuevaAccion').on('click', function () {
+            var NombreAdd = $('#NombreAdd').val().trim();
+            var DescripcionAdd = $('#DescripcionAdd').val().trim();
+
+            if (!Nombre || !Descripcion) {
+                Swal.fire('Error', 'Todos los campos son obligatorios', 'error');
+                return;
+            }
+
+            $.ajax({
+                url: `{% url 'create_accion' %}`,
+                type: 'POST',
+                data: {
+                    varNombre: NombreAdd,
+                    varDescripcion: DescripcionAdd,
+                    varModulo: id_modulo,
+                    csrfmiddlewaretoken: "{{ csrf_token }}"
+                },
+                success: function (response) {
+                    Swal.fire('Éxito', 'Accion agregada correctamente', 'success');
+                    $('#modalAgregarAccion').modal('hide');
+                    getAcciones();
+                },
+                error: function (xhr, status, error) {
+                    Swal.fire('Error', 'No se pudo agregar la accion', 'error');
+                }
+            });
+        });
+    });
+</script>
+{% endblock %}

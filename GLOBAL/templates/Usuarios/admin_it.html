@@ -1,0 +1,435 @@
+{% extends 'componentes/menu_global_security.html' %}
+{% load static %}
+
+{% block title %}
+ADMIN IT
+{% endblock %}
+
+
+{% block body %}
+
+<div class="container-fluid mt-1">
+    <div class="card shadow-lg card-expanded">
+
+        <div class="row align-items-center">
+            <div class="col d-flex align-items-center">
+                <button id="toggle-sidebar" class="me-3" title="Mostrar/Ocultar Menu">
+                </button>
+                <i class="material-icons d-block">person</i>
+                <h4 class="page-title mb-0">ADMIN IT</h4>
+            </div>
+        </div>
+
+        <div class="container-fluid pt-1">
+
+            <div class="row mt-1">
+
+                <div class="row d-flex align-items-start justify-content-between">
+
+                    <div class="col-4">
+                        <label class="me-2">MÓDULOS</label>
+                        <div class="table-responsive shadow bg-blanco">
+                            <table id="tableModulos"
+                                class="table table-striped table-bordered mb-0 table-sm rounded-4 table-hover align-middle tabla-ajustada">
+                                <thead class="bg-blanco text-dark">
+                                    <tr>
+                                        <th>Nombre</th>
+                                        <th>Descripcion</th>
+                                    </tr>
+                                </thead>
+                                <tbody>
+                                </tbody>
+                            </table>
+                        </div>
+                    </div>
+
+                    <div class="col-lg-3">
+                        <label class="me-2">USUARIOS DISPONIBLES</label>
+                        <div class="table-responsive shadow bg-blanco">
+                            <table id="tableUsuariosDisponibles"
+                                class="table table-striped table-bordered mb-0 table-sm rounded-4 table-hover align-middle tabla-ajustada">
+                                <thead class="table-success text-dark">
+                                    <tr>
+                                        <th>Nombre</th>
+                                    </tr>
+                                </thead>
+                                <tbody class="table-success text-dark">
+                                </tbody>
+                            </table>
+                        </div>
+                    </div>
+
+                    <div class="col-lg-1 d-flex flex-column align-items-center my-4">
+                        <button id="btnAgregar" class="btn btn-success btn-sm mb-2" style="width: 50px; height: 50px;">
+                            <i class="large material-icons">arrow_forward</i>
+                        </button>
+                        <button id="btnQuitar" class="btn btn-danger btn-sm mb-2" style="width: 50px; height: 50px;">
+                            <i class="large material-icons">arrow_back</i>
+                        </button>
+                    </div>
+
+                    <div class="col-lg-3">
+                        <label class="me-2">USUARIO ASIGNADOS</label>
+                        <div class="table-responsive shadow bg-blanco">
+                            <table id="tableUsuariosAsignados"
+                                class="table table-striped table-bordered mb-0 table-sm rounded-4 table-hover align-middle tabla-ajustada">
+                                <thead class="table-danger text-dark">
+                                    <tr>
+                                        <th>Nombre</th>
+                                    </tr>
+                                </thead>
+                                <tbody class="table-danger text-dark">
+                                </tbody>
+                            </table>
+                        </div>
+                    </div>
+
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+
+<a href="{% url 'global_main' %}">
+    <button class="btn btn-sm btn-danger" id="btnCerrar" title="Cerrar"
+        style="position: fixed; bottom: 20px; right: 20px;">
+        <i class="fa fa-times"></i> Cerrar
+    </button>
+</a>
+
+{% endblock %}
+
+
+
+{% block scripts %}
+<script>
+    $(document).ready(function () {
+
+        var csrfToken = "{{ csrf_token }}";
+        var tableFirmas, firma_id;
+
+        var toastMixin = Swal.mixin({
+            toast: true,
+            icon: 'success',
+            title: 'General Title',
+            animation: false,
+            position: 'top-right',
+            showConfirmButton: false,
+            timer: 2000,
+            timerProgressBar: true,
+            didOpen: (toast) => {
+                toast.addEventListener('mouseenter', Swal.stopTimer);
+                toast.addEventListener('mouseleave', Swal.resumeTimer);
+            }
+        });
+
+        /* MENU ID Y SUBMENU ID */
+        $('#usuariosMenu, #adminIT_submenu').addClass('active');
+
+        selectedModuloId = null
+        selectedUsuarioDisponibleId = null
+        selectedUsuarioAsignadoId = null
+
+        getModulosDisponibles()
+
+        function getModulosDisponibles() {
+
+            $("#tableModulos").DataTable().clear().destroy();
+            var cardHeight = $(".card-expanded").height();
+            var tableHeight = cardHeight * 0.5;
+
+            tableModulos = $('#tableModulos').DataTable({
+                autoWidth: false,
+                scrollX: true,
+                scrollY: tableHeight + 'px',
+                scrollCollapse: true,
+                pageLength: 50,
+                dom: 'rftip',
+                language: {
+                    url: "{% static 'app/th/json/es-ES.json' %}",
+                },
+                ajax: {
+                    url: `{% url 'get_modulos_admin_it' %}`,
+                    type: "POST",
+                    dataSrc: 'data',
+                    data: {
+                        csrfmiddlewaretoken: csrfToken
+                    },
+                },
+                colReorder: {
+                    realtime: false,
+                },
+                buttons: [
+                    {
+                        extend: 'excel',
+                        text: '<i class="fas fa-file-excel"></i>',
+                        titleAttr: 'Exportar a Excel',
+                        className: 'btn btn-success',
+                    },
+                    {
+                        extend: 'pdf',
+                        text: '<i class="fas fa-file-pdf"></i>',
+                        titleAttr: 'Exportar a PDF',
+                        className: 'btn btn-danger',
+                    },
+                    {
+                        extend: 'print',
+                        text: '<i class="fas fa-print"></i>',
+                        titleAttr: 'Imprimir',
+                        className: 'btn btn-primary',
+                        orientation: 'landscape'
+                    }
+                ],
+                columns: [
+                    {
+                        data: 'Nombre',
+                    },
+                    {
+                        data: 'Descripcion'
+                    },
+                ],
+                order: [[0, "asc"]],
+            });
+
+        }
+
+        $('#tableModulos tbody').on('click', 'tr', function () {
+            $('#tableModulos tbody tr').removeClass('selected');
+
+            $(this).addClass('selected');
+
+            selectedModuloId = tableModulos.row(this).data().PKmodulo;
+
+            selectedUsuarioDisponibleId = null
+            selectedUsuarioAsignadoId = null
+
+            getUsuariosDisponibles(selectedModuloId);
+            getUsuariosAsignados(selectedModuloId);
+
+        });
+
+        function getUsuariosDisponibles(moduloSeleccionado) {
+
+            $("#tableUsuariosDisponibles").DataTable().clear().destroy();
+
+            var cardHeight = $(".card-expanded").height();
+            var tableHeight = cardHeight * 0.5;
+
+            tableUsuariosDisponibles = $('#tableUsuariosDisponibles').DataTable({
+                autoWidth: false,
+                scrollX: true,
+                scrollY: tableHeight + 'px',
+                scrollCollapse: true,
+                pageLength: 50,
+                dom: 'rftip',
+                language: {
+                    url: "{% static 'app/th/json/es-ES.json' %}",
+                },
+                ajax: {
+                    url: `{% url 'get_usuarios_disponibles_admin_it_data' %}`,
+                    type: "POST",
+                    dataSrc: 'data',
+                    data: {
+                        varModulo: moduloSeleccionado,
+                        csrfmiddlewaretoken: csrfToken
+                    },
+                },
+                colReorder: {
+                    realtime: false,
+                },
+                buttons: [
+                    {
+                        extend: 'excel',
+                        text: '<i class="fas fa-file-excel"></i>',
+                        titleAttr: 'Exportar a Excel',
+                        className: 'btn btn-success',
+                    },
+                    {
+                        extend: 'pdf',
+                        text: '<i class="fas fa-file-pdf"></i>',
+                        titleAttr: 'Exportar a PDF',
+                        className: 'btn btn-danger',
+                    },
+                    {
+                        extend: 'print',
+                        text: '<i class="fas fa-print"></i>',
+                        titleAttr: 'Imprimir',
+                        className: 'btn btn-primary',
+                        orientation: 'landscape'
+                    }
+                ],
+                columns: [
+                    {
+                        data: 'Nombres',
+                    },
+                ],
+                order: [[0, "asc"]],
+            });
+
+        }
+
+        $('#tableUsuariosDisponibles tbody').on('click', 'tr', function () {
+            $('#tableUsuariosDisponibles tbody tr').removeClass('selected');
+
+            $(this).addClass('selected');
+
+            selectedUsuarioDisponibleId = tableUsuariosDisponibles.row(this).data().fkUsuario;
+
+        });
+
+
+        function getUsuariosAsignados(moduloSeleccionado) {
+
+            $("#tableUsuariosAsignados").DataTable().clear().destroy();
+            var cardHeight = $(".card-expanded").height();
+            var tableHeight = cardHeight * 0.5;
+
+            tableUsuariosAsignados = $('#tableUsuariosAsignados').DataTable({
+                autoWidth: false,
+                scrollX: true,
+                scrollY: tableHeight + 'px',
+                scrollCollapse: true,
+                pageLength: 50,
+                dom: 'rftip',
+                language: {
+                    url: "{% static 'app/th/json/es-ES.json' %}",
+                },
+                ajax: {
+                    url: `{% url 'get_usuarios_asignados_admin_it_data' %}`,
+                    type: "POST",
+                    dataSrc: 'data',
+                    data: {
+                        varModulo: moduloSeleccionado,
+                        csrfmiddlewaretoken: csrfToken
+                    },
+                },
+                colReorder: {
+                    realtime: false,
+                },
+                buttons: [
+                    {
+                        extend: 'excel',
+                        text: '<i class="fas fa-file-excel"></i>',
+                        titleAttr: 'Exportar a Excel',
+                        className: 'btn btn-success',
+                    },
+                    {
+                        extend: 'pdf',
+                        text: '<i class="fas fa-file-pdf"></i>',
+                        titleAttr: 'Exportar a PDF',
+                        className: 'btn btn-danger',
+                    },
+                    {
+                        extend: 'print',
+                        text: '<i class="fas fa-print"></i>',
+                        titleAttr: 'Imprimir',
+                        className: 'btn btn-primary',
+                        orientation: 'landscape'
+                    }
+                ],
+                columns: [
+                    {
+                        data: 'Nombres',
+                    },
+                ],
+                order: [[0, "asc"]],
+            });
+
+        }
+
+        $('#tableUsuariosAsignados tbody').on('click', 'tr', function () {
+            $('#tableUsuariosAsignados tbody tr').removeClass('selected');
+
+            $(this).addClass('selected');
+
+            selectedUsuarioAsignadoId = tableUsuariosAsignados.row(this).data().fkUsuario;
+
+        });
+
+        $('#btnAgregar').on('click', function () {
+            asignar(selectedModuloId, selectedUsuarioDisponibleId)
+        });
+
+        $('#btnQuitar').on('click', function () {
+            quitar(selectedModuloId, selectedUsuarioAsignadoId)
+        });
+
+        $('#tableUsuariosDisponibles tbody').on('dblclick', 'tr', function () {
+            asignar(selectedModuloId, selectedUsuarioDisponibleId)
+        });
+
+        $('#tableUsuariosAsignados tbody').on('dblclick', 'tr', function () {
+            quitar(selectedModuloId, selectedUsuarioAsignadoId)
+        });
+
+
+        function asignar(asignarModulo, asignarUsuario) {
+            if (asignarUsuario == null || asignarModulo == null) {
+                Swal.fire("", "Debes seleccionar un Modulo y un Usuario Disponible!", "warning");
+            } else {
+                $.ajax({
+                    url: "{% url 'insert_usuario_it' %}",
+                    type: "POST",
+                    data: {
+                        varUsuario: asignarUsuario,
+                        varModulo: asignarModulo,
+                        csrfmiddlewaretoken: csrfToken
+                    },
+                    success: function (data) {
+                        if (data.save == 1) {
+                            toastMixin.fire({
+                                animation: true,
+                                title: 'Usuario Asignado!'
+                            });
+
+                            selectedUsuarioDisponibleId = null
+                            selectedUsuarioAsignadoId = null
+
+                            tableUsuariosDisponibles.ajax.reload(null, false);
+                            tableUsuariosAsignados.ajax.reload(null, false);
+                        } else {
+                            Swal.fire("", "Error D: " + data.error, "error");
+                        }
+                    }
+                });
+            }
+        }
+
+        function quitar(quitarModulo, quitarUsuario) {
+            if (quitarUsuario == null || quitarModulo == null) {
+                Swal.fire("", "Debes seleccionar un Modulo y un Usuario Asignado!", "warning");
+            } else {
+                $.ajax({
+                    url: "{% url 'eliminar_usuario_it' %}",
+                    type: "POST",
+                    data: {
+                        varUsuario: quitarUsuario,
+                        varModulo: quitarModulo,
+                        csrfmiddlewaretoken: csrfToken
+                    },
+                    success: function (data) {
+                        if (data.save == 1) {
+                            toastMixin.fire({
+                                animation: true,
+                                title: 'Usuario Removido!'
+                            });
+
+                            selectedUsuarioDisponibleId = null
+                            selectedUsuarioAsignadoId = null
+
+                            tableUsuariosDisponibles.ajax.reload(null, false);
+                            tableUsuariosAsignados.ajax.reload(null, false);
+                        } else {
+                            Swal.fire("", "Error D: " + data.error, "error");
+                        }
+                    }
+                });
+            }
+        }
+
+
+    });
+
+</script>
+{% endblock %}

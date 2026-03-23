@@ -1,0 +1,444 @@
+{% extends 'componentes/menu_global_security.html' %}
+{% load static %}
+
+{% block title %}
+MENUS DEL GRUPO
+{% endblock %}
+
+{% block body %}
+
+<div class="container-fluid pt-1">
+    <div class="card shadow-lg card-expanded">
+        <div class="row align-items-center">
+            <div class="col d-flex align-items-center">
+                <button id="toggle-sidebar" class="hamburger btnMenu me-3" title="Mostrar/Ocultar Menu">
+                    
+                </button>
+                <h4 class="page-title mb-0">MENUS DEL GRUPO</h4>
+            </div>
+            <div class="col d-flex justify-content-end">
+                <div class="d-flex flex-column align-items-right">
+                    <label for="selectModulo" class="fw-bold">Sistema:</label>
+                    <select id="selectModulo" class="form-select form-select-sm w-75">
+                        <option value="" data-description="Descripcion">Seleccione un Modulo</option>
+                        {% for m in modulos %}
+                        <option value="{{ m.PKmodulo }}" data-description="{{ m.Descripcion }}">
+                            {{ m.Nombre }}
+                        </option>
+                        {% endfor %}
+                    </select>
+                </div>
+            </div>
+        </div>
+
+        <div class="row mt-1">
+            <div class="col-6">
+                <div class="table-responsive shadow bg-blanco">
+                    <table id="tableMenus"
+                        class="table table-striped table-bordered table-sm rounded-4 table-hover align-middle">
+                        <thead class="bg-primary text-white">
+                            <tr>
+                                <th>Nombre Página</th>
+                                <th>Autorizado</th>
+                                <th>Nombre</th>
+                                <th>Boton</th>
+                                <th>Posicion</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+
+            <div class="col-6">
+                <div class="table-responsive shadow bg-light">
+                    <table id="tableGrupos" class="table table-bordered table-sm rounded-4">
+                        <thead class="bg-success text-white">
+                            <tr>
+                                <th>Nombre</th>
+                                <th>Descripción</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+
+
+<a href="{% url 'global_main' %}">
+    <button class="btn btn-sm btn-danger" id="btnCerrar" title="Cerrar"
+        style="position: fixed; bottom: 20px; right: 20px;">
+        <i class="fa fa-times"></i> Cerrar
+    </button>
+</a>
+
+{% endblock %}
+
+{% block scripts %}
+
+<script>
+    $(document).ready(function () {
+
+        var csrfToken = "{{ csrf_token }}";
+        var tableFirmas, firma_id;
+
+        var toastMixin = Swal.mixin({
+            toast: true,
+            icon: 'success',
+            title: 'General Title',
+            animation: false,
+            position: 'top-right',
+            showConfirmButton: false,
+            timer: 2000,
+            timerProgressBar: true,
+            didOpen: (toast) => {
+                toast.addEventListener('mouseenter', Swal.stopTimer);
+                toast.addEventListener('mouseleave', Swal.resumeTimer);
+            }
+        });
+
+        /* MENU ID Y SUBMENU ID */
+        $('#gruposMenu, #menusDelGrupo_submenu').addClass('active');
+
+        id_Modulo = $('#selectModulo').val();
+        selectedGrupoId = null;
+
+        $('#selectModulo').select2({
+            templateResult: function (data) {
+                if (!data.id) { return data.text; }
+                let description = $(data.element).data('description');
+                return $('<div><strong>' + data.text + '</strong><br><small>' + description + '</small></div>');
+            },
+            templateSelection: function (data) {
+                let description = $(data.element).data('description');
+                return data.text + " | " + description;
+            },
+            width: 'resolve'
+        });
+
+
+        $('#selectModulo').change(function (e) {
+            e.preventDefault();
+
+            id_Modulo = $(this).val();
+
+            if (id_Modulo != null && id_Modulo != "") {
+                getMenus(id_Modulo);
+                getGrupos(id_Modulo);
+            }
+
+        });
+
+
+        $('#tableMenus tbody').on('dblclick', 'tr', function () {
+            table = $('#tableMenus').DataTable();
+            var rowData = table.row($(this)).data();
+            var index = table.row($(this)).index();
+
+            if (!rowData) {
+                console.error("No se pudo obtener los datos de la fila.");
+                return;
+            }
+
+            ActualizarMenu(rowData, index);
+        });
+
+        if (id_Modulo != null && id_Modulo != "") {
+            getMenus(id_Modulo);
+            getGrupos(id_Modulo);
+        }
+
+        function getMenus(menuModuloSeleccionado) {
+
+            $("#tableMenus").DataTable().clear().destroy();
+
+            var cardHeight = $(".card-expanded").height();
+            var tableHeight = cardHeight * 0.5;
+
+            tableMenus = $('#tableMenus').DataTable({
+                autoWidth: false,
+                scrollX: true,
+                scrollY: tableHeight + 'px',
+                scrollCollapse: true,
+                pageLength: 50,
+                dom: 'rftip',
+                language: {
+                    url: "{% static 'app/th/json/es-ES.json' %}",
+                },
+                ajax: {
+                    url: `{% url 'get_menus_grupo_menus_data' %}`,
+                    type: "POST",
+                    dataSrc: 'data',
+                    data: {
+                        varModulo: menuModuloSeleccionado,
+                        csrfmiddlewaretoken: csrfToken
+                    },
+                },
+                colReorder: {
+                    realtime: false,
+                },
+                buttons: [
+                    {
+                        extend: 'excel',
+                        text: '<i class="fas fa-file-excel"></i>',
+                        titleAttr: 'Exportar a Excel',
+                        className: 'btn btn-success',
+                    },
+                    {
+                        extend: 'pdf',
+                        text: '<i class="fas fa-file-pdf"></i>',
+                        titleAttr: 'Exportar a PDF',
+                        className: 'btn btn-danger',
+                    },
+                    {
+                        extend: 'print',
+                        text: '<i class="fas fa-print"></i>',
+                        titleAttr: 'Imprimir',
+                        className: 'btn btn-primary',
+                        orientation: 'landscape'
+                    }
+                ],
+                columns: [
+                    {
+                        data: 'NombrePagina',
+                    },
+                    {
+                        data: 'Autorizado',
+                        className: 'text-center',
+                        render: function (data, type, row) {
+                            var badge = "";
+                            if (data == true) {
+                                badge += '<i class="fa-regular fa-circle-check" style="color: #00ba4c;"></i>';
+                            } else {
+                                badge += '<i class="fa-regular fa-circle-xmark" style="color: #ff0d0d;"></i>';
+                            }
+                            return badge;
+                        },
+                    },
+                    {
+                        data: 'Nombre',
+                    },
+                    {
+                        data: 'Boton',
+                    },
+                    {
+                        data: 'Posicion',
+                    },
+                ],
+                createdRow: function (row, data, dataIndex) {
+                    if (data.Autorizado == true) {
+                        $(row).css('background-color', '#c2ffdb');
+                    }
+                },
+                order: [[3, "asc"]],
+            });
+
+        }
+
+
+        function getGrupos(menuModuloSeleccionado) {
+            $("#tableGrupos").DataTable().clear().destroy();
+            var cardHeight = $(".card-expanded").height();
+            var tableHeight = cardHeight * 0.5;
+
+            tableGrupos = $('#tableGrupos').DataTable({
+                autoWidth: false,
+                scrollX: true,
+                scrollY: tableHeight + 'px',
+                scrollCollapse: true,
+                pageLength: 50,
+                dom: 'rftip',
+                language: {
+                    url: "{% static 'app/th/json/es-ES.json' %}",
+                },
+                ajax: {
+                    url: `{% url 'get_menus_grupo_grupos_data' %}`,
+                    type: "POST",
+                    data: {
+                        varModulo: menuModuloSeleccionado,
+                        csrfmiddlewaretoken: csrfToken
+                    },
+                },
+                colReorder: {
+                    realtime: false,
+                },
+                buttons: [
+                    {
+                        extend: 'excel',
+                        text: '<i class="fas fa-file-excel"></i>',
+                        titleAttr: 'Exportar a Excel',
+                        className: 'btn btn-success',
+                    },
+                    {
+                        extend: 'pdf',
+                        text: '<i class="fas fa-file-pdf"></i>',
+                        titleAttr: 'Exportar a PDF',
+                        className: 'btn btn-danger',
+                    },
+                    {
+                        extend: 'print',
+                        text: '<i class="fas fa-print"></i>',
+                        titleAttr: 'Imprimir',
+                        className: 'btn btn-primary',
+                        orientation: 'landscape'
+                    }
+                ],
+                columns: [
+                    { data: 'Nombre' },
+                    { data: 'Descripcion' }
+                ],
+                order: [[0, "asc"]],
+            });
+        }
+
+        $('#tableGrupos tbody').on('click', 'tr', function () {
+            $('#tableGrupos tbody tr').removeClass('selected');
+
+            $(this).addClass('selected');
+
+            selectedGrupoId = tableGrupos.row(this).data().PKgrupo;
+            ListarMenusGrupo(selectedGrupoId);
+
+        });
+
+
+        $('#tableMenus tbody').on('dblclick', 'tr', function () {
+
+            tabla = $('#tableMenus').DataTable();
+            var rowData = tabla.row($(this)).data();
+            var index = tabla.row($(this)).index();
+
+            $('#tableMenus tbody tr').removeClass('selected');
+
+            $(this).addClass('selected');
+
+            if (!rowData) {
+                console.error("No se pudo obtener los datos de la fila.");
+                return;
+            }
+
+            ActualizarMenu(rowData, index, selectedGrupoId);
+        });
+        function ListarMenusGrupo(id_Grupo) {
+            let menusDT = $('#tableMenus').DataTable();
+            let menusRows = menusDT.rows().data();
+
+            menusRows.each(function (rowData, index) {
+                rowData.Autorizado = false
+            });
+            menusDT.clear().rows.add(menusRows).draw();
+
+
+            $.ajax({
+                url: "{% url 'data_menus_grupo' %}",
+                type: "POST",
+                data: {
+                    varGrupo: id_Grupo,
+                    varModulo: id_Modulo,
+                    csrfmiddlewaretoken: csrfToken
+                },
+                success: function (data) {
+                    let menusGrupo = data.data;
+
+                    let tableMenus = $('#tableMenus').DataTable();
+                    let rowsMenus = tableMenus.rows().data();
+
+                    rowsMenus.each(function (rowData, index) {
+                        menusGrupo.forEach(menuGrupo => {
+                            if (rowData.PKMenu == menuGrupo.fkMenu) {
+                                rowData.Autorizado = true;
+                            }
+                        });
+                    });
+
+                    tableMenus.clear().rows.add(rowsMenus).draw();
+
+                },
+                error: function (xhr, status, error) {
+                    console.log("Error al obtener menús del grupo:", error);
+                }
+            });
+        }
+
+
+        function ActualizarMenu(filaData, filaIndex, grupoSeleccionadoId) {
+
+            if (grupoSeleccionadoId == null) {
+                return;
+            }
+
+            var PKmenu = filaData.PKMenu;
+            var Autorizado = filaData.Autorizado;
+            var Inverso = !Autorizado;
+            var ElGrupo = filaData.TipoMenu;
+
+            var tableMenu = $('#tableMenus').DataTable();
+            var rowsMenu = tableMenu.rows().data();
+
+            if (ElGrupo == 2) {
+                var codigoGrupo = filaData.Boton;
+                if (codigoGrupo.length > 4) {
+                    codigoGrupo = codigoGrupo.substring(0, 4);
+                }
+
+                rowsMenu.each(function (rowData, index) {
+                    var codigoBoton = rowData.Boton;
+                    if (rowData.Boton.length > 4) {
+                        codigoBoton = rowData.Boton.substring(0, 4);
+                    }
+
+                    if (codigoGrupo == codigoBoton) {
+                        $.ajax({
+                            url: "{% url 'insert_delete_menu_grupo' %}",
+                            type: "POST",
+                            data: {
+                                varIdGrupo: grupoSeleccionadoId,
+                                varPKMenu: PKmenu,
+                                varAutorizado: Autorizado,
+                                csrfmiddlewaretoken: csrfToken
+                            },
+                            success: function (data) {
+                                console.log("Menú actualizado exitosamente.");
+                                filaData.Autorizado = Inverso;
+                            },
+                            error: function (xhr, status, error) {
+                                console.error("Error al actualizar el menú:", error);
+                            }
+                        });
+                    }
+                });
+            } else {
+
+                $.ajax({
+                    url: "{% url 'insert_delete_menu_grupo' %}",
+                    type: "POST",
+                    data: {
+                        varIdGrupo: grupoSeleccionadoId,
+                        varPKMenu: PKmenu,
+                        varAutorizado: Autorizado,
+                        csrfmiddlewaretoken: csrfToken
+                    },
+                    success: function (data) {
+                        console.log("Menú actualizado exitosamente.");
+                        filaData.Autorizado = Inverso;
+                    },
+                    error: function (xhr, status, error) {
+                        console.error("Error al actualizar el menú:", error);
+                    }
+                });
+
+            }
+
+
+            ListarMenusGrupo(grupoSeleccionadoId)
+        }
+    });
+</script>
+
+{% endblock %}

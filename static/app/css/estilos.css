@@ -1,0 +1,166 @@
+@import url("https://fonts.googleapis.com/css2?family=Poppins:wght@200;300;400;500;600;700;800&display=swap");
+
+body {
+    font-family: "Poppins", sans-serif;
+    background-color: #f4f4f4;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    height: 100vh;
+    margin: 0;
+  }
+  .modal {
+    background-color: #fff;
+    padding: 20px;
+    border-radius: 5px;
+    width: 80%;
+    max-width: 1200px; /* Ajusta para controlar el ancho máximo */
+    box-shadow: 0 0 10px rgba(0, 0, 0, 0.2);
+    overflow: hidden; /* Asegura que todo el contenido esté dentro del modal */
+  }
+  
+  .close-button {
+    cursor: pointer;
+    background-color: #999;
+    border: none;
+    border-radius: 50%;
+    width: 30px;
+    height: 30px;
+    font-size: 20px;
+    color: white;
+    position: absolute;
+    right: 20px;
+    top: 20px;
+  }
+  .row {
+    display: flex;
+    justify-content: space-between; /* Opcional, dependiendo del diseño deseado */
+    width: 100%;
+  }
+  
+  .nombre-competencia {
+    flex: 3; /* Ocupa 3/4 del espacio disponible */
+  }
+  
+  .id-competencia {
+    flex: 3; /* Ocupa 3/4 del espacio disponible */
+   
+  }
+  
+  .nombre-cliente {
+    flex: 3; /* Ocupa 1/4 del espacio disponible */
+  }
+  
+  .id-cliente {
+    flex: 1; /* Ocupa 1/4 del espacio disponible */
+  }
+  
+  input[type="text"],
+  input[type="number"] {
+    padding: 10px;
+    margin: 10px 0; /* Asegura espaciado vertical entre campos */
+    border: 1px solid #ccc;
+    border-radius: 4px;
+    /* Elimina los márgenes o paddings laterales específicos si los hubiera */
+  }
+  
+  
+  .column {
+    flex: 1; /* Hace que cada columna ocupe un espacio equitativo */
+    padding: 0 10px; /* Añade un poco de espacio entre las columnas */
+  }
+  
+  input[type="text"],
+  input[type="number"] {
+    width: 100%; /* Asegura que los inputs ocupen todo el ancho de su columna */
+    padding: 10px;
+    margin: 10px 0; /* Espaciado entre inputs */
+    border: 1px solid #ccc;
+    border-radius: 4px;
+  }
+  /* Asegura que los elementos de la fila no tengan margen superior extra */
+.row > div[class^="col-"],
+.row > [class*=" col-"] {
+  margin-top: 0;
+}
+
+/* Ajusta la alineación superior de los elementos de la columna */
+.form-group {
+  margin-bottom: 0; /* Elimina o reduce el margen inferior si es necesario */
+}
+
+/* Si se utiliza un contenedor alrededor del 'row' que necesita un ajuste */
+.contenedor-personalizado {
+  padding-top: 0; /* Ajusta según el nombre real de tu clase contenedora si la hay */
+}
+
+  
+  h2 {
+    color: #2a3f54;
+    text-align: center;
+  }
+  
+  .form-ventas-perdidas {
+    display: flex;
+    flex-wrap: wrap;
+    justify-content: space-between; /* Espacia las secciones de forma uniforme */
+  }
+  
+  .seccion {
+    flex: 1 1 45%; /* Ajusta para que cada sección ocupe cerca del 45%, permitiendo dos columnas */
+    border: 1px solid #ccc;
+    padding: 20px;
+    margin-bottom: 20px;
+    border-radius: 5px;
+  }
+  
+  .seccion h3 {
+    color: #333740;
+    margin-top: 0;
+  }
+  
+  input[type="text"],
+  input[type="number"],
+  input[type="date"],
+  textarea,
+  select {
+    padding: 10px;
+    margin: 5px 0;
+    border: 1px solid #ccc;
+    border-radius: 4px;
+    width: calc(100% - 22px);
+  }
+  
+  textarea {
+    resize: vertical;
+    height: 80px;
+  }
+  
+  .acciones {
+    flex-basis: 100%; /* Asegura que los botones de acción ocupen toda la fila */
+    display: flex;
+    justify-content: center;
+    padding-top: 10px;
+  }
+  
+  button {
+    padding: 10px 20px;
+    margin: 0 10px;
+    border: none;
+    border-radius: 4px;
+    cursor: pointer;
+    color: white;
+  }
+  
+  .btn-competencia {
+    background-color: #333740;
+  }
+  
+  .btn-venta-perdida {
+    background-color: #2a3f54;
+  }
+  
+  .btn-motivos {
+    background-color: #4c6a2f;
+  }
+  

@@ -1,0 +1,626 @@
+{% extends 'componentes/menu_contable.html' %}
+{% load static %}
+
+{% block title %}
+REPORTE INGRESOS
+{% endblock %}
+
+
+{% block body %}
+
+<div class="row align-items-center border-bottom mb-2 py-1">
+    <div class="col d-flex align-items-center">
+        <button id="toggle-sidebar" class="btn btn-warning btn-sm me-2 btnMenu" title="Mostrar/Ocultar menú">
+            <i class="fas fa-bars"></i>
+        </button>
+        <h6 class="page-title mb-0 fs-6 fw-bold">REPORTE INGRESOS</h6>
+    </div>
+</div>
+
+<div class="container-fluid mt-1">
+
+    <div class="row d-flex justify-content-start align-items-end">
+
+        {% include 'control_gestion/content_includes/rango_meses.html' %}
+
+        <div class="col-lg-2">
+            <div class="form-group">
+                <label for="filterEmpresaTables">Empresa:</label>
+                <select id="filterEmpresaTables" class="form-select form-select-sm" name="filterEmpresaTables">
+                    <option value="0">TODAS</option>
+                    {% for e in empresasData %}
+                    <option value="{{ e.id }}">{{ e.nombre }}</option>
+                    {% endfor %}
+                </select>
+            </div>
+        </div>
+
+        <div class="col-sm-2">
+            <button type="button" class="btn btn-success btn-sm" id="btnGetProyecciones">Cargar</button>
+        </div>
+
+    </div>
+
+    <br>
+
+    <div class="row">
+        <div class="row text-center">
+            <h5>REPORTE DE INGRESOS LOGRADOS</h5>
+        </div>
+        <div class="row d-flex justify-content-end">
+            <span><b>Filtros Rápidos</b></span>
+            <div class="mainFilters">
+                <div class="row f-flex justify-content-end">
+                    <div class="col-sm">
+                        <label for="">Centro</label>
+                        <input type="text" class="form-control form-control-sm tableMainFilters"
+                            id="DR_filterCentroTables" placeholder="Centro">
+                    </div>
+
+                    <div class="col-sm">
+                        <label for="">Numero Cuenta</label>
+                        <input type="text" class="form-control form-control-sm tableMainFilters"
+                            id="DR_filterNumCuentaTables" placeholder="Numero Cuenta">
+                    </div>
+
+                    <div class="col-sm">
+                        <label for="">Cuenta</label>
+                        <input type="text" class="form-control form-control-sm tableMainFilters"
+                            id="DR_filterCuentaTables" placeholder="Cuenta">
+                    </div>
+
+
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div class="row">
+        <div class="table-responsive">
+            <table id="tbl_IngresadosLogrados"
+                class="table rounded-4 table-sm table-bordered table-striped align-middle mb-0 table-principal"
+                style="width:100%">
+
+                <tfoot class="table-active" style="display: table-header-group;">
+                    <tr>
+                        <th></th>
+                        <th></th>
+                        <th></th>
+                        <th></th>
+                        <th></th>
+                        <th></th>
+                        <th></th>
+                        <th></th>
+                        <th></th>
+                    </tr>
+                </tfoot>
+
+                <thead class="table-gradient text-dark">
+                    <tr>
+                        <th class="text-center">ID Presupuesto</th>
+                        <th class="text-center">Centro</th>
+                        <th class="text-center">Numero Cuenta</th>
+                        <th class="text-center">Cuenta</th>
+                        <th class="text-center">Fecha Fecha Ingreso</th>
+                        <th class="text-center">Valor Ingreso</th>
+                        <th class="text-center">Ingresado Por</th>
+                        <th class="text-center">Mes</th>
+                        <th class="text-center">Año</th>
+                    </tr>
+                </thead>
+                <tbody>
+
+                </tbody>
+            </table>
+        </div>
+    </div>
+
+    <br>
+
+    <div class="row">
+        <div class="row text-center">
+            <h5>REPORTE DE INGRESOS PRESUPUESTADOS</h5>
+        </div>
+        <div class="row d-flex justify-content-end">
+            <span><b>Filtros Rápidos</b></span>
+            <div class="mainFilters">
+                <div class="row f-flex justify-content-end">
+                    <div class="col-sm">
+                        <label for="">Centro</label>
+                        <input type="text" class="form-control form-control-sm tableMainFilters"
+                            id="CN_filterCentroTables" placeholder="Centro">
+                    </div>
+
+                    <div class="col-sm">
+                        <label for="">Numero Cuenta</label>
+                        <input type="text" class="form-control form-control-sm tableMainFilters"
+                            id="CN_filterNumCuentaTables" placeholder="Numero Cuenta">
+                    </div>
+
+                    <div class="col-sm">
+                        <label for="">Cuenta</label>
+                        <input type="text" class="form-control form-control-sm tableMainFilters"
+                            id="CN_filterCuentaTables" placeholder="Cuenta">
+                    </div>
+
+
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div class="row">
+        <div class="table-responsive">
+            <table id="tbl_IngresosPresupuestados"
+                class="table rounded-4 table-sm table-bordered table-striped align-middle mb-0 table-principal"
+                style="width:100%">
+
+                <tfoot class="table-active" style="display: table-header-group;">
+                    <tr>
+                        <th></th>
+                        <th></th>
+                        <th></th>
+                        <th></th>
+                        <th></th>
+                        <th></th>
+                        <th></th>
+                        <th></th>
+                        <th></th>
+                        <th></th>
+                    </tr>
+                </tfoot>
+
+                <thead class="table-gradient text-dark">
+                    <tr>
+                        <th class="text-center">ID Presupuesto</th>
+                        <th class="text-center">Centro</th>
+                        <th class="text-center">Numero Cuenta</th>
+                        <th class="text-center">Cuenta</th>
+
+                        <th class="text-center">Ingreso Proyectado</th>
+                        <th class="text-center">Ingreso Alcanzado</th>
+                        <th class="text-center">Dif. Ingreso</th>
+                        <th class="text-center bg-warning">Porc. Alcanzado</th>
+                        <th class="text-center">Mes</th>
+                        <th class="text-center">Año</th>
+                    </tr>
+                </thead>
+                <tbody>
+
+                </tbody>
+            </table>
+        </div>
+    </div>
+
+
+
+</div>
+
+
+<a href="{% url 'panel_contabilidad' %}">
+    <button class="btn btn-sm btn-danger" id="btnCerrar" title="Cerrar"
+        style="position: fixed; bottom: 20px; right: 20px;">
+        <i class="fa fa-times"></i> Cerrar
+    </button>
+</a>
+
+{% endblock %}
+
+
+{% block scripts %}
+
+
+
+<script>
+    $(document).ready(function () {
+        var csrfToken = "{{ csrf_token }}";
+        var buttons = "Bfrtlip";
+
+        var monthA = "{{ varMonth }}";
+        var varAnio = "{{ varAnio }}";
+
+        var windowSize = $(window).width();
+
+        var cardHeight = $(".card-expanded").height();
+        var tableHeight = cardHeight * 0.5;
+
+        let dollarUSLocale = Intl.NumberFormat("en-US", {
+            minimumFractionDigits: 2,
+            maximumFractionDigits: 2
+        });
+
+        let intergerLocale = Intl.NumberFormat("en-US", {
+            minimumFractionDigits: 0,
+            maximumFractionDigits: 0
+        });
+
+        var toastMixin = Swal.mixin({
+            toast: true,
+            icon: 'success',
+            title: 'General Title',
+            animation: false,
+            position: 'top-right',
+            showConfirmButton: false,
+            timer: 2000,
+            timerProgressBar: true,
+            didOpen: (toast) => {
+                toast.addEventListener('mouseenter', Swal.stopTimer);
+                toast.addEventListener('mouseleave', Swal.resumeTimer);
+            }
+        });
+
+        while (monthA.charAt(0) === '0') {
+            monthA = monthA.substring(1);
+        }
+
+        $('.mesPresupuesto').val(monthA).change();
+
+        for (i = new Date().getFullYear() + 1; i >= (new Date().getFullYear() - 5); i--) {
+            $('.anioPresupuesto').append($('<option />').val(i).html(i));
+            $('.anioPresupuesto').val(varAnio).change();
+        }
+
+        var tbl_IngresosPresupuestados, tbl_IngresadosLogrados;
+
+        $('#tbl_IngresosPresupuestados, #tbl_IngresadosLogrados').DataTable({
+            language: {
+                url: "{% static 'app/th/json/es-ES.json' %}",
+            },
+        });
+
+
+        $('#btnGetProyecciones').click(function (e) {
+            e.preventDefault();
+
+            varMes1 = $('#mesPresupuestoDesde').val();
+            varAnio1 = $('#anioPresupuestoDesde').val();
+
+            varMes2 = $('#mesPresupuestoHasta').val();
+            varAnio2 = $('#anioPresupuestoHasta').val();
+
+            empresa = $('#filterEmpresaTables').val();
+
+            negocioColumns = [4];
+
+            $("#tbl_IngresadosLogrados").DataTable().clear().destroy();
+
+            tbl_IngresadosLogrados = $('#tbl_IngresadosLogrados').DataTable({
+                scrollX: true,
+                scrollCollapse: true,
+                scrollY: '400px',
+                pageLength: 50,
+                fixedColumns: {
+                    left: 3
+                },
+                drawCallback: function (settings) {
+                    let dollarUSLocale = Intl.NumberFormat("en-US", {
+                        minimumFractionDigits: 2,
+                        maximumFractionDigits: 2
+                    });
+
+                    let intergerLocale = Intl.NumberFormat("en-US", {
+                        minimumFractionDigits: 0,
+                        maximumFractionDigits: 0
+                    });
+
+                    var api = this.api();
+
+                    // Variables para almacenar los totales de las columnas 5 y 6
+                    var totalColumn5 = 0;
+                    var totalColumn6 = 0;
+
+                    // Calcular totales para las columnas 3, 4, 5, y 6
+                    [5].forEach(function (colIndex) {
+                        var total = api
+                            .column(colIndex, {
+                                search: 'applied'
+                            })
+                            .data()
+                            .reduce(function (a, b) {
+                                return Number(a) + Number(b);
+                            }, 0);
+
+                        var columnFooter = $(api.column(colIndex).footer());
+                        columnFooter.html(dollarUSLocale.format(total));
+                        columnFooter.css('text-align', 'right');
+                    });
+
+                },
+                language: {
+                    url: "{% static 'app/th/json/es-ES.json' %}",
+                },
+                ajax: {
+                    beforeSend: function (xhr, type) {
+                        if (!type.crossDomain) {
+                            xhr.setRequestHeader(
+                                'X-CSRF-Token',
+                                $(
+                                    'meta[name="csrf-token"]'
+                                ).attr('content'));
+                        }
+                    },
+                    url: `{% url 'dataReporteIngresosLogrados' %}?mes1=${encodeURIComponent(varMes1)}&anio1=${encodeURIComponent(varAnio1)}&mes2=${encodeURIComponent(varMes2)}&anio2=${encodeURIComponent(varAnio2)}&empresa=${encodeURIComponent(empresa)}`,
+                },
+                dom: buttons,
+                buttons: [{
+                    extend: 'excel',
+                    text: '<i class="fas fa-file-excel"></i>',
+                    titleAttr: 'Excel',
+                    className: 'btn btn-success',
+                },
+                {
+                    extend: 'pdf',
+                    text: '<i class="fas fa-file-pdf"></i>',
+                    titleAttr: 'PDF',
+                    className: 'btn btn-danger',
+                },
+                {
+                    extend: 'print',
+                    title: 'INGRESOS LOGRADOS',
+                    text: '<i class="fas fa-print"></i>',
+                    titleAttr: 'Imprimir',
+                    className: 'btn btn-info',
+                    footer: true,
+                    customize: function (win) {
+                        // Asegúrate de que los bordes de las celdas se impriman
+                        $(win.document.body).find('table tr th').css('border',
+                            '1px solid #ddd');
+                        $(win.document.body).find('table tr td').css('border',
+                            '1px solid #ddd');
+
+                        // Alinea a la derecha los totales en el pie de página
+                        $(win.document.body).find('tfoot th').css('text-align',
+                            'right');
+                    }
+                }
+
+                ],
+                columns: [{
+                    data: 'id_gasto'
+                },
+                {
+                    data: 'nombre_centro'
+                },
+                {
+                    data: 'cuenta_contable'
+                },
+                {
+                    data: 'descripcion_cuenta',
+                    className: 'rightBorderStyle'
+                },
+                {
+                    data: 'fecha_gasto'
+                },
+
+                {
+                    data: 'valor',
+                    className: 'currency',
+                    render: $.fn.dataTable.render.number(',', '.', 2)
+                },
+
+
+                {
+                    data: 'ingresado_por'
+                },
+                {
+                    data: 'mes_nombre'
+                },
+                {
+                    data: 'anio'
+                },
+
+                ],
+                columnDefs: [{
+                    targets: [4],
+                    visible: false,
+                    searchable: true
+                }],
+                createdRow: function (row, data) {
+                    //  
+                }
+            });
+
+
+            $("#tbl_IngresosPresupuestados").DataTable().clear().destroy();
+
+            tbl_IngresosPresupuestados = $('#tbl_IngresosPresupuestados').DataTable({
+                scrollX: true,
+                scrollCollapse: true,
+                scrollY: '400px',
+                pageLength: 50,
+                fixedColumns: {
+                    left: 3
+                },
+                drawCallback: function (settings) {
+                    let dollarUSLocale = Intl.NumberFormat("en-US", {
+                        minimumFractionDigits: 2,
+                        maximumFractionDigits: 2
+                    });
+
+                    let intergerLocale = Intl.NumberFormat("en-US", {
+                        minimumFractionDigits: 0,
+                        maximumFractionDigits: 0
+                    });
+
+                    var api = this.api();
+
+                    // Variables para almacenar los totales de las columnas 5 y 6
+                    var totalColumn4 = 0;
+                    var totalColumn5 = 0;
+
+                    // Calcular totales para las columnas 3, 4, 5, y 6
+                    [4, 5].forEach(function (colIndex) {
+                        var total = api
+                            .column(colIndex, {
+                                search: 'applied'
+                            })
+                            .data()
+                            .reduce(function (a, b) {
+                                return Number(a) + Number(b);
+                            }, 0);
+
+                        // Guardar los totales de las columnas 5 y 6 para usarlos en el cálculo del porcentaje
+                        if (colIndex === 4) {
+                            totalColumn4 = total;
+                        } else if (colIndex === 5) {
+                            totalColumn5 = total;
+                        }
+
+                        // Mostrar el total en el pie de página en la columna respectiva
+                        var columnFooter = $(api.column(colIndex).footer());
+                        columnFooter.html(dollarUSLocale.format(total));
+                        columnFooter.css('text-align', 'right');
+                    });
+
+                    var diferencia = totalColumn5 - totalColumn4; // Evitar división por cero
+                    var columns_diferencia = $(api.column(6).footer());
+                    columns_diferencia.html(dollarUSLocale.format(diferencia));
+                    columns_diferencia.css('text-align', 'right');
+
+
+                    var percentage = (totalColumn5 / totalColumn4) * 100 || 0; // Evitar división por cero
+                    var columnFooter = $(api.column(7).footer());
+                    columnFooter.html(dollarUSLocale.format(percentage) + ' %');
+                    columnFooter.css('text-align', 'center');
+                },
+                language: {
+                    url: "{% static 'app/th/json/es-ES.json' %}",
+                },
+                ajax: {
+                    beforeSend: function (xhr, type) {
+                        if (!type.crossDomain) {
+                            xhr.setRequestHeader(
+                                'X-CSRF-Token',
+                                $(
+                                    'meta[name="csrf-token"]'
+                                ).attr('content'));
+                        }
+                    },
+                    url: `{% url 'dataReporteIngresosPresupuestos' %}?mes1=${encodeURIComponent(varMes1)}&anio1=${encodeURIComponent(varAnio1)}&mes2=${encodeURIComponent(varMes2)}&anio2=${encodeURIComponent(varAnio2)}&empresa=${encodeURIComponent(empresa)}`,
+                },
+                dom: buttons,
+                buttons: [{
+                    extend: 'excel',
+                    text: '<i class="fas fa-file-excel"></i>',
+                    titleAttr: 'Excel',
+                    className: 'btn btn-success',
+                },
+                {
+                    extend: 'pdf',
+                    text: '<i class="fas fa-file-pdf"></i>',
+                    titleAttr: 'PDF',
+                    className: 'btn btn-danger',
+                },
+                {
+                    extend: 'print',
+                    title: 'INGRESOS PRESUPUESTADOS ',
+                    text: '<i class="fas fa-print"></i>',
+                    titleAttr: 'Imprimir',
+                    className: 'btn btn-info',
+                    footer: true,
+                    customize: function (win) {
+                        // Asegúrate de que los bordes de las celdas se impriman
+                        $(win.document.body).find('table tr th').css('border',
+                            '1px solid #ddd');
+                        $(win.document.body).find('table tr td').css('border',
+                            '1px solid #ddd');
+
+                        // Alinea a la derecha los totales en el pie de página
+                        $(win.document.body).find('tfoot th').css('text-align',
+                            'right');
+                    }
+                }
+
+                ],
+                columns: [{
+                    data: 'id_presupuesto'
+                },
+                {
+                    data: 'nombre_centro'
+                },
+                {
+                    data: 'numero_cuenta'
+                },
+                {
+                    data: 'descripcion_cuenta',
+                    className: 'rightBorderStyle'
+                },
+
+
+                {
+                    data: 'valor_autorizado',
+                    className: 'currency',
+                    render: $.fn.dataTable.render.number(',', '.', 2)
+                },
+                {
+                    data: 'logrado',
+                    className: 'currency',
+                    render: $.fn.dataTable.render.number(',', '.', 2)
+                },
+                {
+                    data: 'diferencia',
+                    className: 'currency',
+                    render: $.fn.dataTable.render.number(',', '.', 2)
+                },
+                {
+                    data: 'porc_alcanzado',
+                    className: 'averages rightBorderStyle',
+                    render: $.fn.dataTable.render.number(',', '.', 2)
+                },
+                {
+                    data: 'mes_nombre'
+                },
+                {
+                    data: 'anio'
+                },
+
+                ],
+                columnDefs: [{
+                    targets: [0],
+                    visible: false,
+                    searchable: true
+                }],
+                createdRow: function (row, data) {
+
+                },
+            });
+
+        });
+
+
+        $('#CN_filterCentroTables').keyup(function () {
+            tbl_IngresosPresupuestados.column(1).search(this.value, true, false).draw();
+        });
+        $('#CN_filterNumCuentaTables').keyup(function () {
+            tbl_IngresosPresupuestados.column(2).search(this.value, true, false).draw();
+        });
+        $('#CN_filterCuentaTables').keyup(function () {
+            tbl_IngresosPresupuestados.column(3).search(this.value, true, false).draw();
+        });
+
+
+
+        $('#DR_filterCentroTables').keyup(function () {
+            tbl_IngresadosLogrados.column(1).search(this.value, true, false).draw();
+        });
+        $('#DR_filterNumCuentaTables').keyup(function () {
+            tbl_IngresadosLogrados.column(2).search(this.value, true, false).draw();
+        });
+        $('#DR_filterCuentaTables').keyup(function () {
+            tbl_IngresadosLogrados.column(3).search(this.value, true, false).draw();
+        });
+
+
+
+
+
+
+
+
+
+
+
+        /*  */
+    });
+</script>
+{% endblock %}

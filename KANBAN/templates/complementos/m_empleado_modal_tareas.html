@@ -1,0 +1,129 @@
+<div class="modal fade" id="editTaskModal" tabindex="-1" role="dialog" aria-labelledby="editTaskModalLabel" aria-hidden="true">
+    <div class="modal-dialog modal-lg shadow-lg" role="document">
+        <div class="modal-content" style="border-radius: 10px; background-color: #f8f9fa;">
+            <div class="modal-header d-flex justify-content-end" style="border-bottom: none;">
+                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+            </div>
+            <div class="modal-body">
+                <form id="editTaskForm">
+                    <input type="text" id="id_tarea_hidden" name="tarea_id" >
+                    <div class="row d-flex">
+                        <div class="col">
+                            <div class="form-group">
+                                <input type="text" class="form-control form-control-sm" id="nombre_tarea" name="nombre_tarea" disabled   style="border: none; background-color: #fff; box-shadow: 0px 1px 5px rgba(0, 0, 0, 0.1); border-radius: 4px; font-weight: bold;">
+                                <small style="font-size: 12px" id="modificado_tarea">modificado por <span style="color: brown; font-weight: bold;">{{userName}}</span></small>
+
+                            </div>
+                        </div>
+                        <div class="col-sm-1 text-end">
+                            <button type="button" class="btn btn-sm btn-primary" id="assignUsersBtn" title="Miembros de la Tarea">
+                                <i class="fas fa-user"></i>
+                            </button>
+                        </div>
+                    </div>
+
+                    <div class="row mt-3">
+                        <div class="col-lg-6">
+                            <div class="form-group">
+                                <label for="estado_tarea">Estado</label>
+                                <select class="form-select form-select-sm" id="estado_tarea" name="estado_tarea" style="width: 100%;">
+                                    <option value=""></option>
+                                    {% for tipo in tareas %}
+                                        <option value="{{ tipo.0 }}">{{ tipo.2 }}</option> 
+                                    {% endfor %}
+                                </select>
+                            </div>
+                        </div>
+                        <div class="col-lg-6">
+                            <div class="form-group">
+                                <label for="prioridad_tarea">Prioridad</label>
+                                <select class="form-select form-select-sm" id="prioridad_tarea" name="prioridad_tarea" >
+                                    <option value=""></option>
+                                    {% for tipo in prioridad %}
+                                        <option value="{{ tipo.0 }}">{{ tipo.1 }}</option> 
+                                    {% endfor %}
+                                </select>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="row mt-3">
+                        <div class="col-lg-6">
+                            <div class="form-group">
+                                <label for="fecha_inicio_tarea">Fecha de Inicio</label>
+                                <input type="date" class="form-control form-control-sm" id="fecha_inicio_tarea" name="fecha_inicio_tarea"  style="border: none; box-shadow: 0px 1px 5px rgba(0, 0, 0, 0.1);">
+                            </div>
+                        </div>
+                        <div class="col-lg-6">
+                            <div class="form-group">
+                                <label for="fecha_final_tarea">Fecha de Vencimiento</label>
+                                <input type="date" class="form-control form-control-sm" id="fecha_final_tarea" name="fecha_final_tarea"  style="border: none; box-shadow: 0px 1px 5px rgba(0, 0, 0, 0.1);">
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="row mt-3">
+                        <div class="col-lg-12">
+                            <div class="form-group">
+                                <label for="descripcion_tarea">Notas</label>
+                                <textarea class="form-control form-control-sm" id="descripcion_tarea" name="descripcion_tarea" placeholder="Escribe una descripción o agregue notas aquí"  style="border: none; background-color: #fff; box-shadow: 0px 1px 5px rgba(0, 0, 0, 0.1); border-radius: 4px;"></textarea>
+                            </div>
+                        </div>
+                    </div>
+                </form>
+
+                <div class="row mt-4">
+                    <div class="col-lg-12">
+                        <div class="form-group">
+                            <label>Lista de Comprobación <span id="checklist-status">0 / 0</span></label>
+                            <div class="progress" style="height: 20px;">
+                                <div id="checklist-progress" class="progress-bar" role="progressbar" style="width: 0%;" aria-valuenow="0" aria-valuemin="0" aria-valuemax="100"></div>
+                            </div>
+                            <ul id="checklist-container" class="list-group mt-2" style="border-radius: 4px; overflow-y: auto; max-height: 150px;"></ul>
+                            <input type="text" class="form-control form-control-sm mt-2" id="new-checklist-item" placeholder="Agregar un elemento" style="border-radius: 4px; box-shadow: 0px 1px 5px rgba(0, 0, 0, 0.1);">
+                        </div>
+                    </div>
+                </div>
+
+                <div class="row mt-4">
+                    <div class="col-lg-12">
+                        <div class="form-group">
+                            <label for="archivo">Datos Adjuntos</label>
+                            <div id="adjuntosContainer" class="mt-2" style="max-height: 100px; overflow-y: auto; border: 1px solid #e0e0e0; padding: 5px; border-radius: 4px;"></div>
+                            <div class="d-flex align-items-center mt-2">
+                                <button type="button" class="btn btn-sm btn-primary" id="btnUpload">Agregar Datos Adjuntos</button>
+                                <input type="file" id="fileInput" name="archivo[]" style="display: none;" multiple>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="row mt-4">
+                    <div class="col-lg-12">
+                        <div class="form-group">
+                            <label for="comentario_tarea">Comentario</label>
+                            <textarea class="form-control form-control-sm" id="comentario_tarea" name="comentario_tarea" rows="1" placeholder="Escribe un comentario" style="height: 50px !important; border-radius: 4px;"></textarea>
+                            <div class="text-end mt-2">
+                                <button type="button" class="btn btn-sm btn-primary" id="btnComment" >Enviar</button>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <div id="commentsContainer" class="mt-4" style="max-height: 200px; overflow-y: auto;"></div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<script src="https://cdnjs.cloudflare.com/ajax/libs/jquery/3.6.0/jquery.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/select2/4.0.13/js/select2.full.min.js"></script>
+
+
+<script>
+    $('#estado_tarea').select2({
+            placeholder: "Seleccione una tarea",
+            allowClear: true
+    });
+
+</script>

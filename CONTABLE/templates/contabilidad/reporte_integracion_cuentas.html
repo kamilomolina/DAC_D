@@ -1,0 +1,280 @@
+{% extends 'componentes/menu_contable.html' %}
+{% load static %}
+
+{% block title %}REPORTE INTEGRACIÓN DE CUENTAS{% endblock %}
+
+{% block body %}
+
+<div class="row align-items-center border-bottom mb-2 py-1">
+    <div class="col d-flex align-items-center">
+        <button id="toggle-sidebar" class="btn btn-warning btn-sm me-2 btnMenu">
+            <i class="fas fa-bars"></i>
+        </button>
+        <h6 class="page-title mb-0 fs-6 fw-bold">
+            REPORTE INTEGRACIÓN DE CUENTAS CONTABLES
+        </h6>
+    </div>
+</div>
+
+
+<div class="container-fluid mt-1">
+
+    <!-- 🔹 FILTROS -->
+    <div class="row d-flex align-items-end mb-3">
+
+        <div class="col-lg-2">
+            <label>Empresa:</label>
+            <select id="empresaPartida" class="form-select form-select-sm">
+                {% for e in empresasData %}
+                <option value="{{ e.id }}">{{ e.nombre }}</option>
+                {% endfor %}
+            </select>
+        </div>
+
+        <div class="col-lg-2">
+            <label>Desde:</label>
+            <input type="date" id="periodoInicio" class="form-control form-control-sm" value="{{ date1 }}">
+        </div>
+
+        <div class="col-lg-2">
+            <label>Hasta:</label>
+            <input type="date" id="periodoFinal" class="form-control form-control-sm" value="{{ date2 }}">
+        </div>
+
+        <div class="col-lg-2">
+            <label>Filtrar:</label>
+            <select id="filtroSaldos" class="form-select form-select-sm">
+                <option value="0">Mostrar Todo</option>
+                <option value="1">Solo con Saldo (Directo o Acumulado)</option>
+            </select>
+        </div>
+
+        <div class="col-lg-2">
+            <button class="btn btn-success btn-sm mt-4" id="btnLoadData">Cargar</button>
+        </div>
+
+    </div>
+
+
+    <div class="row">
+        <div class="col-lg-4">
+            <label for="clasificacion">Codigo:</label>
+            <input type="text" class="form-control form-control-sm" id="filterOrdenCodigo" name="filterOrdenCodigo"
+                placeholder="Buscar por Codigo de Cuenta">
+        </div>
+        <div class="col-lg-4">
+            <label for="clasificacion">Cuenta:</label>
+            <input type="text" class="form-control form-control-sm" id="filterOrdenCuenta" name="filterOrdenCuenta"
+                placeholder="Buscar por Nombre de Cuenta">
+        </div>
+        <div class="col-lg-4">
+            <label for="cuentaBase">Cuenta Base:</label>
+            <select class="form-select form-select-sm" id="filterOrdenTipo" name="filterOrdenTipo" required>
+                <option value="">Seleccione la cuenta base</option>
+                {% for tipo in cuentas_bases %}
+                <option value="{{ tipo.1 }}">{{ tipo.1 }}</option>
+                {% endfor %}
+            </select>
+        </div>
+    </div>
+
+    <!-- 🔹 TABLA -->
+    <div class="row">
+        <div class="table-responsive">
+            <table id="tablaIntegracion" class="table table-striped table-bordered table-hover table-sm align-middle"
+                style="width:100%;">
+                <thead class="table-gradient text-dark">
+                    <tr>
+                        <th>Código</th>
+                        <th>Cuenta</th>
+                        <th>Tipo</th>
+                        <th>Saldo Directo</th>
+                        <th>Saldo Acumulado</th>
+                    </tr>
+                </thead>
+                <tbody></tbody>
+            </table>
+        </div>
+    </div>
+
+</div>
+
+<a href="{% url 'panel_contabilidad' %}">
+    <button class="btn btn-sm btn-danger" id="btnCerrar" style="position: fixed; bottom: 20px; right: 20px;">
+        <i class="fa fa-times"></i> Cerrar
+    </button>
+</a>
+
+{% endblock %}
+
+
+{% block scripts %}
+
+<script>
+    $(document).ready(function () {
+
+        var csrfToken = "{{ csrf_token }}";
+        var tablaIntegracion;
+
+        $('#filtroSaldos').val(0).change();
+        $('#filterOrdenTipo').val('').change();
+
+        $('#tablaIntegracion').DataTable({
+            language: { url: "{% static 'app/th/json/es-ES.json' %}" },
+        });
+
+        function cargarTabla() {
+            showLoadingScreen();
+
+            let empresa = $('#empresaPartida').val();
+            let date1 = $('#periodoInicio').val();
+            let date2 = $('#periodoFinal').val();
+            let filtro = $('#filtroSaldos').val(); // 1=con saldo, 0=todo
+
+            if (!empresa || !date1 || !date2) {
+                Swal.fire("", "Debe seleccionar empresa y fechas.", "warning");
+                return;
+            }
+
+            $("#tablaIntegracion").DataTable().clear().destroy();
+
+            tablaIntegracion = $('#tablaIntegracion').DataTable({
+                ordering: false,
+                autoWidth: false,
+                scrollX: true,
+                scrollY: "45vh",
+                scrollCollapse: true,
+                pageLength: -1,
+                dom: "Bfrtip",
+                language: { url: "{% static 'app/th/json/es-ES.json' %}" },
+                initComplete: function () {
+                    Swal.close();
+                },
+                ajax: {
+                    beforeSend: function (xhr, type) {
+                        if (!type.crossDomain) {
+                            xhr.setRequestHeader(
+                                'X-CSRF-Token',
+                                $('meta[name="csrf-token"]').attr('content')
+                            );
+                        }
+                    },
+                    url: `{% url 'dataReporteIntegracionCuentasContables' %}`,
+                    type: "POST",
+                    dataSrc: 'data',
+                    data: {
+                        csrfmiddlewaretoken: csrfToken,
+                        empresa: empresa,
+                        date1: date1,
+                        date2: date2,
+                        filtro: filtro
+                    }
+                },
+
+                buttons: [
+                    { extend: "excel", className: "btn btn-success", text: "<i class='fas fa-file-excel'></i>" },
+                    { extend: "pdf", className: "btn btn-danger", text: "<i class='fas fa-file-pdf'></i>" },
+                    { extend: "print", className: "btn btn-primary", text: "<i class='fas fa-print'></i>" }
+                ],
+
+                columns: [
+                    {
+                        data: "codigo",
+                        render: function (data, type, row) {
+                            return renderConBarraIzquierda(data, type, row);
+                        }
+                    },
+                    {
+                        data: "nombre",
+                        render: function (data, type, row) {
+                            let estilo = '';
+
+                            if (row.es_padre == 1) {
+                                estilo += 'font-weight:bold !important;';
+                            }
+
+                            return `<div style="${estilo}">${data}</div>`;
+                        }
+                    },
+                    {
+                        data: "Cuenta",
+                        render: function (data, type, row) {
+                            let estilo = '';
+
+                            if (row.es_padre == 1) {
+                                estilo += 'font-weight:bold !important;';
+                            }
+
+                            return `<div style="${estilo}">${data}</div>`;
+                        }
+                    },
+                    {
+                        data: "SaldoDirecto",
+                        render: function (data, type, row) {
+                            let estilo = 'text-align:right;';
+
+                            if (row.es_padre == 1) {
+                                estilo += 'font-weight:bold !important;';
+                            }
+
+                            let numero = Number(data).toLocaleString('es-HN', { minimumFractionDigits: 2 });
+
+                            return `<div style="${estilo}">${numero}</div>`;
+                        }
+                    },
+                    {
+                        data: "SaldoAcumulado",
+                        render: function (data, type, row) {
+                            let estilo = 'text-align:right;';
+
+                            if (row.es_padre == 1) {
+                                estilo += 'font-weight:bold !important;';
+                            }
+
+                            let numero = Number(data).toLocaleString('es-HN', { minimumFractionDigits: 2 });
+
+                            return `<div style="${estilo}">${numero}</div>`;
+                        }
+                    }
+                ]
+            });
+
+        }
+
+        function renderConBarraIzquierda(data, type, row, align = 'left') {
+
+            // 👉 Para filtro, ordenamiento y exportación, se devuelve el valor crudo
+            if (type !== 'display') {
+                return data;
+            }
+
+            let estilo = `
+                padding-left:10px;
+                border-left: 8px solid #${row.color_hex ?? 'cccccc'};
+                ${align === 'right' ? 'text-align:right;' : ''}
+                font-weight:${row.es_padre == 1 ? 'bold' : 'normal'};
+            `;
+
+            return `<div style="${estilo}">${data}</div>`;
+        }
+
+
+
+        $('#filterOrdenCodigo').keyup(function () {
+            tablaIntegracion.column(0).search(this.value, true, false).draw();
+        });
+        $('#filterOrdenCuenta').keyup(function () {
+            tablaIntegracion.column(1).search(this.value, true, false).draw();
+        });
+        $('#filterOrdenTipo').change(function () {
+            tablaIntegracion.column(2).search(this.value, true, false).draw();
+        });
+
+
+        $("#btnLoadData").click(cargarTabla);
+
+    });
+</script>
+
+
+{% endblock %}

@@ -1,0 +1,264 @@
+{% extends 'componentes/menu_activo.html' %}
+{% load static %}
+
+{% block title %}
+Gestión de Categorías de Activos
+{% endblock %}
+
+{% block body %}
+
+<div class="container-fluid mt-3">
+    {% csrf_token %}
+
+    <div class="card shadow-sm border-0">
+        <div class="card-header bg-white">
+            <div class="d-flex justify-content-between align-items-center flex-wrap gap-2">
+                <h5 class="mb-0">Gestión de Categorías de Activos</h5>
+                <button class="btn btn-primary btn-sm" id="btnNuevaCategoria">
+                    <i class="material-icons align-middle" style="font-size:18px;">add</i>
+                    Nueva categoría
+                </button>
+            </div>
+        </div>
+
+        <div class="card-body">
+            <div class="row g-2 mb-3">
+                <div class="col-md-3">
+                    <label class="form-label form-label-sm">Empresa</label>
+                    <input type="text" class="form-control form-control-sm" id="fkEmpresa" value="1">
+                </div>
+
+                <div class="col-md-3">
+                    <label class="form-label form-label-sm">Estado</label>
+                    <select class="form-select form-select-sm" id="estadoFiltro">
+                        <option value="0">Todos</option>
+                        <option value="1" selected>Activos</option>
+                        <option value="2">Inactivos</option>
+                        <option value="3">Eliminados</option>
+                    </select>
+                </div>
+
+                <div class="col-md-4">
+                    <label class="form-label form-label-sm">Buscar</label>
+                    <input type="text" class="form-control form-control-sm" id="textoBusqueda" placeholder="Nombre o descripción...">
+                </div>
+
+                <div class="col-md-2 d-flex align-items-end">
+                    <button class="btn btn-secondary btn-sm w-100" id="btnBuscarCategorias">
+                        Buscar
+                    </button>
+                </div>
+            </div>
+
+            <div class="table-responsive">
+                <table class="table table-bordered table-hover table-sm w-100" id="tablaCategoriasActivos">
+                    <thead class="table-light">
+                        <tr>
+                            <th>ID</th>
+                            <th>Nombre Categoría</th>
+                            <th>Descripción</th>
+                            <th>Estado</th>
+                            <th>Acciones</th>
+                        </tr>
+                    </thead>
+                    <tbody></tbody>
+                </table>
+            </div>
+        </div>
+    </div>
+</div>
+
+
+<div class="modal fade" id="modalCategoriaActivo" tabindex="-1" aria-hidden="true">
+    <div class="modal-dialog modal-lg modal-dialog-scrollable">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title">Categoría de Activo</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+            </div>
+
+            <div class="modal-body">
+                <input type="hidden" id="pkCategoria">
+
+                <div class="row g-2">
+                    <div class="col-md-12">
+                        <label class="form-label form-label-sm">Nombre Categoría</label>
+                        <input type="text" class="form-control form-control-sm" id="nombreCategoria">
+                    </div>
+
+                    <div class="col-md-12">
+                        <label class="form-label form-label-sm">Descripción</label>
+                        <textarea class="form-control form-control-sm" id="descripcion" rows="3"></textarea>
+                    </div>
+                </div>
+            </div>
+
+            <div class="modal-footer">
+                <button class="btn btn-success btn-sm" id="btnGuardarCategoria">Guardar</button>
+                <button class="btn btn-secondary btn-sm" data-bs-dismiss="modal">Cerrar</button>
+            </div>
+        </div>
+    </div>
+</div>
+
+{% endblock %}
+
+{% block scripts %}
+<script src="{% static 'app/activo/utils.js' %}"></script>
+<script>
+let tablaCategoriasActivos = null;
+
+$(document).ready(function () {
+    inicializarEventosCategorias();
+    cargarCategoriasActivos();
+});
+
+function inicializarEventosCategorias() {
+    $('#btnBuscarCategorias').on('click', function () {
+        cargarCategoriasActivos();
+    });
+
+    $('#btnNuevaCategoria').on('click', function () {
+        limpiarFormularioCategoria();
+        $('#modalCategoriaActivo').modal('show');
+    });
+
+    $('#btnGuardarCategoria').on('click', function () {
+        guardarCategoriaActivo();
+    });
+
+    $('#textoBusqueda').on('keypress', function (e) {
+        if (e.which === 13) {
+            cargarCategoriasActivos();
+        }
+    });
+}
+
+function cargarCategoriasActivos() {
+    ActivoUtils.ajax("{% url 'ACTIVO:get_categorias_activos' %}", {
+        fkEmpresa: $('#fkEmpresa').val(),
+        estado: $('#estadoFiltro').val(),
+        textoBusqueda: $('#textoBusqueda').val()
+    }, function (response) {
+        if ($.fn.DataTable.isDataTable('#tablaCategoriasActivos')) {
+            $('#tablaCategoriasActivos').DataTable().destroy();
+        }
+
+        $('#tablaCategoriasActivos tbody').empty();
+
+        $.each(response.data, function (i, item) {
+            $('#tablaCategoriasActivos tbody').append(`
+                <tr>
+                    <td>${item.PkCategoria}</td>
+                    <td>${item.NombreCategoria || ''}</td>
+                    <td>${item.Descripcion || ''}</td>
+                    <td>${ActivoUtils.getStatusBadge(item.estado)}</td>
+                    <td class="text-center">
+                        <button class="btn btn-primary btn-sm me-1" onclick="editarCategoriaActivo(${item.PkCategoria})">
+                            Editar
+                        </button>
+                        <button class="btn btn-danger btn-sm" onclick="eliminarCategoriaActivo(${item.PkCategoria})">
+                            Eliminar
+                        </button>
+                    </td>
+                </tr>
+            `);
+        });
+
+        tablaCategoriasActivos = $('#tablaCategoriasActivos').DataTable({
+            destroy: true,
+            pageLength: 10,
+            order: [[0, 'desc']],
+            language: { url: '//cdn.datatables.net/plug-ins/1.13.7/i18n/es-ES.json' }
+        });
+    });
+}
+
+function editarCategoriaActivo(pkCategoria) {
+    limpiarFormularioCategoria();
+
+    $.ajax({
+        url: "{% url 'ACTIVO:get_categoria_activo_x_id' %}",
+        type: 'GET',
+        data: {
+            pkCategoria: pkCategoria
+        },
+        success: function (response) {
+            if (!response.success) {
+                alert(response.mensaje);
+                return;
+            }
+
+            let d = response.data;
+
+            $('#pkCategoria').val(d.PkCategoria);
+            $('#nombreCategoria').val(d.NombreCategoria);
+            $('#descripcion').val(d.Descripcion);
+
+            $('#modalCategoriaActivo').modal('show');
+        }
+    });
+}
+
+function guardarCategoriaActivo() {
+    let pkCategoria = $('#pkCategoria').val();
+    let url = pkCategoria ? "{% url 'ACTIVO:update_categoria_activo' %}" : "{% url 'ACTIVO:insert_categoria_activo' %}";
+
+    $.ajax({
+        url: url,
+        type: 'POST',
+        data: {
+            pkCategoria: pkCategoria,
+            nombreCategoria: $('#nombreCategoria').val(),
+            descripcion: $('#descripcion').val(),
+            fkEmpresa: $('#fkEmpresa').val(),
+            csrfmiddlewaretoken: $('[name=csrfmiddlewaretoken]').val()
+        },
+        success: function (response) {
+            alert(response.mensaje);
+
+            if (response.save == 1) {
+                $('#modalCategoriaActivo').modal('hide');
+                cargarCategoriasActivos();
+            }
+        }
+    });
+}
+
+function eliminarCategoriaActivo(pkCategoria) {
+    if (!confirm('¿Deseas eliminar esta categoría?')) {
+        return;
+    }
+
+    $.ajax({
+        url: "{% url 'ACTIVO:delete_categoria_activo' %}",
+        type: 'POST',
+        data: {
+            pkCategoria: pkCategoria,
+            estado: 3,
+            csrfmiddlewaretoken: $('[name=csrfmiddlewaretoken]').val()
+        },
+        success: function (response) {
+            alert(response.mensaje);
+            if (response.save == 1) {
+                cargarCategoriasActivos();
+            }
+        }
+    });
+}
+
+function limpiarFormularioCategoria() {
+    $('#pkCategoria').val('');
+    $('#nombreCategoria').val('');
+    $('#descripcion').val('');
+}
+
+function formatoNumero(valor) {
+    return ActivoUtils.formatNumber(valor);
+}
+
+function obtenerTextoEstado(estado) {
+    return ActivoUtils.getStatusBadge(estado);
+}
+</script>
+{% endblock %}

@@ -1,0 +1,794 @@
+{% extends 'componentes/menu_contable.html' %}
+{% load static %}
+
+{% block title %}
+    {% if partida_id == '0' or partida_id == 0 %}
+        NUEVA PARTIDA MANUAL
+    {% else %}
+        EDITAR PARTIDA # {{ partida_id }}
+    {% endif %}
+{% endblock %}
+
+<style>
+    /* Contenedor Sticky */
+    .sticky-footer-container {
+        position: sticky;
+        bottom: 0;
+        z-index: 10;
+        /* Asegura que esté por encima del contenido */
+        background-color: white;
+        /* Color de fondo para visibilidad */
+        box-shadow: 0 -2px 5px rgba(0, 0, 0, 0.1);
+        /* Sombra opcional */
+    }
+
+    /* Asegura que la tabla no se desborde */
+    .sticky-footer {
+        margin: 0;
+        width: 100%;
+        border-collapse: collapse;
+    }
+</style>
+
+{% block body %}
+
+<div class="row align-items-center border-bottom mb-2 py-1">
+    <div class="col d-flex align-items-center">
+        <button id="toggle-sidebar" class="btn btn-warning btn-sm me-2 btnMenu" title="Mostrar/Ocultar menú">
+            <i class="fas fa-bars"></i>
+        </button>
+        <h6 class="page-title mb-0 fs-6 fw-bold">
+            {% if partida_id == '0' or partida_id == 0 %}
+            NUEVA PARTIDA MANUAL
+            {% else %}
+            EDITAR PARTIDA {{ num_partida }}
+            {% endif %}
+        </h6>
+    </div>
+</div>
+
+<hr>
+
+<div class="row">
+
+    <div class="row mb-3">
+
+        <div class="col-md-3">
+            <div class="form-group">
+                <label for="">Empresa:</label>
+                <select id="empresaPartida" class="form-select form-select-sm" name="empresaPartida">
+                    {% for e in empresasData %}
+                    <option value="{{ e.id }}">{{ e.nombre }}</option>
+                    {% endfor %}
+                </select>
+            </div>
+        </div>
+
+        <div class="col-md-3">
+            <div class="form-group">
+                <label for="">Sucursal:</label>
+                <select id="sucursalPartida" class="form-select form-select-sm" name="sucursalPartida">
+                    {% for s in sucursalesData %}
+                    <option value="{{ s.PKsucursal }}" {% if s.PKsucursal == FkSucursal %}selected{% endif %}>{{ s.NombreSucursal }}</option>
+                    {% endfor %}
+                </select>
+            </div>
+        </div>
+
+        <div class="col-md-3">
+            <div class="form-group">
+                <label for="NumeroDocto">Numero de Referencia de Documento:</label>
+                <input type="text" class="form-control form-control-sm" id="NumeroDocto" value="{{ NumeroDocto }}">
+            </div>
+        </div>
+
+        <div class="col-md-3">
+            <div class="form-group">
+                <label for="fechaPartida">Fecha Partida:</label>
+                <input type="date" class="form-control form-control-sm" id="fechaPartida"
+                    value="{{ fecha_hora_actual }}">
+            </div>
+        </div>
+
+        <div class="col-md-3">
+            <div class="form-group">
+                <label for="tasaCambio">Tasa de Cambio:</label>
+                <input type="number" class="form-control form-control-sm" id="tasaCambio" value="{{ tasaCambio }}"
+                    step="0.01">
+            </div>
+        </div>
+
+        <div class="col-md-3">
+            <div class="form-group">
+                <label for="">Tipo de Partida (Manuales):</label>
+                <select id="tipo_partida" class="form-select form-select-sm" name="tipo_partida">
+                    {% for tipo in tiposPartidasData %}
+                    {% if tipo.manual_automatica == 1 %}
+                    <option value="{{tipo.Codigo}}" {% if tipo.Codigo == TipoDocto %}selected{% endif %}>{{tipo.Codigo}} | {{ tipo.Nombre }}</option>
+                    {% endif %}
+                    {% endfor %}
+                </select>
+            </div>
+        </div>
+
+    </div>
+
+
+    <div class="row mb-2">
+        <div class="col-sm-12">
+            <div class="form-group">
+                <label for="sinopsisPartida">Sinopsis Partida:</label>
+                <textarea class="form-control form-control-sm" id="sinopsisPartida"
+                    placeholder="Sinopsis Partida">{{ sinopsis }}</textarea>
+            </div>
+        </div>
+    </div>
+
+    <hr>
+
+    <div class="table-responsive">
+
+        <table id="tablePartidaManual"
+            class="table table-striped table-bordered mb-0 table-sm rounded-4 table-hover align-middle"
+            style="width: 100%;">
+            <thead class="table-gradient text-dark">
+                <tr>
+                    <th>Codigo</th>
+                    <th>Sinopsis</th>
+                    <th>Debe</th>
+                    <th>Haber</th>
+                    <th>Gasto?</th>
+                    <th>Centro Costo</th>
+                    <th>Acciones</th>
+                </tr>
+            </thead>
+
+            <tbody id="tabla-datos">
+
+                <tr>
+                    <td>
+                        <select class="form-select form-select-sm codigo-select codigo_dom" id="codigo">
+                            <option value="" disabled selected>Seleccione una Cuenta</option>
+                            {% for cta in cuentasData %}
+                            <option value="{{cta.CodigoCuenta}}">{{ cta.CodigoCuenta }} | {{ cta.Concepto }}</option>
+                            {% endfor %}
+                        </select>
+                    </td>
+                    <td><input type="text" class="form-control form-control-sm" id="sinopsis"
+                            placeholder="Ingrese una Sinopsis"></td>
+                    <td><input type="text" class="form-control form-control-sm formattedMoneyInputs" id="debe"
+                            placeholder="0.00"></td>
+                    <td><input type="text" class="form-control form-control-sm formattedMoneyInputs" id="haber"
+                            placeholder="0.00"></td>
+
+                    <!-- Nuevo campo gasto -->
+                    <td class="text-center">
+                        <input type="checkbox" class="form-check-input aplica-gasto" id="chkGasto">
+                    </td>
+
+                    <!-- Nuevo campo centro -->
+                    <td>
+                        <select class="form-select form-select-sm centro-select" id="centro">
+                            <option value="">-- Seleccione Centro --</option>
+                            {% for c in centrosData %}
+                            <option value="{{ c.id_centro }}">{{ c.nombre_centro }}</option>
+                            {% endfor %}
+                        </select>
+                    </td>
+
+                    <td>
+                        <button type="button" class="btn btn-sm btn-primary" id="agregar">
+                            <i class="fas fa-plus"></i>
+                        </button>
+                    </td>
+                </tr>
+
+
+                {% for d in detallesPartidaData %}
+                <tr>
+                    <td>
+                        <select class="form-select form-select-sm codigo-select codigo_dom">
+                            {% for cta in cuentasData %}
+                            <option value="{{cta.CodigoCuenta}}" {% if d.CodigoCuenta == cta.CodigoCuenta%}selected{%endif %}>
+                                {{ cta.CodigoCuenta }} | {{ cta.Concepto }}
+                            </option>
+                            {% endfor %}
+                        </select>
+                    </td>
+                    <td class="editable sinopsis" contenteditable="true">{{ d.Sinopsis }}</td>
+                    <td class="editable debe text-right" contenteditable="true">{{ d.Debe }}</td>
+                    <td class="editable haber text-right" contenteditable="true">{{ d.Haber }}</td>
+                    <td class="text-center">
+                        <input type="checkbox" class="form-check-input aplica-gasto" {% if d.aplica_gastos == 1%}checked{% endif %}>
+                    </td>
+                    <td>
+                        <select class="form-select form-select-sm centro-select" {% if d.aplica_gastos == 0%}disabled{% endif %}>
+                            <option value="">-- Seleccione Centro --</option>
+                            {% for c in centrosData %}
+                            <option value="{{ c.id_centro }}" {% if d.id_centro == c.id_centro %}selected{% endif %}>{{c.nombre_centro }}</option>
+                            {% endfor %}
+                        </select>
+                    </td>
+                    <td>
+                        <button type="button" class="btn btn-sm btn-danger eliminar">
+                            <i class="fas fa-trash"></i>
+                        </button>
+                    </td>
+                </tr>
+                {% endfor %}
+
+
+            </tbody>
+
+        </table>
+
+    </div>
+</div>
+
+<br><br>
+
+<div class="sticky-bottom bg-white border-top shadow-sm">
+    <table class="table table-bordered table-striped table-sm mb-0 rounded-4 table-hover">
+        <tbody>
+            <tr>
+                <td class="text-end fw-bold">
+                    <b>Total Partida:</b>
+                </td>
+                <td>
+                    <input type="text" class="form-control form-control-sm text-end cleanInputs formattedMoneyInputs"
+                        id="totalPartida" value="{{ balance }}">
+                </td>
+                <td class="text-end fw-bold">
+                    <b>Total DEBE:</b>
+                </td>
+                <td>
+                    <input type="text" class="form-control form-control-sm text-end cleanInputs" id="totalDebe" readonly
+                        value="0.00">
+                </td>
+                <td class="text-end fw-bold">
+                    <b>Total HABER:</b>
+                </td>
+                <td>
+                    <input type="text" class="form-control form-control-sm text-end cleanInputs" id="totalHaber"
+                        readonly value="0.00">
+                </td>
+                <td class="text-end">
+                    <!-- <button type="button" class="btn btn-success btn-sm" id="btnGuardar">Guardar</button> -->
+                    <button type="button" class="btn btn-warning btn-sm" id="btnPreview">
+                        <i class="fas fa-eye"></i> Previsualizar
+                    </button>
+                </td>
+            </tr>
+        </tbody>
+    </table>
+</div>
+
+
+<a href="{% url 'panel_contabilidad' %}">
+    <button class="btn btn-sm btn-danger" id="btnCerrar" title="Cerrar"
+        style="position: fixed; bottom: 20px; right: 20px;">
+        <i class="fa fa-times"></i> Cerrar
+    </button>
+</a>
+
+{% include 'contabilidad/modales_contabilidad/m_previsualizar_partida_manual.html' %}
+
+
+{% endblock %}
+
+
+
+{% block scripts %}
+
+<script>
+    $(document).ready(function () {
+        var partida_id = "{{ partida_id }}";
+        var empresa_id = "{{ empresa }}";
+        var csrfToken = "{{ csrf_token }}";
+
+        console.log(partida_id);
+
+        if (partida_id == 0) {
+            var opcion = 1;
+
+            $('#NumeroDocto').val('');
+            $('#sinopsis').val('');
+            $('.cleanInputs').val(0.00);
+
+            getTasaCambioActual();
+        } else {
+            var opcion = 2;
+
+            $('#sucursalPartida').val('{{ FkSucursal }}').change();
+            $('#tipo_partida').val('{{ TipoDocto }}').change();
+        }
+
+        $('#empresaPartida').val(empresa_id).change();
+
+        $('.codigo_dom, .codigo-select').select2({ width: '100%' });
+
+        var toastMixin = Swal.mixin({
+            toast: true,
+            icon: 'success',
+            title: 'General Title',
+            animation: false,
+            position: 'top-right',
+            showConfirmButton: false,
+            timer: 2000,
+            timerProgressBar: true,
+            didOpen: (toast) => {
+                toast.addEventListener('mouseenter', Swal.stopTimer);
+                toast.addEventListener('mouseleave', Swal.resumeTimer);
+            }
+        });
+
+        let dollarUSLocale = Intl.NumberFormat("en-US", {
+            minimumFractionDigits: 2,
+            maximumFractionDigits: 2
+        });
+
+        let intergerLocale = Intl.NumberFormat("en-US", {
+            minimumFractionDigits: 0,
+            maximumFractionDigits: 0
+        });
+
+        $('#tablePartidaManual').DataTable({
+            autoWidth: false,
+            scrollX: true,
+            scrollY: '350px',
+            scrollCollapse: true,
+            pageLength: 15,
+            dom: 'tip',
+            order: [], // Desactiva el ordenamiento inicial
+            columnDefs: [
+                { orderable: false, targets: '_all' } // Desactiva el ordenamiento para todas las columnas
+            ]
+        });
+
+
+        $('#empresaPartida').change(function (e) {
+            e.preventDefault();
+
+            const empresa = $(this).val();
+
+            const nuevaURL = "{% url 'conta_new_edit_partida' 0 2 %}".replace(2, empresa);
+
+            window.location.href = nuevaURL;
+        });
+
+        $('#fechaPartida').change(function (e) {
+            e.preventDefault();
+
+            getTasaCambioActual();
+        });
+
+        function getTasaCambioActual() {
+            fecha_partida = $('#fechaPartida').val().trim();
+
+            $.ajax({
+                url: "{% url 'get_tasa_cambio_x_fecha' %}",
+                type: 'POST',
+                data: {
+                    fecha_partida: fecha_partida,
+                    csrfmiddlewaretoken: csrfToken
+                },
+                success: function (data) {
+                    if (data.save == 1) {
+                        $('#tasaCambio').val(data.tasa_cambio);
+                    } else {
+                        $('#tasaCambio').val(0.00);
+                    }
+                }
+            });
+        }
+
+
+        $('#agregar').click(function () {
+            const codigoConcepto = $('#codigo').val();
+            const codigo = codigoConcepto;
+            const sinopsis = $('#sinopsis').val();
+            const debe = parseFloat($('#debe').val().replace(/,/g, "")) || 0;
+            const haber = parseFloat($('#haber').val().replace(/,/g, "")) || 0;
+            const aplicaGasto = $('#chkGasto').is(':checked') ? 1 : 0;
+            const centroId = $('#centro').val();
+            const centroNombre = $('#centro option:selected').text();
+
+            // === VALIDACIONES ===
+            if (!codigo) {
+                Swal.fire("", "Seleccione un código.", "warning");
+                return;
+            }
+            if (!sinopsis.trim()) {
+                Swal.fire("", "Ingrese una sinopsis.", "warning");
+                return;
+            }
+            if ((debe === 0 && haber === 0) || (debe > 0 && haber > 0)) {
+                Swal.fire("", "Debe llenar solo uno de los campos: Debe o Haber.", "warning");
+                return;
+            }
+            if (aplicaGasto === 1 && (!centroId || centroId === "")) {
+                Swal.fire("", "Si marca 'Gasto', debe seleccionar un centro.", "warning");
+                return;
+            }
+
+            const opcionesSelect = $('#codigo').html();
+            const opcionesCentro = $('#centro').html();
+
+            // === NUEVA FILA ===
+            const nuevaFila = `
+                <tr>
+                    <td>
+                        <select class="form-select form-select-sm codigo-select">
+                            ${opcionesSelect}
+                        </select>
+                    </td>
+                    <td class="editable sinopsis" contenteditable="true">${sinopsis}</td>
+                    <td class="editable debe text-right" contenteditable="true">${debe > 0.00 ? dollarUSLocale.format(debe) : 0.00}</td>
+                    <td class="editable haber text-right" contenteditable="true">${haber > 0.00 ? dollarUSLocale.format(haber) : 0.00}</td>
+                    <td class="text-center">
+                        <input type="checkbox" class="form-check-input aplica-gasto" ${aplicaGasto ? 'checked' : ''}>
+                    </td>
+                    <td>
+                        <select class="form-select form-select-sm centro-select" ${aplicaGasto ? '' : 'disabled'}>
+                            ${opcionesCentro}
+                        </select>
+                    </td>
+                    <td>
+                        <button type="button" class="btn btn-sm btn-danger eliminar">
+                            <i class="fas fa-trash"></i>
+                        </button>
+                    </td>
+                </tr>
+            `;
+
+            // === AGREGAR A LA TABLA ===
+            $('#tabla-datos').append(nuevaFila);
+
+            // Marcar los selects
+            $('#tabla-datos tr:last .codigo-select').val(codigoConcepto);
+            if (aplicaGasto && centroId) {
+                $('#tabla-datos tr:last .centro-select').val(centroId);
+            }
+
+            $('.codigo-select, .centro-select').select2({ width: '100%' });
+
+            // Actualizar totales
+            actualizarTotales();
+
+            // Limpiar campos
+            $('#codigo').val('').change();
+            $('#sinopsis').val('');
+            $('#debe').val('');
+            $('#haber').val('');
+            $('#chkGasto').prop('checked', false);
+            $('#centro').val('').change();
+            $('#centro').prop('disabled', true);
+        });
+
+
+        // === DESHABILITAR SELECT DE CENTRO POR DEFECTO EN LA FILA NUEVA ===
+        $('#centro').prop('disabled', true);
+
+        // === HABILITAR/DESHABILITAR SELECT SEGÚN CHECK ===
+        $(document).on('change', '.aplica-gasto', function () {
+            const fila = $(this).closest('tr');
+            const centroSelect = fila.find('.centro-select');
+
+            if ($(this).is(':checked')) {
+                centroSelect.prop('disabled', false);
+            } else {
+                centroSelect.val('').trigger('change').prop('disabled', true);
+            }
+        });
+
+        // === TAMBIÉN PARA EL CHECK DE LA FILA INICIAL (INPUT NUEVO) ===
+        $('#chkGasto').change(function () {
+            if ($(this).is(':checked')) {
+                $('#centro').prop('disabled', false);
+            } else {
+                $('#centro').val('').prop('disabled', true);
+            }
+        });
+
+
+        $('#tabla-datos').on('blur', '.editable', function () {
+            actualizarTotales();
+        });
+
+        // Eliminar fila
+        $('#tabla-datos').on('click', '.eliminar', function () {
+            $(this).closest('tr').remove();
+            actualizarTotales();
+        });
+
+        // Actualizar totales
+        function actualizarTotales() {
+            let totalDebe = 0;
+            let totalHaber = 0;
+
+            $('#tabla-datos tr').each(function () {
+                const debe = parseFloat($(this).find('.debe').text().replace(/,/g, "")) || 0;
+                const haber = parseFloat($(this).find('.haber').text().replace(/,/g, "")) || 0;
+
+                totalDebe += debe;
+                totalHaber += haber;
+            });
+
+            $('#totalDebe').val(dollarUSLocale.format(totalDebe));
+            $('#totalHaber').val(dollarUSLocale.format(totalHaber));
+
+            // Si "Total Partida" debe ser el monto de la partida, normalmente es el totalDebe (o totalHaber, son iguales).
+            $('#totalPartida').val(dollarUSLocale.format(totalDebe));
+        }
+
+        actualizarTotales();
+
+
+
+
+        // === DESHABILITAR O HABILITAR CENTROS EN FILAS EXISTENTES ===
+        $('#tabla-datos tbody tr').each(function () {
+            const chk = $(this).find('.aplica-gasto');
+            const centro = $(this).find('.centro-select');
+
+            if (chk.length) {
+                if (chk.is(':checked')) {
+                    centro.prop('disabled', false);
+                } else {
+                    centro.val('').prop('disabled', true);
+                }
+            }
+        });
+
+
+
+        $('#btnPreview').click(function () {
+            const sinopsis = $('#sinopsisPartida').val();
+            const fecha = $('#fechaPartida').val();
+            const empresa = $('#empresaPartida option:selected').text();
+            const sucursal = $('#sucursalPartida option:selected').text();
+            const usuario = '{{ request.session.userName }}';
+            const tasa = $('#tasaCambio').val();
+
+            const debe = parseFloat($('#totalDebe').val().replace(/,/g, "")) || 0;
+            const haber = parseFloat($('#totalHaber').val().replace(/,/g, "")) || 0;
+            const totalPartida = parseFloat($('#totalPartida').val().replace(/,/g, "")) || 0;
+
+            // Validar igualdad de montos
+            if (debe !== haber) {
+                Swal.fire("", "El Total DEBE y el Total HABER deben ser iguales.", "warning");
+                return;
+            }
+
+            if (totalPartida != debe || totalPartida != haber) {
+                Swal.fire("", "El Total de la Partida con el Total DEBE y el Total HABER deben ser iguales.", "warning");
+                return;
+            }
+
+            const filas = [];
+            let totalDebe = 0;
+            let totalHaber = 0;
+
+            $('#tabla-datos tr').each(function () {
+                // Detectar si es fila base o fila agregada
+                const codigoSelect = $(this).find('.codigo-select');
+                const codigo = codigoSelect.val();
+                const texto = codigoSelect.find('option:selected').text().trim();
+
+                // Si es fila base (editable)
+                const sinopsisFila = $(this).find('.sinopsis, #sinopsis').val() || $(this).find('.sinopsis, #sinopsis').text().trim();
+                const debe = parseFloat(($(this).find('.debe, #debe').val() || $(this).find('.debe, #debe').text()).replace(/,/g, "")) || 0;
+                const haber = parseFloat(($(this).find('.haber, #haber').val() || $(this).find('.haber, #haber').text()).replace(/,/g, "")) || 0;
+                const aplicaGasto = $(this).find('.aplica-gasto, #chkGasto').is(':checked');
+                const centro = aplicaGasto ? $(this).find('.centro-select option:selected').text().trim() : '';
+
+
+                console.log(codigo + " " + sinopsisFila + " Debe: " + debe + " Haber: " + haber);
+
+                if (codigo && sinopsisFila && (debe !== 0 || haber !== 0)) {
+                    filas.push({ codigo, texto, sinopsisFila, debe, haber, aplicaGasto, centro });
+                    totalDebe += debe;
+                    totalHaber += haber;
+                }
+            });
+
+            // Llenar los datos del modal
+            $('#prevSinopsis').text(sinopsis);
+            $('#prevFecha').text(fecha);
+            $('#prevEmpresa').text(empresa);
+            $('#prevSucursal').text(sucursal);
+            $('#prevUsuario').text(usuario);
+            $('#prevTasa').text(tasa);
+
+            console.log(filas);
+
+            let html = '';
+            filas.forEach(f => {
+                html += `
+                    <tr>
+                        <td>${f.codigo}</td>
+                        <td>${f.texto}</td>
+                        <td>${f.sinopsisFila}</td>
+                        <td class="text-center">${dollarUSLocale.format(f.debe)}</td>
+                        <td class="text-center">${dollarUSLocale.format(f.haber)}</td>
+                        <td class="text-center">${f.aplicaGasto ? '<i class="fas fa-check text-success"></i>' : '-'}</td>
+                        <td>${f.centro || '-'}</td>
+                    </tr>`;
+            });
+
+            $('#tablaPreviewBody').html(html);
+            $('#previewTotalDebe').text(dollarUSLocale.format(totalDebe));
+            $('#previewTotalHaber').text(dollarUSLocale.format(totalHaber));
+
+            const balance = totalDebe - totalHaber;
+            const balanceColor = balance === 0 ? 'text-success' : 'text-danger';
+            $('#previewBalance').html(`<span class="${balanceColor}">${dollarUSLocale.format(balance)}</span>`);
+
+            // Mostrar modal
+            $('#modalPreviewPartida').modal('show');
+        });
+
+
+
+        function obtenerDatosTabla() {
+            const datos = [];
+
+            $('#tabla-datos tr').each(function () {
+                const select = $(this).find('.codigo-select');
+                const codigo = select.val();
+                let texto = select.find('option:selected').text();
+
+                if (texto.includes('|')) {
+                    texto = texto.substring(texto.indexOf('|') + 1).trim();
+                }
+
+
+                const sinopsis = $(this).find('.sinopsis').text().trim();
+                const debe = parseFloat($(this).find('.debe').text().replace(/,/g, "")) || 0;
+                const haber = parseFloat($(this).find('.haber').text().replace(/,/g, "")) || 0;
+                const aplica_gastos = $(this).find('.aplica-gasto').is(':checked') ? 1 : 0;
+                const id_centro = aplica_gastos ? ($(this).find('.centro-select').val() || 0) : 0;
+
+                if (sinopsis !== '') {
+                    datos.push({
+                        detalle_id: 0,
+                        codigo: codigo,
+                        texto: texto,
+                        sinopsis: sinopsis,
+                        debe: debe,
+                        haber: haber,
+                        aplica_gastos: aplica_gastos,
+                        id_centro: id_centro
+                    });
+                }
+            });
+
+            return datos;
+        }
+
+
+        $('#btnConfirmarGuardar').click(function (e) {
+            e.preventDefault();
+
+            const tipo_partida = $('#tipo_partida').val();
+            const sinopsisPartida = $('#sinopsisPartida').val();
+            const tasa = $('#tasaCambio').val();
+            const fecha_partida = $('#fechaPartida').val();
+            const empresa = $('#empresaPartida').val();
+            const sucursal = $('#sucursalPartida').val();
+            const referencia = $('#NumeroDocto').val();
+
+            const debe = parseFloat($('#totalDebe').val().replace(/,/g, "")) || 0;
+            const haber = parseFloat($('#totalHaber').val().replace(/,/g, "")) || 0;
+            const balance = parseFloat($('#totalPartida').val().replace(/,/g, "")) || 0;
+
+            // Validar igualdad de montos
+            if (debe !== haber) {
+                Swal.fire("", "El Total DEBE y el Total HABER deben ser iguales.", "warning");
+                return;
+            }
+
+            if (balance != debe || balance != haber) {
+                Swal.fire("", "El Total de la Partida con el Total DEBE y el Total HABER deben ser iguales.", "warning");
+                return;
+            }
+
+            if (!referencia) {
+                Swal.fire("", "Debes agregar un Número de Referencia.", "warning");
+                return;
+            }
+
+            // Revisar centros faltantes
+            let faltantes = [];
+
+            $('#tabla-datos tbody tr').each(function (i) {
+                const aplicaGasto = $(this).find('.aplica-gasto').is(':checked');
+                const centro = $(this).find('.centro-select').val();
+
+                if (aplicaGasto && (!centro || centro === "")) {
+                    faltantes.push(i + 1);
+                    $(this).addClass('table-danger');
+                } else {
+                    $(this).removeClass('table-danger');
+                }
+            });
+
+            if (faltantes.length > 0) {
+                Swal.fire({
+                    title: "Centros pendientes",
+                    icon: "warning",
+                    html: `Las filas <b>${faltantes.join(', ')}</b> tienen "Gasto" marcado pero sin centro asignado.`,
+                    confirmButtonText: "Entendido",
+                });
+                return;
+            }
+
+            // Validación visual final del balance
+            const balanceDiff = debe - haber;
+            if (balanceDiff !== 0) {
+                Swal.fire({
+                    title: "Partida desequilibrada",
+                    html: `<b>El balance actual es ${balanceDiff.toFixed(2)}</b>. Corrige los valores antes de guardar.`,
+                    icon: "error",
+                    confirmButtonText: "Corregir",
+                });
+                return;
+            }
+
+            // Envío de datos
+            const arrDetalles = obtenerDatosTabla();
+
+            $.ajax({
+                url: "{% url 'insert_update_partidas_header_details' %}",
+                type: 'POST',
+                data: {
+                    partida_id: partida_id,
+                    tipo_partida: tipo_partida,
+                    sinopsisPartida: sinopsisPartida,
+                    empresa: empresa,
+                    fecha_partida: fecha_partida,
+                    balance: balance,
+                    balanceD: 0,
+                    tasa: tasa,
+                    debe: debe,
+                    haber: haber,
+                    arrDetalles: JSON.stringify(arrDetalles),
+                    sucursal: sucursal,
+                    referencia: referencia,
+                    opcion: opcion,
+                    csrfmiddlewaretoken: csrfToken
+                },
+                beforeSend: function () {
+                    Swal.fire({
+                        title: 'Guardando...',
+                        text: 'Espere un momento',
+                        allowOutsideClick: false,
+                        showConfirmButton: false,
+                        willOpen: () => Swal.showLoading()
+                    });
+                },
+                success: function (data) {
+                    Swal.close();
+                    if (data.save == 1) {
+
+                        if (data.existe == 1) {
+                            Swal.fire("", "Ya existe una partida con el mismo numero de referencia de Documento.", "warning");
+                        } else {
+                            Swal.fire("", opcion == 1 ? "Partida Guardada" : "Partida Editada", "success");
+                            window.location.reload();
+                        }
+
+                    } else {
+                        Swal.fire("", "Error D: " + data.error, "error");
+                    }
+                }
+            });
+        });
+
+
+
+
+        /*  */
+    });
+</script>
+{% endblock %}

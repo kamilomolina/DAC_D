@@ -1,0 +1,348 @@
+{% extends 'menu_nomina.html' %}
+{% load static %}
+
+{% block title %}
+TIPOS PLANILLAS
+{% endblock %}
+
+{% block body %}
+
+<body>
+    <div class="card p-2 crear-container">
+        <div class="row">
+            <div class="col-md-12">
+                <div class="card">
+                    <div class="card-body" style="background-color: #f4f6f9;">
+                        <div class="d-flex justify-content-between align-items-center mb-4 mt-2">
+                            <h4 class="text-primary">Tipos Planillas</h4>
+
+                            <button type="button" id="btnNuevoTipoPlanilla"
+                                class="btn btn-add-adicional animate__animated animate__pulse animate__slow animate__infinite"
+                                style="background-color: #f5c542; color: #ffffff;" data-bs-toggle="modal"
+                                data-bs-target="#modalClasesPlanilla">
+                                <i class="material-icons">add</i>
+                            </button>
+                        </div>
+
+                        <div class="table-responsive">
+                            <table id="tablaClasesPlanilla" class="table table-striped table-bordered table-top-border"
+                                style="width:100%">
+                                <thead>
+                                    <tr>
+                                        <th>ID</th>
+                                        <th>Descripción</th>
+                                        <th>Valor</th>
+                                        <th>Cód. Partida Automática</th>
+                                        <th>Usa cuenta por empleado</th>
+                                        <th>Código cuenta</th>
+                                        <th>Registrar gasto</th>
+                                        <th>Ingresa Patronal</th>
+                                        <th>Estado</th>
+                                        <th>Acciones</th>
+                                    </tr>
+                                </thead>
+                                <tbody></tbody>
+                            </table>
+                        </div>
+
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    {% include 'complementos/planilla/modal_clases_planilla.html' %}
+    {% include 'complementos/modales/modal_cuentas_contables_seleccionar.html' %}
+
+</body>
+{% endblock %}
+
+{% block scripts %}
+<script>
+    $(document).ready(function () {
+        var csrfToken = "{{ csrf_token }}";
+
+        // Toast
+        var toastMixin = Swal.mixin({
+            toast: true,
+            icon: 'success',
+            title: 'Acción realizada',
+            animation: false,
+            position: 'top-right',
+            showConfirmButton: false,
+            timer: 2000,
+            timerProgressBar: true,
+            didOpen: (toast) => {
+                toast.addEventListener('mouseenter', Swal.stopTimer);
+                toast.addEventListener('mouseleave', Swal.resumeTimer);
+            }
+        });
+
+        // ==========================
+        // DataTable
+        // ==========================
+        var dtClases = $('#tablaClasesPlanilla').DataTable({
+            ajax: {
+                url: "{% url 'nomina_listar_clases_planilla' %}",
+                type: "POST",
+                data: {
+                    csrfmiddlewaretoken: csrfToken
+                },
+                dataSrc: function (json) {
+                    if (!json.success) return [];
+                    return json.data;
+                }
+            },
+            columns: [
+                { data: "id_clase_planilla" },
+                { data: "descripcion_cargo_laboral" },
+                { data: "valor" },
+                { data: "codigo_partida_automatica" },
+                {
+                    data: "usa_cuenta_por_empleado",
+                    render: function (data) {
+                        return data === 1 ? 'SI APLICA' : 'NO APLICA';
+                    }
+                },
+                { data: "codigo_cuenta" },
+                {
+                    data: "registrar_gasto",
+                    render: function (data) {
+                        return data === 1 ? 'SI APLICA' : 'NO APLICA';
+                    }
+                },
+                {
+                    data: "aplica_patronal",
+                    render: function (data) {
+                        return data === 1 ? 'SI APLICA' : 'NO APLICA';
+                    }
+                },
+                {
+                    data: "estado",
+                    render: function (data) {
+                        if (data === 3) return '<span class="badge bg-danger">INACTIVO</span>';
+
+                        return '<span class="badge bg-success">ACTIVO</span>';
+                    }
+                },
+                {
+                    data: null,
+                    orderable: false,
+                    render: function (row) {
+                        return `
+                        <div class="btn-group">
+                            <button type="button"
+                                    class="btn btn-sm btn-warning js-edit"
+                                    data-id="${row.id_clase_planilla}"
+                                    data-descripcion="${row.descripcion_cargo_laboral}"
+                                    data-valor="${row.valor}"
+                                    data-codpartida="${row.codigo_partida_automatica}"
+                                    data-usacuenta="${row.usa_cuenta_por_empleado}"
+                                    data-codcuenta="${row.codigo_cuenta}"
+                                    data-registragasto="${row.registrar_gasto}"
+                                    data-aplicaPatronal="${row.aplica_patronal}">
+                                <i class="material-icons">edit</i>
+                            </button>
+                            <button type="button"
+                                    class="btn btn-sm btn-danger js-estado"
+                                    data-id="${row.id_clase_planilla}">
+                                <i class="material-icons">change_circle</i>
+                            </button>
+                        </div>`;
+                    }
+                }
+            ]
+        });
+
+        // ==========================
+        // Modal: nuevo
+        // ==========================
+        $('#btnNuevoTipoPlanilla').on('click', function () {
+            var form = document.getElementById('formClasePlanilla');
+            form.reset();
+
+            form.opc.value = '1';
+            form.id_clase_planilla.value = '';
+
+            $('#modalClasesPlanillaLabel').text('Nueva clase de planilla');
+
+            // selects a 0/1
+            $('#usa_cuenta_por_empleado').val('0');
+            $('#registrar_gasto').val('0');
+        });
+
+        // ==========================
+        // Modal: editar
+        // ==========================
+        $(document).on('click', '.js-edit', function () {
+            var btn = this.dataset;
+            var form = document.getElementById('formClasePlanilla');
+
+            form.reset();
+
+            form.opc.value = '2';
+            form.id_clase_planilla.value = btn.id;
+            form.descripcion_cargo_laboral.value = btn.descripcion;
+            form.valor.value = btn.valor;
+            form.codigo_partida_automatica.value = btn.codpartida;
+            form.usa_cuenta_por_empleado.value = btn.usacuenta;
+            form.codigo_cuenta.value = btn.codcuenta;
+            form.registrar_gasto.value = btn.registragasto;
+            form.aplica_patronal.value = btn.aplicaPatronal;
+
+            $('#modalClasesPlanillaLabel').text('Editar clase de planilla');
+
+            $('#modalClasesPlanilla').modal('show');
+        });
+
+        // ==========================
+        // Guardar (crear / editar)
+        // ==========================
+        $('#formClasePlanilla').on('submit', function (e) {
+            e.preventDefault();
+
+            var form = this;
+            var formData = {
+                csrfmiddlewaretoken: csrfToken,
+                opc: form.opc.value,
+                id_clase_planilla: form.id_clase_planilla.value || null,
+                descripcion_cargo_laboral: form.descripcion_cargo_laboral.value,
+                tipo: '',
+                valor: form.valor.value,
+                codigo_partida_automatica: form.codigo_partida_automatica.value,
+                usa_cuenta_por_empleado: form.usa_cuenta_por_empleado.value,
+                codigo_cuenta: form.codigo_cuenta.value,
+                registrar_gasto: form.registrar_gasto.value,
+                aplica_patronal: form.aplica_patronal.value
+            };
+
+            $.ajax({
+                url: "{% url 'nomina_guardar_clase_planilla' %}",
+                type: "POST",
+                data: formData,
+                success: function (data) {
+                    if (data.save == 1) {
+                        $('#modalClasesPlanilla').modal('hide');
+                        dtClases.ajax.reload(null, false);
+                        toastMixin.fire({
+                            icon: 'success',
+                            title: (form.opc.value == 1 ? 'Tipo Planilla Creada!' : 'Tipo Planilla Editada!')
+                        });
+                    } else {
+                        Swal.fire('Error', data.error + 'No se pudo guardar', 'error');
+                    }
+                },
+                error: function () {
+                    Swal.fire('Error', 'Error de comunicación con el servidor', 'error');
+                }
+            });
+        });
+
+        // ==========================
+        // Cambiar estado
+        // ==========================
+        $(document).on('click', '.js-estado', function () {
+            var id = $(this).data('id');
+
+            Swal.fire({
+                title: '¿Cambiar estado?',
+                text: 'Se habilitará / deshabilitará esta clase de planilla.',
+                icon: 'warning',
+                showCancelButton: true,
+                confirmButtonText: 'Sí, continuar',
+                cancelButtonText: 'Cancelar'
+            }).then((result) => {
+                if (!result.isConfirmed) return;
+
+                $.ajax({
+                    url: "{% url 'nomina_cambiar_estado_clase_planilla' %}",
+                    type: "POST",
+                    data: {
+                        csrfmiddlewaretoken: csrfToken,
+                        id_clase_planilla: id
+                    },
+                    success: function (data) {
+                        if (data.save == 1) {
+                            dtClases.ajax.reload(null, false);
+                            toastMixin.fire({
+                                icon: 'success',
+                                title: 'Estado Actualizado'
+                            });
+                        } else {
+                            Swal.fire('Error', data.error || 'No se pudo actualizar el estado', 'error');
+                        }
+                    },
+                    error: function () {
+                        Swal.fire('Error', 'Error de comunicación con el servidor', 'error');
+                    }
+                });
+
+            });
+        });
+
+
+
+
+        $("#tablaCuentas").DataTable({
+            ajax: {
+                url: `{% url 'list_all_cuentas_grado' %}`,
+                type: "POST",
+                data: {
+                    csrfmiddlewaretoken: csrfToken
+                },
+                dataSrc: function (json) {
+                    if (!json.success) return [];
+                    return json.data;
+                }
+            },
+            columns: [
+                { data: "CodigoCuenta" },
+                { data: "Concepto" },
+                {
+                    data: null,
+                    orderable: false,
+                    render: function (row) {
+                        return `
+                    <button class="btn btn-success btn-sm btnSeleccionCuentaGeneral"
+                            data-codigo="${row.CodigoCuenta}"
+                            data-cuenta="${row.Concepto}">
+                        <i class="fas fa-arrow-right"></i>
+                    </button>
+                `;
+                    }
+                }
+            ],
+            language: { url: "//cdn.datatables.net/plug-ins/1.13.6/i18n/es-ES.json" }
+        });
+
+
+        $(document).on("click", ".btnBuscarCuentaGeneral", function () {
+            $("#modalSeleccionCuenta").modal("show");
+        });
+
+
+        $(document).on("click", ".btnSeleccionCuentaGeneral", function () {
+
+            let codigo = $(this).data("codigo");
+            let concepto = $(this).data("cuenta");
+
+            const usaCentro = $("#usa_cuenta_por_empleado").val();
+
+            let codigoFinal = codigo;
+
+            // Si aplica por centro, eliminar los primeros 7 caracteres: 6-01-05-
+            if (usaCentro === "1") {
+                codigoFinal = codigo.substring(8);
+            }
+
+            // resultado final: "001-001 | SUELDOS ORDINARIOS"
+            const textoFinal = `${codigoFinal} | ${concepto}`;
+
+            $("#codigo_cuenta").val(textoFinal);
+
+            $("#modalSeleccionCuenta").modal("hide");
+        });
+
+    });
+</script>
+{% endblock %}

@@ -1,0 +1,609 @@
+{% extends 'plantilla_nueva.html' %} <!-- Asegúrate de usar el nombre correcto de tu plantilla base -->
+
+{% block title %}
+Ventas Perdidas
+{% endblock%}
+
+{% block icon %}
+<i class="material-icons">money_off</i>
+{% endblock %}
+
+{% block head %}
+<link href="https://fonts.googleapis.com/icon?family=Material+Icons+Outlined" rel="stylesheet">
+<script src="https://ajax.googleapis.com/ajax/libs/jquery/3.5.1/jquery.min.js"></script>
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/chosen/1.8.7/chosen.min.css">
+<script src="https://cdnjs.cloudflare.com/ajax/libs/jquery/3.5.1/jquery.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/chosen/1.8.7/chosen.jquery.min.js"></script>
+<link rel="stylesheet"
+    href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:opsz,wght,FILL,GRAD@24,400,0,0" />
+<link href="https://fonts.googleapis.com/icon?family=Material+Icons" rel="stylesheet">
+
+
+<style>
+    body {
+        background-color: #ffffff;
+        margin: 0;
+        padding: 0;
+        /* Eliminado el padding para que el body abarque toda la pantalla */
+        height: 100vh;
+        /* Ajuste para que el body use toda la altura de la pantalla */
+        width: 100vw;
+        /* Ajuste para que el body use toda la anchura de la pantalla */
+    }
+
+    .dataTables_filter {
+        float: left !important;
+    }
+
+    .estilo-uniforme {
+        font-size: 16px;
+        /* Tamaño de letra deseado */
+        /* Aquí puedes agregar cualquier otro estilo que desees uniformizar */
+    }
+
+    .header-buttons {
+        display: flex;
+        justify-content: space-between;
+        flex-wrap: wrap;
+        /* Permite que los botones se ajusten según el ancho disponible */
+        margin-bottom: 20px;
+        /* Espacio entre los botones y la tabla */
+    }
+
+    .btn-container {
+        display: flex;
+        justify-content: flex-end;
+        /* Alinea el contenido a la derecha */
+    }
+
+    .dataTables_filter {
+        display: none;
+    }
+
+    .form-control {
+        font-size: 16px;
+        /* Cambia este valor al tamaño de letra que prefieras */
+    }
+
+    .btn-azul-normal {
+        background-color: #007bff;
+        /* Un azul normal */
+        color: white;
+        /* Letra blanca */
+        font-weight: bold;
+        /* Letra en negrita */
+        transition: background-color 0.3s ease;
+        /* Animación suave para el cambio de color */
+    }
+
+    .btn-azul-normal:hover {
+        background-color: #0056b3;
+        /* Un azul un poco más oscuro para el hover */
+    }
+
+    .button {
+        border: none;
+        color: white;
+        padding: 10px 20px;
+        font-size: 16px;
+        cursor: pointer;
+        border-radius: 5px;
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        width: 100%;
+        flex-basis: calc(33.333% - 20px);
+        margin: 10px;
+    }
+
+    .button span {
+        margin-right: 5px;
+        /* Ajusta el espacio entre el texto y el ícono */
+    }
+
+    .button i {
+        margin-left: 20px;
+        /* Espacio adicional entre el texto y el icono */
+    }
+
+    .button:hover {
+        transform: scale(1.05);
+    }
+
+    .btn-competencia {
+        background-color: #333740;
+    }
+
+    .btn-venta-perdida {
+        background-color: #2a3f54;
+    }
+
+    #editarCompetenciaForm input,
+    #editarCompetenciaForm textarea {
+        font-size: 16px;
+        /* Ajusta esto al tamaño de letra deseado */
+    }
+
+    #editarCompetenciaForm input,
+    #editarCompetenciaForm textarea {
+        font-size: 16px;
+        /* Ajusta esto al tamaño de letra deseado */
+    }
+
+    .btn-motivos {
+        background-color: #8b6e0d;
+    }
+
+    .row {
+        display: flex;
+        justify-content: space-between;
+        /* Opcional, dependiendo del diseño deseado */
+        width: 100%;
+    }
+
+    .nombre-competencia {
+        flex: 3;
+        /* Ocupa 3/4 del espacio disponible */
+    }
+
+    .id-competencia {
+        flex: 3;
+        /* Ocupa 3/4 del espacio disponible */
+
+    }
+
+    .nombre-cliente {
+        flex: 3;
+        /* Ocupa 1/4 del espacio disponible */
+    }
+
+    .id-cliente {
+        flex: 1;
+        /* Ocupa 1/4 del espacio disponible */
+    }
+
+    input[type="text"],
+    input[type="number"] {
+        padding: 10px;
+        margin: 10px 0;
+        /* Asegura espaciado vertical entre campos */
+        border: 1px solid #ccc;
+        border-radius: 4px;
+        /* Elimina los márgenes o paddings laterales específicos si los hubiera */
+    }
+
+    .column {
+        flex: 1;
+        /* Hace que cada columna ocupe un espacio equitativo */
+        padding: 0 10px;
+        /* Añade un poco de espacio entre las columnas */
+    }
+
+    input[type="text"],
+    input[type="number"] {
+        width: 100%;
+        /* Asegura que los inputs ocupen todo el ancho de su columna */
+        padding: 10px;
+        margin: 10px 0;
+        /* Espaciado entre inputs */
+        border: 1px solid #ccc;
+        border-radius: 4px;
+    }
+
+    /* Asegura que los elementos de la fila no tengan margen superior extra */
+    .row>div[class^="col-"],
+    .row>[class*=" col-"] {
+        margin-top: 0;
+    }
+
+    /* Ajusta la alineación superior de los elementos de la columna */
+    .form-group {
+        margin-bottom: 0;
+        /* Elimina o reduce el margen inferior si es necesario */
+    }
+
+    /* Si se utiliza un contenedor alrededor del 'row' que necesita un ajuste */
+    .contenedor-personalizado {
+        padding-top: 0;
+        /* Ajusta según el nombre real de tu clase contenedora si la hay */
+    }
+
+    h2 {
+        color: #2a3f54;
+        text-align: center;
+    }
+
+    .form-ventas-perdidas {
+        display: flex;
+        flex-wrap: wrap;
+        justify-content: space-between;
+        /* Espacia las secciones de forma uniforme */
+    }
+
+    .seccion {
+        border: 1px solid #ccc;
+        padding: 20px;
+        margin-bottom: 20px;
+        border-radius: 5px;
+        min-height: 250px;
+        /* Establece un mínimo de altura */
+    }
+
+
+    .seccion2 {
+        border: 1px solid #ccc;
+        padding: 20px;
+        margin-bottom: 20px;
+        border-radius: 5px;
+    }
+
+    .seccion h3 {
+        color: #333740;
+        font-size: 1rem;
+        margin-top: 0;
+    }
+
+    .chosen-select,
+    input[type="text"],
+    input[type="number"],
+    input[type="date"],
+    textarea,
+    select {
+        padding: 10px;
+        margin: 5px 0;
+        font-size: 0.8rem;
+        border: 1px solid #ccc;
+        border-radius: 4px;
+        width: calc(100% - 22px);
+    }
+
+    .input-group {
+        display: flex;
+        flex-direction: column;
+        width: 100%;
+        /* Establece el ancho del grupo de entrada para que coincida con el contenedor */
+    }
+
+    .input-field {
+        width: 100%;
+        /* Establece el ancho de todos los campos de entrada para que coincidan */
+        padding: 10px;
+        margin-bottom: 10px;
+        /* Espacio entre los campos */
+        border: 1px solid #ccc;
+        border-radius: 4px;
+    }
+
+
+    textarea {
+        resize: vertical;
+        height: 80px;
+    }
+
+    .acciones {
+        flex-basis: 100%;
+        /* Asegura que los botones de acción ocupen toda la fila */
+        display: flex;
+        justify-content: center;
+        padding-top: 10px;
+    }
+
+    button {
+        padding: 10px 20px;
+        margin: 0 10px;
+        border: none;
+        border-radius: 4px;
+        cursor: pointer;
+        color: white;
+    }
+
+    nav ul {
+        list-style-type: none;
+        /* Elimina los puntos de las listas */
+        padding: 0;
+        display: flex;
+        justify-content: center;
+    }
+
+    nav ul li a {
+        display: block;
+        padding: 10px 15px;
+        text-decoration: none;
+        /* Elimina el subrayado */
+        color: #333;
+        /* Color del texto */
+        border-radius: 5px;
+        /* Bordes redondeados */
+        transition: background-color 0.3s;
+        /* Transición suave */
+    }
+
+    /* Estilo para pestaña activa */
+    nav ul li a.active {
+        background-color: #8CB9BD;
+        /* Color de fondo de la pestaña activa */
+        color: #FEFBF6;
+        /* Color del texto de la pestaña activa */
+    }
+
+    /* Estilo al pasar el ratón */
+    nav ul li a:hover {
+        background-color: #ECB159;
+        /* Color al pasar el ratón */
+    }
+
+    /* Estilo al hacer clic */
+    nav ul li a:active {
+        background-color: #B67352;
+        /* Color al hacer clic */
+    }
+
+
+    .content-panel .input-field,
+    .content-panel .form-control {
+        width: 100%;
+        /* Asegura que todos los elementos tengan el ancho completo de su contenedor padre */
+        box-sizing: border-box;
+        /* Incluye padding y bordes en el ancho total */
+        padding: 10px;
+        /* Espacio interno para que el texto no esté pegado a los bordes */
+        margin-bottom: 10px;
+        /* Espacio entre los elementos */
+        border: 1px solid #ccc;
+        /* Borde común para todos */
+        border-radius: 4px;
+        /* Bordes redondeados */
+    }
+
+    .content-panel select,
+    .content-panel textarea,
+    .content-panel input[type="text"],
+    .content-panel input[type="date"] {
+        display: block;
+        /* Asegura que el elemento se renderice como un bloque, ocupando el ancho total */
+    }
+
+    .input-field {
+        width: 100%;
+        /* Establece el ancho al 100% del contenedor padre */
+        box-sizing: border-box;
+        /* Asegúrate de que el padding y border estén incluidos en el ancho */
+        margin-bottom: 10px;
+        /* Espacio entre elementos */
+    }
+
+    .input-group {
+        display: flex;
+        flex-direction: column;
+    }
+
+    .input-group .form-control {
+        margin-bottom: 10px;
+        /* espacio entre los elementos */
+    }
+
+    /* Puede que necesites ajustar el ancho y el margen dependiendo de tu diseño exacto */
+    .input-group .form-control {
+        width: calc(100% - 2px);
+        /* Ajusta el 100% si es necesario */
+        margin-right: auto;
+        margin-left: auto;
+    }
+
+    #tabla_programaciones_wrapper .dataTables_filter {
+        float: left;
+        text-align: left;
+    }
+
+    .button-container {
+        position: fixed;
+        top: 0;
+        left: 0;
+        width: 100%;
+        background-color: #fff;
+        z-index: 1000;
+        padding: 10px;
+        box-shadow: 0px 2px 4px rgba(0, 0, 0, 0.1);
+    }
+
+    .toggle-button {
+        margin-right: 20px;
+        padding: 10px 20px;
+        border: none;
+        border-radius: 30px;
+        background-color: transparent;
+        color: #007bff;
+        font-size: 18px;
+        font-weight: bold;
+        cursor: pointer;
+        transition: color 0.3s;
+    }
+
+    .toggle-button:hover {
+        color: #0056b3;
+    }
+
+    .toggle-button i {
+        margin-right: 10px;
+    }
+
+    .content {
+        position: absolute;
+        top: 50px;
+        right: 20px;
+        width: 300px;
+        background-color: #fff;
+        box-shadow: 0px 2px 4px rgba(0, 0, 0, 0.1);
+        border-radius: 10px;
+        padding: 20px;
+        display: none;
+    }
+
+    .content.active {
+        display: block;
+    }
+
+    .content h3 {
+        margin-top: 0;
+    }
+
+    .table-container {
+        margin-top: 70px;
+        /* Espacio para los botones */
+    }
+
+    .estilo-uniforme {
+        font-size: 16px;
+        /* Agrega aquí más estilos si es necesario */
+    }
+
+    #competenciaForm .form-control {
+        font-size: 16px !important;
+    }
+
+    .filter-label {
+        margin-bottom: .25rem;
+        /* Ajusta para reducir el espacio debajo de la etiqueta */
+        font-size: .875rem;
+        /* Opcional: Mantiene el tamaño de la fuente de la etiqueta reducido */
+    }
+
+    /* Mantén las demás reglas CSS como están */
+    .filter-input {
+        padding: .25rem .5rem;
+        /* Reduce el padding interno */
+        height: calc(1.5em + .5rem + 2px);
+        /* Ajusta la altura */
+    }
+
+    .row>[class^="col-"] {
+        padding-right: 5px;
+        padding-left: 5px;
+        /* Reduce el espacio entre columnas */
+    }
+
+
+    /* Resto del CSS */
+</style>
+{% endblock%}
+
+{% block content %}
+
+<div class="row">
+    <div class="col-lg-12"><!-- Usa row para una fila que contiene todas las columnas -->
+        <div class="seccion2">
+            <div class="row">
+                <!-- Elimina justify-content-start si quieres que empiece desde la izquierda -->
+                <div class="col-lg-3"> <!-- Ajusta según sea necesario para el ancho -->
+                    <div class="form-group">
+                        <label for="formatoSelect" class="col-form-label">Formato:</label>
+                        <select class="form-control form-control-sm" name="formato_select" id="formatoSelect">
+                            <option value="#">Seleccione un Formato</option>
+                            <option value="1">SUPERMERCADO</option>
+                            <option value="2">DISTRIBUIDORA</option>
+                        </select>
+                    </div>
+                </div>
+
+                <div class="col-lg-3"> <!-- Ajusta según sea necesario para el ancho -->
+                    <div class="form-group">
+                        <label for="almacen_select" class="col-form-label">Almacen:</label>
+                        <select class="form-control form-control-sm" name="almacen_select" id="almacen_select">
+                            <option value="#">Seleccione un almacen</option>
+                        </select>
+                    </div>
+                </div>
+
+                <div class="col-lg-3"> <!-- Ajusta según sea necesario para el ancho -->
+                    <div class="form-group">
+                        <label for="cliente_select" class="col-form-label">Cliente:</label>
+                        <select class="form-control form-control-sm" name="cliente_select" id="cliente_select">
+                        </select>
+                    </div>
+                </div>
+
+                <div class="col-lg-3 d-flex align-items-end">
+                    <button type="button" class="btn btn-primary mb-3" id="cargarBtn">Cargar</button>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+<div>
+    <form class="form-ventas-perdidas">
+        <div class="row">
+            <!-- Columna para la primera sección -->
+            <div class="col-md-6">
+                <div class="seccion">
+                    <h3>Información del Producto</h3>
+                    <div class="input-group">
+                        <select id="nombre_producto" class="form-control">
+                        </select>
+                        <select id="presentacion" class="form-control">
+                            <!-- Las opciones se cargarán dinámicamente -->
+                        </select>
+                        <input type="number" step="any" placeholder="Cantidad" name="cantidad" class="form-control">
+                        <input type="number" step="0.01" placeholder="Precio" name="precio" class="form-control">
+                        <input type="number" step="0.01" placeholder="Precio Mínimo" name="precio_min"
+                            class="form-control">
+                    </div>
+                </div>
+            </div>
+
+            <!-- Columna para la segunda sección -->
+            <div class="col-md-6">
+                <div class="seccion">
+                    <h3>Motivos de la venta perdida</h3>
+                    <div class="container">
+                        <nav>
+                            <ul>
+                                <li><a href="#inventario" id="inventarioTab">Inventario</a></li>
+                                <li><a href="#precio" id="precioTab">Precio</a></li>
+                                <li><a href="#servicio" id="servicioTab">Servicio</a></li>
+                            </ul>
+                        </nav>
+                        <div class="content-panel" id="inventario" style="display:block;">
+                            <textarea placeholder="Comentario" name="comentario"></textarea>
+                            <input type="date" name="fecha">
+                        </div>
+                        <div class="content-panel" id="precio" style="display:none;">
+                            <h3>Competencia</h3>
+                            <div class="input-group">
+                                <select id="select_nombre_competencia_precio" class="input-field"
+                                    name="select_nombre_competencia_precio">
+                                    <option value="#">Seleccionar Competencia</option>
+                                    <!-- Opciones -->
+                                </select>
+                                <input type="text" class="input-field" placeholder="Precio Competencia"
+                                    name="precio_competencia">
+                                <textarea class="input-field" placeholder="Comentario"
+                                    name="comentario_precio"></textarea>
+                                <input type="date" class="input-field" name="fecha_precio">
+                            </div>
+                        </div>
+                        <div class="content-panel" id="servicio" style="display:none;">
+                            <h3>Competencia</h3>
+                            <div class="input-group">
+                                <select id="select_nombre_competencia_servicio" class="input-field"
+                                    name="select_nombre_competencia_servicio">
+                                    <option value="#">Seleccionar Competencia</option>
+                                    <!-- Opciones -->
+                                </select>
+                                <input type="text" class="input-field" placeholder="Precio Competencia"
+                                    name="precio_competencia_servicio">
+                                <textarea class="input-field" placeholder="Comentario"
+                                    name="comentario_servicio"></textarea>
+                                <input type="date" class="input-field" name="fecha_servicio">
+                                <select id="nombre_motivo" class="input-field" name="nombre_motivo">
+                                    <option value="">Seleccionar Motivo</option>
+                                    <!-- Añade más opciones aquí -->
+                                </select>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </form>
+</div>
+{% endblock%}

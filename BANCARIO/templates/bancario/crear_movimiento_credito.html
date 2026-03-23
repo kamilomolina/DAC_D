@@ -1,0 +1,1283 @@
+{% extends 'componentes/menu_bancario.html' %}
+{% load static %}
+
+{% block title %}
+CREAR MOVIMIENTO CREDITO
+{% endblock %}
+
+{% block body %}
+
+
+<div class="row align-items-center border-bottom mb-3 py-2 bg-white shadow-sm mx-0">
+  <div class="col d-flex align-items-center px-0">
+    <button id="toggle-sidebar" class="btn btn-primary btn-sm me-3 border-0 rounded-circle btnMenu"
+      style="width: 32px; height: 32px; padding: 0;">
+      <i class="fas fa-bars"></i>
+    </button>
+    <h6 class="page-title mb-0 fs-5 fw-bold text-dark">
+      <i class="fas fa-money-check-alt text-primary me-2"></i>CREAR {{ titulo_tipo }}
+    </h6>
+  </div>
+</div>
+
+<input type="hidden" id="id_empresa" value="{{ id_empresa }}" />
+<input type="hidden" id="fkTipoMovimiento" value="{{ fkTipoMovimiento }}" />
+
+<div class="container-fluid px-0 mt-3">
+  <form id="frmMovimiento">
+    <div class="row g-2 mx-0">
+      <!-- ===================================================== -->
+      <!-- COLUMNA IZQUIERDA : MOVIMIENTO -->
+      <!-- ===================================================== -->
+      <div class="col-md-5">
+        <div class="card card-banco p-2 h-100">
+          <div class="d-flex justify-content-between align-items-center mb-2">
+            <div class="small text-muted">
+              <i class="fas fa-university me-1"></i>
+              Movimiento
+            </div>
+
+            <span class="badge bg-light border text-dark" id="badgeMoneda">
+              <i class="fas fa-coins me-1"></i>Moneda: --
+            </span>
+          </div>
+
+          <div class="row g-2">
+            <div class="col-md-6">
+              <label class="fw-semibold">Empresa</label>
+              <select id="selectEmpresa" class="form-select form-select-sm">
+                {% for e in empresasData %}
+                <option value="{{ e.PkEmpresa }}">{{ e.NombreEmpresa }}</option>
+                {% endfor %}
+              </select>
+            </div>
+
+            <div class="col-md-6">
+              <label class="fw-semibold">Sucursal</label>
+              <select id="filtroSucursal" class="form-select form-select-sm">
+                <option value="0">Seleccione...</option>
+                {% for s in sucursalesData %}
+                <option value="{{ s.PKsucursal }}">
+                  {{ s.NombreSucursal }}
+                </option>
+                {% endfor %}
+              </select>
+            </div>
+
+            <div class="col-md-6">
+              <label class="fw-semibold">Banco</label>
+              <select id="selectBanco" class="form-select form-select-sm">
+                <option value="0">Seleccione un Banco</option>
+                {% for b in bancosData %}
+                <option value="{{ b.PkCatBanco }}" data-img="data:image/png;base64,{{ b.ImagenBanco }}">
+                  {{ b.Banco }}
+                </option>
+                {% endfor %}
+              </select>
+
+              <div class="text-center mt-2">
+                <img id="imgBanco" style="max-height: 70px; max-width: 200px" />
+              </div>
+            </div>
+
+            <div class="col-md-6">
+              <label class="fw-semibold">Cuenta</label>
+              <select id="selectCuenta" class="form-select form-select-sm">
+                <option value="0">Seleccione...</option>
+              </select>
+            </div>
+
+            <div class="col-md-4">
+              <label class="fw-semibold">Fecha</label>
+              <input type="date" id="fecha" class="form-control form-control-sm"
+                value="{{ fecha_actual|date:'Y-m-d' }}" />
+            </div>
+
+            <div class="col-md-4">
+              <label class="fw-semibold">Número</label>
+              <input type="text" id="numero" class="form-control form-control-sm" />
+            </div>
+
+            <div class="col-md-4">
+              <label class="fw-semibold">Valor Doc.</label>
+              <input type="text" id="valorDoc" class="form-control form-control-sm text-end formattedMoneyInputs" />
+            </div>
+
+            <input type="hidden" id="valorDocLps" />
+
+            <div class="col-md-12">
+              <label class="fw-semibold">Concepto General</label>
+              <textarea id="conceptoGeneral" class="form-control form-control-sm" rows="2"></textarea>
+            </div>
+
+            <!-- MONTO LETRAS -->
+            <div class="col-md-12">
+              <label class="fw-semibold">Monto en Letras:</label>
+              <div class="alert alert-info p-1 mb-0" id="montoLetras">---</div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- ===================================================== -->
+      <!-- COLUMNA DERECHA : PROCEDENCIA / DETALLE -->
+      <!-- ===================================================== -->
+      <div class="col-md-7">
+        <div class="card card-banco p-2 h-100">
+          <div class="small text-muted mb-2">
+            <i class="fas fa-list me-1"></i>
+            Agregar Procedencia
+          </div>
+
+          <div class="row g-2 align-items-end">
+            <div class="col-md-3">
+              <label>Procedencia</label>
+              <select id="selectProcedencia" class="form-select form-select-sm">
+                <option value="0">Seleccione...</option>
+                {% for p in procedenciasData %}
+                <option value="{{ p.PkCatProcedenciaD }}" data-devoltc="{{ p.DevolTC }}"
+                  data-devolprovee="{{ p.DevolProvee }}" data-depositocliente="{{ p.DepositoCliente }}"
+                  data-anticipoproveedor="{{ p.AnticipoProveedor }}" data-depositotransito="{{ p.DepositoTransito }}"
+                  data-FkSucursal="{{ p.FkSucursal }}">
+                  {{ p.ProcedenciaDMov }}
+                </option>
+                {% endfor %}
+              </select>
+            </div>
+
+            <div class="col-md-2">
+              <label>Tipo</label>
+              <select id="selectTipoDetalle" class="form-select form-select-sm">
+                <option value="0">Seleccione...</option>
+                {% for td in tiposDoctoData %}
+                <option value="{{ td.PkDocumento }}" data-cheque="{{td.EsCheque}}">
+                  {{ td.DescripcionDocumento }}
+                </option>
+                {% endfor %}
+              </select>
+            </div>
+
+            <div class="col-md-3">
+              <label>Banco</label>
+              <select id="selectBancoDetalle" class="form-select form-select-sm">
+                <option value="0">Seleccione...</option>
+                {% for b in bancosData %}
+                <option value="{{ b.PkCatBanco }}">{{ b.Banco }}</option>
+                {% endfor %}
+              </select>
+            </div>
+
+            <div class="col-md-2">
+              <label>Cuenta</label>
+              <select id="selectCuentaDetalle" class="form-select form-select-sm">
+                <option value="0">Seleccione...</option>
+              </select>
+            </div>
+
+            <!-- <div class="col-md-3" id="wrapPagoProveedor">
+              <label>Pago a Proveedor</label>
+              <select
+                id="selectPagoProveedor"
+                class="form-select form-select-sm"
+              >
+                <option value="0">Seleccione...</option>
+                {% for pp in pagosProveedorData %}
+                <option value="{{ pp.PkMov }}">{{ pp.Descripcion }}</option>
+                {% endfor %}
+              </select>
+            </div> -->
+
+            <div class="col-md-2">
+              <label>Número</label>
+              <input type="text" id="numeroDetalle" class="form-control form-control-sm" />
+            </div>
+
+            <div class="col-md-3">
+              <label>Valor</label>
+              <input type="text" id="valor" class="form-control form-control-sm text-end formattedMoneyInputs" />
+            </div>
+
+            <input type="hidden" id="valorLps" />
+
+            <div class="col-md-2">
+              <label>Librador</label>
+              <input type="text" id="libradorDetalle" class="form-control form-control-sm" />
+            </div>
+
+            <div class="col-md-4 d-none" id="wrapTarjeta">
+              <label>Tarjeta</label>
+              <select id="selectTarjeta" class="form-select form-select-sm">
+                <option value="0">Seleccione...</option>
+                {% for t in tarjetasData %}
+                <option value="{{ t.PkTarjetaCredito }}">
+                  {{ t.NoTarjetaCredito }} | {{ t.Emisor }} | {{ t.Banco }}
+                </option>
+                {% endfor %}
+              </select>
+            </div>
+
+            <div class="col-md-3 d-none" id="wrapCliente">
+              <label>Cliente:</label>
+              <select id="selectCliente" class="form-select form-select-sm">
+                <option value="0">Seleccione Cliente</option>
+                {% for c in clientesData %}
+                <option value="{{c.PKCliente}}" data-id="{{c.PKCliente}}" data-codigo_cliente="{{c.Codigo}}">
+                  {{c.NombreConocido}}
+                </option>
+                {% endfor %}
+              </select>
+            </div>
+
+            <div class="col-md-12">
+              <label>Concepto</label>
+              <textarea id="conceptoDetalle" class="form-control form-control-sm" rows="2"></textarea>
+            </div>
+
+            <div class="col-md-2 mt-2">
+              <label>&nbsp;</label>
+              <button type="button" id="btnAgregarDetalle" class="btn btn-success btn-sm w-100 fw-bold">
+                <i class="fas fa-plus"></i> Agregar
+              </button>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- ===================================================== -->
+    <!-- TABLAS INFERIORES -->
+    <!-- ===================================================== -->
+    <div class="row align-items-start mt-3 mx-0">
+
+      <!-- ===================================================== -->
+      <!-- TABLA CAJAS (Oculta por defecto) -->
+      <!-- ===================================================== -->
+      <div class="col-md-6 d-none ps-0" id="wrapTablaCajas">
+        <div class="card card-banco p-2 h-100 shadow-sm border-0 rounded-4">
+          <div class="d-flex justify-content-between align-items-center mb-2">
+            <div class="small text-muted fw-bold text-danger">
+              <i class="fas fa-cash-register me-1"></i>
+              Liquidación de Salidas Pendientes
+            </div>
+
+            <div class="d-flex align-items-center gap-2">
+              <input type="date" id="filtroFechaInicioCajas" class="form-control form-control-sm" title="Fecha Inicio">
+              <span class="text-muted small fw-bold">al</span>
+              <input type="date" id="filtroFechaFinCajas" class="form-control form-control-sm" title="Fecha Fin">
+              <button type="button" class="btn btn-sm btn-outline-secondary" id="btnLimpiarFechasCajas"
+                title="Limpiar Filtro">
+                <i class="fas fa-eraser"></i>
+              </button>
+            </div>
+          </div>
+          <div class="table-responsive">
+            <table class="table table-sm table-moderna table-bordered table-hover" id="tablaCajas">
+              <thead class="table-danger">
+                <tr>
+                  <th>N° Mov</th>
+                  <th>Fecha</th>
+                  <th>Notas</th>
+                  <th class="text-end">Saldo Disponible</th>
+                  <th class="text-center" width="140">Aplicar</th>
+                  <th>Turno/Usuario</th>
+                </tr>
+              </thead>
+              <tbody></tbody>
+              <tfoot>
+                <tr class="fw-bold bg-light">
+                  <td colspan="4" class="text-end">Total a Liquidar:</td>
+                  <td id="totalCajasAplicado" class="text-end text-danger">0.00</td>
+                  <td></td>
+                </tr>
+              </tfoot>
+            </table>
+          </div>
+        </div>
+      </div>
+
+      <!-- ===================================================== -->
+      <!-- TABLA DETALLES COMPLETA -->
+      <!-- ===================================================== -->
+      <div class="col-md-12 pe-0" id="wrapTablaDetalles">
+        <div class="card card-banco p-2 h-100 shadow-sm border-0 rounded-4">
+          <div class="small text-muted mb-2 fw-bold text-danger">
+            <i class="fas fa-cash-register me-1"></i>
+            Detalles del Movimiento
+          </div>
+          <div class="table-responsive">
+            <table class="table table-sm table-moderna table-bordered table-hover" id="tablaDetalle">
+              <thead class="table-light">
+                <tr>
+                  <!-- <th>Proced.</th>
+                  <th>Tarjeta</th>
+                  <th>Pago a Proveedor</th>
+                  <th>Cliente</th> -->
+                  <th>Tipo</th>
+                  <th>Banco</th>
+                  <th>Cuenta</th>
+                  <th>Número</th>
+                  <th>Librador</th>
+                  <th>Concepto</th>
+                  <th class="text-end">Valor</th>
+                  <th class="text-end">Valor Lps</th>
+                  <th width="40"></th>
+                </tr>
+              </thead>
+
+              <tbody></tbody>
+
+              <tfoot>
+                <tr class="fw-bold bg-light">
+                  <td colspan="6" class="text-end">Totales:</td>
+                  <td id="totalValor" class="text-end">0.00</td>
+                  <td id="totalValorLps" class="text-end">0.00</td>
+                  <td></td>
+                </tr>
+              </tfoot>
+            </table>
+          </div>
+        </div>
+      </div>
+
+    </div>
+
+    <!-- GUARDAR -->
+    <div class="d-flex justify-content-end mt-3">
+      <button type="button" id="btnGuardar" class="btn btn-success px-4">
+        <i class="fas fa-save me-1"></i>
+        Guardar Movimiento
+      </button>
+    </div>
+  </form>
+</div>
+
+<a href="{% url 'panel_bancario' %}">
+  <button class="btn btn-sm btn-danger" id="btnCerrar" title="Cerrar"
+    style="position: fixed; bottom: 20px; right: 20px">
+    <i class="fa fa-times"></i> Cerrar
+  </button>
+</a>
+
+{% endblock %} {% block scripts %}
+
+<script>
+  $(function () {
+    let detallesMovimiento = [];
+
+    const csrfToken = "{{ csrf_token }}";
+    const tipo = parseInt($("#fkTipoMovimiento").val() || 0);
+
+    const dollarUSLocale = new Intl.NumberFormat("en-US", {
+      minimumFractionDigits: 2,
+      maximumFractionDigits: 2,
+    });
+
+    $("#selectCliente").select2({
+      placeholder: "Seleccione un Cliente",
+      closeOnSelect: true,
+      width: "100%",
+      dropdownAutoWidth: true,
+    });
+
+    // =====================================================
+    // 🎨 COLOR DINÁMICO SEGÚN TIPO
+    // =====================================================
+    const colores = {
+      5: "#fff3e0",
+      6: "#fce4ec",
+      7: "#e8f5e9",
+    };
+
+    $(".card-banco").css("background", colores[tipo] || "#f8f9fa");
+
+    // =====================================================
+    // 🏢 EMPRESA
+    // =====================================================
+    $("#selectEmpresa").val($("#id_empresa").val());
+
+    $("#selectEmpresa").change(function () {
+      let emp = $(this).val();
+
+      $("form").each(function () { this.reset(); });
+      $(this).val(emp);
+
+      cargarSucursales();
+      cargarCuentas("#selectBanco", "#selectCuenta");
+
+      if ($("#selectBancoDep").length) {
+        cargarCuentas("#selectBancoDep", "#selectCuentaDep");
+      }
+    });
+
+    function cargarSucursales() {
+      let empresa = $("#selectEmpresa").val();
+
+      showLoadingScreen("Actualizando sucursales...");
+
+      $.get("{% url 'api_get_sucursales_usuario' %}", { empresa: empresa }, function (resp) {
+        Swal.close();
+        let html = '<option value="0">Seleccione...</option>';
+        if (resp.success && resp.data) {
+          resp.data.forEach(function (s) {
+            html += `<option value="${s.PKsucursal}">${s.NombreSucursal}</option>`;
+          });
+        }
+        $("#filtroSucursal").html(html);
+      }).fail(function () {
+        Swal.close();
+        appToast.error("Error al obtener sucursales.");
+      });
+    }
+
+    // =====================================================
+    // 🏦 CARGA DE CUENTAS POR BANCO (REUTILIZABLE)
+    // =====================================================
+    function cargarCuentas(selectBancoId, selectCuentaId) {
+      let empresa = $("#selectEmpresa").val();
+      let banco = parseInt($(selectBancoId).val());
+
+      if (!banco || banco === 0) {
+        $(selectCuentaId).html('<option value="0">Seleccione...</option>');
+        return;
+      }
+
+      $.get(
+        "{% url 'get_cuentas_bancarias' %}",
+        {
+          empresa: empresa,
+          status: 1,
+          banco: banco,
+        },
+        function (resp) {
+          let html = '<option value="0">Seleccione...</option>';
+
+          resp.data.forEach(function (c) {
+            let txtTS = c.AplicaTS == 1 ? " | SI APLICA TS" : " | NO APLICA TS";
+
+            html += `
+                    <option
+                        value="${c.PkCatCuentaBancaria}"
+                        data-moneda="${c.Moneda}"
+                        data-cuenta="${c.CuentaBancaria}">
+                        ${c.CuentaBancaria} - ${c.Moneda}${txtTS}
+                    </option>`;
+          });
+
+          $(selectCuentaId).html(html);
+          $(selectCuentaId).val(0).trigger("change");
+        }
+      );
+    }
+
+    // =====================================================
+    // 🏦 BANCO PRINCIPAL
+    // =====================================================
+    $("#selectBanco").change(function () {
+      let img = $(this).find(":selected").data("img");
+
+      $("#imgBanco").attr("src", img || "");
+
+      cargarCuentas("#selectBanco", "#selectCuenta");
+    });
+
+    // =====================================================
+    // 🏦 BANCO DETALLE (INDEPENDIENTE)
+    // =====================================================
+    $("#selectBancoDetalle").change(function () {
+      cargarCuentas("#selectBancoDetalle", "#selectCuentaDetalle");
+    });
+
+    // =====================================================
+    // 💱 CUENTA PRINCIPAL → MONEDA
+    // =====================================================
+    $("#selectCuenta").change(function () {
+      let op = $(this).find(":selected");
+      let moneda = op.data("moneda") || "--";
+
+      $("#badgeMoneda").html(
+        `<i class="fas fa-coins me-1"></i>Moneda: ${moneda}`
+      );
+    });
+
+    // =====================================================
+    // 💰 VALOR PRINCIPAL
+    // =====================================================
+    $("#valorDoc").on("blur", function () {
+      let v = $(this).val().replace(/,/g, "");
+      $("#valorDocLps").val(v);
+
+      if (typeof NumtoLetras === "function") {
+        $("#montoLetras").text(NumtoLetras(v));
+      }
+    });
+
+    // =====================================================
+    // 💰 VALOR DETALLE (SINCRONIZA LPS OCULTO)
+    // =====================================================
+    $("#valor").on("blur", function () {
+      let v = $(this).val().replace(/,/g, "");
+      $("#valorLps").val(v);
+    });
+
+    // =====================================================
+    // ➕ AGREGAR FILA A GRID
+    // =====================================================
+    $("#btnAgregarDetalle").click(function () {
+      let fkProcedencia = parseInt($("#selectProcedencia").val() || 0);
+      let fkTipo = parseInt($("#selectTipoDetalle").val() || 0);
+      let fkBanco = parseInt($("#selectBancoDetalle").val() || 0);
+      let fkCuenta = parseInt($("#selectCuentaDetalle").val() || 0);
+
+      let numero = $("#numeroDetalle").val() || "";
+      let librador = $("#libradorDetalle").val() || "";
+      let concepto = $("#conceptoDetalle").val() || "";
+      let valor = parseFloat($("#valor").val().replace(/,/g, "") || 0);
+
+      if (fkProcedencia === 0) {
+        Swal.fire("", "Seleccione una procedencia", "warning");
+        return;
+      }
+
+      if (fkTipo === 0) {
+        Swal.fire("", "Seleccione un tipo", "warning");
+        return;
+      }
+
+      if (fkBanco === 0) {
+        Swal.fire("", "Seleccione un banco", "warning");
+        return;
+      }
+
+      if (fkCuenta === 0) {
+        Swal.fire("", "Seleccione una cuenta", "warning");
+        return;
+      }
+
+      if (valor <= 0) {
+        Swal.fire("", "Ingrese un valor válido", "warning");
+        return;
+      }
+
+      const op = $("#selectProcedencia option:selected");
+
+      const devolTC = parseInt(op.data("devoltc") || 0);
+      const devolProvee = parseInt(op.data("devolprovee") || 0);
+      const depositoCliente = parseInt(op.data("depositocliente") || 0);
+
+      const fkTarjeta = parseInt($("#selectTarjeta").val() || 0);
+      const fkMovimientoXAplicar = parseInt(
+        $("#selectPagoProveedor").val() || 0
+      );
+      const fkCliente = parseInt($("#selectCliente").val() || 0);
+
+      if (devolTC === 1 && fkTarjeta === 0) {
+        Swal.fire("", "Seleccione tarjeta", "warning");
+        return;
+      }
+
+      /* if (devolProvee === 1 && fkMovimientoXAplicar === 0) {
+        Swal.fire("", "Seleccione pago a proveedor", "warning");
+        return;
+      } */
+
+      /* if (depositoCliente === 1 && fkCliente === 0) {
+        Swal.fire("", "Seleccione cliente", "warning");
+        return;
+      } */
+
+      let procedenciaTxt = $("#selectProcedencia option:selected").text() || "";
+      let tipoTxt = $("#selectTipoDetalle option:selected").text() || "";
+      let bancoTxt = $("#selectBancoDetalle option:selected").text() || "";
+      let cuentaTxt = $("#selectCuentaDetalle option:selected").data('cuenta') || "";
+      let clienteTxt = $("#selectCliente option:selected").text() || "";
+
+      detallesMovimiento.push({
+        fkProcedencia,
+        procedenciaTxt,
+        fkTipoDocumento: fkTipo,
+        tipoDocumentoTxt: tipoTxt,
+        fkBanco,
+        bancoTxt,
+        fkCuenta,
+        cuentaTxt,
+        fkCliente,
+        clienteTxt,
+        fkTarjeta,
+        fkMovimientoXAplicar: parseInt($("#selectPagoProveedor").val() || 0),
+        numero,
+        librador,
+        concepto,
+        valor,
+      });
+
+      // Render fila en DataTable en lugar de append directo. 
+      // El usaurio borró Procedencia, Tarjeta, Pago Proveedor y Cliente del TH.
+      let actionBtn = `<button class="btn btn-sm btn-danger btnEliminar" data-idx="${detallesMovimiento.length - 1}"><i class="fas fa-trash"></i></button>`;
+
+      tDetalle.row.add([
+        tipoTxt,
+        bancoTxt,
+        cuentaTxt,
+        numero,
+        librador,
+        concepto,
+        `<div class="text-end">${dollarUSLocale.format(valor)}</div>`,
+        `<div class="text-end">${dollarUSLocale.format(valor)}</div>`,
+        actionBtn
+      ]).draw(false);
+
+      recalcularTotales();
+
+      recalcularTotales();
+      evaluarBloqueoProcedencia();
+
+      // En Depósitos (tipo = 7) u otros casos donde el Select de procedencia se deba mantener congelado
+      // Solo borramos los campos de digitación manual
+      $("#numeroDetalle").val("");
+      $("#libradorDetalle").val("");
+      $("#conceptoDetalle").val("");
+      $("#valor").val("0.00");
+      $("#valorLps").val("0.00");
+
+      aplicarReglasProcedencia(true);
+
+    });
+
+    // =====================================================
+    // 🗑 ELIMINAR FILA (Usa el índice del array y limpia tabla)
+    // =====================================================
+    $(document).on("click", ".btnEliminar", function () {
+      let tr = $(this).closest("tr");
+      let row = tDetalle.row(tr);
+      let idx = $(this).data("idx");
+
+      // Remover del Array
+      detallesMovimiento[idx] = null; // Mark as deleted to keep indexing intact or rebuild array
+
+      // Remover de DataTable
+      row.remove().draw(false);
+
+      recalcularTotales();
+
+      // Si eliminó el último detalle limpiar el combo
+      evaluarBloqueoProcedencia();
+    });
+
+    // =====================================================
+    // 🔒 BLOQUEAR / DESBLOQUEAR PROCEDENCIA Y SUCURSAL
+    // =====================================================
+    function evaluarBloqueoProcedencia() {
+      let detalleLimpio = detallesMovimiento.filter(x => x !== null);
+
+      if (detalleLimpio.length > 0) {
+        // Ya hay detalles, bloqueamos el Select para no mezclar procedencias ni sucursales
+        $("#selectProcedencia").css("pointer-events", "none").css("background-color", "#e9ecef");
+        $("#filtroSucursal").css("pointer-events", "none").css("background-color", "#e9ecef");
+      } else {
+        // Volvemos a habilitarlo todo
+        $("#selectProcedencia").css("pointer-events", "auto").css("background-color", "");
+        $("#filtroSucursal").css("pointer-events", "auto").css("background-color", "");
+      }
+    }
+
+    let movimientoJSON = {};
+
+    $("#btnGuardar").click(function () {
+      // =============================
+      // VALIDACIONES ENCABEZADO
+      // =============================
+
+      if ($("#selectEmpresa").val() == 0) {
+        Swal.fire("", "Seleccione empresa", "warning");
+        return;
+      }
+
+      if ($("#filtroSucursal").val() == 0) {
+        Swal.fire("", "Seleccione sucursal", "warning");
+        return;
+      }
+
+      if ($("#selectBanco").val() == 0) {
+        Swal.fire("", "Seleccione banco principal", "warning");
+        return;
+      }
+
+      if ($("#selectCuenta").val() == 0) {
+        Swal.fire("", "Seleccione cuenta principal", "warning");
+        return;
+      }
+
+      if (!$("#fecha").val()) {
+        Swal.fire("", "Seleccione fecha", "warning");
+        return;
+      }
+
+      if (!$("#numero").val()) {
+        Swal.fire("", "Ingrese número", "warning");
+        return;
+      }
+
+      if (detallesMovimiento.length === 0) {
+        Swal.fire("", "Debe agregar al menos un detalle", "warning");
+        return;
+      }
+
+      let valorDoc = parseFloat($("#valorDoc").val().replace(/,/g, "") || 0);
+      let totalDetalle = 0;
+      detallesMovimiento.forEach(d => {
+        if (d) totalDetalle += d.valor;
+      });
+
+      if (valorDoc <= 0) {
+        Swal.fire("", "Valor Doc inválido", "warning");
+        return;
+      }
+
+      if (totalDetalle !== valorDoc) {
+        Swal.fire(
+          "",
+          "El Valor Doc debe ser igual al total del detalle",
+          "warning"
+        );
+        return;
+      }
+
+      // Limpiar los nulls si se borraron filas
+      let detalleLimpio = detallesMovimiento.filter(x => x !== null);
+
+      if (detalleLimpio.length === 0) {
+        Swal.fire("", "Debe agregar al menos un detalle", "warning");
+        return;
+      }
+
+      // =============================
+      // RECOPILAR LIQUIDACIONES 
+      // =============================
+      let arrayLiquidaciones = [];
+      let totalLiquidado = 0;
+
+      if (!$("#wrapTablaCajas").hasClass("d-none") && tCajas) {
+        // Buscar en TODAS las páginas de DataTables
+        tCajas.$(".input-liquidar").each(function () {
+          let val = parseFloat($(this).val().replace(/,/g, "") || 0);
+          if (val > 0) {
+            arrayLiquidaciones.push({
+              "pkCajaMov": $(this).data("id"),
+              "valorAplicado": val
+            });
+            totalLiquidado += val;
+          }
+        });
+
+        // Validamos que el total liquidado haga match perfecto con el encabezado solo si es DepositoCliente
+        // NUEVA REGLA (Strict): Si estamos viendo el panel de cajas (Depósito Cliente), 
+        // aplicar saldo es obligatorio y debe cuadrar exacto con el Valor Doc.
+        let opProc = $("#selectProcedencia option:selected");
+        let isDepClient = parseInt(opProc.data("depositocliente") || 0);
+
+        if (isDepClient === 1 && totalLiquidado !== valorDoc) {
+          Swal.fire({
+            title: "Liquidación Obligatoria",
+            html: "Para facturación con Depósitos de Clientes, <b>debes liquidar obligatoriamente</b> las salidas correspondientes.<br><br>El Total a Liquidar (" + dollarUSLocale.format(totalLiquidado) + ") debe ser <b>exactamente igual</b> al Valor Doc (" + dollarUSLocale.format(valorDoc) + ").",
+            icon: "warning"
+          });
+          return;
+        }
+      }
+
+      // =============================
+      // CONSTRUIR JSON COMPLETO
+      // =============================
+
+      movimientoJSON = {
+        encabezado: {
+          empresa: $("#selectEmpresa").val(),
+          sucursal: $("#filtroSucursal").val(),
+          banco: $("#selectBanco").val(),
+          cuenta: $("#selectCuenta").val(),
+          fecha: $("#fecha").val(),
+          numero: $("#numero").val(),
+          valorDoc: valorDoc,
+          conceptoGeneral: $("#conceptoGeneral").val(),
+          tipoMovimiento: $("#fkTipoMovimiento").val(),
+        },
+        detalle: detalleLimpio,
+        liquidaciones: arrayLiquidaciones
+      };
+
+      console.log("JSON FINAL:", movimientoJSON);
+
+      // 🔄 1. Deshabilitamos el botón para evitar doble clic
+      let btnGuardar = $("#btnGuardar");
+      let originalBtnHtml = btnGuardar.html();
+      btnGuardar.prop("disabled", true).html('<i class="fas fa-spinner fa-spin me-1"></i> Procesando...');
+
+      // 🔄 2. Levantamos un modal que impida tocar fuera (El que sugieres)
+      Swal.fire({
+        title: 'Verificando y Guardando...',
+        html: 'Por favor espere mientras se procesa<br><b>No cierre esta ventana</b>',
+        allowOutsideClick: false,
+        allowEscapeKey: false,
+        showConfirmButton: false,
+        didOpen: () => {
+          Swal.showLoading();
+        }
+      });
+
+      // 🔄 3. Validamos primero el mes
+      $.get(
+        "{% url 'validar_mes_movimiento' %}",
+        { fecha: $("#fecha").val() },
+        function (resp) {
+          if (resp.cerrado == 1) {
+            // Revertir UI
+            btnGuardar.prop("disabled", false).html(originalBtnHtml);
+            Swal.fire("Atención", "El Mes Contable está Cerrado. No es posible generar el movimiento.", "warning");
+            return;
+          }
+
+          // Si todo está bien, pasamos a guardar la data final
+          guardarMovimiento(btnGuardar, originalBtnHtml);
+        }
+      ).fail(function () {
+        // En caso de caída de internet o error 500 en la validación
+        btnGuardar.prop("disabled", false).html(originalBtnHtml);
+        Swal.fire("Error de Red", "Ocurrió un error al validar el mes. Inténtalo de nuevo.", "error");
+      });
+    });
+
+    function guardarMovimiento(btnGuardar, originalBtnHtml) {
+      $.ajax({
+        url: "{% url 'guardar_movimiento_credito' %}",
+        method: "POST",
+        headers: { "X-CSRFToken": csrfToken },
+        contentType: "application/json",
+        data: JSON.stringify(movimientoJSON),
+        success: function (resp) {
+          // Revertir estado del botón
+          btnGuardar.prop("disabled", false).html(originalBtnHtml);
+
+          if (resp.success) {
+            Swal.close();
+
+            Swal.fire("", "Movimiento Guardado!", "success");
+
+            detallesMovimiento = [];
+            initFormulario();
+            $("#numero").focus();
+
+          } else {
+            Swal.fire("Aviso", resp.error, "warning");
+          }
+        },
+        error: function () {
+          btnGuardar.prop("disabled", false).html(originalBtnHtml);
+          Swal.fire("Error en el Servidor", "Ocurrió un error inesperado al procesar la petición.", "error");
+        }
+      });
+    }
+
+
+
+    // =====================================================
+    // 🧮 TOTALES CON ANIMACIÓN
+    // =====================================================
+    function recalcularTotales() {
+      let total = 0;
+      detallesMovimiento.forEach(d => {
+        if (d) total += d.valor;
+      });
+
+      // Animación suave de los números totales para mejor experiencia visual
+      $({ Counter: parseFloat($("#totalValor").text().replace(/,/g, '')) || 0 }).animate({
+        Counter: total
+      }, {
+        duration: 400,
+        easing: 'swing',
+        step: function (now) {
+          $("#totalValor").text(dollarUSLocale.format(now));
+          $("#totalValorLps").text(dollarUSLocale.format(now));
+        },
+        complete: function () {
+          $("#totalValor").text(dollarUSLocale.format(total));
+          $("#totalValorLps").text(dollarUSLocale.format(total));
+        }
+      });
+    }
+
+    // =====================================================
+    // ⌨️ ATAJOS DE TECLADO (UX PARA DIGITADORES)
+    // =====================================================
+    $("#conceptoDetalle, #valor").on("keypress", function (e) {
+      if (e.which === 13) { // Si presiona ENTER
+        e.preventDefault();
+        $("#btnAgregarDetalle").click();
+      }
+    });
+
+    $(document).on("keydown", function (e) {
+      // Ctrl + Enter para guardar el movimiento completo
+      if (e.ctrlKey && e.key === "Enter") {
+        e.preventDefault();
+        $("#btnGuardar").click();
+      }
+    });
+
+
+
+    // =====================================================
+    // 🧼 LIMPIAR DETALLE
+    // =====================================================
+    function limpiarDetalle() {
+      $("#selectProcedencia").val(0).trigger("change");
+      $("#selectTipoDetalle").val(0).trigger("change");
+      $("#selectBancoDetalle").val(0).trigger("change");
+
+      $("#selectCuentaDetalle")
+        .html('<option value="0">Seleccione...</option>')
+        .val(0)
+        .trigger("change");
+
+      $("#numeroDetalle").val("");
+      $("#libradorDetalle").val("");
+      $("#conceptoDetalle").val("");
+      $("#valor").val("0.00");
+      $("#valorLps").val("0.00");
+    }
+
+    // =====================================================
+    // 🔄 INIT FORMULARIO
+    // =====================================================
+
+    // VARIABLES GLOBALES DATATABLES
+    let tDetalle = null;
+    let tCajas = null;
+
+    function initFormulario() {
+      $("#filtroSucursal").val(0).trigger("change");
+      $("#selectBanco").val(0).trigger("change");
+
+      $("#selectCuenta")
+        .html('<option value="0">Seleccione...</option>')
+        .val(0)
+        .trigger("change");
+
+      $("#numero").val("");
+      $("#valorDoc").val("0.00");
+      $("#valorDocLps").val("0.00");
+      $("#conceptoGeneral").val("");
+
+      if (!tDetalle) {
+        tDetalle = $('#tablaDetalle').DataTable({
+          "language": {
+            "url": "{% static 'app/th/json/es-ES.json' %}",
+          },
+          "pageLength": 5,
+          "lengthMenu": [5, 10, 20],
+          "responsive": true,
+          "destroy": true,
+          "searching": false,
+          "info": false,
+          "bLengthChange": true
+        });
+      } else {
+        tDetalle.clear().draw();
+      }
+
+      $("#totalValor").text("0.00");
+      $("#totalValorLps").text("0.00");
+
+      limpiarDetalle();
+      evaluarBloqueoProcedencia();
+    }
+
+    initFormulario();
+
+    function cargarCajasPendientes(sucursalID) {
+      if (tCajas) {
+        tCajas.destroy(); // Destruimos instacias previas
+      }
+      $("#tablaCajas tbody").empty();
+      $("#totalCajasAplicado").text("0.00");
+
+      $.get("{% url 'api_get_caja_salidas_pendientes' %}", { sucursal: sucursalID }, function (res) {
+        if (res.data) {
+          let html = "";
+          res.data.forEach(c => {
+            html += `
+                    <tr>
+                        <td class="text-center">${c.PKcajaMov}</td>
+                        <td>${c.Creado.substring(0, 10)}</td>
+                        <td style="max-width: 150px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis;" title="${c.Notas}">${c.Notas}</td>
+                        <td class="text-end fw-bold text-success">${dollarUSLocale.format(c.SaldoDisponible)}</td>
+                        <td class="text-center">
+                            <div class="input-group input-group-sm">
+                                <input type="text" class="form-control text-end formattedMoneyInputs input-liquidar" 
+                                    data-id="${c.PKcajaMov}" 
+                                    data-max="${c.SaldoDisponible}" 
+                                    placeholder="0.00" value="0.00" readonly>
+                                <button class="btn btn-outline-success btn-auto-aplicar" type="button" title="Auto Aplicar" data-max="${c.SaldoDisponible}">
+                                    <i class="fas fa-check"></i>
+                                </button>
+                            </div>
+                        </td>
+                        <td><b>${c.NoTurno}</b> - ${c.Cajero}</td>
+                    </tr>
+                    `;
+          });
+          if (res.data.length === 0) {
+            html = `<tr><td colspan="6" class="text-center text-muted">No hay salidas vigentes pendientes para liquidar</td></tr>`;
+          }
+          $("#tablaCajas tbody").html(html);
+
+          tCajas = $('#tablaCajas').DataTable({
+            "language": {
+              "url": "{% static 'app/th/json/es-ES.json' %}",
+            },
+            "pageLength": 10,
+            "lengthMenu": [5, 10, 20, 50],
+            "order": [[0, "desc"]],
+            "responsive": true,
+            "destroy": true,
+            "searching": true,
+            "info": true
+          });
+        }
+      });
+    }
+
+    function validarYSumarLiquidacion(inputEl) {
+      let val = parseFloat(inputEl.val().replace(/,/g, "") || 0);
+      let maxVal = parseFloat(inputEl.data('max') || 0);
+
+      // 1. Obtener Valor Documento
+      let valorDoc = parseFloat($("#valorDoc").val().replace(/,/g, "") || 0);
+
+      // El límite real para esta caja es lo máximo que tenga disponible. 
+      // Ya no restringimos estrictamente al remanente, permitiendo que elijan
+      // lo que quieran. La validación final bloqueará el guardado si no cuadra.
+      let limiteReal = maxVal;
+
+      // 5. Validar que lo tipeado no exceda el límite real
+      if (val > limiteReal) {
+        Swal.fire("Advertencia", `El monto a liquidar no puede exceder el saldo disponible de ${dollarUSLocale.format(maxVal)}.`, "warning");
+        val = limiteReal;
+        inputEl.val(dollarUSLocale.format(val));
+      }
+
+      // 6. Calcular Total Liquidado Globalmente
+      let totalLiq = 0;
+      if (tCajas) {
+        tCajas.$('.input-liquidar').each(function () {
+          totalLiq += parseFloat($(this).val().replace(/,/g, "") || 0);
+        });
+      }
+
+      $("#totalCajasAplicado").text(dollarUSLocale.format(totalLiq));
+
+      // 7. AUTO-ACTUALIZAR VALOR DOC
+      // Si el monto total liquidado cambia, el Valor Doc se sincroniza automáticamente
+      $("#valorDoc").val(parseFloat(totalLiq).toFixed(2)).trigger("blur");
+
+      // 8. Actualizar el estado visual del botón Check/Cruz de ESTA fila
+      let btn = inputEl.siblings('.btn-auto-aplicar');
+      let iconEl = btn.find('i');
+      if (val > 0) {
+        btn.removeClass("btn-outline-success").addClass("btn-outline-danger");
+        iconEl.removeClass("fa-check").addClass("fa-times");
+        btn.attr("title", "Limpiar Monto");
+      } else {
+        btn.removeClass("btn-outline-danger").addClass("btn-outline-success");
+        iconEl.removeClass("fa-times").addClass("fa-check");
+        btn.attr("title", "Auto Aplicar");
+      }
+    }
+
+    // Escuchar cambios tipiados en los inputs de liquidar
+    $(document).on('blur', '.input-liquidar', function () {
+      validarYSumarLiquidacion($(this));
+    });
+
+    // Nuevo: Botón Auto-Aplicar Saldo (Check/Cruz) Inteligente
+    $(document).on('click', '.btn-auto-aplicar', function () {
+      let inputEl = $(this).siblings('.input-liquidar');
+      let maxVal = parseFloat($(this).data('max') || 0);
+      let valorDoc = parseFloat($("#valorDoc").val().replace(/,/g, "") || 0);
+
+      let currentVal = parseFloat(inputEl.val().replace(/,/g, "") || 0);
+
+      if (currentVal > 0) {
+        // Si ya tiene algo, limpiarlo (El validador se encarga de cambiar el icono)
+        inputEl.val("0.00");
+      } else {
+        // Si está en 0, aplicamos el máximo disponible
+        inputEl.val(maxVal);
+      }
+
+      // Ejecutar trigger para que calcule contra el remanente, sume y valide iconos
+      validarYSumarLiquidacion(inputEl);
+    });
+
+    function aplicarReglasProcedencia(isRefreshing = false) {
+      const op = $("#selectProcedencia option:selected");
+
+      const devolTC = parseInt(op.data("devoltc") || 0);
+      const devolProvee = parseInt(op.data("devolprovee") || 0);
+      const depositoCliente = parseInt(op.data("depositocliente") || 0);
+      const anticipoProveedor = parseInt(op.data("anticipoproveedor") || 0);
+      const depositoTransito = parseInt(op.data("depositotransito") || 0);
+
+      const fkSucProc = parseInt(op.data("fksucursal") || 0);
+
+      // Auto-seleccionar sucursal si la procedencia viene amarrada y aún no hemos elegido
+      let sucursalActiva = parseInt($("#filtroSucursal").val() || 0);
+      if (fkSucProc !== 0 && sucursalActiva === 0) {
+        $("#filtroSucursal").val(fkSucProc);
+        sucursalActiva = fkSucProc;
+      }
+
+      // Mostrar widget de Caja dependiendo si es DepositoCliente en un tipo 7
+      if (tipo === 7 && depositoCliente === 1) {
+        // Validacion Obligatoria: Para cargar cajas debe haber una Sucursal elegida
+        if (sucursalActiva === 0) {
+          Swal.fire("Sucursal Requerida", "Debe elegir una Sucursal primero para ver sus salidas pendientes.", "info");
+          $("#selectProcedencia").val(0); // Revertir elección
+          $("#wrapTablaCajas").addClass("d-none");
+          $("#wrapTablaDetalles").removeClass("col-md-6").addClass("col-md-12 pe-0");
+          return; // Cortar ejecución
+        }
+
+        $("#wrapTablaCajas").removeClass("d-none");
+        $("#wrapTablaDetalles").removeClass("col-md-12 pe-0").addClass("col-md-6");
+
+        if (!isRefreshing) {
+          cargarCajasPendientes(sucursalActiva);
+        }
+      } else {
+        $("#wrapTablaCajas").addClass("d-none");
+        $("#wrapTablaDetalles").removeClass("col-md-6").addClass("col-md-12 pe-0");
+
+        if (!isRefreshing) {
+          $("#tablaCajas tbody").empty();
+        }
+      }
+
+      // Ocultar todo primero
+      $("#wrapTarjeta").addClass("d-none");
+      $("#wrapCliente").addClass("d-none");
+
+      // Reset valores
+      $("#selectTarjeta").val(0);
+      $("#selectCliente").val(0).trigger("change");
+
+      // Mostrar según flags
+      if (devolTC === 1) {
+        $("#wrapTarjeta").removeClass("d-none");
+      }
+
+      if (depositoCliente === 1) {
+        $("#wrapCliente").removeClass("d-none");
+      }
+    }
+    $("#selectProcedencia").change(function () {
+      aplicarReglasProcedencia(false);
+    });
+    // ==========================================
+    // LÓGICA FILTRO SUCURSAL VS PROCEDENCIAS
+    // ==========================================
+    function filtrarProcedencias() {
+      let sucursalActiva = parseInt($("#filtroSucursal").val() || 0);
+
+      $("#selectProcedencia option").each(function () {
+        let val = $(this).val();
+        let fkSuc = parseInt($(this).data("fksucursal") || 0);
+
+        if (val === "0") {
+          $(this).show(); // Opción 'Seleccione...' siempre visible
+        } else if (fkSuc === 0 || fkSuc === sucursalActiva) {
+          $(this).show();
+        } else {
+          $(this).hide();
+        }
+      });
+
+      // Si la opción que estaba seleccionada ahora quedó oculta, resetear
+      let optSelec = $("#selectProcedencia option:selected");
+      if (optSelec.css('display') === 'none') {
+        $("#selectProcedencia").val(0).trigger("change");
+      }
+    }
+
+    // Cambiar filtroSucursal limpia la procedencia (por ende cajas) porque el contexto cambia
+    $("#filtroSucursal").change(function (e) {
+      if (e.originalEvent) {
+        $("#selectProcedencia").val(0).trigger("change");
+      }
+      filtrarProcedencias();
+      // Si a pesar del reset la tabla sigue activa, recargar:
+      if (!$("#wrapTablaCajas").hasClass("d-none")) {
+        cargarCajasPendientes($(this).val());
+      }
+    });
+
+    // ==========================================
+    // FILTRO DE FECHAS EN TABLA CAJAS (CLIENT-SIDE)
+    // ==========================================
+    $.fn.dataTable.ext.search.push(function (settings, data, dataIndex) {
+      if (settings.nTable.id !== 'tablaCajas') {
+        return true;
+      }
+
+      let minStr = $('#filtroFechaInicioCajas').val();
+      let maxStr = $('#filtroFechaFinCajas').val();
+
+      // EXCEPCIÓN UX: Si la fila ya tiene un valor aplicado (>0), NUNCA la ocultamos.
+      let node = settings.aoData[dataIndex].nTr;
+      if (node) {
+        let inputVal = parseFloat($(node).find('.input-liquidar').val().replace(/,/g, "") || 0);
+        if (inputVal > 0) {
+          return true;
+        }
+      }
+
+      // Asumimos que la Fecha está en el índice 1
+      let fechaFilaStr = data[1] || "";
+
+      if (!minStr && !maxStr) return true;
+
+      // Convertir a Date Objects para comparar
+      let minDate = minStr ? new Date(minStr + "T00:00:00") : null;
+      let maxDate = maxStr ? new Date(maxStr + "T23:59:59") : null;
+      let rowDate = new Date(fechaFilaStr + "T12:00:00");
+
+      if (minDate && !maxDate) {
+        return rowDate >= minDate;
+      } else if (!minDate && maxDate) {
+        return rowDate <= maxDate;
+      } else if (minDate && maxDate) {
+        return rowDate >= minDate && rowDate <= maxDate;
+      }
+      return true;
+    });
+
+    $('#filtroFechaInicioCajas, #filtroFechaFinCajas').on('change', function () {
+      if (tCajas) {
+        tCajas.draw();
+      }
+    });
+
+    $('#btnLimpiarFechasCajas').on('click', function () {
+      $('#filtroFechaInicioCajas').val('');
+      $('#filtroFechaFinCajas').val('');
+      if (tCajas) {
+        tCajas.draw();
+      }
+    });
+
+
+    filtrarProcedencias();
+    aplicarReglasProcedencia();
+  });
+</script>
+
+{% endblock %}

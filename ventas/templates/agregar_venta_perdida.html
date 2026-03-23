@@ -1,0 +1,99 @@
+{% load static %}
+<!DOCTYPE html>
+<html lang="es">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <link rel="stylesheet" href="{% static 'app/css/estilos.css' %}">
+
+</head>
+
+<body>
+    <div class="container-fluid"> <!-- Asegura un contenedor fluido para todo el ancho -->
+        <div class="row"> <!-- Usa row para una fila que contiene todas las columnas -->
+            <div class="col-sm p-2 shadow-lg border m-2 rounded-4">
+                <div class="row"> <!-- Elimina justify-content-start si quieres que empiece desde la izquierda -->
+                    <div class="col-lg-4"> <!-- Ajusta según sea necesario para el ancho -->
+                        <div class="form-group">
+                            <label for="formato_select" class="col-form-label">Formato:</label>
+                            <select class="form-select form-select-sm" name="formato_select" id="formato_select">
+                                <option value="#">Seleccione un Formato</option>
+                                <option value="1">SUPERMERCADO</option>
+                                <option value="2">DISTRIBUIDORA</option>
+                            </select>
+                        </div>
+                    </div>
+                    <div class="col-lg-4"> <!-- Ajusta según sea necesario para el ancho -->
+                        <div class="form-group">
+                            <label for="sucursal_select" class="col-form-label">Sucursal:</label>
+                            <select class="form-select form-select-sm" name="sucursal_select" id="sucursal_select">
+                                <option value="#">Seleccione una Sucursal</option>
+                            </select>
+                        </div>
+                    </div>
+                    <div class="col-lg-4"> <!-- Ajusta según sea necesario para el ancho -->
+                        <div class="form-group">
+                            <label for="cliente_select" class="col-form-label">Cliente:</label>
+                            <select class="form-select form-select-sm" name="cliente_select" id="cliente_select">
+                                <option value="#">Seleccione un Cliente</option>
+                            </select>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div class="modal-content">
+        <span class="close-button">&times;</span>
+        <form class="form-ventas-perdidas">
+            <div class="seccion">
+                <h3>Información del Producto</h3>
+                <input type="text" placeholder="Nombre del Producto" name="nombre_producto">
+                <div class="row">
+                    <div class="column">
+                        <input type="text" placeholder="Presentación" name="presentacion">
+                        <input type="number" step="any" placeholder="Cantidad" name="cantidad">
+                    </div>
+                    <div class="column">
+                        <input type="number" step="0.01" placeholder="Precio" name="precio">
+                        <input type="number" step="0.01" placeholder="Precio Mínimo" name="precio_min">
+                    </div>
+                </div>
+            </div>
+            <div class="seccion">
+                <h3>Detalles de la Venta Perdida</h3>
+                <select name="id_motivo" class="btn-motivos">
+                    <option value="">Seleccionar Motivo</option>
+                    <!-- Opciones de motivos aquí -->
+                </select>
+                <textarea placeholder="Comentario" name="comentario"></textarea>
+                <input type="date" name="fecha">
+            </div>
+            <div class="seccion">
+                <h3>Información del Cliente</h3>
+                <div class="row">
+                    <input type="number" placeholder="ID Cliente" name="id_cliente" class="id-cliente">
+                    <input type="text" placeholder="Nombre del Cliente" name="nombre_cliente" class="nombre-cliente">
+                </div>
+            </div>
+            <div class="seccion">
+                <h3>Competencia</h3>
+                <div class="row">
+                    <input type="text" placeholder="Nombre de la Competencia" name="nombre_competencia"
+                        class="nombre-competencia">
+                    <input type="number" placeholder="ID Competencia" name="id_competencia" class="id-competencia">
+                </div>
+                <input type="text" placeholder="Precio Competencia" name="precio_competencia">
+            </div>
+            <div class="acciones">
+            </div>
+        </form>
+    </div>
+    <script src="scripts.js"></script>
+</body>
+
+
+
+</html>

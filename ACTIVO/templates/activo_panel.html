@@ -1,0 +1,170 @@
+{% extends 'componentes/menu_activo.html' %}
+{% load static %}
+
+{% block title %}ACTIVO FIJO - Panel Principal{% endblock %}
+
+{% block body %}
+<style>
+    .glass-card {
+        min-height: 150px;
+        border: 1px solid rgba(255, 255, 255, 0.4);
+        border-radius: 20px;
+        box-shadow: 0 10px 30px rgba(0, 0, 0, 0.05);
+        transition: all 0.3s cubic-bezier(0.25, 0.8, 0.25, 1);
+        overflow: hidden;
+        position: relative;
+        background: #ffffff;
+    }
+
+    .glass-card:hover {
+        transform: translateY(-5px);
+        box-shadow: 0 15px 35px rgba(0, 0, 0, 0.1);
+    }
+
+    .glass-card::before {
+        content: '';
+        position: absolute;
+        top: 0;
+        left: 0;
+        width: 100%;
+        height: 6px;
+    }
+
+    .card-body-custom {
+        padding: 16px 18px;
+        display: flex;
+        flex-direction: column;
+        height: 100%;
+    }
+
+    .icon-container {
+        width: 40px;
+        height: 40px;
+        border-radius: 14px;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        margin-bottom: 10px;
+    }
+
+    .state-blue::before { background: linear-gradient(90deg, #3b82f6, #60a5fa); }
+    .state-blue .icon-container { background: #eff6ff; color: #3b82f6; }
+    
+    .state-green::before { background: linear-gradient(90deg, #10b981, #34d399); }
+    .state-green .icon-container { background: #ecfdf5; color: #10b981; }
+
+    .state-yellow::before { background: linear-gradient(90deg, #f59e0b, #fbbf24); }
+    .state-yellow .icon-container { background: #fffbeb; color: #f59e0b; }
+
+    .title-modern { font-size: 1rem; font-weight: 700; color: #1e293b; margin-bottom: 2px; }
+    .subtitle-modern { font-size: 0.8rem; color: #64748b; font-weight: 500; }
+    .value-modern { font-size: 1.6rem; font-weight: 800; color: #0f172a; line-height: 1.2; margin-top: 6px; }
+
+    .ct-welcome-card {
+        background: linear-gradient(135deg, rgba(67, 97, 238, 0.08), rgba(58, 86, 212, 0.06));
+        border: 1px solid rgba(67, 97, 238, 0.25);
+        border-radius: 16px;
+        padding: 20px 24px;
+        margin-bottom: 24px;
+        position: relative;
+        overflow: hidden;
+    }
+
+    .ct-welcome-title {
+        font-size: 1.4rem;
+        font-weight: 800;
+        background: linear-gradient(135deg, #4361ee, #252538);
+        -webkit-background-clip: text;
+        -webkit-text-fill-color: transparent;
+        background-clip: text;
+        margin-bottom: 2px;
+    }
+
+    .ct-welcome-subtitle { color: #64748b; font-size: 0.85rem; font-weight: 500; margin-bottom: 0; }
+</style>
+
+<div class="row align-items-center border-bottom mb-3 py-2">
+    <div class="col d-flex align-items-center">
+        <button id="toggle-sidebar" class="btn btn-warning btn-sm me-2 btnMenu" title="Mostrar/Ocultar menú">
+            <i class="fas fa-bars"></i>
+        </button>
+        <h6 class="page-title mb-0 fs-6 fw-bold">PANTALLA PRINCIPAL</h6>
+    </div>
+</div>
+
+<div class="ct-welcome-card">
+    <h2 class="ct-welcome-title">Bienvenido al Módulo de Activo Fijo</h2>
+    <p class="ct-welcome-subtitle">Control detallado de activos, depreciaciones, ubicaciones y gestión de inventario.</p>
+</div>
+
+<div class="row g-4">
+    <!-- Totales Card -->
+    <div class="col-12 col-sm-6 col-lg-3">
+        <div class="glass-card h-100 state-blue">
+            <div class="card-body-custom">
+                <div class="icon-container">
+                    <i class="material-icons">inventory_2</i>
+                </div>
+                <h6 class="title-modern">Total Activos</h6>
+                <div class="subtitle-modern">Activos Registrados</div>
+                <div class="value-modern" id="totalActivos">0</div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Categorías Card -->
+    <div class="col-12 col-sm-6 col-lg-3">
+        <div class="glass-card h-100 state-green">
+            <div class="card-body-custom">
+                <div class="icon-container">
+                    <i class="material-icons">category</i>
+                </div>
+                <h6 class="title-modern">Categorías</h6>
+                <div class="subtitle-modern">Tipos de Activos</div>
+                <div class="value-modern" id="totalCategorias">0</div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Valor Total Card -->
+    <div class="col-12 col-sm-6 col-lg-3">
+        <div class="glass-card h-100 state-yellow">
+            <div class="card-body-custom">
+                <div class="icon-container">
+                    <i class="material-icons">paid</i>
+                </div>
+                <h6 class="title-modern">Inversión Total</h6>
+                <div class="subtitle-modern">Valor en Libros</div>
+                <div class="value-modern" id="valorTotal">L. 0.00</div>
+            </div>
+        </div>
+    </div>
+</div>
+
+{% endblock %}
+
+{% block scripts %}
+<script src="{% static 'app/activo/utils.js' %}"></script>
+<script>
+    $(document).ready(function() {
+        const fkEmpresa = 1; // Valor de ejemplo, debería venir de la sesión
+
+        // Cargar estadísticas básicas (Podemos implementar un endpoint específico después)
+        // Por ahora, simulamos la carga o usamos los endpoints existentes
+        ActivoUtils.ajax("{% url 'ACTIVO:get_activos' %}", { fkEmpresa, estado: 1 }, function(resp) {
+            if (resp.data) {
+                $('#totalActivos').text(resp.data.length);
+                let total = 0;
+                resp.data.forEach(a => total += (parseFloat(a.ValorCompra) || 0));
+                $('#valorTotal').text('L. ' + ActivoUtils.formatNumber(total));
+            }
+        });
+
+        ActivoUtils.ajax("{% url 'ACTIVO:get_categorias_activos' %}", { fkEmpresa, estado: 1 }, function(resp) {
+            if (resp.data) {
+                $('#totalCategorias').text(resp.data.length);
+            }
+        });
+    });
+</script>
+{% endblock %}

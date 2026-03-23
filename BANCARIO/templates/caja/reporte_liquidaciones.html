@@ -1,0 +1,275 @@
+{% extends 'componentes/menu_bancario.html' %}
+{% load static %}
+
+{% block title %}
+REPORTE DE LIQUIDACIONES
+{% endblock %}
+
+{% block body %}
+
+<div class="row align-items-center border-bottom mb-3 py-2 bg-white shadow-sm mx-0">
+    <div class="col d-flex align-items-center px-0">
+        <button id="toggle-sidebar" class="btn btn-primary btn-sm me-3 border-0 rounded-circle btnMenu"
+            style="width: 32px; height: 32px; padding: 0;">
+            <i class="fas fa-bars"></i>
+        </button>
+
+        <h6 class="page-title mb-0 fs-5 fw-bold text-dark">
+            <i class="fas fa-file-invoice-dollar text-primary me-2"></i>REPORTE DE LIQUIDACIONES DE CAJA
+        </h6>
+    </div>
+</div>
+
+<input type="hidden" id="id_empresa" value="{{ id_empresa }}">
+
+<div class="container-fluid px-0 mt-1">
+
+    <!-- ================= FILTROS ================= -->
+    <div class="card p-2 mb-2">
+        <div class="row g-2 align-items-end">
+
+            <!-- EMPRESA -->
+            <div class="col-lg-3">
+                <label class="fw-bold">Empresa:</label>
+                <select id="filtroEmpresa" class="form-select form-select-sm">
+                    {% for e in empresasData %}
+                    <option value="{{ e.PkEmpresa }}">{{ e.NombreEmpresa }}</option>
+                    {% endfor %}
+                </select>
+            </div>
+
+            <!-- SUCURSAL -->
+            <div class="col-lg-3">
+                <label class="fw-bold">Sucursal:</label>
+                <select id="filtroSucursal" class="form-select form-select-sm">
+                    {% for s in sucursalesData %}
+                    <option value="{{ s.PKsucursal }}">{{ s.NombreSucursal }}</option>
+                    {% endfor %}
+                </select>
+            </div>
+
+            <!-- DESDE -->
+            <div class="col-lg-2">
+                <label class="fw-bold">Desde:</label>
+                <input type="date" id="fechaDesde" class="form-control form-control-sm" value="{{date1}}">
+            </div>
+
+            <!-- HASTA -->
+            <div class="col-lg-2">
+                <label class="fw-bold">Hasta:</label>
+                <input type="date" id="fechaHasta" class="form-control form-control-sm" value="{{date2}}">
+            </div>
+
+            <div class="col-lg-2">
+                <button id="btnCargarReporte" class="btn btn-success btn-sm w-100 fw-bold">Cargar</button>
+            </div>
+
+        </div>
+    </div>
+
+
+    <div class="card p-2">
+
+        <div class="row">
+            <!-- ================= TABLA REPORTE ================= -->
+            <div class="col-md-12">
+
+                <h6 class="fw-bold mb-2">
+                    Detalle de Liquidaciones
+                </h6>
+
+                <div class="table-responsive">
+                    <table class="table table-sm table-bordered table-striped" id="tablaReporteLiquidaciones">
+
+                        <thead class="table-light">
+                            <tr>
+                                <th>Fecha</th>
+                                <th>No Turno</th>
+                                <th>Cajero</th>
+                                <th class="text-end">Salidas</th>
+                                <th>Fecha Movimiento Bancario</th>
+                                <th>Notas</th>
+                                <th>Número Referencia</th>
+                                <th>Banco</th>
+                                <th>Cuenta Bancaria</th>
+                                <th>Tipo Cuenta</th>
+                                <th>Nombre Sucursal</th>
+                                <th>Nombre Empresa</th>
+                            </tr>
+                        </thead>
+
+                        <tbody></tbody>
+
+                    </table>
+                </div>
+            </div>
+
+        </div>
+
+    </div>
+
+</div>
+
+<a href="{% url 'panel_bancario' %}">
+    <button class="btn btn-sm btn-danger" id="btnCerrar" title="Cerrar"
+        style="position: fixed; bottom: 20px; right: 20px;">
+        <i class="fa fa-times"></i> Cerrar
+    </button>
+</a>
+
+
+{% endblock %}
+
+
+{% block scripts %}
+
+<script>
+
+    $(function () {
+
+        var csrfToken = "{{ csrf_token }}";
+        var id_empresa = "{{ id_empresa }}";
+
+        let dollar = Intl.NumberFormat("en-US", {
+            minimumFractionDigits: 2,
+            maximumFractionDigits: 2
+        });
+
+
+        $('#filtroEmpresa').val(id_empresa);
+
+        $("#filtroEmpresa").change(function () {
+            let emp = $(this).val();
+            let d1 = $('#fechaDesde').val();
+            let d2 = $('#fechaHasta').val();
+
+            $(this).val(emp);
+
+            cargarSucursales();
+        });
+
+        function cargarSucursales() {
+            let empresa = $("#filtroEmpresa").val();
+
+            showLoadingScreen("Actualizando sucursales...");
+
+            $.get("{% url 'api_get_sucursales_usuario' %}", { empresa: empresa }, function (resp) {
+                Swal.close();
+                let html = '<option value="0">TODAS</option>';
+                if (resp.success && resp.data) {
+                    resp.data.forEach(function (s) {
+                        html += `<option value="${s.PKsucursal}">${s.NombreSucursal}</option>`;
+                    });
+                }
+                $("#filtroSucursal").html(html);
+            }).fail(function () {
+                Swal.close();
+                appToast.error("Error al obtener sucursales.");
+            });
+        }
+
+        let tablaReporteLiquidaciones = $("#tablaReporteLiquidaciones").DataTable({
+            autoWidth: false,
+            scrollX: true,
+            scrollY: '400px',
+            scrollCollapse: true,
+            paging: true,
+            ordering: true,
+            pageLength: 20,
+            language: {
+                "url": "{% static 'app/th/json/es-ES.json' %}",
+            },
+            dom: 'Bfrtip',
+            buttons: [
+                {
+                    extend: 'excelHtml5',
+                    text: '<i class="fas fa-file-excel"></i>',
+                    className: 'btn btn-success btn-sm'
+                },
+                {
+                    extend: 'pdfHtml5',
+                    text: '<i class="fas fa-file-pdf"></i>',
+                    className: 'btn btn-danger btn-sm'
+                },
+                {
+                    extend: 'print',
+                    text: '<i class="fas fa-print"></i>',
+                    titleAttr: 'Imprimir',
+                    className: 'btn btn-primary',
+                    orientation: 'landscape'
+                }
+            ],
+            data: [],
+            columns: [
+                { data: "FechaTurno" },
+                { data: "NoTurno" },
+                { data: "Cajero" },
+                {
+                    data: "Salidas",
+                    className: "text-end",
+                    render: function (data) {
+                        return dollar.format(data || 0);
+                    }
+                },
+                { data: "FechaMovimiento" },
+                { data: "Notas" },
+                { data: "Numero" },
+                { data: "Banco" },
+                { data: "CuentaBancaria" },
+                { data: "TipoCuenta" },
+                { data: "NombreSucursal" },
+                { data: "NombreEmpresa" }
+            ],
+        });
+
+
+        $('#btnCargarReporte').click(function () {
+
+            let sucursal = $('#filtroSucursal').val();
+            let date1 = $('#fechaDesde').val();
+            let date2 = $('#fechaHasta').val();
+
+            if (!date1 || !date2) {
+                appToast.warning("Seleccione ambas fechas");
+                return;
+            }
+
+            showLoadingScreen("Obteniendo datos...");
+            $('#btnCargarReporte').prop('disabled', true);
+
+            $.get("{% url 'get_movimientos_caja_liquidaciones' %}", {
+                sucursal: sucursal,
+                date1: date1,
+                date2: date2,
+                tipoCuenta: 'SALIDA'
+            }, function (resp) {
+                Swal.close();
+                $('#btnCargarReporte').prop('disabled', false);
+
+                if (resp.error) {
+                    appToast.error(resp.error);
+                    return;
+                }
+
+                if (resp.data) {
+                    tablaReporteLiquidaciones.clear();
+                    tablaReporteLiquidaciones.rows.add(resp.data);
+                    tablaReporteLiquidaciones.draw();
+
+                    if (resp.data.length === 0) {
+                        appToast.info("No se encontraron registros");
+                    }
+                }
+            }).fail(function () {
+                Swal.close();
+                $('#btnCargarReporte').prop('disabled', false);
+                appToast.error("Error en la petición.");
+            });
+
+        });
+
+    });
+
+</script>
+
+{% endblock %}

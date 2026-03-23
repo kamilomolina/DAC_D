@@ -1,0 +1,39 @@
+<!-- Modal para Agregar Grupo -->
+<div class="modal fade" id="modalAgregarMenu" tabindex="-1" role="dialog" aria-labelledby="modalAgregarMenuLabel" aria-hidden="true">
+    <div class="modal-dialog" role="document">
+      <div class="modal-content">
+        <div class="modal-header">
+          <h5 class="modal-title" id="modalAgregarMenuLabel">Agregar Nuevo Menu</h5>
+          <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Cerrar"></button>
+        </div>
+        <div class="modal-body">
+          <form id="formAgregarUsuario">
+            <div class="mb-3">
+              <label for="NombreAdd" class="form-label">Nombre</label>
+              <input type="text" class="form-control" id="NombreAdd" required>
+            </div>
+            <div class="mb-3">
+              <label for="BotonAdd" class="form-label">Boton</label>
+              <input type="text" class="form-control" id="BotonAdd" required>
+            </div>
+            <div class="mb-3">
+              <label for="PaginaAdd" class="form-label">Pagina</label>
+              <input type="text" class="form-control" id="PaginaAdd" required>
+            </div>
+            <div class="mb-3">
+              <label for="GrupoAdd" class="form-label">Grupo</label>
+              <input type="text" class="form-control" id="GrupoAdd" required>
+            </div>
+            <div class="mb-3">
+              <label for="PosicionAdd" class="form-label">Posicion</label>
+              <input type="text" class="form-control" id="PosicionAdd" required>
+            </div>
+          </form>
+        </div>
+        <div class="modal-footer">
+          <button type="button" class="btn btn-primary" id="guardarNuevoMenu">Guardar</button>
+          <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancelar</button>
+        </div>
+      </div>
+    </div>
+  </div>

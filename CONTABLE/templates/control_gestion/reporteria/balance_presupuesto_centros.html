@@ -1,0 +1,729 @@
+{% extends 'componentes/menu_contable.html' %}
+{% load static %}
+
+{% block title %}
+BALANCE PRESUPUESTO POR CENTROS
+{% endblock %}
+
+
+{% block body %}
+
+<div class="row align-items-center border-bottom mb-2 py-1">
+    <div class="col d-flex align-items-center">
+        <button id="toggle-sidebar" class="btn btn-warning btn-sm me-2 btnMenu" title="Mostrar/Ocultar menú">
+            <i class="fas fa-bars"></i>
+        </button>
+        <h6 class="page-title mb-0 fs-6 fw-bold">BALANCE PRESUPUESTO POR CENTROS</h6>
+    </div>
+</div>
+
+<div class="container-fluid mt-1">
+
+    <div class="row d-flex justify-content-start align-items-end">
+
+        {% include 'control_gestion/content_includes/rango_meses.html' %}
+
+        <div class="col-lg-2">
+            <div class="form-group">
+                <label for="filterEmpresaTables">Empresa:</label>
+                <select id="filterEmpresaTables" class="form-select form-select-sm" name="filterEmpresaTables">
+                    <option value="0">TODAS</option>
+                    {% for e in empresasData %}
+                    <option value="{{ e.id }}">{{ e.nombre }}</option>
+                    {% endfor %}
+                </select>
+            </div>
+        </div>
+
+        <div class="col-sm-2">
+            <button type="button" class="btn btn-success btn-sm" id="btnGetProyecciones">Cargar</button>
+        </div>
+
+    </div>
+
+    <br>
+
+    <div class="row d-flex justify-content-start">
+        <span><b>Filtros Rápidos</b></span>
+        <div class="mainFilters">
+            <div class="row f-flex justify-content-start">
+                <div class="col-sm-2">
+                    <label for="">Centro</label>
+                    <input type="text" class="form-control form-control-sm tableMainFilters" id="DR_filterCentroTables"
+                        placeholder="Centro">
+                </div>
+                <div class="col-sm-2">
+                    <label for="">Tipo Centro</label>
+                    <input type="text" class="form-control form-control-sm tableMainFilters"
+                        id="DR_filterTipoCentroTables" placeholder="Centro">
+                </div>
+                <div class="col-sm-2">
+                    <label for="">Empresa</label>
+                    <select class="form-select form-select-sm" id="DR_filterEmpresaCentroTables">
+                        <option value="">TODAS</option>
+                        {% for e in empresasData %}
+                        <option value="{{ e.nombre }}">{{ e.nombre }}</option>
+                        {% endfor %}
+                    </select>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div class="row">
+
+        <div class="col-lg-12">
+            <div class="table-responsive">
+                <table id="tbl_CentrosEmpresa"
+                    class="table rounded-4 table-sm table-bordered table-striped align-middle mb-0 table-principal"
+                    style="width:100%">
+
+                    <tfoot class="table-active" style="display: table-header-group;">
+                        <tr>
+                            <th></th>
+                            <th></th>
+                            <th></th>
+                            <th></th>
+                            <th></th>
+                            <th></th>
+                            <th></th>
+                            <th></th>
+                            <th></th>
+                            <th></th>
+                            <th></th>
+                            <th></th>
+                            <th></th>
+                        </tr>
+                    </tfoot>
+
+                    <thead class="table-gradient text-dark">
+                        <tr>
+                            <th class="text-center">#</th>
+                            <th class="text-center">Centro</th>
+                            <th class="text-center">Tipo Centro</th>
+                            <th class="text-center">Empresa</th>
+                            <th class="text-center">Presupuesto Proyectado</th>
+                            <th class="text-center">Presupuesto Autorizado</th>
+                            <th class="text-center">Porc. Participacion</th>
+                            <th class="text-center">Gasto Total</th>
+                            <th class="text-center">Presupuesto Disponible</th>
+                            <th class="text-center bg-warning">Porc Gastado</th>
+                            <th class="text-center">Mes</th>
+                            <th class="text-center">Año</th>
+                            <th class="text-center">Acciones</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+
+                    </tbody>
+                </table>
+            </div>
+        </div>
+
+    </div>
+
+
+</div>
+
+
+<div class="modal fade" id="ModalCuentasCentro" tabindex="-1" aria-labelledby="ModalCuentasCentroLabel"
+    aria-hidden="true" data-bs-keyboard="false" data-bs-backdrop="static">
+    <div class="modal-dialog modal-fullscreen">
+        <div class="modal-content">
+            <div class="modal-header modal-header-vehicles" style="background-color: rgb(166, 219, 150)">
+                <h5 class="modal-title" id="ModalCuentasCentroLabel" style="color: #fff"></h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+            </div>
+            <div class="modal-body">
+
+                <div class="row">
+                    <div class="form-group">
+                        <div class="col-sm-2">
+                            <label for="">Cuenta</label>
+                            <input type="text" class="form-control form-control-sm tableMainFilters"
+                                id="modalCuentaFilter" placeholder="Cuenta">
+                        </div>
+                    </div>
+                </div>
+
+                <br>
+
+                <div class="row">
+                    <div class="table-responsive">
+                        <table id="tableCentrosCuenta"
+                            class="table rounded-4 table-sm table-bordered table-striped align-middle mb-0 table-principal"
+                            style="width:100%">
+
+                            <tfoot class="table-active" style="display: table-header-group;">
+                                <tr>
+                                    <th></th>
+                                    <th></th>
+                                    <th></th>
+                                    <th></th>
+                                    <th></th>
+                                    <th></th>
+                                    <th></th>
+                                    <th></th>
+                                </tr>
+                            </tfoot>
+
+                            <thead class="table-gradient text-dark">
+                                <tr>
+                                    <th class="text-center">#</th>
+                                    <th class="text-center">Descripcion Cuenta</th>
+                                    <th class="text-center">Presupuesto Proyectado</th>
+                                    <th class="text-center">Presupuesto Autorizado</th>
+                                    <th class="text-center">Porc. Participacion</th>
+                                    <th class="text-center">Gasto Total</th>
+                                    <th class="text-center">Presupuesto Disponible</th>
+                                    <th class="text-center bg-warning">Porc. Gastado</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+
+            </div>
+
+            <div class="modal-footer">
+                <button type="button" class="btn btn-disabled" data-bs-dismiss="modal">Cerrar</button>
+            </div>
+
+        </div>
+    </div>
+</div>
+
+<a href="{% url 'panel_contabilidad' %}">
+    <button class="btn btn-sm btn-danger" id="btnCerrar" title="Cerrar"
+        style="position: fixed; bottom: 20px; right: 20px;">
+        <i class="fa fa-times"></i> Cerrar
+    </button>
+</a>
+
+{% endblock %}
+
+
+{% block scripts %}
+
+
+
+<script>
+    $(document).ready(function () {
+        var csrfToken = "{{ csrf_token }}";
+        var buttons = "Bfrtlip";
+
+        var monthA = "{{ varMonth }}";
+        var varAnio = "{{ varAnio }}";
+
+        var windowSize = $(window).width();
+
+        var cardHeight = $(".card-expanded").height();
+        var tableHeight = cardHeight * 0.5;
+
+        let dollarUSLocale = Intl.NumberFormat("en-US", {
+            minimumFractionDigits: 2,
+            maximumFractionDigits: 2
+        });
+
+        let intergerLocale = Intl.NumberFormat("en-US", {
+            minimumFractionDigits: 0,
+            maximumFractionDigits: 0
+        });
+
+        var toastMixin = Swal.mixin({
+            toast: true,
+            icon: 'success',
+            title: 'General Title',
+            animation: false,
+            position: 'top-right',
+            showConfirmButton: false,
+            timer: 2000,
+            timerProgressBar: true,
+            didOpen: (toast) => {
+                toast.addEventListener('mouseenter', Swal.stopTimer);
+                toast.addEventListener('mouseleave', Swal.resumeTimer);
+            }
+        });
+
+        while (monthA.charAt(0) === '0') {
+            monthA = monthA.substring(1);
+        }
+
+        $('.mesPresupuesto').val(monthA).change();
+
+        for (i = new Date().getFullYear(); i > (new Date().getFullYear() - 5); i--) {
+            $('.anioPresupuesto').append($('<option />').val(i).html(i));
+        }
+
+
+
+        tbl_CentrosEmpresa = $('#tbl_CentrosEmpresa').DataTable({
+            language: {
+                url: "{% static 'app/th/json/es-ES.json' %}",
+            },
+        });
+
+
+        $('#btnGetProyecciones').click(function (e) {
+            e.preventDefault();
+
+            varMes1 = $('#mesPresupuestoDesde').val();
+            varAnio1 = $('#anioPresupuestoDesde').val();
+
+            varMes2 = $('#mesPresupuestoHasta').val();
+            varAnio2 = $('#anioPresupuestoHasta').val();
+
+            empresa = $('#filterEmpresaTables').val();
+
+            $("#tbl_CentrosEmpresa").DataTable().clear().destroy();
+
+            tbl_CentrosEmpresa = $('#tbl_CentrosEmpresa').DataTable({
+                scrollX: true,
+                scrollCollapse: true,
+                scrollY: '400px',
+                pageLength: 50,
+                fixedColumns: {
+                    left: 3,
+                    right: 1
+                },
+                drawCallback: function (settings) {
+                    let dollarUSLocale = Intl.NumberFormat("en-US", {
+                        minimumFractionDigits: 2,
+                        maximumFractionDigits: 2
+                    });
+
+                    let intergerLocale = Intl.NumberFormat("en-US", {
+                        minimumFractionDigits: 0,
+                        maximumFractionDigits: 0
+                    });
+
+                    var api = this.api();
+
+                    // Variables para almacenar los totales de las columnas 5 y 6
+                    var totalColumn2 = 0;
+                    var totalColumn4 = 0;
+
+                    // Calcular totales para las columnas 3, 4, 5, y 6
+                    [4, 5, 6, 7, 8].forEach(function (colIndex) {
+                        var total = api
+                            .column(colIndex, {
+                                search: 'applied'
+                            })
+                            .data()
+                            .reduce(function (a, b) {
+                                return Number(a) + Number(b);
+                            }, 0);
+
+                        // Guardar los totales de las columnas 5 y 6 para usarlos en el cálculo del porcentaje
+                        if (colIndex === 5) {
+                            totalColumn2 = total;
+                        } else if (colIndex === 7) {
+                            totalColumn4 = total;
+                        } else if (colIndex === 6) {
+                            totalColumn6 = total;
+                        }
+
+                        // Mostrar el total en el pie de página en la columna respectiva
+                        var columnFooter = $(api.column(colIndex).footer());
+                        columnFooter.html(dollarUSLocale.format(total));
+                        columnFooter.css('text-align', 'right');
+                    });
+
+                    if (totalColumn6 >= 100) {
+                        totalColumn6 = 100;
+                    }
+
+                    var column_participacion = $(api.column(6).footer());
+                    column_participacion.html(dollarUSLocale.format(totalColumn6) + ' %');
+                    column_participacion.css('text-align', 'center');
+
+                    var percentage = (totalColumn4 / totalColumn2) * 100 ||
+                        0; // Evitar división por cero
+                    var columnFooter = $(api.column(9).footer());
+                    columnFooter.html(dollarUSLocale.format(percentage) + ' %');
+                    columnFooter.css('text-align', 'center');
+                },
+                language: {
+                    url: "{% static 'app/th/json/es-ES.json' %}",
+                },
+                ajax: {
+                    beforeSend: function (xhr, type) {
+                        if (!type.crossDomain) {
+                            xhr.setRequestHeader(
+                                'X-CSRF-Token',
+                                $(
+                                    'meta[name="csrf-token"]'
+                                ).attr('content'));
+                        }
+                    },
+                    url: `{% url 'dataBalancePresupuestoCentros' %}?mes1=${encodeURIComponent(varMes1)}&anio1=${encodeURIComponent(varAnio1)}&mes2=${encodeURIComponent(varMes2)}&anio2=${encodeURIComponent(varAnio2)}&empresa=${encodeURIComponent(empresa)}`,
+                },
+                dom: buttons,
+                buttons: [{
+                    extend: 'excel',
+                    text: '<i class="fas fa-file-excel"></i>',
+                    titleAttr: 'Excel',
+                    className: 'btn btn-success',
+                },
+                {
+                    extend: 'pdf',
+                    text: '<i class="fas fa-file-pdf"></i>',
+                    titleAttr: 'PDF',
+                    className: 'btn btn-danger',
+                },
+                {
+                    extend: 'print',
+                    text: '<i class="fas fa-print"></i>',
+                    titleAttr: 'Imprimir',
+                    className: 'btn btn-info',
+                }
+                ],
+                columns: [{
+                    data: 'id_centro'
+                },
+                {
+                    data: 'nombre_centro'
+                },
+                {
+                    data: 'nombre_Tcentro'
+                },
+                {
+                    data: 'empresa'
+                },
+
+
+                {
+                    data: 'PROYECTADO',
+                    className: 'currency',
+                    render: $.fn.dataTable.render.number(',', '.', 2)
+                },
+                {
+                    data: 'AUTORIZADO',
+                    className: 'currency',
+                    render: $.fn.dataTable.render.number(',', '.', 2)
+                },
+                {
+                    data: 'PORC_PARTICIPACION',
+                    className: 'averages',
+                    render: $.fn.dataTable.render.number(',', '.', 2)
+                },
+                {
+                    data: 'GASTO',
+                    className: 'currency',
+                    render: $.fn.dataTable.render.number(',', '.', 2)
+                },
+                {
+                    data: 'DISPONIBLE',
+                    className: 'currency',
+                    render: $.fn.dataTable.render.number(',', '.', 2)
+                },
+                {
+                    data: 'PORC',
+                    className: 'averages',
+                    render: $.fn.dataTable.render.number(',', '.', 2)
+                },
+                {
+                    data: 'mes_nombre'
+                },
+                {
+                    data: 'anio'
+                },
+                {
+                    data: null,
+                    render: function (data, type,
+                        row) {
+                        var badge =
+                            `<div class='text-center'><div class='btn-group'>   <button class='btn btn-info btn-sm btnViewCuentas' data-mes="${row.mes}" data-anio="${row.anio}" data-centro="${row.id_centro}" id='btnViewCuentas' title='Ver Centros'><i class='material-icons text-white'>visibility</i></button>   </div></div>`;
+
+                        return badge;
+                    }
+                },
+                ],
+                order: [
+                    [6, "desc"]
+                ],
+                createdRow: function (row, data) {
+                    if (parseFloat(data.DISPONIBLE) > 0) {
+                        $('td', row).eq(8).css({
+                            'background-color': 'green',
+                            'color': 'white',
+                            'border-style': 'solid',
+                            'border-color': '#bdbdbd',
+                        });
+                        $('td', row).eq(9).css({
+                            'background-color': 'green',
+                            'color': 'white',
+                            'border-style': 'solid',
+                            'border-color': '#bdbdbd',
+                        });
+                    } else if (parseFloat(data.DISPONIBLE) < 0) {
+                        $('td', row).eq(8).css({
+                            'background-color': 'red',
+                            'color': 'white',
+                            'border-style': 'solid',
+                            'border-color': '#bdbdbd',
+                        });
+                        $('td', row).eq(9).css({
+                            'background-color': 'red',
+                            'color': 'white',
+                            'border-style': 'solid',
+                            'border-color': '#bdbdbd',
+                        });
+                    } else if (parseFloat(data.DISPONIBLE) == 0) {
+                        $('td', row).eq(8).css({
+                            'background-color': 'yellow',
+                            'color': 'black',
+                            'border-style': 'solid',
+                            'border-color': '#bdbdbd',
+                        });
+                        $('td', row).eq(9).css({
+                            'background-color': 'yellow',
+                            'color': 'black',
+                            'border-style': 'solid',
+                            'border-color': '#bdbdbd',
+                        });
+                    }
+                },
+            });
+        });
+
+
+        $('#DR_filterCentroTables').keyup(function () {
+            tbl_CentrosEmpresa.column(1).search(this.value, true, false).draw();
+        });
+        $('#DR_filterTipoCentroTables').keyup(function () {
+            tbl_CentrosEmpresa.column(2).search(this.value, true, false).draw();
+        });
+        $('#DR_filterEmpresaCentroTables').change(function () {
+            tbl_CentrosEmpresa.column(3).search(this.value, true, false).draw();
+        });
+
+
+        $(document).on('click', '.btnViewCuentas', function () {
+            fila = $(this).closest("tr");
+
+            varMes1 = $(this).data('mes');
+            varAnio1 = $(this).data('anio');
+
+            varMes2 = $(this).data('mes');
+            varAnio2 = $(this).data('anio');
+
+            var data = $("#tbl_CentrosEmpresa").DataTable().row(fila).data();
+            var id_centro = $(this).data('centro');
+            var nombre_centro = data['nombre_centro'];
+
+            $("#tableCentrosCuenta").DataTable().clear().destroy();
+
+            tableCentrosCuenta = $('#tableCentrosCuenta').DataTable({
+                drawCallback: function (settings) {
+                    let dollarUSLocale = Intl.NumberFormat("en-US", {
+                        minimumFractionDigits: 2,
+                        maximumFractionDigits: 2
+                    });
+
+                    let intergerLocale = Intl.NumberFormat("en-US", {
+                        minimumFractionDigits: 0,
+                        maximumFractionDigits: 0
+                    });
+
+                    var api = this.api();
+
+                    // Variables para almacenar los totales de las columnas 5 y 6
+                    var totalColumn2 = 0;
+                    var totalColumn3 = 0;
+                    var totalColumn5 = 0;
+                    var totalColumn6 = 0;
+
+                    // Calcular totales para las columnas 3, 4, 5, y 6
+                    [2, 3, 5, 6].forEach(function (colIndex) {
+                        var total = api
+                            .column(colIndex, {
+                                search: 'applied'
+                            })
+                            .data()
+                            .reduce(function (a, b) {
+                                return Number(a) + Number(b);
+                            }, 0);
+
+                        // Guardar los totales de las columnas 5 y 6 para usarlos en el cálculo del porcentaje
+                        if (colIndex === 2) {
+                            totalColumn2 = total;
+                        } else if (colIndex === 3) {
+                            totalColumn3 = total;
+                        } else if (colIndex === 5) {
+                            totalColumn5 = total;
+                        } else if (colIndex === 6) {
+                            totalColumn6 = total;
+                        }
+
+                        // Mostrar el total en el pie de página en la columna respectiva
+                        var columnFooter = $(api.column(colIndex).footer());
+                        columnFooter.html(dollarUSLocale.format(total));
+                        columnFooter.css('text-align', 'right');
+                    });
+
+                    var disponible = ((totalColumn5 / totalColumn3 ) * 100) || 0;
+
+                    var columnFooter = $(api.column(7).footer());
+                    columnFooter.html(dollarUSLocale.format(disponible) + ' %');
+                    columnFooter.css('text-align', 'center');
+                },
+                language: {
+                    url: "{% static 'app/th/json/es-ES.json' %}",
+                },
+                scrollCollapse: true,
+                scrollY: '400px',
+                pageLength: 50,
+                ajax: {
+                    beforeSend: function (xhr, type) {
+                        if (!type.crossDomain) {
+                            xhr.setRequestHeader(
+                                'X-CSRF-Token',
+                                $(
+                                    'meta[name="csrf-token"]'
+                                ).attr('content'));
+                        }
+                    },
+                    url: `{% url 'dataBalancePresupuestosCentrosVAIC' %}?mes1=${encodeURIComponent(varMes1)}&anio1=${encodeURIComponent(varAnio1)}&mes2=${encodeURIComponent(varMes2)}&anio2=${encodeURIComponent(varAnio2)}&id_centro=${encodeURIComponent(id_centro)}`,
+                },
+                dom: buttons,
+                buttons: [{
+                    extend: 'excel',
+                    text: '<i class="fas fa-file-excel"></i>',
+                    titleAttr: 'Excel',
+                    className: 'btn btn-success',
+                },
+                {
+                    extend: 'pdf',
+                    text: '<i class="fas fa-file-pdf"></i>',
+                    titleAttr: 'PDF',
+                    className: 'btn btn-danger',
+                },
+                {
+                    extend: 'print',
+                    text: '<i class="fas fa-print"></i>',
+                    titleAttr: 'Imprimir',
+                    className: 'btn btn-info',
+                }
+                ],
+                columns: [{
+                    data: 'numero_cuenta'
+                },
+                {
+                    data: 'descripcion_cuenta'
+                },
+                {
+                    data: 'valor_proyectado',
+                    className: 'currency',
+                    render: $.fn.dataTable.render.number(',', '.', 2)
+                },
+                {
+                    data: 'valor_autorizado',
+                    className: 'currency',
+                    render: $.fn.dataTable.render.number(',', '.', 2)
+                },
+                {
+                    data: 'porc_participacion',
+                    className: 'currency',
+                    render: $.fn.dataTable.render.number(',', '.', 2)
+                },
+                {
+                    data: 'gasto',
+                    className: 'currency',
+                    render: $.fn.dataTable.render.number(',', '.', 2)
+                },
+                {
+                    data: 'presupuesto_disponible',
+                    className: 'currency',
+                    render: $.fn.dataTable.render.number(',', '.', 2)
+                },
+                {
+                    data: 'porc_gastado',
+                    className: 'averages',
+                    render: $.fn.dataTable.render.number(',', '.', 2)
+                },
+                ],
+                order: [
+                    [5, "desc"]
+                ],
+                createdRow: function (row, data) {
+                    if (parseFloat(data.presupuesto_disponible) > 0) {
+                        $('td', row).eq(6).css({
+                            'background-color': 'green',
+                            'color': 'white',
+                            'border-style': 'solid',
+                            'border-color': '#bdbdbd',
+                        });
+                        $('td', row).eq(7).css({
+                            'background-color': 'green',
+                            'color': 'white',
+                            'border-style': 'solid',
+                            'border-color': '#bdbdbd',
+                        });
+                    } else if (parseFloat(data.presupuesto_disponible) < 0) {
+                        $('td', row).eq(6).css({
+                            'background-color': 'red',
+                            'color': 'white',
+                            'border-style': 'solid',
+                            'border-color': '#bdbdbd',
+                        });
+                        $('td', row).eq(7).css({
+                            'background-color': 'red',
+                            'color': 'white',
+                            'border-style': 'solid',
+                            'border-color': '#bdbdbd',
+                        });
+                    } else if (parseFloat(data.presupuesto_disponible) == 0) {
+                        $('td', row).eq(6).css({
+                            'background-color': 'yellow',
+                            'color': 'black',
+                            'border-style': 'solid',
+                            'border-color': '#bdbdbd',
+                        });
+                        $('td', row).eq(7).css({
+                            'background-color': 'yellow',
+                            'color': 'black',
+                            'border-style': 'solid',
+                            'border-color': '#bdbdbd',
+                        });
+                    }
+                },
+            });
+
+
+            $('#modalCuentaFilter').keyup(function () {
+                tableCentrosCuenta.column(1).search(this.value, true, false).draw();
+            });
+
+
+            $("#ModalCuentasCentroLabel").text("BALANCE DE CUENTAS PRESUPUESTADAS DEL CENTRO " +
+                nombre_centro);
+            $("#ModalCuentasCentro").modal("show");
+        });
+
+
+        $('.btnCloseModalCuentasCentro').click(function (e) {
+            e.preventDefault();
+
+            $("#ModalCuentasCentro").modal("hide");
+        });
+
+
+
+
+
+
+
+
+
+
+
+
+
+        /*  */
+    });
+</script>
+{% endblock %}

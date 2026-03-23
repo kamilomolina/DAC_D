@@ -1,0 +1,677 @@
+/* ========================================================
+   BANK_CSS.css — Estilos del Módulo Bancario
+   Tema: Dark Banking (Navy / Teal / Gold)
+   Tendencia: 2026 — Glassmorphism, Inter Font, Micro-animations
+   ======================================================== */
+
+:root {
+  /* Banking Light Theme (Adapted for white body) */
+  --bk-primary: #0a1628;
+  --bk-secondary: #f8fafc;
+  --bk-accent: #00b4d8;
+  --bk-accent-alt: #0077b6;
+  --bk-gold: #d4a855;
+  --bk-gold-light: #f0d78c;
+  --bk-surface: #ffffff;
+  --bk-text: #1e293b;
+  --bk-text-muted: #64748b;
+  --bk-border: rgba(0, 180, 216, 0.25);
+  --bk-glow: 0 0 20px rgba(0, 180, 216, 0.1);
+  --bk-radius: 14px;
+
+  /* Shared vars for compat with CONTA components */
+  --navbar-color: linear-gradient(135deg, #0a1628, #112240);
+  --main-color: linear-gradient(to right, #00b4d8, #0077b6);
+  --body-color: #0d1b2a;
+  --background-color: #112240;
+  --black-color: #e2e8f0;
+  --hover-color: rgba(0, 180, 216, 0.15);
+  --link-navbar: #e2e8f0;
+  --success-color: #10b981;
+  --danger-color: #f43f5e;
+  --warning-color: #f59e0b;
+  --disabled-color: #7d7d7d;
+  --highlight-color: #d4a855;
+  --green-color: #10b981;
+  --primary-color: #00b4d8;
+  --surface-color: rgba(17, 34, 64, 0.95);
+  --border-radius: 14px;
+  --box-shadow-soft: 0 2px 10px rgba(0, 0, 0, 0.2);
+  --box-shadow-hover: 0 4px 15px rgba(0, 0, 0, 0.35);
+  --border-light: 1px solid rgba(0, 180, 216, 0.15);
+
+  /* Colores Tablas */
+  --table1-color: #112240;
+  --table2-color: #1a3050;
+  --table3-color: #1d3a5c;
+  --table4-color: #0077b6;
+  --table5-color: #00b4d8;
+}
+
+
+*,
+*::before,
+*::after {
+  padding: 0;
+  margin: 0;
+  box-sizing: border-box;
+}
+
+body {
+  margin: 0 0 55px 0;
+  font-family: 'Inter', -apple-system, sans-serif;
+  font-size: 15px;
+  /* background: linear-gradient(135deg, #0a1628 0%, #112240 40%, #0d1b2a 100%); */
+  min-height: 100vh;
+  color: var(--bk-text);
+}
+
+h1,
+h2,
+h3,
+h4,
+h5,
+h6 {
+  font-family: 'Inter', sans-serif;
+  margin-top: 0;
+  color: var(--bk-text);
+}
+
+a:hover,
+a:active,
+a:focus {
+  outline: none;
+  text-decoration: none;
+  border-radius: 10px;
+}
+
+input,
+button,
+a {
+  transition: all 0.4s ease;
+}
+
+.main-wrapper {
+  display: flex;
+}
+
+/* ========================================================
+   NAVBAR — Glassmorphism Banking
+   ======================================================== */
+.nav {
+  position: fixed;
+  top: 0;
+  width: 100%;
+  box-shadow: 0 4px 30px rgba(0, 0, 0, 0.3);
+  z-index: 1050;
+  display: flex;
+}
+
+.navbar {
+  background: var(--navbar-color);
+  padding: 0.15rem 1rem !important;
+}
+
+#menuDiv {
+  background: rgba(10, 22, 40, 0.92) !important;
+  backdrop-filter: blur(24px) saturate(180%);
+  -webkit-backdrop-filter: blur(24px) saturate(180%);
+  border-bottom: 1px solid var(--bk-border);
+  box-shadow: 0 4px 30px rgba(0, 0, 0, 0.3);
+  padding: 0 16px;
+  position: sticky;
+  top: 0;
+  z-index: 1050;
+}
+
+#menuDiv .nav-link {
+  color: #e2e8f0 !important;
+  font-weight: 600;
+  font-size: 0.82rem;
+  padding: 12px 16px;
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  white-space: nowrap;
+  border-radius: 10px;
+  transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+  position: relative;
+  letter-spacing: 0.2px;
+}
+
+#menuDiv .nav-link:hover {
+  background: rgba(0, 180, 216, 0.1);
+  color: var(--bk-accent) !important;
+  transform: translateY(-1px);
+}
+
+#menuDiv .nav-link .material-icons {
+  font-size: 20px;
+  color: var(--bk-accent);
+  transition: color 0.3s ease;
+}
+
+#menuDiv .nav-link:hover .material-icons {
+  color: var(--bk-gold);
+}
+
+/* Wrapper Scroll Estético */
+.custom-scroll-nav {
+  display: flex;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: 4px;
+}
+
+.custom-scroll-nav .dropdown {
+  position: relative !important;
+}
+
+/* Brand Mark */
+.bk-brand {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 8px 18px 8px 0;
+  border-right: 1px solid var(--bk-border);
+  margin-right: 8px;
+}
+
+.bk-brand-icon {
+  width: 36px;
+  height: 36px;
+  background: linear-gradient(135deg, var(--bk-accent), var(--bk-accent-alt));
+  border-radius: 10px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  box-shadow: 0 4px 14px rgba(0, 180, 216, 0.25);
+  animation: bk-pulse 4s ease-in-out infinite;
+}
+
+.bk-brand-icon .material-icons {
+  color: #fff;
+  font-size: 20px;
+}
+
+.bk-brand-text {
+  font-size: 0.9rem;
+  font-weight: 800;
+  letter-spacing: 1.5px;
+  text-transform: uppercase;
+  color: #ffffff;
+}
+
+@keyframes bk-pulse {
+
+  0%,
+  100% {
+    box-shadow: 0 4px 14px rgba(0, 180, 216, 0.25);
+  }
+
+  50% {
+    box-shadow: 0 4px 20px rgba(212, 168, 85, 0.35);
+  }
+}
+
+/* Exit Button */
+.btn-salir-nav {
+  background: transparent;
+  border: 1px solid rgba(239, 68, 68, 0.4);
+  color: #f87171;
+  font-weight: 600;
+  font-size: 0.82rem;
+  padding: 8px 16px;
+  border-radius: 10px;
+  display: flex;
+  align-items: center;
+  gap: 4px;
+  transition: all 0.3s ease;
+  white-space: nowrap;
+}
+
+.btn-salir-nav:hover {
+  background: rgba(239, 68, 68, 0.15);
+  border-color: #ef4444;
+  color: #ef4444;
+  box-shadow: 0 0 20px rgba(239, 68, 68, 0.15);
+}
+
+.btn-salir-nav .material-icons {
+  font-size: 18px;
+}
+
+@media (max-width: 550px) {
+  .nav__link {
+    margin: 5%;
+  }
+}
+
+/* Page Wrapper */
+.page-wrapper {
+  flex-grow: 1;
+  padding: 20px 24px;
+  transition: margin-left 0.3s ease;
+  color: var(--bk-text);
+}
+
+.page-title {
+  color: var(--bk-text) !important;
+}
+
+.table-gradient {
+  background: linear-gradient(to right, rgba(0, 180, 216, 0.05), rgba(212, 168, 85, 0.05), rgba(0, 119, 182, 0.05));
+}
+
+table {
+  font-size: 12px;
+}
+
+
+.card-expanded {
+  margin: 0 auto;
+  height: 80vh;
+  overflow-y: auto;
+  padding: 1rem;
+  display: flex;
+  flex-direction: column;
+}
+
+.card-expanded .row {
+  margin-bottom: 1rem;
+}
+
+.card-expanded .form-select,
+.card-expanded .form-control {
+  width: 100%;
+}
+
+
+/* ========================================================
+   DROPDOWN MENUS — Banking Dark
+   ======================================================== */
+.dropdown-menu {
+  background: rgba(10, 22, 40, 0.97) !important;
+  backdrop-filter: blur(20px);
+  border: 1px solid var(--bk-border);
+  border-radius: var(--bk-radius);
+  box-shadow: 0 20px 60px rgba(0, 0, 0, 0.5), var(--bk-glow);
+  padding: 8px;
+  min-width: 280px;
+  animation: bkDropIn 0.25s cubic-bezier(0.16, 1, 0.3, 1);
+}
+
+@keyframes bkDropIn {
+  from {
+    opacity: 0;
+    transform: translateY(-8px) scale(0.97);
+  }
+
+  to {
+    opacity: 1;
+    transform: translateY(0) scale(1);
+  }
+}
+
+.dropdown-menu.show {
+  opacity: 1;
+  transform: translateY(0);
+  pointer-events: auto;
+}
+
+.dropdown-menu .dropdown-item {
+  color: #e2e8f0 !important;
+  font-size: 0.82rem;
+  font-weight: 500;
+  padding: 8px 12px;
+  border-radius: 8px;
+  transition: all 0.2s ease;
+  background: transparent;
+}
+
+.dropdown-menu .dropdown-item:hover,
+.dropdown-menu .dropdown-item:focus {
+  background: rgba(0, 180, 216, 0.1) !important;
+  color: var(--bk-accent) !important;
+}
+
+.dropdown-menu .dropdown-item a,
+.dropdown-menu a.dropdown-item {
+  color: #e2e8f0 !important;
+  text-decoration: none;
+  font-weight: 500;
+}
+
+.dropdown-menu .dropdown-item:hover a,
+.dropdown-menu .dropdown-item a:hover,
+.dropdown-menu a.dropdown-item:hover {
+  color: var(--bk-accent) !important;
+}
+
+.dropdown-divider {
+  border-color: var(--bk-border) !important;
+  margin: 4px 0;
+}
+
+.reportesText {
+  color: var(--bk-gold) !important;
+  font-size: 0.7rem !important;
+  letter-spacing: 1.5px;
+  cursor: default !important;
+}
+
+.reportesText b {
+  font-weight: 700;
+}
+
+.dropdown-menu .abrir-enlace {
+  background: rgba(0, 180, 216, 0.15);
+  border: 1px solid rgba(0, 180, 216, 0.25);
+  color: var(--bk-accent);
+  border-radius: 6px;
+  padding: 2px 6px;
+  transition: all 0.2s ease;
+}
+
+.dropdown-menu .abrir-enlace:hover {
+  background: var(--bk-accent);
+  color: #fff;
+  transform: scale(1.1);
+}
+
+.dropdown-menu hr {
+  border-color: var(--bk-border);
+  margin: 6px 0;
+}
+
+
+/* ========================================================
+   BADGES
+   ======================================================== */
+.badge:hover {
+  transform: scale(1.075);
+  transition: 0.3s ease-in-out;
+}
+
+.badge-info {
+  background-color: #1c7991;
+}
+
+.badge-success {
+  background-color: var(--green-color);
+}
+
+.badge-danger {
+  background-color: #740000;
+}
+
+.badge-logistica {
+  background-color: #5e5e5e;
+}
+
+.badge-orange {
+  background-color: #de7c04;
+}
+
+.badge-premium {
+  background-color: #ecc902;
+}
+
+.badge-pink {
+  background-color: #c50083;
+}
+
+.badge-warning {
+  background-color: var(--bk-accent-alt);
+}
+
+.badge-null {
+  background-color: var(--bk-accent-alt);
+}
+
+.badge-process {
+  background-color: #0046e8;
+}
+
+.badge-ventas {
+  background-color: #175200;
+}
+
+.badge-cabanias {
+  background-color: #58452a;
+}
+
+.badge-idc {
+  background-color: #1bc2c2;
+}
+
+.badge-compras {
+  background-color: #c0b023;
+}
+
+.badge-admin {
+  background-color: #0b0258;
+}
+
+.badge-super {
+  background-color: #4ad669;
+}
+
+.badge-hocares {
+  background-color: #fffd83;
+}
+
+.badge-miramontes {
+  background-color: #2b4ce2;
+}
+
+.badge-rrhh {
+  background-color: #d35555;
+}
+
+.badge-auditoria {
+  background-color: #888787;
+}
+
+.badge-it {
+  background-color: #106366;
+}
+
+.badge-bodeguita {
+  background-color: #545728;
+}
+
+.badge-empresa {
+  background-color: #ff0000;
+}
+
+.badge-yellow {
+  background-color: #fff128;
+}
+
+.badge-purple {
+  background-color: #7c3d76;
+}
+
+.badge-disabled {
+  background-color: #545454;
+  color: #fff;
+}
+
+.badge-distribuidora {
+  background-color: #47703334;
+  color: #000;
+}
+
+.badge-supermercado {
+  background-color: #3a717734;
+  color: #000;
+}
+
+.badge-totales {
+  background-color: #54408037;
+  color: #000;
+}
+
+.badge-over {
+  background-color: #333f9c;
+  color: #fff;
+}
+
+
+/* ========================================================
+   CARD BANCO — Banking Glassmorphism
+   ======================================================== */
+.card-banco {
+  background: var(--bk-surface);
+  border-radius: var(--bk-radius);
+  border: 1px solid var(--bk-border);
+  box-shadow: var(--box-shadow-soft);
+  transition: all 0.2s ease;
+  overflow: hidden;
+  font-family: 'Inter', -apple-system, sans-serif;
+}
+
+.card-banco:hover {
+  box-shadow: var(--box-shadow-hover);
+  transform: translateY(-1px);
+}
+
+.card-banco label {
+  font-size: 0.75rem;
+  color: #4b5563;
+  margin-bottom: 0.1rem;
+  font-weight: 600;
+}
+
+.card-banco .form-control,
+.card-banco .form-select {
+  border-radius: 6px;
+  border: 1px solid rgba(0, 0, 0, 0.15);
+  padding: 0.35rem 0.5rem;
+  font-size: 0.85rem;
+  transition: border-color 0.2s, box-shadow 0.2s;
+  height: 30px;
+  background: #ffffff;
+  color: #333333;
+}
+
+.card-banco .form-control:focus,
+.card-banco .form-select:focus {
+  border-color: var(--bk-accent);
+  box-shadow: 0 0 0 2px rgba(0, 180, 216, 0.2);
+  background: #ffffff;
+}
+
+.card-banco .form-control[readonly],
+.card-banco .form-control:disabled {
+  background-color: #f3f4f6;
+  color: #6b7280;
+  border-color: #d1d5db;
+}
+
+.card-banco .select2-container .select2-selection--single {
+  height: 30px !important;
+  border-radius: 6px !important;
+  border: 1px solid rgba(0, 0, 0, 0.15) !important;
+  background: #ffffff !important;
+}
+
+.card-banco .select2-container--default .select2-selection--single .select2-selection__rendered {
+  line-height: 28px !important;
+  font-size: 0.85rem;
+  color: #333333 !important;
+}
+
+.card-banco .select2-selection__arrow {
+  height: 28px !important;
+}
+
+/* Table */
+.table-moderna thead th {
+  background-color: rgba(0, 180, 216, 0.08);
+  color: var(--bk-text-muted);
+  font-weight: 600;
+  border-bottom: none;
+  text-transform: uppercase;
+  font-size: 0.65rem;
+  letter-spacing: 0.3px;
+  padding: 0.4rem;
+}
+
+.table-moderna tbody td {
+  padding: 0.4rem;
+  font-size: 0.8rem;
+  vertical-align: middle;
+}
+
+.table-moderna tbody tr:hover {
+  background-color: rgba(0, 180, 216, 0.03);
+}
+
+.formattedMoneyInputs {
+  font-family: 'Consolas', 'Courier New', monospace;
+  font-weight: 500;
+}
+
+
+/* ========================================================
+   BTN MENU toggle
+   ======================================================== */
+.btnMenu {
+  background: rgba(0, 180, 216, 0.15) !important;
+  border: 1px solid rgba(0, 180, 216, 0.3) !important;
+  color: var(--bk-accent) !important;
+}
+
+.btnMenu:hover {
+  background: rgba(0, 180, 216, 0.25) !important;
+}
+
+
+/* ========================================================
+   UTILITY OVERRIDES for Banking dark theme
+   ======================================================== */
+.currency {
+  text-align: right !important;
+}
+
+.averages {
+  text-align: center !important;
+}
+
+.fs-small {
+  font-size: 0.8rem !important;
+}
+
+/* DataTables export button fixes */
+.dt-buttons .btn.dt-button {
+  background-image: none !important;
+  color: #fff !important;
+  border: none;
+}
+
+.dt-buttons .btn-success.dt-button {
+  background-color: #198754 !important;
+}
+
+.dt-buttons .btn-danger.dt-button {
+  background-color: #dc3545 !important;
+}
+
+.dt-buttons .btn-primary.dt-button {
+  background-color: #0d6efd !important;
+}
+
+.dt-buttons .btn-info.dt-button {
+  background-color: #0dcaf0 !important;
+}
+
+.dt-buttons .btn-warning.dt-button {
+  background-color: #ffc107 !important;
+  color: #000 !important;
+}
+
+.dt-buttons .btn.dt-button:hover {
+  opacity: 0.85;
+}
