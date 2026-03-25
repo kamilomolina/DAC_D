@@ -154,11 +154,11 @@ function cargarCategoriasActivos() {
                     <td>${item.Descripcion || ''}</td>
                     <td>${ActivoUtils.getStatusBadge(item.estado)}</td>
                     <td class="text-center">
-                        <button class="btn btn-primary btn-sm me-1" onclick="editarCategoriaActivo(${item.PkCategoria})">
-                            Editar
+                        <button class="btn btn-primary btn-sm me-1" title="Editar" onclick="editarCategoriaActivo(${item.PkCategoria})">
+                            <i class="fas fa-pen"></i>
                         </button>
-                        <button class="btn btn-danger btn-sm" onclick="eliminarCategoriaActivo(${item.PkCategoria})">
-                            Eliminar
+                        <button class="btn btn-danger btn-sm" title="Eliminar" onclick="eliminarCategoriaActivo(${item.PkCategoria})">
+                            <i class="fas fa-trash"></i>
                         </button>
                     </td>
                 </tr>
@@ -215,11 +215,13 @@ function guardarCategoriaActivo() {
             csrfmiddlewaretoken: $('[name=csrfmiddlewaretoken]').val()
         },
         success: function (response) {
-            alert(response.mensaje);
-
             if (response.save == 1) {
+                let msg = pkCategoria ? "Editado con éxito" : "Creado con éxito";
+                Swal.fire("Éxito", msg, "success");
                 $('#modalCategoriaActivo').modal('hide');
                 cargarCategoriasActivos();
+            } else {
+                Swal.fire("Error", response.mensaje, "error");
             }
         }
     });

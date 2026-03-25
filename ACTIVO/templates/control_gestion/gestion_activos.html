@@ -267,11 +267,11 @@ function cargarActivos() {
                     <td>${item.FechaCompra || ''}</td>
                     <td class="text-end">${ActivoUtils.formatNumber(item.ValorCompra)}</td>
                     <td class="text-center">
-                        <button class="btn btn-primary btn-sm me-1" onclick="editarActivo(${item.PkActivo})">
-                            Editar
+                        <button class="btn btn-primary btn-sm me-1" title="Editar" onclick="editarActivo(${item.PkActivo})">
+                            <i class="fas fa-pen"></i>
                         </button>
-                        <button class="btn btn-danger btn-sm" onclick="eliminarActivo(${item.PkActivo})">
-                            Eliminar
+                        <button class="btn btn-danger btn-sm" title="Eliminar" onclick="eliminarActivo(${item.PkActivo})">
+                            <i class="fas fa-trash"></i>
                         </button>
                     </td>
                 </tr>
@@ -352,7 +352,8 @@ function guardarActivo() {
         },
         success: function (response) {
             if (response.save == 1) {
-                Swal.fire("Éxito", response.mensaje, "success");
+                let msg = pkActivo ? "Editado con éxito" : "Creado con éxito";
+                Swal.fire("Éxito", msg, "success");
                 $('#modalActivo').modal('hide');
                 cargarActivos();
             } else {

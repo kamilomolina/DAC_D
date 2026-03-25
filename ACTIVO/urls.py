@@ -25,6 +25,11 @@ urlpatterns = [
     # ---- NUEVAS RUTAS BASE ----
     # Catálogos
     path('gestion-proveedores/', gestion_proveedores, name='gestion_proveedores'),
+    path('get-proveedores/', get_proveedores, name='get_proveedores'),
+    path('get-proveedor-x-id/', get_proveedor_x_id, name='get_proveedor_x_id'),
+    path('insert-proveedor/', insert_proveedor, name='insert_proveedor'),
+    path('update-estado-proveedor/', update_estado_proveedor, name='update_estado_proveedor'),
+    path('delete-proveedor/', delete_proveedor, name='delete_proveedor'),
     path('gestion-ubicaciones/', gestion_ubicaciones, name='gestion_ubicaciones'),
     path('gestion-motivos-salida/', gestion_motivos_salida, name='gestion_motivos_salida'),
     

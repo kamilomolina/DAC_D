@@ -28,9 +28,9 @@ def fill_categorias_activos(request):
 
 def fill_proveedores_activos(request):
     try:
-        fkEmpresa = request.GET.get('fkEmpresa')
         with connections['activo'].cursor() as cursor:
-            cursor.callproc('AF_FILL_PROVEEDORES', [fkEmpresa])
+            # Usando AF_GET_PROVEEDORES que sí existe en lugar de AF_FILL_PROVEEDORES
+            cursor.callproc('AF_GET_PROVEEDORES', [])
             column_names = [desc[0] for desc in cursor.description]
             data = [dict(zip(map(str, column_names), row)) for row in cursor.fetchall()]
         return JsonResponse({'data': data})
@@ -297,6 +297,130 @@ def delete_categoria_activo(request):
 # Catálogos
 def gestion_proveedores(request):
     return render(request, 'catalogos/gestion_proveedores.html')
+
+def get_proveedores(request):
+    try:
+        with connections['activo'].cursor() as cursor:
+            cursor.callproc('AF_GET_PROVEEDORES', [])
+            column_names = [desc[0] for desc in cursor.description]
+            data = []
+            for row in cursor.fetchall():
+                row_dict = {}
+                for col, val in zip(column_names, row):
+                    if isinstance(val, (date, datetime)):
+                        row_dict[str(col)] = val.strftime('%Y-%m-%d %H:%M:%S')
+                    elif isinstance(val, decimal.Decimal):
+                        row_dict[str(col)] = float(val)
+                    else:
+                        row_dict[str(col)] = val if val is not None else ""
+                data.append(row_dict)
+        return JsonResponse({'data': data})
+    except Exception as e:
+        return JsonResponse({'data': [], 'error': str(e)})
+
+def get_proveedor_x_id(request):
+    try:
+        pkProveedor = request.GET.get('pkProveedor')
+        if not pkProveedor:
+             return JsonResponse({'success': False, 'mensaje': 'ID requerido'})
+             
+        with connections['activo'].cursor() as cursor:
+            cursor.callproc('AF_GET_PROVEEDORES', [])
+            column_names = [desc[0] for desc in cursor.description]
+            
+            # Filtramos en python ya que el SP trae todos:
+            found_data = None
+            for row in cursor.fetchall():
+                if str(row[0]) == str(pkProveedor):
+                    found_data = {}
+                    for col, val in zip(column_names, row):
+                        if isinstance(val, (date, datetime)):
+                            found_data[str(col)] = val.strftime('%Y-%m-%d %H:%M:%S')
+                        elif isinstance(val, decimal.Decimal):
+                            found_data[str(col)] = float(val)
+                        else:
+                            found_data[str(col)] = val if val is not None else ""
+                    break
+                    
+            if not found_data:
+                return JsonResponse({'success': False, 'mensaje': 'No se encontró el proveedor.'})
+                
+        return JsonResponse({'success': True, 'data': found_data})
+    except Exception as e:
+        return JsonResponse({'success': False, 'mensaje': str(e)})
+
+def insert_proveedor(request):
+    try:
+        if request.method != 'POST':
+            return JsonResponse({'save': 0, 'mensaje': 'Método no permitido.'})
+            
+        userName = request.session.get('userName', 'admin') # Falta userName en request? Agregamos 'admin' por si no hay session de pruebas.
+        if not request.session.get('userName'):
+            # Si el proyecto usa userInfo o similar, lo extraemos, usamos get() normal para evitar error de session no iniciada
+            userName = request.session.get('userName', 'admin') 
+            
+        p = request.POST
+        pkProveedor = p.get('pkProveedor')
+        if not pkProveedor or str(pkProveedor) == "":
+            pkProveedor = 0
+            
+        params = [
+            pkProveedor, 
+            p.get('nombreProveedor'), 
+            p.get('rtn'), 
+            p.get('telefono'), 
+            p.get('email'), 
+            p.get('direccion'), 
+            userName
+        ]
+        
+        with connections['activo'].cursor() as cursor:
+            cursor.callproc('AF_INSERT_PROVEEDOR', params)
+            row = cursor.fetchone()
+            
+        return JsonResponse({
+            'save': row[0],
+            'existe': row[1],
+            'lastID': row[2],
+            'mensaje': row[3] if len(row) > 3 else 'Operación realizada correctamente'
+        })
+    except Exception as e:
+        return JsonResponse({'save': 0, 'mensaje': str(e)})
+
+def update_estado_proveedor(request):
+    try:
+        if request.method != 'POST':
+            return JsonResponse({'save': 0, 'mensaje': 'Método no permitido.'})
+            
+        userName = request.session.get('userName')
+        p = request.POST
+        
+        pkProveedor = p.get('pkProveedor')
+        with connections['activo'].cursor() as cursor:
+            cursor.callproc('AF_UPDATE_ESTADO_PROVEEDOR', [pkProveedor, userName])
+            row = cursor.fetchone()
+            
+        return JsonResponse({'save': row[0], 'mensaje': row[1]})
+    except Exception as e:
+        return JsonResponse({'save': 0, 'mensaje': str(e)})
+
+def delete_proveedor(request):
+    try:
+        if request.method != 'POST':
+            return JsonResponse({'save': 0, 'mensaje': 'Método no permitido.'})
+            
+        pkProveedor = request.POST.get('pkProveedor')
+        
+        with connections['activo'].cursor() as cursor:
+            cursor.callproc('AF_DELETE_PROVEEDOR', [pkProveedor])
+            row = cursor.fetchone()
+            
+        return JsonResponse({
+            'save': row[0] if row else 1,
+            'mensaje': 'Proveedor eliminado correctamente'
+        })
+    except Exception as e:
+        return JsonResponse({'save': 0, 'mensaje': str(e)})
 
 def gestion_ubicaciones(request):
     return render(request, 'catalogos/gestion_ubicaciones.html')

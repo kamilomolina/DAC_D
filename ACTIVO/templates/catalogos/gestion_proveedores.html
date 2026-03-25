@@ -1,22 +1,333 @@
 {% extends 'componentes/menu_activo.html' %}
+{% load static %}
 
-{% block title %}ACTIVO FIJO - Gestión de Proveedores{% endblock %}
+{% block title %}
+Gestión de Proveedores
+{% endblock %}
 
 {% block body %}
-<div class="row align-items-center border-bottom mb-3 py-2">
-    <div class="col d-flex align-items-center">
-        <h6 class="page-title mb-0 fs-6 fw-bold">Gestión de Proveedores</h6>
+<div class="container-fluid mt-3">
+    {% csrf_token %}
+
+    <div class="card shadow-sm border-0">
+        <div class="card-header bg-white">
+            <div class="d-flex justify-content-between align-items-center flex-wrap gap-2">
+                <h5 class="mb-0">Gestión de Proveedores</h5>
+                <button class="btn btn-primary btn-sm" id="btnNuevoProveedor">
+                    <i class="material-icons align-middle" style="font-size:18px;">add</i>
+                    Nuevo Proveedor
+                </button>
+            </div>
+        </div>
+
+        <div class="card-body">
+            <div class="row g-2 mb-3">
+                <div class="col-md-8">
+                    <label class="form-label form-label-sm">Buscar</label>
+                    <input type="text" class="form-control form-control-sm" id="textoBusqueda" placeholder="Nombre, RTN, Correo...">
+                </div>
+                <div class="col-md-4 d-flex align-items-end">
+                    <button class="btn btn-secondary btn-sm w-100" id="btnBuscarProveedores">
+                        Actualizar Lista
+                    </button>
+                </div>
+            </div>
+
+            <div class="table-responsive">
+                <table class="table table-bordered table-hover table-sm w-100" id="tablaProveedores">
+                    <thead class="table-light">
+                        <tr>
+                            <th>ID</th>
+                            <th>Nombre</th>
+                            <th>RTN</th>
+                            <th>Teléfono</th>
+                            <th>Correo</th>
+                            <th>Dirección</th>
+                            <th>Estado</th>
+                            <th>Acciones</th>
+                        </tr>
+                    </thead>
+                    <tbody></tbody>
+                </table>
+            </div>
+        </div>
     </div>
 </div>
 
-<div class="card shadow-sm border-0 mb-4 h-100" style="border-radius: 12px;">
-    <div class="card-body p-5 text-center">
-        <i class="material-icons text-muted" style="font-size: 4rem; opacity: 0.5;">construction</i>
-        <h4 class="mt-3 text-muted">Pantalla en construcción</h4>
-        <p class="text-secondary">Esta sección está siendo desarrollada. Pronto estará disponible.</p>
+
+<div class="modal fade" id="modalProveedor" tabindex="-1" aria-hidden="true">
+    <div class="modal-dialog modal-lg modal-dialog-scrollable">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title">Proveedor</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+            </div>
+
+            <div class="modal-body">
+                <input type="hidden" id="pkProveedor">
+
+                <div class="row g-2">
+                    <div class="col-md-12">
+                        <label class="form-label form-label-sm">Nombre Proveedor</label>
+                        <input type="text" class="form-control form-control-sm" id="nombreProveedor" required>
+                    </div>
+
+                    <div class="col-md-6">
+                        <label class="form-label form-label-sm">RTN</label>
+                        <input type="text" class="form-control form-control-sm" id="rtn">
+                    </div>
+
+                    <div class="col-md-6">
+                        <label class="form-label form-label-sm">Teléfono</label>
+                        <input type="text" class="form-control form-control-sm" id="telefono">
+                    </div>
+
+                    <div class="col-md-12">
+                        <label class="form-label form-label-sm">Correo Electrónico</label>
+                        <input type="email" class="form-control form-control-sm" id="email">
+                    </div>
+
+                    <div class="col-md-12">
+                        <label class="form-label form-label-sm">Dirección</label>
+                        <textarea class="form-control form-control-sm" id="direccion" rows="3"></textarea>
+                    </div>
+                </div>
+            </div>
+
+            <div class="modal-footer">
+                <button class="btn btn-success btn-sm" id="btnGuardarProveedor">Guardar</button>
+                <button class="btn btn-secondary btn-sm" data-bs-dismiss="modal">Cerrar</button>
+            </div>
+        </div>
     </div>
 </div>
+
 {% endblock %}
 
 {% block scripts %}
+<script src="{% static 'app/activo/utils.js' %}"></script>
+<script>
+    let tablaProveedores = null;
+
+$(document).ready(function () {
+    inicializarEventos();
+    cargarProveedores();
+});
+
+function inicializarEventos() {
+    $('#btnBuscarProveedores').on('click', function () {
+        cargarProveedores();
+    });
+
+    $('#btnNuevoProveedor').on('click', function () {
+        limpiarFormularioProveedor();
+        $('#modalProveedor').modal('show');
+    });
+
+    $('#btnGuardarProveedor').on('click', function () {
+        guardarProveedor();
+    });
+
+    $('#textoBusqueda').on('keyup', function () {
+        if (tablaProveedores) {
+            tablaProveedores.search(this.value).draw();
+        }
+    });
+}
+
+function cargarProveedores() {
+    $.ajax({
+        url: "{% url 'ACTIVO:get_proveedores' %}",
+        type: 'GET',
+        success: function (response) {
+            if ($.fn.DataTable.isDataTable('#tablaProveedores')) {
+                $('#tablaProveedores').DataTable().destroy();
+            }
+
+            $('#tablaProveedores tbody').empty();
+
+            $.each(response.data, function (i, item) {
+                let badgeEstado = item.estado === 'ACTIVO' ? '<span class="badge bg-success">ACTIVO</span>' : '<span class="badge bg-danger">' + item.estado + '</span>';
+                let btnEstadoText = item.estado === 'ACTIVO' ? 'Inactivar' : 'Activar';
+                let btnEstadoClass = item.estado === 'ACTIVO' ? 'btn-danger' : 'btn-success';
+
+                $('#tablaProveedores tbody').append(`
+                    <tr>
+                        <td>${item.PkProveedor}</td>
+                        <td>${item.NombreProveedor || ''}</td>
+                        <td>${item.RTN || ''}</td>
+                        <td>${item.Telefono || ''}</td>
+                        <td>${item.Email || ''}</td>
+                        <td>${item.Direccion || ''}</td>
+                        <td class="text-center">${badgeEstado}</td>
+                        <td class="text-center">
+                            <button class="btn btn-primary btn-sm me-1" title="Editar" onclick="editarProveedor(${item.PkProveedor})">
+                                <i class="fas fa-pen"></i>
+                            </button>
+                            <button class="btn ${btnEstadoClass} btn-sm me-1" title="${btnEstadoText}" onclick="cambiarEstadoProveedor(${item.PkProveedor})">
+                                <i class="fas fa-sync-alt"></i>
+                            </button>
+                            <button class="btn btn-danger btn-sm" title="Eliminar" onclick="eliminarProveedor(${item.PkProveedor})">
+                                <i class="fas fa-trash"></i>
+                            </button>
+                        </td>
+                    </tr>
+                `);
+            });
+
+            tablaProveedores = $('#tablaProveedores').DataTable({
+                destroy: true,
+                pageLength: 10,
+                order: [[0, 'desc']],
+                language: { url: '//cdn.datatables.net/plug-ins/1.13.7/i18n/es-ES.json' }
+            });
+        }
+    });
+}
+
+function editarProveedor(pkProveedor) {
+    limpiarFormularioProveedor();
+
+    $.ajax({
+        url: "{% url 'ACTIVO:get_proveedor_x_id' %}",
+        type: 'GET',
+        data: {
+            pkProveedor: pkProveedor
+        },
+        success: function (response) {
+            if (!response.success) {
+                Swal.fire("Atención", response.mensaje, "warning");
+                return;
+            }
+
+            let d = response.data;
+
+            $('#pkProveedor').val(d.PkProveedor);
+            $('#nombreProveedor').val(d.NombreProveedor);
+            $('#rtn').val(d.RTN);
+            $('#telefono').val(d.Telefono);
+            $('#email').val(d.Email);
+            $('#direccion').val(d.Direccion);
+
+            $('#modalProveedor').modal('show');
+        }
+    });
+}
+
+function guardarProveedor() {
+    let pkProveedor = $('#pkProveedor').val();
+    let url = "{% url 'ACTIVO:insert_proveedor' %}";
+
+    // Validaciones básicas
+    if (!$('#nombreProveedor').val() || $('#nombreProveedor').val().trim() === '') {
+        Swal.fire("Atención", "El nombre del proveedor es obligatorio", "warning");
+        return;
+    }
+
+    $.ajax({
+        url: url,
+        type: 'POST',
+        data: {
+            pkProveedor: pkProveedor,
+            nombreProveedor: $('#nombreProveedor').val(),
+            rtn: $('#rtn').val(),
+            telefono: $('#telefono').val(),
+            email: $('#email').val(),
+            direccion: $('#direccion').val(),
+            csrfmiddlewaretoken: $('[name=csrfmiddlewaretoken]').val()
+        },
+        success: function (response) {
+            if (response.save == 1) {
+                if (response.existe == 1) {
+                    Swal.fire("Atención", response.mensaje || "El proveedor ya existe o tiene datos duplicados", "warning");
+                } else {
+                    let msg = pkProveedor ? "Editado con éxito" : "Creado con éxito";
+                    Swal.fire("Éxito", msg, "success");
+                    $('#modalProveedor').modal('hide');
+                    cargarProveedores();
+                }
+            } else {
+                Swal.fire("Error", response.mensaje || "Ocurrió un error general.", "error");
+            }
+        },
+        error: function(xhr, status, error) {
+            Swal.fire("Error", "Error al guardar: " + error, "error");
+        }
+    });
+}
+
+function cambiarEstadoProveedor(pkProveedor) {
+    Swal.fire({
+        title: '¿Estás seguro?',
+        text: "Se cambiará el estado de este proveedor",
+        icon: 'warning',
+        showCancelButton: true,
+        confirmButtonColor: '#3085d6',
+        cancelButtonColor: '#d33',
+        confirmButtonText: 'Sí, continuar',
+        cancelButtonText: 'Cancelar'
+    }).then((result) => {
+        if (result.isConfirmed) {
+            $.ajax({
+                url: "{% url 'ACTIVO:update_estado_proveedor' %}",
+                type: 'POST',
+                data: {
+                    pkProveedor: pkProveedor,
+                    csrfmiddlewaretoken: $('[name=csrfmiddlewaretoken]').val()
+                },
+                success: function (response) {
+                    if (response.save == 1) {
+                        Swal.fire("Éxito", response.mensaje || "Estado actualizado correctamente", "success");
+                        cargarProveedores();
+                    } else {
+                        Swal.fire("Error", response.mensaje, "error");
+                    }
+                }
+            });
+        }
+    });
+}
+
+function eliminarProveedor(pkProveedor) {
+    Swal.fire({
+        title: '¿Estás seguro?',
+        text: "¡No podrás revertir esto!",
+        icon: 'warning',
+        showCancelButton: true,
+        confirmButtonColor: '#3085d6',
+        cancelButtonColor: '#d33',
+        confirmButtonText: 'Sí, eliminar',
+        cancelButtonText: 'Cancelar'
+    }).then((result) => {
+        if (result.isConfirmed) {
+            $.ajax({
+                url: "{% url 'ACTIVO:delete_proveedor' %}",
+                type: 'POST',
+                data: {
+                    pkProveedor: pkProveedor,
+                    estado: 3,
+                    csrfmiddlewaretoken: $('[name=csrfmiddlewaretoken]').val()
+                },
+                success: function (response) {
+                    if (response.save == 1) {
+                        Swal.fire("Eliminado", response.mensaje || "Proveedor eliminado con éxito", "success");
+                        cargarProveedores();
+                    } else {
+                        Swal.fire("Error", response.mensaje, "error");
+                    }
+                }
+            });
+        }
+    });
+}
+
+function limpiarFormularioProveedor() {
+    $('#pkProveedor').val('');
+    $('#nombreProveedor').val('');
+    $('#rtn').val('');
+    $('#telefono').val('');
+    $('#email').val('');
+    $('#direccion').val('');
+}
+</script>
 {% endblock %}
