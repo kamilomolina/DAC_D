@@ -1,22 +1,311 @@
 {% extends 'componentes/menu_activo.html' %}
+{% load static %}
 
-{% block title %}ACTIVO FIJO - Gestión de Ubicaciones{% endblock %}
+{% block title %}
+Gestión de Ubicaciones
+{% endblock %}
 
 {% block body %}
-<div class="row align-items-center border-bottom mb-3 py-2">
-    <div class="col d-flex align-items-center">
-        <h6 class="page-title mb-0 fs-6 fw-bold">Gestión de Ubicaciones</h6>
+<div class="container-fluid mt-3">
+    {% csrf_token %}
+
+    <div class="card shadow-sm border-0">
+        <div class="card-header bg-white">
+            <div class="d-flex justify-content-between align-items-center flex-wrap gap-2">
+                <h5 class="mb-0">Gestión de Ubicaciones</h5>
+                <button class="btn btn-primary btn-sm" id="btnNuevaUbicacion">
+                    <i class="material-icons align-middle" style="font-size:18px;">add</i>
+                    Nueva Ubicación
+                </button>
+            </div>
+        </div>
+
+        <div class="card-body">
+            <div class="row g-2 mb-3">
+                <div class="col-md-8">
+                    <label class="form-label form-label-sm">Buscar</label>
+                    <input type="text" class="form-control form-control-sm" id="textoBusqueda" placeholder="Código, Nombre, Tipo...">
+                </div>
+                <div class="col-md-4 d-flex align-items-end">
+                    <button class="btn btn-secondary btn-sm w-100" id="btnBuscarUbicaciones">
+                        Actualizar Lista
+                    </button>
+                </div>
+            </div>
+
+            <div class="table-responsive">
+                <table class="table table-bordered table-hover table-sm w-100" id="tablaUbicaciones">
+                    <thead class="table-light">
+                        <tr>
+                            <th>ID</th>
+                            <th>Código</th>
+                            <th>Nombre</th>
+                            <th>Tipo</th>
+                            <th>Descripción</th>
+                            <th>Acciones</th>
+                        </tr>
+                    </thead>
+                    <tbody></tbody>
+                </table>
+            </div>
+        </div>
     </div>
 </div>
 
-<div class="card shadow-sm border-0 mb-4 h-100" style="border-radius: 12px;">
-    <div class="card-body p-5 text-center">
-        <i class="material-icons text-muted" style="font-size: 4rem; opacity: 0.5;">construction</i>
-        <h4 class="mt-3 text-muted">Pantalla en construcción</h4>
-        <p class="text-secondary">Esta sección está siendo desarrollada. Pronto estará disponible.</p>
+
+<div class="modal fade" id="modalUbicacion" tabindex="-1" aria-hidden="true">
+    <div class="modal-dialog modal-lg modal-dialog-scrollable">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title">Ubicación</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+            </div>
+
+            <div class="modal-body">
+                <input type="hidden" id="pkUbicacion">
+
+                <div class="row g-2">
+                    <div class="col-md-6">
+                        <label class="form-label form-label-sm">Código de Ubicación</label>
+                        <input type="text" class="form-control form-control-sm" id="codigoUbicacion" required>
+                    </div>
+
+                    <div class="col-md-6">
+                        <label class="form-label form-label-sm">Nombre de Ubicación</label>
+                        <input type="text" class="form-control form-control-sm" id="nombreUbicacion" required>
+                    </div>
+
+                    <div class="col-md-6">
+                        <label class="form-label form-label-sm">Tipo de Ubicación</label>
+                        <input type="text" class="form-control form-control-sm" id="tipoUbicacion">
+                    </div>
+
+                    <div class="col-md-6">
+                        <label class="form-label form-label-sm">Empresa</label>
+                        <select class="form-select form-select-sm" id="fkEmpresa">
+                            <option value="0">General / Todas</option>
+                            <!-- Se podría llenar dinámicamente si se requiere, pero por ahora se deja la opción genérica -->
+                        </select>
+                    </div>
+
+                    <div class="col-md-12">
+                        <label class="form-label form-label-sm">Descripción</label>
+                        <textarea class="form-control form-control-sm" id="descripcionUbicacion" rows="3"></textarea>
+                    </div>
+                </div>
+            </div>
+
+            <div class="modal-footer">
+                <button class="btn btn-success btn-sm" id="btnGuardarUbicacion">Guardar</button>
+                <button class="btn btn-secondary btn-sm" data-bs-dismiss="modal">Cerrar</button>
+            </div>
+        </div>
     </div>
 </div>
+
 {% endblock %}
 
 {% block scripts %}
+<script src="{% static 'app/activo/utils.js' %}"></script>
+<script>
+    let tablaUbicaciones = null;
+
+$(document).ready(function () {
+    inicializarEventos();
+    cargarUbicaciones();
+});
+
+function inicializarEventos() {
+    $('#btnBuscarUbicaciones').on('click', function () {
+        cargarUbicaciones();
+    });
+
+    $('#btnNuevaUbicacion').on('click', function () {
+        limpiarFormularioUbicacion();
+        $('#modalUbicacion').modal('show');
+    });
+
+    $('#btnGuardarUbicacion').on('click', function () {
+        guardarUbicacion();
+    });
+
+    $('#textoBusqueda').on('keyup', function () {
+        if (tablaUbicaciones) {
+            tablaUbicaciones.search(this.value).draw();
+        }
+    });
+}
+
+function cargarUbicaciones() {
+    $.ajax({
+        url: "{% url 'ACTIVO:get_ubicaciones' %}",
+        type: 'GET',
+        success: function (response) {
+            if ($.fn.DataTable.isDataTable('#tablaUbicaciones')) {
+                $('#tablaUbicaciones').DataTable().destroy();
+            }
+
+            $('#tablaUbicaciones tbody').empty();
+
+            $.each(response.data, function (i, item) {
+                // Adjust property names based on exactly what AF_FILL_UBICACIONES returns. Defaulting to general assumptions
+                let pk = item.PkUbicacion || item.pkUbicacion || item.PKUBICACION;
+                let codigo = item.CodigoUbicacion || item.codigoUbicacion || item.CODIGOUBICACION || '';
+                let nombre = item.NombreUbicacion || item.nombreUbicacion || item.NOMBREUBICACION || '';
+                let tipo = item.TipoUbicacion || item.tipoUbicacion || item.TIPOUBICACION || '';
+                let descripcion = item.Descripcion || item.descripcion || item.DESCRIPCION || '';
+                
+                $('#tablaUbicaciones tbody').append(`
+                    <tr>
+                        <td>${pk}</td>
+                        <td>${codigo}</td>
+                        <td>${nombre}</td>
+                        <td>${tipo}</td>
+                        <td>${descripcion}</td>
+                        <td class="text-center">
+                            <button class="btn btn-primary btn-sm me-1" title="Editar" onclick="editarUbicacion(${pk})">
+                                <i class="fas fa-pen"></i>
+                            </button>
+                            <button class="btn btn-danger btn-sm" title="Eliminar/Inactivar" onclick="eliminarUbicacion(${pk})">
+                                <i class="fas fa-trash"></i>
+                            </button>
+                        </td>
+                    </tr>
+                `);
+            });
+
+            tablaUbicaciones = $('#tablaUbicaciones').DataTable({
+                destroy: true,
+                pageLength: 10,
+                order: [[0, 'desc']],
+                language: { url: '//cdn.datatables.net/plug-ins/1.13.7/i18n/es-ES.json' }
+            });
+        }
+    });
+}
+
+function editarUbicacion(pkUbicacion) {
+    limpiarFormularioUbicacion();
+
+    $.ajax({
+        url: "{% url 'ACTIVO:get_ubicacion_x_id' %}",
+        type: 'GET',
+        data: {
+            pkUbicacion: pkUbicacion
+        },
+        success: function (response) {
+            if (!response.success) {
+                Swal.fire("Atención", response.mensaje, "warning");
+                return;
+            }
+
+            let d = response.data;
+
+            $('#pkUbicacion').val(d.PkUbicacion || d.pkUbicacion || d.PKUBICACION);
+            $('#codigoUbicacion').val(d.CodigoUbicacion || d.codigoUbicacion || d.CODIGOUBICACION);
+            $('#nombreUbicacion').val(d.NombreUbicacion || d.nombreUbicacion || d.NOMBREUBICACION);
+            $('#tipoUbicacion').val(d.TipoUbicacion || d.tipoUbicacion || d.TIPOUBICACION);
+            $('#descripcionUbicacion').val(d.Descripcion || d.descripcion || d.DESCRIPCION);
+            
+            if (d.FkEmpresa || d.fkEmpresa || d.FKEMPRESA) {
+                let fkEmpresa = d.FkEmpresa || d.fkEmpresa || d.FKEMPRESA;
+                // Add option if not exists
+                if ($("#fkEmpresa option[value='"+fkEmpresa+"']").length == 0) {
+                    $("#fkEmpresa").append('<option value="'+fkEmpresa+'">Empresa '+fkEmpresa+'</option>');
+                }
+                $('#fkEmpresa').val(fkEmpresa);
+            }
+
+            $('#modalUbicacion').modal('show');
+        }
+    });
+}
+
+function guardarUbicacion() {
+    let pkUbicacion = $('#pkUbicacion').val();
+    let url = "{% url 'ACTIVO:insert_ubicacion' %}";
+
+    // Validaciones básicas
+    if (!$('#nombreUbicacion').val() || $('#nombreUbicacion').val().trim() === '') {
+        Swal.fire("Atención", "El nombre de la ubicación es obligatorio", "warning");
+        return;
+    }
+    
+    if (!$('#codigoUbicacion').val() || $('#codigoUbicacion').val().trim() === '') {
+        Swal.fire("Atención", "El código de la ubicación es obligatorio", "warning");
+        return;
+    }
+
+    $.ajax({
+        url: url,
+        type: 'POST',
+        data: {
+            pkUbicacion: pkUbicacion,
+            codigoUbicacion: $('#codigoUbicacion').val(),
+            nombreUbicacion: $('#nombreUbicacion').val(),
+            tipoUbicacion: $('#tipoUbicacion').val(),
+            descripcion: $('#descripcionUbicacion').val(),
+            fkEmpresa: $('#fkEmpresa').val(),
+            csrfmiddlewaretoken: $('[name=csrfmiddlewaretoken]').val()
+        },
+        success: function (response) {
+            if (response.save == 1) {
+                let msg = pkUbicacion ? "Editado con éxito" : "Creado con éxito";
+                Swal.fire("Éxito", response.mensaje || msg, "success");
+                $('#modalUbicacion').modal('hide');
+                cargarUbicaciones();
+            } else {
+                Swal.fire("Error", response.mensaje || "Ocurrió un error general.", "error");
+            }
+        },
+        error: function(xhr, status, error) {
+            Swal.fire("Error", "Error al guardar: " + error, "error");
+        }
+    });
+}
+
+function eliminarUbicacion(pkUbicacion) {
+    Swal.fire({
+        title: '¿Estás seguro?',
+        text: "¡Se inactivará / eliminará lógicamente esta ubicación!",
+        icon: 'warning',
+        showCancelButton: true,
+        confirmButtonColor: '#3085d6',
+        cancelButtonColor: '#d33',
+        confirmButtonText: 'Sí, eliminar',
+        cancelButtonText: 'Cancelar'
+    }).then((result) => {
+        if (result.isConfirmed) {
+            $.ajax({
+                url: "{% url 'ACTIVO:delete_ubicacion' %}",
+                type: 'POST',
+                data: {
+                    pkUbicacion: pkUbicacion,
+                    csrfmiddlewaretoken: $('[name=csrfmiddlewaretoken]').val()
+                },
+                success: function (response) {
+                    if (response.deleted == 1 || response.save == 1) {
+                        Swal.fire("Eliminado", response.mensaje || "Ubicación eliminada con éxito", "success");
+                        cargarUbicaciones();
+                    } else {
+                        Swal.fire("Error", response.mensaje || "Error al eliminar", "error");
+                    }
+                },
+                error: function(xhr, status, error) {
+                    Swal.fire("Error", "Error al comunicarse con el servidor", "error");
+                }
+            });
+        }
+    });
+}
+
+function limpiarFormularioUbicacion() {
+    $('#pkUbicacion').val('');
+    $('#codigoUbicacion').val('');
+    $('#nombreUbicacion').val('');
+    $('#tipoUbicacion').val('');
+    $('#descripcionUbicacion').val('');
+    $('#fkEmpresa').val('0'); // Default to generic option
+}
+</script>
 {% endblock %}

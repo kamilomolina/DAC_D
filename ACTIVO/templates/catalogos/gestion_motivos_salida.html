@@ -1,22 +1,270 @@
 {% extends 'componentes/menu_activo.html' %}
+{% load static %}
 
-{% block title %}ACTIVO FIJO - Motivos de Salida{% endblock %}
+{% block title %}
+Gestión de Motivos de Salida
+{% endblock %}
 
 {% block body %}
-<div class="row align-items-center border-bottom mb-3 py-2">
-    <div class="col d-flex align-items-center">
-        <h6 class="page-title mb-0 fs-6 fw-bold">Motivos de Salida</h6>
+<div class="container-fluid mt-3">
+    {% csrf_token %}
+
+    <div class="card shadow-sm border-0">
+        <div class="card-header bg-white">
+            <div class="d-flex justify-content-between align-items-center flex-wrap gap-2">
+                <h5 class="mb-0">Gestión de Motivos de Salida</h5>
+                <button class="btn btn-primary btn-sm" id="btnNuevoMotivo">
+                    <i class="material-icons align-middle" style="font-size:18px;">add</i>
+                    Nuevo Motivo
+                </button>
+            </div>
+        </div>
+
+        <div class="card-body">
+            <div class="row g-2 mb-3">
+                <div class="col-md-8">
+                    <label class="form-label form-label-sm">Buscar</label>
+                    <input type="text" class="form-control form-control-sm" id="textoBusqueda" placeholder="Buscar por descripción...">
+                </div>
+                <div class="col-md-4 d-flex align-items-end">
+                    <button class="btn btn-secondary btn-sm w-100" id="btnBuscarMotivos">
+                        Actualizar Lista
+                    </button>
+                </div>
+            </div>
+
+            <div class="table-responsive">
+                <table class="table table-bordered table-hover table-sm w-100" id="tablaMotivos">
+                    <thead class="table-light">
+                        <tr>
+                            <th>ID</th>
+                            <th>Descripción del Motivo</th>
+                            <th>Estado</th>
+                            <th>Acciones</th>
+                        </tr>
+                    </thead>
+                    <tbody></tbody>
+                </table>
+            </div>
+        </div>
     </div>
 </div>
 
-<div class="card shadow-sm border-0 mb-4 h-100" style="border-radius: 12px;">
-    <div class="card-body p-5 text-center">
-        <i class="material-icons text-muted" style="font-size: 4rem; opacity: 0.5;">construction</i>
-        <h4 class="mt-3 text-muted">Pantalla en construcción</h4>
-        <p class="text-secondary">Esta sección está siendo desarrollada. Pronto estará disponible.</p>
+<div class="modal fade" id="modalMotivo" tabindex="-1" aria-hidden="true">
+    <div class="modal-dialog modal-dialog-scrollable">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title">Motivo de Salida</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+            </div>
+
+            <div class="modal-body">
+                <input type="hidden" id="pkMotivoSalida">
+
+                <div class="row g-2">
+                    <div class="col-md-12">
+                        <label class="form-label form-label-sm">Descripción del Motivo</label>
+                        <textarea class="form-control form-control-sm" id="descripcionMotivo" rows="3" required></textarea>
+                    </div>
+                </div>
+            </div>
+
+            <div class="modal-footer">
+                <button class="btn btn-success btn-sm" id="btnGuardarMotivo">Guardar</button>
+                <button class="btn btn-secondary btn-sm" data-bs-dismiss="modal">Cerrar</button>
+            </div>
+        </div>
     </div>
 </div>
+
 {% endblock %}
 
 {% block scripts %}
+<script src="{% static 'app/activo/utils.js' %}"></script>
+<script>
+    let tablaMotivos = null;
+
+$(document).ready(function () {
+    inicializarEventos();
+    cargarMotivos();
+});
+
+function inicializarEventos() {
+    $('#btnBuscarMotivos').on('click', function () {
+        cargarMotivos();
+    });
+
+    $('#btnNuevoMotivo').on('click', function () {
+        limpiarFormularioMotivo();
+        $('#modalMotivo').modal('show');
+    });
+
+    $('#btnGuardarMotivo').on('click', function () {
+        guardarMotivo();
+    });
+
+    $('#textoBusqueda').on('keyup', function () {
+        if (tablaMotivos) {
+            tablaMotivos.search(this.value).draw();
+        }
+    });
+}
+
+function cargarMotivos() {
+    $.ajax({
+        url: "{% url 'ACTIVO:get_motivos_salida' %}",
+        type: 'GET',
+        success: function (response) {
+            console.log("Response from get_motivos_salida:", response);
+            if (response.error) {
+                console.error("Backend Error:", response.error);
+                Swal.fire("Error en BD", response.error, "error");
+            }
+            
+            if ($.fn.DataTable.isDataTable('#tablaMotivos')) {
+                $('#tablaMotivos').DataTable().destroy();
+            }
+
+            $('#tablaMotivos tbody').empty();
+
+            $.each(response.data, function (i, item) {
+                let pk = item.PkMotivoSalida || item.pkmotivosalida || item.PKMOTIVOSALIDA || item.pk_motivo_salida;
+                let descripcion = item.DescripcionMotivo || item.descripcionmotivo || item.DESCRIPCIONMOTIVO || item.descripcion_motivo || '';
+                let estado = item.Estado || item.estado || item.ESTADO || '';
+                
+                let estadoStr = String(estado).toUpperCase();
+                let badgeEstado = '<span class="badge bg-secondary">' + estado + '</span>';
+                
+                if(estadoStr === 'ACTIVO' || estadoStr === '1' || estadoStr === 'TRUE') {
+                    badgeEstado = '<span class="badge bg-success">ACTIVO</span>';
+                } else if(estadoStr === 'INACTIVO' || estadoStr === '0' || estadoStr === 'FALSE') {
+                    badgeEstado = '<span class="badge bg-danger">INACTIVO</span>';
+                }
+
+                $('#tablaMotivos tbody').append(`
+                    <tr>
+                        <td>${pk}</td>
+                        <td>${descripcion}</td>
+                        <td class="text-center">${badgeEstado}</td>
+                        <td class="text-center">
+                            <button class="btn btn-primary btn-sm me-1" title="Editar" onclick="editarMotivo(${pk})">
+                                <i class="fas fa-pen"></i>
+                            </button>
+                            <button class="btn btn-danger btn-sm" title="Eliminar/Inactivar" onclick="eliminarMotivo(${pk})">
+                                <i class="fas fa-trash"></i>
+                            </button>
+                        </td>
+                    </tr>
+                `);
+            });
+
+            tablaMotivos = $('#tablaMotivos').DataTable({
+                destroy: true,
+                pageLength: 10,
+                order: [[0, 'desc']],
+                language: { url: '//cdn.datatables.net/plug-ins/1.13.7/i18n/es-ES.json' }
+            });
+        }
+    });
+}
+
+function editarMotivo(pkMotivoSalida) {
+    limpiarFormularioMotivo();
+
+    $.ajax({
+        url: "{% url 'ACTIVO:get_motivo_salida_x_id' %}",
+        type: 'GET',
+        data: {
+            pkMotivoSalida: pkMotivoSalida
+        },
+        success: function (response) {
+            if (!response.success) {
+                Swal.fire("Atención", response.mensaje, "warning");
+                return;
+            }
+
+            let d = response.data;
+
+            $('#pkMotivoSalida').val(d.PkMotivoSalida || d.pkmotivosalida || d.PKMOTIVOSALIDA || d.pk_motivo_salida);
+            $('#descripcionMotivo').val(d.DescripcionMotivo || d.descripcionmotivo || d.DESCRIPCIONMOTIVO || d.descripcion_motivo);
+            
+            $('#modalMotivo').modal('show');
+        }
+    });
+}
+
+function guardarMotivo() {
+    let pkMotivoSalida = $('#pkMotivoSalida').val();
+    let url = "{% url 'ACTIVO:insert_motivo_salida' %}";
+
+    // Validaciones básicas
+    if (!$('#descripcionMotivo').val() || $('#descripcionMotivo').val().trim() === '') {
+        Swal.fire("Atención", "La descripción del motivo es obligatoria", "warning");
+        return;
+    }
+
+    $.ajax({
+        url: url,
+        type: 'POST',
+        data: {
+            pkMotivoSalida: pkMotivoSalida,
+            descripcionMotivo: $('#descripcionMotivo').val(),
+            csrfmiddlewaretoken: $('[name=csrfmiddlewaretoken]').val()
+        },
+        success: function (response) {
+            if (response.save == 1) {
+                let msg = pkMotivoSalida ? "Editado con éxito" : "Creado con éxito";
+                Swal.fire("Éxito", response.mensaje || msg, "success");
+                $('#modalMotivo').modal('hide');
+                cargarMotivos();
+            } else {
+                Swal.fire("Error", response.mensaje || "Ocurrió un error general.", "error");
+            }
+        },
+        error: function(xhr, status, error) {
+            Swal.fire("Error", "Error al guardar: " + error, "error");
+        }
+    });
+}
+
+function eliminarMotivo(pkMotivoSalida) {
+    Swal.fire({
+        title: '¿Estás seguro?',
+        text: "¡Se inactivará / eliminará lógicamente este motivo!",
+        icon: 'warning',
+        showCancelButton: true,
+        confirmButtonColor: '#3085d6',
+        cancelButtonColor: '#d33',
+        confirmButtonText: 'Sí, eliminar',
+        cancelButtonText: 'Cancelar'
+    }).then((result) => {
+        if (result.isConfirmed) {
+            $.ajax({
+                url: "{% url 'ACTIVO:delete_motivo_salida' %}",
+                type: 'POST',
+                data: {
+                    pkMotivoSalida: pkMotivoSalida,
+                    csrfmiddlewaretoken: $('[name=csrfmiddlewaretoken]').val()
+                },
+                success: function (response) {
+                    if (response.deleted == 1 || response.save == 1) {
+                        Swal.fire("Eliminado", response.mensaje || "Motivo eliminado con éxito", "success");
+                        cargarMotivos();
+                    } else {
+                        Swal.fire("Error", response.mensaje || "Error al eliminar", "error");
+                    }
+                },
+                error: function(xhr, status, error) {
+                    Swal.fire("Error", "Error al comunicarse con el servidor", "error");
+                }
+            });
+        }
+    });
+}
+
+function limpiarFormularioMotivo() {
+    $('#pkMotivoSalida').val('');
+    $('#descripcionMotivo').val('');
+}
+</script>
 {% endblock %}

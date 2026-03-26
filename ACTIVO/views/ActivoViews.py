@@ -425,12 +425,230 @@ def delete_proveedor(request):
 def gestion_ubicaciones(request):
     return render(request, 'catalogos/gestion_ubicaciones.html')
 
+def get_ubicaciones(request):
+    try:
+        fkEmpresa = request.GET.get('fkEmpresa', 0)
+        if not fkEmpresa or str(fkEmpresa) == "":
+            fkEmpresa = 0
+            
+        with connections['activo'].cursor() as cursor:
+            cursor.callproc('AF_FILL_UBICACIONES', [fkEmpresa])
+            column_names = [desc[0] for desc in cursor.description]
+            data = []
+            for row in cursor.fetchall():
+                row_dict = {}
+                for col, val in zip(column_names, row):
+                    if isinstance(val, (date, datetime)):
+                        row_dict[str(col)] = val.strftime('%Y-%m-%d %H:%M:%S')
+                    elif isinstance(val, decimal.Decimal):
+                        row_dict[str(col)] = float(val)
+                    else:
+                        row_dict[str(col)] = val if val is not None else ""
+                data.append(row_dict)
+        return JsonResponse({'data': data})
+    except Exception as e:
+        return JsonResponse({'data': [], 'error': str(e)})
+
+def get_ubicacion_x_id(request):
+    try:
+        pkUbicacion = request.GET.get('pkUbicacion')
+        if not pkUbicacion:
+             return JsonResponse({'success': False, 'mensaje': 'ID requerido'})
+             
+        fkEmpresa = request.GET.get('fkEmpresa', 0)
+        if not fkEmpresa or str(fkEmpresa) == "":
+            fkEmpresa = 0
+            
+        with connections['activo'].cursor() as cursor:
+            cursor.callproc('AF_FILL_UBICACIONES', [fkEmpresa])
+            column_names = [desc[0] for desc in cursor.description]
+            
+            found_data = None
+            for row in cursor.fetchall():
+                if str(row[0]) == str(pkUbicacion):
+                    found_data = {}
+                    for col, val in zip(column_names, row):
+                        if isinstance(val, (date, datetime)):
+                            found_data[str(col)] = val.strftime('%Y-%m-%d %H:%M:%S')
+                        elif isinstance(val, decimal.Decimal):
+                            found_data[str(col)] = float(val)
+                        else:
+                            found_data[str(col)] = val if val is not None else ""
+                    break
+                    
+            if not found_data:
+                return JsonResponse({'success': False, 'mensaje': 'No se encontró la ubicación.'})
+                
+        return JsonResponse({'success': True, 'data': found_data})
+    except Exception as e:
+        return JsonResponse({'success': False, 'mensaje': str(e)})
+
+def insert_ubicacion(request):
+    try:
+        if request.method != 'POST':
+            return JsonResponse({'save': 0, 'mensaje': 'Método no permitido.'})
+            
+        userName = request.session.get('userName', 'admin')
+        if not request.session.get('userName'):
+            userName = request.session.get('userName', 'admin') 
+            
+        p = request.POST
+        pkUbicacion = p.get('pkUbicacion')
+        if not pkUbicacion or str(pkUbicacion) == "":
+            pkUbicacion = 0
+            
+        fkEmpresa = p.get('fkEmpresa')
+        if not fkEmpresa or str(fkEmpresa) == "":
+            fkEmpresa = 0
+            
+        params = [
+            pkUbicacion, 
+            p.get('codigoUbicacion'), 
+            p.get('nombreUbicacion'), 
+            p.get('tipoUbicacion'), 
+            p.get('descripcion'), 
+            fkEmpresa,
+            userName
+        ]
+        
+        with connections['activo'].cursor() as cursor:
+            cursor.callproc('AF_INSERT_UBICACION', params)
+            row = cursor.fetchone()
+            
+        return JsonResponse({
+            'save': row[0],
+            'lastID': row[1] if len(row) > 1 else pkUbicacion,
+            'mensaje': row[2] if len(row) > 2 else 'Operación realizada correctamente'
+        })
+    except Exception as e:
+        return JsonResponse({'save': 0, 'mensaje': str(e)})
+
+def delete_ubicacion(request):
+    try:
+        if request.method != 'POST':
+            return JsonResponse({'save': 0, 'mensaje': 'Método no permitido.'})
+            
+        userName = request.session.get('userName', 'admin')
+        pkUbicacion = request.POST.get('pkUbicacion')
+        
+        with connections['activo'].cursor() as cursor:
+            cursor.callproc('AF_DELETE_UBICACION', [pkUbicacion, userName])
+            row = cursor.fetchone()
+            
+        return JsonResponse({
+            'deleted': row[0] if row else 1,
+            'save': row[0] if row else 1,
+            'mensaje': 'Ubicación eliminada correctamente'
+        })
+    except Exception as e:
+        return JsonResponse({'deleted': 0, 'save': 0, 'mensaje': str(e)})
+
 def gestion_motivos_salida(request):
     return render(request, 'catalogos/gestion_motivos_salida.html')
 
-# Activos
-def sacar_equipo(request):
-    return render(request, 'activos/sacar_equipo.html')
+def get_motivos_salida(request):
+    try:
+        with connections['activo'].cursor() as cursor:
+            cursor.callproc('AF_FILL_MOTIVOS_SALIDA', [])
+            column_names = [desc[0] for desc in cursor.description]
+            data = []
+            for row in cursor.fetchall():
+                row_dict = {}
+                for col, val in zip(column_names, row):
+                    if isinstance(val, (date, datetime)):
+                        row_dict[str(col)] = val.strftime('%Y-%m-%d %H:%M:%S')
+                    elif isinstance(val, decimal.Decimal):
+                        row_dict[str(col)] = float(val)
+                    else:
+                        row_dict[str(col)] = val if val is not None else ""
+                data.append(row_dict)
+        return JsonResponse({'data': data})
+    except Exception as e:
+        return JsonResponse({'data': [], 'error': str(e)})
+
+def get_motivo_salida_x_id(request):
+    try:
+        pkMotivoSalida = request.GET.get('pkMotivoSalida')
+        if not pkMotivoSalida:
+             return JsonResponse({'success': False, 'mensaje': 'ID requerido'})
+             
+        with connections['activo'].cursor() as cursor:
+            cursor.callproc('AF_FILL_MOTIVOS_SALIDA', [])
+            column_names = [desc[0] for desc in cursor.description]
+            
+            found_data = None
+            for row in cursor.fetchall():
+                if str(row[0]) == str(pkMotivoSalida):
+                    found_data = {}
+                    for col, val in zip(column_names, row):
+                        if isinstance(val, (date, datetime)):
+                            found_data[str(col)] = val.strftime('%Y-%m-%d %H:%M:%S')
+                        elif isinstance(val, decimal.Decimal):
+                            found_data[str(col)] = float(val)
+                        else:
+                            found_data[str(col)] = val if val is not None else ""
+                    break
+                    
+            if not found_data:
+                return JsonResponse({'success': False, 'mensaje': 'No se encontró el motivo de salida.'})
+                
+        return JsonResponse({'success': True, 'data': found_data})
+    except Exception as e:
+        return JsonResponse({'success': False, 'mensaje': str(e)})
+
+def insert_motivo_salida(request):
+    try:
+        if request.method != 'POST':
+            return JsonResponse({'save': 0, 'mensaje': 'Método no permitido.'})
+            
+        userName = request.session.get('userName', 'admin')
+        if not request.session.get('userName'):
+            userName = request.session.get('userName', 'admin') 
+            
+        p = request.POST
+        pkMotivoSalida = p.get('pkMotivoSalida')
+        if not pkMotivoSalida or str(pkMotivoSalida) == "":
+            pkMotivoSalida = 0
+            
+        params = [
+            pkMotivoSalida, 
+            p.get('descripcionMotivo'),
+            userName
+        ]
+        
+        with connections['activo'].cursor() as cursor:
+            cursor.callproc('AF_INSERT_MOTIVO_SALIDA', params)
+            row = cursor.fetchone()
+            
+        return JsonResponse({
+            'save': row[0],
+            'lastID': row[1] if len(row) > 1 else pkMotivoSalida,
+            'mensaje': row[2] if len(row) > 2 else 'Operación realizada correctamente'
+        })
+    except Exception as e:
+        return JsonResponse({'save': 0, 'mensaje': str(e)})
+
+def delete_motivo_salida(request):
+    try:
+        if request.method != 'POST':
+            return JsonResponse({'save': 0, 'mensaje': 'Método no permitido.'})
+            
+        userName = request.session.get('userName', 'admin')
+        pkMotivoSalida = request.POST.get('pkMotivoSalida')
+        
+        with connections['activo'].cursor() as cursor:
+            cursor.callproc('AF_DELETE_MOTIVO_SALIDA', [pkMotivoSalida, userName])
+            row = cursor.fetchone()
+            
+        return JsonResponse({
+            'deleted': row[0] if row else 1,
+            'save': row[0] if row else 1,
+            'mensaje': 'Motivo eliminado correctamente'
+        })
+    except Exception as e:
+        return JsonResponse({'deleted': 0, 'save': 0, 'mensaje': str(e)})
+
+
 
 # Depreciación
 def depreciaciones_aplicadas(request):
