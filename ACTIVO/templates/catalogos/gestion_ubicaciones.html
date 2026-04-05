@@ -6,103 +6,105 @@ Gestión de Ubicaciones
 {% endblock %}
 
 {% block body %}
-<div class="container-fluid mt-3">
-    {% csrf_token %}
+<!-- Encabezado de la Pantalla -->
+<div class="d-flex justify-content-between align-items-end mb-4 flex-wrap gap-2">
+    <div>
+        <h2 class="mb-1" style="color: var(--text-primary); font-weight: 700; font-size: 1.5rem;">Gestión de Ubicaciones</h2>
+        <p class="text-muted mb-0" style="font-size: 0.9rem;">Catálogo global de ubicaciones registradas en el sistema.</p>
+    </div>
+    <div>
+        <button class="btn btn-primary d-flex align-items-center gap-2 px-3 py-2 shadow-sm" id="btnNuevaUbicacion" style="background-color: var(--brand-primary); border-color: var(--brand-primary); border-radius: 8px;">
+            <i class="material-icons">add_circle</i>
+            <span>Nueva Ubicación</span>
+        </button>
+    </div>
+</div>
 
-    <div class="card shadow-sm border-0">
-        <div class="card-header bg-white">
-            <div class="d-flex justify-content-between align-items-center flex-wrap gap-2">
-                <h5 class="mb-0">Gestión de Ubicaciones</h5>
-                <button class="btn btn-primary btn-sm" id="btnNuevaUbicacion">
-                    <i class="material-icons align-middle" style="font-size:18px;">add</i>
-                    Nueva Ubicación
+<!-- Tarjeta Principal (Card Blanca/Oscura) -->
+<div class="modern-card">
+    <div class="modern-card-body">
+        
+        <div class="row g-2 mb-4">
+            <div class="col-md-8">
+                <label class="form-label form-label-sm text-muted fw-bold">Buscar</label>
+                <input type="text" class="form-control" id="textoBusqueda" placeholder="Código, Nombre, Tipo...">
+            </div>
+            <div class="col-md-4 d-flex align-items-end">
+                <button class="btn btn-outline-secondary d-flex align-items-center justify-content-center gap-1 w-100" id="btnBuscarUbicaciones" style="border-radius: 8px;">
+                    <i class="material-icons" style="font-size: 18px;">refresh</i> Actualizar Lista
                 </button>
             </div>
         </div>
 
-        <div class="card-body">
-            <div class="row g-2 mb-3">
-                <div class="col-md-8">
-                    <label class="form-label form-label-sm">Buscar</label>
-                    <input type="text" class="form-control form-control-sm" id="textoBusqueda" placeholder="Código, Nombre, Tipo...">
-                </div>
-                <div class="col-md-4 d-flex align-items-end">
-                    <button class="btn btn-secondary btn-sm w-100" id="btnBuscarUbicaciones">
-                        Actualizar Lista
-                    </button>
-                </div>
-            </div>
-
-            <div class="table-responsive">
-                <table class="table table-bordered table-hover table-sm w-100" id="tablaUbicaciones">
-                    <thead class="table-light">
-                        <tr>
-                            <th>ID</th>
-                            <th>Código</th>
-                            <th>Nombre</th>
-                            <th>Tipo</th>
-                            <th>Descripción</th>
-                            <th>Acciones</th>
-                        </tr>
-                    </thead>
-                    <tbody></tbody>
-                </table>
-            </div>
+        <div class="table-responsive">
+            <table class="table table-hover w-100 align-middle" id="tablaUbicaciones">
+                <thead>
+                    <tr>
+                        <th class="py-3">ID</th>
+                        <th class="py-3">Código</th>
+                        <th class="py-3">Nombre</th>
+                        <th class="py-3">Tipo</th>
+                        <th class="py-3">Descripción</th>
+                        <th class="py-3 text-center">Acciones</th>
+                    </tr>
+                </thead>
+                <tbody></tbody>
+            </table>
         </div>
+        
     </div>
 </div>
 
-
 <div class="modal fade" id="modalUbicacion" tabindex="-1" aria-hidden="true">
-    <div class="modal-dialog modal-lg modal-dialog-scrollable">
-        <div class="modal-content">
-            <div class="modal-header">
-                <h5 class="modal-title">Ubicación</h5>
+    <div class="modal-dialog modal-lg modal-dialog-centered">
+        <div class="modal-content border-0 shadow-lg" style="border-radius: 16px;">
+            <div class="modal-header border-bottom-0 pb-0">
+                <h5 class="modal-title fw-bold">Ubicación</h5>
                 <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
             </div>
 
-            <div class="modal-body">
+            <div class="modal-body px-4 py-3">
                 <input type="hidden" id="pkUbicacion">
 
-                <div class="row g-2">
+                <div class="row g-3">
                     <div class="col-md-6">
-                        <label class="form-label form-label-sm">Código de Ubicación</label>
-                        <input type="text" class="form-control form-control-sm" id="codigoUbicacion" required>
+                        <label class="form-label text-muted fw-bold" style="font-size: 0.8rem;">Código de Ubicación</label>
+                        <input type="text" class="form-control" id="codigoUbicacion" required>
                     </div>
 
                     <div class="col-md-6">
-                        <label class="form-label form-label-sm">Nombre de Ubicación</label>
-                        <input type="text" class="form-control form-control-sm" id="nombreUbicacion" required>
+                        <label class="form-label text-muted fw-bold" style="font-size: 0.8rem;">Nombre de Ubicación</label>
+                        <input type="text" class="form-control" id="nombreUbicacion" required>
                     </div>
 
                     <div class="col-md-6">
-                        <label class="form-label form-label-sm">Tipo de Ubicación</label>
-                        <input type="text" class="form-control form-control-sm" id="tipoUbicacion">
+                        <label class="form-label text-muted fw-bold" style="font-size: 0.8rem;">Tipo de Ubicación</label>
+                        <input type="text" class="form-control" id="tipoUbicacion">
                     </div>
 
                     <div class="col-md-6">
-                        <label class="form-label form-label-sm">Empresa</label>
-                        <select class="form-select form-select-sm" id="fkEmpresa">
-                            <option value="0">General / Todas</option>
-                            <!-- Se podría llenar dinámicamente si se requiere, pero por ahora se deja la opción genérica -->
+                        <label class="form-label text-muted fw-bold" style="font-size: 0.8rem;">Empresa</label>
+                        <select class="form-select" id="fkEmpresa">
+                            {% for emp in empresas %}
+                                <option value="{{ emp.PkEmpresa }}">{{ emp.NombreEmpresa }}</option>
+                            {% endfor %}
                         </select>
                     </div>
 
                     <div class="col-md-12">
-                        <label class="form-label form-label-sm">Descripción</label>
-                        <textarea class="form-control form-control-sm" id="descripcionUbicacion" rows="3"></textarea>
+                        <label class="form-label text-muted fw-bold" style="font-size: 0.8rem;">Descripción</label>
+                        <textarea class="form-control" id="descripcionUbicacion" rows="3"></textarea>
                     </div>
                 </div>
             </div>
 
-            <div class="modal-footer">
-                <button class="btn btn-success btn-sm" id="btnGuardarUbicacion">Guardar</button>
-                <button class="btn btn-secondary btn-sm" data-bs-dismiss="modal">Cerrar</button>
+            <div class="modal-footer border-top-0 pt-0 px-4 pb-4">
+                <button class="btn btn-light" data-bs-dismiss="modal" style="border-radius: 8px;">Cancelar</button>
+                <button class="btn btn-primary px-4" id="btnGuardarUbicacion" style="background-color: var(--brand-primary); border-color: var(--brand-primary); border-radius: 8px;">Guardar</button>
             </div>
         </div>
     </div>
 </div>
-
 {% endblock %}
 
 {% block scripts %}
@@ -208,12 +210,7 @@ function editarUbicacion(pkUbicacion) {
             $('#descripcionUbicacion').val(d.Descripcion || d.descripcion || d.DESCRIPCION);
             
             if (d.FkEmpresa || d.fkEmpresa || d.FKEMPRESA) {
-                let fkEmpresa = d.FkEmpresa || d.fkEmpresa || d.FKEMPRESA;
-                // Add option if not exists
-                if ($("#fkEmpresa option[value='"+fkEmpresa+"']").length == 0) {
-                    $("#fkEmpresa").append('<option value="'+fkEmpresa+'">Empresa '+fkEmpresa+'</option>');
-                }
-                $('#fkEmpresa').val(fkEmpresa);
+                $('#fkEmpresa').val(d.FkEmpresa || d.fkEmpresa || d.FKEMPRESA);
             }
 
             $('#modalUbicacion').modal('show');

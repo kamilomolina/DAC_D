@@ -6,102 +6,104 @@ Gestión de Proveedores
 {% endblock %}
 
 {% block body %}
-<div class="container-fluid mt-3">
-    {% csrf_token %}
+<!-- Encabezado de la Pantalla -->
+<div class="d-flex justify-content-between align-items-end mb-4 flex-wrap gap-2">
+    <div>
+        <h2 class="mb-1" style="color: var(--text-primary); font-weight: 700; font-size: 1.5rem;">Registro de Proveedores</h2>
+        <p class="text-muted mb-0" style="font-size: 0.9rem;">Catálogo global de los proveedores registrados en el sistema.</p>
+    </div>
+    <div>
+        <button class="btn btn-primary d-flex align-items-center gap-2 px-3 py-2 shadow-sm" id="btnNuevoProveedor" style="background-color: var(--brand-primary); border-color: var(--brand-primary); border-radius: 8px;">
+            <i class="material-icons">add_circle</i>
+            <span>Nuevo Registro</span>
+        </button>
+    </div>
+</div>
 
-    <div class="card shadow-sm border-0">
-        <div class="card-header bg-white">
-            <div class="d-flex justify-content-between align-items-center flex-wrap gap-2">
-                <h5 class="mb-0">Gestión de Proveedores</h5>
-                <button class="btn btn-primary btn-sm" id="btnNuevoProveedor">
-                    <i class="material-icons align-middle" style="font-size:18px;">add</i>
-                    Nuevo Proveedor
+<!-- Tarjeta Principal -->
+<div class="modern-card">
+    <div class="modern-card-body">
+        
+        <div class="row g-2 mb-4">
+            <div class="col-md-8">
+                <label class="form-label text-muted fw-bold">Buscar</label>
+                <input type="text" class="form-control" id="textoBusqueda" placeholder="Nombre, RTN, Correo...">
+            </div>
+            <div class="col-md-4 d-flex align-items-end">
+                <button class="btn btn-outline-secondary d-flex align-items-center justify-content-center gap-1 w-100" id="btnBuscarProveedores" style="border-radius: 8px;">
+                    <i class="material-icons" style="font-size: 18px;">refresh</i> Actualizar Lista
                 </button>
             </div>
         </div>
 
-        <div class="card-body">
-            <div class="row g-2 mb-3">
-                <div class="col-md-8">
-                    <label class="form-label form-label-sm">Buscar</label>
-                    <input type="text" class="form-control form-control-sm" id="textoBusqueda" placeholder="Nombre, RTN, Correo...">
-                </div>
-                <div class="col-md-4 d-flex align-items-end">
-                    <button class="btn btn-secondary btn-sm w-100" id="btnBuscarProveedores">
-                        Actualizar Lista
-                    </button>
-                </div>
-            </div>
-
-            <div class="table-responsive">
-                <table class="table table-bordered table-hover table-sm w-100" id="tablaProveedores">
-                    <thead class="table-light">
-                        <tr>
-                            <th>ID</th>
-                            <th>Nombre</th>
-                            <th>RTN</th>
-                            <th>Teléfono</th>
-                            <th>Correo</th>
-                            <th>Dirección</th>
-                            <th>Estado</th>
-                            <th>Acciones</th>
-                        </tr>
-                    </thead>
-                    <tbody></tbody>
-                </table>
-            </div>
+        <div class="table-responsive mt-2">
+            <table class="table table-hover w-100 align-middle" id="tablaProveedores">
+                <thead>
+                    <tr>
+                        <th class="py-3">ID</th>
+                        <th class="py-3">Nombre</th>
+                        <th class="py-3">RTN</th>
+                        <th class="py-3">Teléfono</th>
+                        <th class="py-3">Correo</th>
+                        <th class="py-3">Dirección</th>
+                        <th class="py-3 text-center">Estado</th>
+                        <th class="py-3 text-center">Acciones</th>
+                    </tr>
+                </thead>
+                <tbody></tbody>
+            </table>
         </div>
+        
     </div>
 </div>
 
-
+<!-- Modal -->
 <div class="modal fade" id="modalProveedor" tabindex="-1" aria-hidden="true">
-    <div class="modal-dialog modal-lg modal-dialog-scrollable">
-        <div class="modal-content">
-            <div class="modal-header">
-                <h5 class="modal-title">Proveedor</h5>
+    <div class="modal-dialog modal-lg modal-dialog-centered">
+        <div class="modal-content border-0 shadow-lg" style="border-radius: 16px;">
+            <div class="modal-header border-bottom-0 pb-0">
+                <h5 class="modal-title fw-bold">Proveedor</h5>
                 <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
             </div>
 
-            <div class="modal-body">
+            <div class="modal-body px-4 py-3">
                 <input type="hidden" id="pkProveedor">
 
-                <div class="row g-2">
+                <div class="row g-3">
                     <div class="col-md-12">
-                        <label class="form-label form-label-sm">Nombre Proveedor</label>
-                        <input type="text" class="form-control form-control-sm" id="nombreProveedor" required>
+                        <label class="form-label text-muted fw-bold" style="font-size: 0.8rem;">Nombre Proveedor</label>
+                        <input type="text" class="form-control" id="nombreProveedor" required>
                     </div>
 
                     <div class="col-md-6">
-                        <label class="form-label form-label-sm">RTN</label>
-                        <input type="text" class="form-control form-control-sm" id="rtn">
+                        <label class="form-label text-muted fw-bold" style="font-size: 0.8rem;">RTN</label>
+                        <input type="text" class="form-control" id="rtn">
                     </div>
 
                     <div class="col-md-6">
-                        <label class="form-label form-label-sm">Teléfono</label>
-                        <input type="text" class="form-control form-control-sm" id="telefono">
+                        <label class="form-label text-muted fw-bold" style="font-size: 0.8rem;">Teléfono</label>
+                        <input type="text" class="form-control" id="telefono">
                     </div>
 
                     <div class="col-md-12">
-                        <label class="form-label form-label-sm">Correo Electrónico</label>
-                        <input type="email" class="form-control form-control-sm" id="email">
+                        <label class="form-label text-muted fw-bold" style="font-size: 0.8rem;">Correo Electrónico</label>
+                        <input type="email" class="form-control" id="email">
                     </div>
 
                     <div class="col-md-12">
-                        <label class="form-label form-label-sm">Dirección</label>
-                        <textarea class="form-control form-control-sm" id="direccion" rows="3"></textarea>
+                        <label class="form-label text-muted fw-bold" style="font-size: 0.8rem;">Dirección</label>
+                        <textarea class="form-control" id="direccion" rows="3"></textarea>
                     </div>
                 </div>
             </div>
 
-            <div class="modal-footer">
-                <button class="btn btn-success btn-sm" id="btnGuardarProveedor">Guardar</button>
-                <button class="btn btn-secondary btn-sm" data-bs-dismiss="modal">Cerrar</button>
+            <div class="modal-footer border-top-0 pt-0 px-4 pb-4">
+                <button class="btn btn-light" data-bs-dismiss="modal" style="border-radius: 8px;">Cancelar</button>
+                <button class="btn btn-primary px-4" id="btnGuardarProveedor" style="background-color: var(--brand-primary); border-color: var(--brand-primary); border-radius: 8px;">Guardar</button>
             </div>
         </div>
     </div>
 </div>
-
 {% endblock %}
 
 {% block scripts %}

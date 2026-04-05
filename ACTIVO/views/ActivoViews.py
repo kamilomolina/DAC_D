@@ -13,7 +13,7 @@ def panel_activo(request):
     return render(request, 'activo_panel.html')
 
 def gestion_activos(request):
-    return render(request, 'control_gestion/gestion_activos.html')
+    return render(request, 'control_gestion/gestion_activos.html', {'empresas': get_empresas_activas()})
 
 
 def fill_categorias_activos(request):
@@ -172,7 +172,7 @@ def delete_activo(request):
         return JsonResponse({'save': 0, 'mensaje': str(e)})
 
 def gestion_categorias_activos(request):
-    return render(request, 'control_gestion/gestion_categorias_activos.html')
+    return render(request, 'control_gestion/gestion_categorias_activos.html', {'empresas': get_empresas_activas()})
 
 
 def get_categorias_activos(request):
@@ -296,7 +296,7 @@ def delete_categoria_activo(request):
 
 # Catálogos
 def gestion_proveedores(request):
-    return render(request, 'catalogos/gestion_proveedores.html')
+    return render(request, 'catalogos/gestion_proveedores.html', {'empresas': get_empresas_activas()})
 
 def get_proveedores(request):
     try:
@@ -423,7 +423,7 @@ def delete_proveedor(request):
         return JsonResponse({'save': 0, 'mensaje': str(e)})
 
 def gestion_ubicaciones(request):
-    return render(request, 'catalogos/gestion_ubicaciones.html')
+    return render(request, 'catalogos/gestion_ubicaciones.html', {'empresas': get_empresas_activas()})
 
 def get_ubicaciones(request):
     try:
@@ -650,15 +650,49 @@ def delete_motivo_salida(request):
 
 
 
+def get_empresas_activas():
+    empresas = []
+    try:
+        with connections['activo'].cursor() as cursor:
+            cursor.execute("SELECT PkEmpresa, NombreEmpresa, Empresa, Estado FROM global_security.empresas WHERE Estado = 1")
+            column_names = [desc[0] for desc in cursor.description]
+            empresas = [dict(zip(map(str, column_names), row)) for row in cursor.fetchall()]
+    except Exception as e:
+        empresas.append({'PkEmpresa': '', 'NombreEmpresa': f"ERROR BD: {str(e)}", 'Empresa': 'Err'})
+    return empresas
+
+def get_categorias_todas():
+    cats = []
+    try:
+        with connections['activo'].cursor() as cursor:
+            cursor.execute("SELECT PkCategoria, NombreCategoria FROM af_categorias WHERE estado = 1")
+            column_names = [desc[0] for desc in cursor.description]
+            cats = [dict(zip(map(str, column_names), row)) for row in cursor.fetchall()]
+    except Exception as e: 
+        cats.append({'PkCategoria': '', 'NombreCategoria': f"ERROR BD: {str(e)}"})
+    return cats
+
+def get_ubicaciones_todas():
+    ubis = []
+    try:
+        with connections['activo'].cursor() as cursor:
+            cursor.execute("SELECT PkUbicacion, NombreUbicacion FROM af_ubicaciones WHERE estado = 1")
+            column_names = [desc[0] for desc in cursor.description]
+            ubis = [dict(zip(map(str, column_names), row)) for row in cursor.fetchall()]
+    except Exception as e: 
+        ubis.append({'PkUbicacion': '', 'NombreUbicacion': f"ERROR BD: {str(e)}"})
+    return ubis
+
 # Depreciación
 def depreciaciones_aplicadas(request):
-    return render(request, 'depreciacion/depreciaciones_aplicadas.html')
+    context = {
+        'empresas': get_empresas_activas(),
+        'categorias': get_categorias_todas(),
+        'ubicaciones': get_ubicaciones_todas()
+    }
+    return render(request, 'depreciacion/depreciaciones_aplicadas.html', context)
 
-def historial_depreciacion(request):
-    return render(request, 'depreciacion/historial_depreciacion.html')
 
-def depreciacion_anual(request):
-    return render(request, 'depreciacion/depreciacion_anual.html')
 
 # Consultas
 def consulta_estado_actual(request):
@@ -675,5 +709,10 @@ def reporte_bajas(request):
     return render(request, 'reportes/reporte_bajas.html')
 
 def reporte_depreciacion(request):
-    return render(request, 'reportes/reporte_depreciacion.html')
+    context = {
+        'empresas': get_empresas_activas(),
+        'categorias': get_categorias_todas(),
+        'ubicaciones': get_ubicaciones_todas()
+    }
+    return render(request, 'reportes/reporte_depreciacion.html', context)
 

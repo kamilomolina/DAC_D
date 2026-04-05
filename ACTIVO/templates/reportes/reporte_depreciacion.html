@@ -1,22 +1,92 @@
 {% extends 'componentes/menu_activo.html' %}
+{% load static %}
 
-{% block title %}ACTIVO FIJO - Reporte de Depreciación{% endblock %}
+{% block title %}
+Reporte de Depreciación
+{% endblock %}
 
 {% block body %}
-<div class="row align-items-center border-bottom mb-3 py-2">
-    <div class="col d-flex align-items-center">
-        <h6 class="page-title mb-0 fs-6 fw-bold">Reporte de Depreciación</h6>
-    </div>
-</div>
+<div class="container-fluid mt-3">
+    {% csrf_token %}
 
-<div class="card shadow-sm border-0 mb-4 h-100" style="border-radius: 12px;">
-    <div class="card-body p-5 text-center">
-        <i class="material-icons text-muted" style="font-size: 4rem; opacity: 0.5;">construction</i>
-        <h4 class="mt-3 text-muted">Pantalla en construcción</h4>
-        <p class="text-secondary">Esta sección está siendo desarrollada. Pronto estará disponible.</p>
+    <div class="card shadow-sm border-0 mb-3">
+        <div class="card-header bg-white">
+            <h5 class="mb-0">Reporte de Depreciación General</h5>
+        </div>
+        <div class="card-body">
+            <div class="row g-2">
+                <div class="col-md-3">
+                    <label class="form-label form-label-sm">Empresa</label>
+                    <select class="form-select form-select-sm" id="filtroEmpresa">
+                        <option value="">Todas las empresas</option>
+                        {% for emp in empresas %}
+                            <option value="{{ emp.PkEmpresa }}">{{ emp.NombreEmpresa }} ({{ emp.Empresa }})</option>
+                        {% endfor %}
+                    </select>
+                </div>
+                <div class="col-md-3">
+                    <label class="form-label form-label-sm">Año</label>
+                    <select class="form-select form-select-sm" id="filtroAnio">
+                        <option value="">Todos los años</option>
+                    </select>
+                </div>
+                <div class="col-md-3">
+                    <label class="form-label form-label-sm">Categoría</label>
+                    <select class="form-select form-select-sm" id="filtroCategoria">
+                        <option value="">Todas las categorías</option>
+                        {% for cat in categorias %}
+                            <option value="{{ cat.PkCategoria }}">{{ cat.NombreCategoria }}</option>
+                        {% endfor %}
+                    </select>
+                </div>
+                <div class="col-md-3 d-flex align-items-end">
+                    <button class="btn btn-success btn-sm w-100" id="btnGenerarReporte">
+                        <i class="fas fa-file-excel me-1"></i> Generar Reporte
+                    </button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div class="card shadow-sm border-0">
+        <div class="card-body">
+            <div class="table-responsive">
+                <table class="table table-bordered table-hover table-sm w-100" id="tablaReporteDepreciacion">
+                    <thead class="table-light">
+                        <tr>
+                            <th>Código Activo</th>
+                            <th>Nombre Activo</th>
+                            <th>Categoría</th>
+                            <th>Fecha Compra</th>
+                            <th>Valor Compra</th>
+                            <th>Valor Residual</th>
+                            <th>Valor Depreciable</th>
+                            <th>Depreciación del Año</th>
+                            <th>Depreciación Acumulada</th>
+                            <th>Valor en Libros</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                    </tbody>
+                </table>
+            </div>
+        </div>
     </div>
 </div>
 {% endblock %}
 
 {% block scripts %}
+<script>
+    $(document).ready(function() {
+        $('#tablaReporteDepreciacion').DataTable({
+            language: { url: '//cdn.datatables.net/plug-ins/1.13.7/i18n/es-ES.json' },
+            pageLength: 10,
+            dom: 'Bfrtip',
+            buttons: [
+                'excelHtml5',
+                'pdfHtml5'
+            ]
+        });
+    });
+</script>
 {% endblock %}

@@ -7,64 +7,69 @@ Gestión de Activos
 
 {% block body %}
 
-<div class="container-fluid mt-3">
-    {% csrf_token %}
+<!-- Encabezado de la Pantalla -->
+<div class="d-flex justify-content-between align-items-end mb-4 flex-wrap gap-2">
+    <div>
+        <h2 class="mb-1" style="color: var(--text-primary); font-weight: 700; font-size: 1.5rem;">Gestión de Activos</h2>
+        <p class="text-muted mb-0" style="font-size: 0.9rem;">Catálogo completo de activos fijos, equipos y mobiliario.</p>
+    </div>
+    <div>
+        <button class="btn btn-primary d-flex align-items-center gap-2 px-3 py-2 shadow-sm" id="btnNuevoActivo" style="border-radius: 8px;">
+            <i class="material-icons">add_circle</i>
+            <span>Nuevo Activo</span>
+        </button>
+    </div>
+</div>
 
-    <div class="card shadow-sm border-0">
-        <div class="card-header bg-white">
-            <div class="d-flex justify-content-between align-items-center flex-wrap gap-2">
-                <h5 class="mb-0">Gestión de Activos</h5>
-                <button class="btn btn-primary btn-sm" id="btnNuevoActivo">
-                    <i class="material-icons align-middle" style="font-size:18px;">add</i>
-                    Nuevo activo
+<!-- Tarjeta Principal -->
+<div class="modern-card">
+    <div class="modern-card-body">
+        <div class="row g-3 mb-4">
+            <div class="col-md-3">
+                <label class="form-label text-muted fw-bold" style="font-size: 0.8rem;">Empresa</label>
+                <select class="form-select" id="fkEmpresa">
+                    {% for emp in empresas %}
+                        <option value="{{ emp.PkEmpresa }}">{{ emp.NombreEmpresa }}</option>
+                    {% endfor %}
+                </select>
+            </div>
+            <div class="col-md-3">
+                <label class="form-label text-muted fw-bold" style="font-size: 0.8rem;">Estado</label>
+                <select class="form-select" id="estadoFiltro">
+                    <option value="0">Todos</option>
+                    <option value="1" selected>Activos</option>
+                    <option value="2">Inactivos</option>
+                    <option value="3">Eliminados</option>
+                </select>
+            </div>
+            <div class="col-md-4">
+                <label class="form-label text-muted fw-bold" style="font-size: 0.8rem;">Buscar</label>
+                <input type="text" class="form-control" id="textoBusqueda" placeholder="Código, nombre, marca, serie, factura...">
+            </div>
+            <div class="col-md-2 d-flex align-items-end">
+                <button class="btn btn-outline-secondary w-100 d-flex align-items-center justify-content-center gap-2" id="btnBuscarActivos" style="height: 42px; border-radius: 8px;">
+                    <i class="material-icons" style="font-size: 18px;">search</i> Buscar
                 </button>
             </div>
         </div>
 
-        <div class="card-body">
-            <div class="row g-2 mb-3">
-                <div class="col-md-3">
-                    <label class="form-label form-label-sm">Empresa</label>
-                    <input type="text" class="form-control form-control-sm" id="fkEmpresa" value="1">
-                </div>
-                <div class="col-md-3">
-                    <label class="form-label form-label-sm">Estado</label>
-                    <select class="form-select form-select-sm" id="estadoFiltro">
-                        <option value="0">Todos</option>
-                        <option value="1" selected>Activos</option>
-                        <option value="2">Inactivos</option>
-                        <option value="3">Eliminados</option>
-                    </select>
-                </div>
-                <div class="col-md-4">
-                    <label class="form-label form-label-sm">Buscar</label>
-                    <input type="text" class="form-control form-control-sm" id="textoBusqueda" placeholder="Código, nombre, marca, serie, factura...">
-                </div>
-                <div class="col-md-2 d-flex align-items-end">
-                    <button class="btn btn-secondary btn-sm w-100" id="btnBuscarActivos">
-                        Buscar
-                    </button>
-                </div>
-            </div>
-
-            <div class="table-responsive">
-                <table class="table table-bordered table-hover table-sm w-100" id="tablaActivos">
-                    <thead class="table-light">
-                        <tr>
-                            <th>ID</th>
-                            <th>Código</th>
-                            <th>Nombre</th>
-                            <th>Marca</th>
-                            <th>Modelo</th>
-                            <th>Serie</th>
-                            <th>Fecha Compra</th>
-                            <th>Valor Compra</th>
-                            <th>Acciones</th>
-                        </tr>
-                    </thead>
-                    <tbody></tbody>
-                </table>
-            </div>
+        <div class="table-responsive">
+            <table class="table table-hover w-100 align-middle" id="tablaActivos">
+                <thead>
+                    <tr>
+                        <th class="py-3">ID</th>
+                        <th class="py-3">Código</th>
+                        <th class="py-3">Nombre</th>
+                        <th class="py-3">Marca</th>
+                        <th class="py-3">Modelo</th>
+                        <th class="py-3">Serie</th>
+                        <th class="py-3">Fecha Compra</th>
+                        <th class="py-3 text-end">Valor Compra</th>
+                        <th class="py-3 text-center">Acciones</th>
+                    </tr>
+                </thead>
+                <tbody></tbody>
+            </table>
         </div>
     </div>
 </div>
@@ -249,6 +254,10 @@ function cargarActivos() {
         estado: $('#estadoFiltro').val(),
         textoBusqueda: $('#textoBusqueda').val()
     }, function (response) {
+        if (response.error) {
+            Swal.fire("Error BD", "Ocurrió un error consultando activos: " + response.error, "error");
+            return;
+        }
         if ($.fn.DataTable.isDataTable('#tablaActivos')) {
             $('#tablaActivos').DataTable().destroy();
         }

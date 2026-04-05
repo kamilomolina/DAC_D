@@ -1,350 +1,164 @@
 {% load static %}
 <!doctype html>
-<html lang="es">
-
+<html lang="es" data-theme="dark">
 <head>
-    <title>{% block title %}{% endblock %}</title>
-    <!-- Required meta tags -->
+    <title>{% block title %}Activo Fijo{% endblock %}</title>
     <meta charset="utf-8">
     <meta name="viewport" content="width=device-width, initial-scale=1, shrink-to-fit=no">
 
-    <!-- Google Fonts: Inter -->
-    <link rel="preconnect" href="https://fonts.gstatic.com">
-    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800;900&display=swap" rel="stylesheet">
-
+    <!-- Fuentes Modernas: Montserrat / Inter -->
+    <link href="https://fonts.googleapis.com/css2?family=Montserrat:wght@400;500;600;700;800;900&family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+    
     <!-- Bootstrap CSS -->
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.0.2/dist/css/bootstrap.min.css" rel="stylesheet">
-
-    <!-- FontAwesome and Material Icons -->
+    
+    <!-- Iconos: Material UI & FontAwesome -->
     <link href="https://fonts.googleapis.com/icon?family=Material+Icons" rel="stylesheet">
     <script src="https://kit.fontawesome.com/e716b78aa6.js" crossorigin="anonymous"></script>
 
-    <!-- DataTables CSS -->
+    <!-- DataTables & SweetAlert -->
     <link rel="stylesheet" href="https://cdn.datatables.net/1.13.7/css/jquery.dataTables.min.css">
-    <link href="https://cdn.datatables.net/1.13.8/css/jquery.dataTables.css" rel="stylesheet">
-    <link href="https://cdn.datatables.net/buttons/2.4.2/css/buttons.dataTables.css" rel="stylesheet">
-
-    <!-- SweetAlert2 -->
     <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
 
-    <!-- Global CSS structure from Contable adapted to Activo -->
-    <link rel="stylesheet" href="{% static 'app/css/CONTA_CSS.css' %}">
+    <!-- Nuestro super Theme Global -->
+    <link rel="stylesheet" href="{% static 'app/css/activo_fijo_theme.css' %}">
 
     <style>
-        .ct-brand-icon {
-            width: 36px;
-            height: 36px;
-            background: linear-gradient(135deg, #4361ee, #3a56d4);
-            border-radius: 10px;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            color: #fff;
-            box-shadow: 0 4px 12px rgba(67, 97, 238, 0.3);
+        body { font-family: 'Montserrat', sans-serif; }
+        .sidebar-brand-text {
+            font-family: 'Montserrat', sans-serif;
+            font-weight: 900;
+            line-height: 1;
+            font-size: 1.25rem;
+            color: var(--text-primary);
         }
-
-        .ct-brand-icon i.material-icons {
-            font-size: 20px !important;
-            margin: 0 !important;
-            color: #fff !important;
-        }
-
-        .ct-brand-text {
+        .sidebar-brand-text span {
+            display: block;
             font-size: 1.1rem;
             font-weight: 800;
-            color: #fff !important;
-            letter-spacing: 0.5px;
-            text-transform: uppercase;
-        }
-
-        #menuDiv {
-            background: linear-gradient(135deg, #1e1e2d, #252538);
-            box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
-            padding: 0.15rem 1rem !important;
-        }
-
-        .nav-link {
-            color: #e0e0e0 !important;
-            font-weight: 500;
-            padding: 0.5rem 0.8rem !important;
-            display: flex;
-            align-items: center;
-            gap: 6px;
-            border-radius: 6px;
-            transition: all 0.2s ease;
-            font-size: 0.85rem;
-        }
-
-        .nav-link:hover {
-            background-color: rgba(67, 97, 238, 0.15) !important;
-            color: #ffffff !important;
-            transform: translateY(-1px);
-        }
-
-        .nav-link i.material-icons {
-            font-size: 1.1rem !important;
-            color: inherit;
-        }
-
-        .btn-salir-nav {
-            background: linear-gradient(to right, #4361ee, #3a56d4);
-            color: #fff;
-            border: none;
-            padding: 0.4rem 1rem !important;
-            border-radius: 6px;
-            font-weight: 500;
-            letter-spacing: 0.3px;
-            display: flex;
-            align-items: center;
-            gap: 6px;
-            transition: all 0.3s ease;
-            font-size: 0.85rem;
-            box-shadow: 0 4px 10px rgba(67, 97, 238, 0.2);
-            text-decoration: none;
-        }
-
-        .btn-salir-nav:hover {
-            transform: translateY(-2px);
-            box-shadow: 0 6px 15px rgba(67, 97, 238, 0.35);
-            color: #fff;
+            letter-spacing: -0.5px;
         }
     </style>
 
-    {% block meta %}
-    {% endblock %}
+    {% block meta %}{% endblock %}
 </head>
 
 <body>
-
-    <nav id="menuDiv" class="navbar navbar-expand-lg justify-content-start flex-nowrap pe-2 mb-3">
-
-        <div class="d-flex align-items-center flex-grow-1 custom-scroll-nav gap-3">
-
-            <!-- Brand -->
-            <div class="ct-brand d-flex align-items-center gap-2 me-4">
-                <div class="ct-brand-icon">
-                    <i class="material-icons">inventory_2</i>
-                </div>
-                <span class="ct-brand-text">ACTIVO FIJO</span>
-            </div>
-
-            <!-- Dashboard -->
-            <div>
-                <a class="nav-link" href="{% url 'ACTIVO:panel' %}" id="dashboardMenu">
-                    <i class="material-icons">dashboard</i>
-                    Dashboard
-                </a>
-            </div>
-
-            <!-- Menú Catálogos -->
-            <div class="dropdown">
-                <a class="nav-link dropdown-toggle" href="#" id="catalogosMenu" data-bs-toggle="dropdown" style="cursor: pointer;">
-                    <i class="material-icons">category</i>
-                    Catálogos
-                </a>
-
-                <div class="dropdown-menu shadow-sm border-0" aria-labelledby="catalogosMenu">
-                    <div class="dropdown-item d-flex justify-content-between align-items-center p-0">
-                        <a href="{% url 'ACTIVO:gestion_categorias_activos' %}" class="dropdown-item menu-link border-0 flex-grow-1">
-                            <i class="fas fa-tags me-2 text-primary"></i> Categorías
-                        </a>
-                        <button class="btn btn-sm btn-light text-muted abrir-enlace me-2 p-1 bg-transparent border-0" data-bs-toggle="tooltip" title="Abrir en nueva pestaña" style="line-height: 1;">
-                            <i class="fas fa-external-link-alt" style="font-size: 0.8rem;"></i>
-                        </button>
+    <div class="app-wrapper">
+        <!-- SIDEBAR -->
+        <aside class="app-sidebar" id="app-sidebar">
+            <div class="sidebar-header border-bottom-0">
+                <div class="d-flex align-items-center gap-3">
+                    <div style="background: var(--brand-primary); color: white; padding: 6px; border-radius: 10px; display: flex;">
+                        <i class="material-icons" style="font-size: 24px;">inventory_2</i>
                     </div>
-                    <div class="dropdown-item d-flex justify-content-between align-items-center p-0">
-                        <a href="{% url 'ACTIVO:gestion_proveedores' %}" class="dropdown-item menu-link border-0 flex-grow-1">
-                            <i class="fas fa-truck-moving me-2 text-primary"></i> Proveedores
-                        </a>
-                        <button class="btn btn-sm btn-light text-muted abrir-enlace me-2 p-1 bg-transparent border-0" data-bs-toggle="tooltip" title="Abrir en nueva pestaña" style="line-height: 1;">
-                            <i class="fas fa-external-link-alt" style="font-size: 0.8rem;"></i>
-                        </button>
-                    </div>
-                    <div class="dropdown-item d-flex justify-content-between align-items-center p-0">
-                        <a href="{% url 'ACTIVO:gestion_ubicaciones' %}" class="dropdown-item menu-link border-0 flex-grow-1">
-                            <i class="fas fa-map-marker-alt me-2 text-primary"></i> Ubicaciones
-                        </a>
-                        <button class="btn btn-sm btn-light text-muted abrir-enlace me-2 p-1 bg-transparent border-0" data-bs-toggle="tooltip" title="Abrir en nueva pestaña" style="line-height: 1;">
-                            <i class="fas fa-external-link-alt" style="font-size: 0.8rem;"></i>
-                        </button>
-                    </div>
-                    <div class="dropdown-divider"></div>
-                    <div class="dropdown-item d-flex justify-content-between align-items-center p-0">
-                        <a href="{% url 'ACTIVO:gestion_motivos_salida' %}" class="dropdown-item menu-link border-0 flex-grow-1">
-                            <i class="fas fa-sign-out-alt me-2 text-warning"></i> Motivos de Salida
-                        </a>
-                        <button class="btn btn-sm btn-light text-muted abrir-enlace me-2 p-1 bg-transparent border-0" data-bs-toggle="tooltip" title="Abrir en nueva pestaña" style="line-height: 1;">
-                            <i class="fas fa-external-link-alt" style="font-size: 0.8rem;"></i>
-                        </button>
+                    <div class="sidebar-brand-text">
+                        ACTIVO<span>FIJO</span>
                     </div>
                 </div>
             </div>
-
-            <!-- Menú Activos -->
-            <div class="dropdown">
-                <a class="nav-link dropdown-toggle" href="#" id="activosMenu" data-bs-toggle="dropdown" style="cursor: pointer;">
-                    <i class="material-icons">inventory</i>
-                    Activos
+            
+            <div class="sidebar-menu">
+                <!-- Dashboard (Static) -->
+                <a href="{% url 'ACTIVO:panel' %}" class="nav-link text-decoration-none {% if request.resolver_match.url_name == 'panel' %}active{% endif %}" id="menu-dashboard">
+                    <i class="material-icons">dashboard</i> Dashboard
                 </a>
-
-                <div class="dropdown-menu shadow-sm border-0" aria-labelledby="activosMenu">
-                    <div class="dropdown-item d-flex justify-content-between align-items-center p-0">
-                        <a href="{% url 'ACTIVO:gestion_activos' %}" class="dropdown-item menu-link border-0 flex-grow-1">
-                            <i class="fas fa-boxes me-2 text-primary"></i> Gestión de Activos
-                        </a>
-                        <button class="btn btn-sm btn-light text-muted abrir-enlace me-2 p-1 bg-transparent border-0" data-bs-toggle="tooltip" title="Abrir en nueva pestaña" style="line-height: 1;">
-                            <i class="fas fa-external-link-alt" style="font-size: 0.8rem;"></i>
-                        </button>
-                    </div>
-
-                </div>
-            </div>
-
-            <!-- Menú Depreciación -->
-            <div class="dropdown">
-                <a class="nav-link dropdown-toggle" href="#" id="depreciacionMenu" data-bs-toggle="dropdown" style="cursor: pointer;">
-                    <i class="material-icons">trending_down</i>
-                    Depreciación
-                </a>
-
-                <div class="dropdown-menu shadow-sm border-0" aria-labelledby="depreciacionMenu">
-                    <div class="dropdown-item d-flex justify-content-between align-items-center p-0">
-                        <a href="{% url 'ACTIVO:depreciaciones_aplicadas' %}" class="dropdown-item menu-link border-0 flex-grow-1">
-                            <i class="fas fa-check-circle me-2 text-success"></i> Depreciaciones Aplicadas
-                        </a>
-                        <button class="btn btn-sm btn-light text-muted abrir-enlace me-2 p-1 bg-transparent border-0" data-bs-toggle="tooltip" title="Abrir en nueva pestaña" style="line-height: 1;">
-                            <i class="fas fa-external-link-alt" style="font-size: 0.8rem;"></i>
-                        </button>
-                    </div>
-                    <div class="dropdown-item d-flex justify-content-between align-items-center p-0">
-                        <a href="{% url 'ACTIVO:historial_depreciacion' %}" class="dropdown-item menu-link border-0 flex-grow-1">
-                            <i class="fas fa-history me-2 text-info"></i> Historial de Depreciación
-                        </a>
-                        <button class="btn btn-sm btn-light text-muted abrir-enlace me-2 p-1 bg-transparent border-0" data-bs-toggle="tooltip" title="Abrir en nueva pestaña" style="line-height: 1;">
-                            <i class="fas fa-external-link-alt" style="font-size: 0.8rem;"></i>
-                        </button>
-                    </div>
-                    <div class="dropdown-item d-flex justify-content-between align-items-center p-0">
-                        <a href="{% url 'ACTIVO:depreciacion_anual' %}" class="dropdown-item menu-link border-0 flex-grow-1">
-                            <i class="fas fa-calendar-alt me-2 text-primary"></i> Depreciación Anual
-                        </a>
-                        <button class="btn btn-sm btn-light text-muted abrir-enlace me-2 p-1 bg-transparent border-0" data-bs-toggle="tooltip" title="Abrir en nueva pestaña" style="line-height: 1;">
-                            <i class="fas fa-external-link-alt" style="font-size: 0.8rem;"></i>
-                        </button>
+                
+                <!-- Sección: Catálogos -->
+                <div class="sidebar-section">
+                    <a class="nav-link text-decoration-none collapsed" data-bs-toggle="collapse" href="#collapseCatalogos" role="button" aria-expanded="false" aria-controls="collapseCatalogos">
+                        <i class="fas fa-folder-open"></i> Catálogos
+                    </a>
+                    <div class="collapse" id="collapseCatalogos">
+                        <ul class="sidebar-submenu">
+                            <li><a href="{% url 'ACTIVO:gestion_categorias_activos' %}" class="nav-link text-decoration-none {% if 'categorias' in request.path %}active{% endif %}">Categorías</a></li>
+                            <li><a href="{% url 'ACTIVO:gestion_proveedores' %}" class="nav-link text-decoration-none {% if 'proveedores' in request.path %}active{% endif %}">Proveedores</a></li>
+                            <li><a href="{% url 'ACTIVO:gestion_ubicaciones' %}" class="nav-link text-decoration-none {% if 'ubicaciones' in request.path %}active{% endif %}">Ubicaciones</a></li>
+                            <li><a href="{% url 'ACTIVO:gestion_motivos_salida' %}" class="nav-link text-decoration-none {% if 'motivos' in request.path %}active{% endif %}">Motivos</a></li>
+                        </ul>
                     </div>
                 </div>
-            </div>
 
-            <!-- Menú Consultas -->
-            <div class="dropdown">
-                <a class="nav-link dropdown-toggle" href="#" id="consultasMenu" data-bs-toggle="dropdown" style="cursor: pointer;">
-                    <i class="material-icons">search</i>
-                    Consultas
-                </a>
-
-                <div class="dropdown-menu shadow-sm border-0" aria-labelledby="consultasMenu">
-                    <div class="dropdown-item d-flex justify-content-between align-items-center p-0">
-                        <a href="{% url 'ACTIVO:consulta_estado_actual' %}" class="dropdown-item menu-link border-0 flex-grow-1">
-                            <i class="fas fa-search me-2 text-primary"></i> Estado Actual de Activos
-                        </a>
-                        <button class="btn btn-sm btn-light text-muted abrir-enlace me-2 p-1 bg-transparent border-0" data-bs-toggle="tooltip" title="Abrir en nueva pestaña" style="line-height: 1;">
-                            <i class="fas fa-external-link-alt" style="font-size: 0.8rem;"></i>
-                        </button>
-                    </div>
-                    <div class="dropdown-item d-flex justify-content-between align-items-center p-0">
-                        <a href="{% url 'ACTIVO:consulta_estado_mes' %}" class="dropdown-item menu-link border-0 flex-grow-1">
-                            <i class="fas fa-calendar-day me-2 text-info"></i> Estado del Activo a un Mes
-                        </a>
-                        <button class="btn btn-sm btn-light text-muted abrir-enlace me-2 p-1 bg-transparent border-0" data-bs-toggle="tooltip" title="Abrir en nueva pestaña" style="line-height: 1;">
-                            <i class="fas fa-external-link-alt" style="font-size: 0.8rem;"></i>
-                        </button>
+                <!-- Sección: Operaciones -->
+                <div class="sidebar-section">
+                    <a class="nav-link text-decoration-none collapsed" data-bs-toggle="collapse" href="#collapseOperaciones" role="button" aria-expanded="false" aria-controls="collapseOperaciones">
+                        <i class="fas fa-microchip"></i> Operaciones
+                    </a>
+                    <div class="collapse" id="collapseOperaciones">
+                        <ul class="sidebar-submenu">
+                            <li><a href="{% url 'ACTIVO:gestion_activos' %}" class="nav-link text-decoration-none {% if 'activos' in request.path %}active{% endif %}">Gestión Activos</a></li>
+                            <li><a href="{% url 'ACTIVO:depreciaciones_aplicadas' %}" class="nav-link text-decoration-none {% if 'depreciaciones' in request.path %}active{% endif %}">Depreciaciones</a></li>
+                        </ul>
                     </div>
                 </div>
-            </div>
 
-            <!-- Menú Reportes -->
-            <div class="dropdown">
-                <a class="nav-link dropdown-toggle" href="#" id="reportesMenu" data-bs-toggle="dropdown" style="cursor: pointer;">
-                    <i class="material-icons">assessment</i>
-                    Reportes
-                </a>
-
-                <div class="dropdown-menu shadow-sm border-0" aria-labelledby="reportesMenu">
-                    <div class="dropdown-item d-flex justify-content-between align-items-center p-0">
-                        <a href="{% url 'ACTIVO:reporte_general' %}" class="dropdown-item menu-link border-0 flex-grow-1">
-                            <i class="fas fa-file-alt me-2 text-primary"></i> Reporte General de Activos
-                        </a>
-                        <button class="btn btn-sm btn-light text-muted abrir-enlace me-2 p-1 bg-transparent border-0" data-bs-toggle="tooltip" title="Abrir en nueva pestaña" style="line-height: 1;">
-                            <i class="fas fa-external-link-alt" style="font-size: 0.8rem;"></i>
-                        </button>
-                    </div>
-                    <div class="dropdown-item d-flex justify-content-between align-items-center p-0">
-                        <a href="{% url 'ACTIVO:reporte_bajas' %}" class="dropdown-item menu-link border-0 flex-grow-1">
-                            <i class="fas fa-file-excel me-2 text-danger"></i> Reporte de Bajas
-                        </a>
-                        <button class="btn btn-sm btn-light text-muted abrir-enlace me-2 p-1 bg-transparent border-0" data-bs-toggle="tooltip" title="Abrir en nueva pestaña" style="line-height: 1;">
-                            <i class="fas fa-external-link-alt" style="font-size: 0.8rem;"></i>
-                        </button>
-                    </div>
-                    <div class="dropdown-item d-flex justify-content-between align-items-center p-0">
-                        <a href="{% url 'ACTIVO:reporte_depreciacion' %}" class="dropdown-item menu-link border-0 flex-grow-1">
-                            <i class="fas fa-chart-line me-2 text-warning"></i> Reporte de Depreciación
-                        </a>
-                        <button class="btn btn-sm btn-light text-muted abrir-enlace me-2 p-1 bg-transparent border-0" data-bs-toggle="tooltip" title="Abrir en nueva pestaña" style="line-height: 1;">
-                            <i class="fas fa-external-link-alt" style="font-size: 0.8rem;"></i>
-                        </button>
+                <!-- Sección: Consultas & Reportes -->
+                <div class="sidebar-section">
+                    <a class="nav-link text-decoration-none collapsed" data-bs-toggle="collapse" href="#collapseReportes" role="button" aria-expanded="false" aria-controls="collapseReportes">
+                        <i class="fas fa-chart-pie"></i> Reportes
+                    </a>
+                    <div class="collapse" id="collapseReportes">
+                        <ul class="sidebar-submenu">
+                            <li><a href="{% url 'ACTIVO:consulta_estado_actual' %}" class="nav-link text-decoration-none {% if 'estado_actual' in request.path %}active{% endif %}">Estado Actual</a></li>
+                            <li><a href="{% url 'ACTIVO:reporte_general' %}" class="nav-link text-decoration-none {% if 'reporte_general' in request.path %}active{% endif %}">Reporte General</a></li>
+                        </ul>
                     </div>
                 </div>
+                
+                <div class="mt-auto pt-4">
+                    <a href="/CWS/" class="nav-link text-decoration-none">
+                        <i class="material-icons">arrow_back</i> Volver al Portal
+                    </a>
+                </div>
             </div>
+        </aside>
 
-        </div>
+        <!-- MAIN CONTENT AREA -->
+        <main class="app-main">
+            <!-- TOP NAVBAR -->
+            <header class="app-header">
+                <div class="d-flex align-items-center gap-3">
+                    <button class="btn btn-sm d-lg-none" id="sidebar-toggle" style="color: var(--text-primary); background: rgba(99, 102, 241, 0.1);">
+                        <i class="material-icons">menu</i>
+                    </button>
+                    <div class="header-greeting d-none d-sm-flex">
+                        <span class="header-welcome-text">Bienvenido,</span>
+                        <span class="header-user-name">{{ fullName|upper|default:userName|upper|default:"USUARIO" }}</span>
+                    </div>
+                </div>
+                
+                <div class="d-flex align-items-center gap-3">
+                    <!-- Tema Toggle (Estilo CWS Login) -->
+                    <button id="theme-toggle-btn" class="theme-toggle-btn cws-style" title="Alternar tema">
+                        <i class="fas fa-moon" id="theme-icon"></i>
+                    </button>
+                    
+                    <!-- Avatar Redondeado (MNT CONTROL Ref) -->
+                    <div class="user-profile-btn d-flex align-items-center gap-2" style="cursor: pointer;">
+                        <div class="rounded-circle border d-flex align-items-center justify-content-center" style="width: 44px; height: 44px; background: #e2e8f0; border-color: rgba(255,255,255,0.1) !important; overflow: hidden;">
+                             <img src="https://ui-avatars.com/api/?name={{ fullName|urlencode|default:userName|urlencode|default:'U' }}&background=6366f1&color=fff&size=128" style="width: 100%; height: 100%; object-fit: cover;">
+                        </div>
+                    </div>
+                </div>
+            </header>
 
-        <!-- Botón Salir / Regresar a Módulos -->
-        <div class="d-flex align-items-center ms-auto">
-            <a href="/CWS/" class="btn btn-outline-danger btn-sm d-flex align-items-center gap-2" title="Regresar a Módulos">
-                <i class="material-icons" style="font-size: 16px;">exit_to_app</i> Salir
-            </a>
-        </div>
-    </nav>
-
-    <!-- Main Content Area -->
-    <div class="container-fluid">
-        {% block body %}
-        {% endblock %}
+            <!-- CONTENIDO INYECTABLE -->
+            <div class="content-wrapper p-4 flex-grow-1" style="overflow-y: auto; overflow-x: hidden;">
+                {% block body %}
+                {% endblock %}
+            </div>
+        </main>
     </div>
 
-    <!-- Core Scripts -->
+    <!-- Scripts Core -->
     <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
-    <script src="https://cdn.jsdelivr.net/npm/@popperjs/core@2.9.2/dist/umd/popper.min.js"></script>
-    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.0.2/dist/js/bootstrap.min.js"></script>
-    
-    <!-- DataTables Scripts -->
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.0.2/dist/js/bootstrap.bundle.min.js"></script>
     <script src="https://cdn.datatables.net/1.13.7/js/jquery.dataTables.min.js"></script>
-    <script src="https://cdn.datatables.net/1.13.8/js/jquery.dataTables.js"></script>
-
-    <!-- Script to handle opening link in new tab -->
-    <script>
-        $(document).ready(function() {
-            // Enable tooltips
-            var tooltipTriggerList = [].slice.call(document.querySelectorAll('[data-bs-toggle="tooltip"]'))
-            var tooltipList = tooltipTriggerList.map(function (tooltipTriggerEl) {
-                return new bootstrap.Tooltip(tooltipTriggerEl)
-            });
-
-            // Handle external link button click
-            $('.abrir-enlace').click(function(e) {
-                e.preventDefault();
-                e.stopPropagation();
-                var link = $(this).siblings('a').attr('href');
-                if (link && link !== "#") {
-                    window.open(link, '_blank');
-                }
-            });
-        });
-    </script>
+    
+    <!-- Script de Configuración del Tema -->
+    <script src="{% static 'app/activo/activo_fijo_theme.js' %}"></script>
 
     {% block scripts %}
     {% endblock %}
-
 </body>
 </html>
