@@ -47,6 +47,7 @@ urlpatterns = [
     
     # Depreciación
     path('depreciaciones-aplicadas/', depreciaciones_aplicadas, name='depreciaciones_aplicadas'),
+    path('get-depreciaciones-aplicadas/', get_depreciaciones_aplicadas, name='get_depreciaciones_aplicadas'),
     
     # Consultas
     path('consulta-estado-actual/', consulta_estado_actual, name='consulta_estado_actual'),

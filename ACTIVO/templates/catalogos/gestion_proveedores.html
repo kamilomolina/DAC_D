@@ -6,100 +6,107 @@ Gestión de Proveedores
 {% endblock %}
 
 {% block body %}
+{% csrf_token %}
 <!-- Encabezado de la Pantalla -->
 <div class="d-flex justify-content-between align-items-end mb-4 flex-wrap gap-2">
     <div>
-        <h2 class="mb-1" style="color: var(--text-primary); font-weight: 700; font-size: 1.5rem;">Registro de Proveedores</h2>
-        <p class="text-muted mb-0" style="font-size: 0.9rem;">Catálogo global de los proveedores registrados en el sistema.</p>
+        <h2 class="mb-1" style="color: var(--text-primary); font-weight: 700; font-size: 1.5rem;">Gestión de Proveedores</h2>
+        <p class="text-muted mb-0" style="font-size: 0.9rem;">Registro global de proveedores y contactos.</p>
     </div>
     <div>
-        <button class="btn btn-primary d-flex align-items-center gap-2 px-3 py-2 shadow-sm" id="btnNuevoProveedor" style="background-color: var(--brand-primary); border-color: var(--brand-primary); border-radius: 8px;">
+        <button class="btn btn-primary d-flex align-items-center gap-2 px-3 py-2 shadow-sm" id="btnNuevoProveedor" style="border-radius: 8px;">
             <i class="material-icons">add_circle</i>
-            <span>Nuevo Registro</span>
+            <span>Nuevo Proveedor</span>
         </button>
     </div>
 </div>
 
-<!-- Tarjeta Principal -->
-<div class="modern-card">
+<!-- Tarjeta de Filtros -->
+<div class="modern-card mb-4">
     <div class="modern-card-body">
-        
-        <div class="row g-2 mb-4">
-            <div class="col-md-8">
-                <label class="form-label text-muted fw-bold">Buscar</label>
-                <input type="text" class="form-control" id="textoBusqueda" placeholder="Nombre, RTN, Correo...">
+        <h6 class="text-uppercase fw-bold text-muted mb-3" style="font-size: 0.75rem; letter-spacing: 1px;">Área de Filtros</h6>
+        <div class="row g-3">
+            <div class="col-md-3">
+                <label class="form-label text-muted fw-bold" style="font-size: 0.8rem;">Empresa</label>
+                <select class="form-select" id="filtroEmpresa">
+                    <option value="0">Todos</option>
+                    {% for emp in empresas %}
+                        <option value="{{ emp.PkEmpresa }}">{{ emp.NombreEmpresa }}</option>
+                    {% endfor %}
+                </select>
             </div>
-            <div class="col-md-4 d-flex align-items-end">
-                <button class="btn btn-outline-secondary d-flex align-items-center justify-content-center gap-1 w-100" id="btnBuscarProveedores" style="border-radius: 8px;">
-                    <i class="material-icons" style="font-size: 18px;">refresh</i> Actualizar Lista
+            <div class="col-md-7">
+                <label class="form-label text-muted fw-bold" style="font-size: 0.8rem;">Búsqueda</label>
+                <input type="text" class="form-control" id="filtroTexto" placeholder="Nombre, RTN, Correo...">
+            </div>
+            <div class="col-md-2 d-flex align-items-end">
+                <button class="btn btn-outline-secondary w-100 d-flex align-items-center justify-content-center gap-2" id="btnFiltrar" style="height: 42px; border-radius: 8px;">
+                    <i class="material-icons" style="font-size: 18px;">search</i> Actualizar
                 </button>
             </div>
         </div>
+    </div>
+</div>
 
-        <div class="table-responsive mt-2">
+<!-- Tarjeta de Tabla -->
+<div class="modern-card">
+    <div class="modern-card-body">
+        <div class="table-responsive">
             <table class="table table-hover w-100 align-middle" id="tablaProveedores">
                 <thead>
                     <tr>
                         <th class="py-3">ID</th>
-                        <th class="py-3">Nombre</th>
+                        <th class="py-3">Proveedor</th>
                         <th class="py-3">RTN</th>
+                        <th class="py-3">Email</th>
                         <th class="py-3">Teléfono</th>
-                        <th class="py-3">Correo</th>
-                        <th class="py-3">Dirección</th>
-                        <th class="py-3 text-center">Estado</th>
+                        <th class="py-3">Estado</th>
                         <th class="py-3 text-center">Acciones</th>
                     </tr>
                 </thead>
                 <tbody></tbody>
             </table>
         </div>
-        
     </div>
 </div>
 
-<!-- Modal -->
 <div class="modal fade" id="modalProveedor" tabindex="-1" aria-hidden="true">
-    <div class="modal-dialog modal-lg modal-dialog-centered">
-        <div class="modal-content border-0 shadow-lg" style="border-radius: 16px;">
-            <div class="modal-header border-bottom-0 pb-0">
-                <h5 class="modal-title fw-bold">Proveedor</h5>
+    <div class="modal-dialog modal-lg modal-dialog-scrollable">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title">Detalle de Proveedor</h5>
                 <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
             </div>
 
             <div class="modal-body px-4 py-3">
                 <input type="hidden" id="pkProveedor">
-
                 <div class="row g-3">
                     <div class="col-md-12">
-                        <label class="form-label text-muted fw-bold" style="font-size: 0.8rem;">Nombre Proveedor</label>
+                        <label class="form-label fw-bold">Nombre del Proveedor <span class="text-danger">*</span></label>
                         <input type="text" class="form-control" id="nombreProveedor" required>
                     </div>
-
                     <div class="col-md-6">
-                        <label class="form-label text-muted fw-bold" style="font-size: 0.8rem;">RTN</label>
+                        <label class="form-label">RTN</label>
                         <input type="text" class="form-control" id="rtn">
                     </div>
-
                     <div class="col-md-6">
-                        <label class="form-label text-muted fw-bold" style="font-size: 0.8rem;">Teléfono</label>
+                        <label class="form-label">Teléfono</label>
                         <input type="text" class="form-control" id="telefono">
                     </div>
-
                     <div class="col-md-12">
-                        <label class="form-label text-muted fw-bold" style="font-size: 0.8rem;">Correo Electrónico</label>
+                        <label class="form-label">Correo Electrónico</label>
                         <input type="email" class="form-control" id="email">
                     </div>
-
                     <div class="col-md-12">
-                        <label class="form-label text-muted fw-bold" style="font-size: 0.8rem;">Dirección</label>
-                        <textarea class="form-control" id="direccion" rows="3"></textarea>
+                        <label class="form-label">Dirección</label>
+                        <textarea class="form-control" id="direccion" rows="2"></textarea>
                     </div>
                 </div>
             </div>
 
-            <div class="modal-footer border-top-0 pt-0 px-4 pb-4">
-                <button class="btn btn-light" data-bs-dismiss="modal" style="border-radius: 8px;">Cancelar</button>
-                <button class="btn btn-primary px-4" id="btnGuardarProveedor" style="background-color: var(--brand-primary); border-color: var(--brand-primary); border-radius: 8px;">Guardar</button>
+            <div class="modal-footer">
+                <button class="btn btn-light" data-bs-dismiss="modal">Cancelar</button>
+                <button class="btn btn-primary" id="btnGuardarProveedor">Guardar Cambios</button>
             </div>
         </div>
     </div>
@@ -107,9 +114,8 @@ Gestión de Proveedores
 {% endblock %}
 
 {% block scripts %}
-<script src="{% static 'app/activo/utils.js' %}"></script>
 <script>
-    let tablaProveedores = null;
+let tablaProveedores = null;
 
 $(document).ready(function () {
     inicializarEventos();
@@ -117,100 +123,86 @@ $(document).ready(function () {
 });
 
 function inicializarEventos() {
-    $('#btnBuscarProveedores').on('click', function () {
-        cargarProveedores();
-    });
-
+    $('#btnFiltrar').on('click', cargarProveedores);
+    $('#filtroEmpresa').on('change', cargarProveedores);
+    
     $('#btnNuevoProveedor').on('click', function () {
-        limpiarFormularioProveedor();
+        limpiarFormulario();
         $('#modalProveedor').modal('show');
     });
 
-    $('#btnGuardarProveedor').on('click', function () {
-        guardarProveedor();
-    });
+    $('#btnGuardarProveedor').on('click', guardarProveedor);
 
-    $('#textoBusqueda').on('keyup', function () {
-        if (tablaProveedores) {
-            tablaProveedores.search(this.value).draw();
-        }
+    $('#filtroTexto').on('keyup', function () {
+        if (tablaProveedores) tablaProveedores.search(this.value).draw();
     });
 }
 
 function cargarProveedores() {
-    $.ajax({
-        url: "{% url 'ACTIVO:get_proveedores' %}",
-        type: 'GET',
-        success: function (response) {
-            if ($.fn.DataTable.isDataTable('#tablaProveedores')) {
-                $('#tablaProveedores').DataTable().destroy();
-            }
+    ActivoUtils.ajax("{% url 'ACTIVO:get_proveedores' %}", {}, function (response) {
+        if ($.fn.DataTable.isDataTable('#tablaProveedores')) {
+            $('#tablaProveedores').DataTable().destroy();
+        }
 
-            $('#tablaProveedores tbody').empty();
+        $('#tablaProveedores tbody').empty();
 
-            $.each(response.data, function (i, item) {
-                let badgeEstado = item.estado === 'ACTIVO' ? '<span class="badge bg-success">ACTIVO</span>' : '<span class="badge bg-danger">' + item.estado + '</span>';
-                let btnEstadoText = item.estado === 'ACTIVO' ? 'Inactivar' : 'Activar';
-                let btnEstadoClass = item.estado === 'ACTIVO' ? 'btn-danger' : 'btn-success';
+        $.each(response.data, function (i, item) {
+            let pk = ActivoUtils.getVal(item, 'PkProveedor');
+            let estado = ActivoUtils.getVal(item, 'estado');
+            let badgeEstado = estado === 'ACTIVO' ? '<span class="badge bg-success-subtle text-success border border-success-subtle">ACTIVO</span>' : '<span class="badge bg-danger-subtle text-danger border border-danger-subtle">'+estado+'</span>';
 
-                $('#tablaProveedores tbody').append(`
-                    <tr>
-                        <td>${item.PkProveedor}</td>
-                        <td>${item.NombreProveedor || ''}</td>
-                        <td>${item.RTN || ''}</td>
-                        <td>${item.Telefono || ''}</td>
-                        <td>${item.Email || ''}</td>
-                        <td>${item.Direccion || ''}</td>
-                        <td class="text-center">${badgeEstado}</td>
-                        <td class="text-center">
-                            <button class="btn btn-primary btn-sm me-1" title="Editar" onclick="editarProveedor(${item.PkProveedor})">
-                                <i class="fas fa-pen"></i>
+            $('#tablaProveedores tbody').append(`
+                <tr>
+                    <td><span class="small text-muted">${pk}</span></td>
+                    <td class="fw-bold text-primary">${ActivoUtils.getVal(item, 'NombreProveedor')}</td>
+                    <td>${ActivoUtils.getVal(item, 'RTN') || ''}</td>
+                    <td>${ActivoUtils.getVal(item, 'Email') || ''}</td>
+                    <td>${ActivoUtils.getVal(item, 'Telefono') || ''}</td>
+                    <td class="text-center">${badgeEstado}</td>
+                    <td class="text-center">
+                        <div class="btn-group">
+                            <button class="btn btn-primary btn-sm" onclick="editarProveedor(${pk})" title="Editar">
+                                <i class="fas fa-edit"></i>
                             </button>
-                            <button class="btn ${btnEstadoClass} btn-sm me-1" title="${btnEstadoText}" onclick="cambiarEstadoProveedor(${item.PkProveedor})">
+                            <button class="btn btn-secondary btn-sm" onclick="cambiarEstadoProveedor(${pk})" title="Estado">
                                 <i class="fas fa-sync-alt"></i>
                             </button>
-                            <button class="btn btn-danger btn-sm" title="Eliminar" onclick="eliminarProveedor(${item.PkProveedor})">
+                            <button class="btn btn-danger btn-sm" onclick="eliminarProveedor(${pk})" title="Eliminar">
                                 <i class="fas fa-trash"></i>
                             </button>
-                        </td>
-                    </tr>
-                `);
-            });
+                        </div>
+                    </td>
+                </tr>
+            `);
+        });
 
-            tablaProveedores = $('#tablaProveedores').DataTable({
-                destroy: true,
-                pageLength: 10,
-                order: [[0, 'desc']],
-                language: { url: '//cdn.datatables.net/plug-ins/1.13.7/i18n/es-ES.json' }
-            });
-        }
+        tablaProveedores = $('#tablaProveedores').DataTable({
+            destroy: true,
+            pageLength: 10,
+            order: [[0, 'desc']],
+            language: { url: '//cdn.datatables.net/plug-ins/1.13.7/i18n/es-ES.json' }
+        });
     });
 }
 
 function editarProveedor(pkProveedor) {
-    limpiarFormularioProveedor();
-
+    limpiarFormulario();
     $.ajax({
         url: "{% url 'ACTIVO:get_proveedor_x_id' %}",
         type: 'GET',
-        data: {
-            pkProveedor: pkProveedor
-        },
+        data: { pkProveedor: pkProveedor },
         success: function (response) {
             if (!response.success) {
-                Swal.fire("Atención", response.mensaje, "warning");
+                Swal.fire("Error", response.mensaje, "error");
                 return;
             }
-
             let d = response.data;
-
-            $('#pkProveedor').val(d.PkProveedor);
-            $('#nombreProveedor').val(d.NombreProveedor);
-            $('#rtn').val(d.RTN);
-            $('#telefono').val(d.Telefono);
-            $('#email').val(d.Email);
-            $('#direccion').val(d.Direccion);
-
+            $('#pkProveedor').val(ActivoUtils.getVal(d, 'PkProveedor'));
+            $('#nombreProveedor').val(ActivoUtils.getVal(d, 'NombreProveedor'));
+            $('#rtn').val(ActivoUtils.getVal(d, 'RTN'));
+            $('#telefono').val(ActivoUtils.getVal(d, 'Telefono'));
+            $('#email').val(ActivoUtils.getVal(d, 'Email'));
+            $('#direccion').val(ActivoUtils.getVal(d, 'Direccion'));
             $('#modalProveedor').modal('show');
         }
     });
@@ -218,88 +210,60 @@ function editarProveedor(pkProveedor) {
 
 function guardarProveedor() {
     let pkProveedor = $('#pkProveedor').val();
-    let url = "{% url 'ACTIVO:insert_proveedor' %}";
+    let data = {
+        pkProveedor: pkProveedor,
+        nombreProveedor: $('#nombreProveedor').val(),
+        rtn: $('#rtn').val(),
+        telefono: $('#telefono').val(),
+        email: $('#email').val(),
+        direccion: $('#direccion').val(),
+        csrfmiddlewaretoken: $('[name=csrfmiddlewaretoken]').val()
+    };
 
-    // Validaciones básicas
-    if (!$('#nombreProveedor').val() || $('#nombreProveedor').val().trim() === '') {
-        Swal.fire("Atención", "El nombre del proveedor es obligatorio", "warning");
+    if (!data.nombreProveedor) {
+        Swal.fire("Atención", "Nombre obligatorio", "warning");
         return;
     }
 
     $.ajax({
-        url: url,
+        url: "{% url 'ACTIVO:insert_proveedor' %}",
         type: 'POST',
-        data: {
-            pkProveedor: pkProveedor,
-            nombreProveedor: $('#nombreProveedor').val(),
-            rtn: $('#rtn').val(),
-            telefono: $('#telefono').val(),
-            email: $('#email').val(),
-            direccion: $('#direccion').val(),
-            csrfmiddlewaretoken: $('[name=csrfmiddlewaretoken]').val()
-        },
+        data: data,
         success: function (response) {
             if (response.save == 1) {
-                if (response.existe == 1) {
-                    Swal.fire("Atención", response.mensaje || "El proveedor ya existe o tiene datos duplicados", "warning");
-                } else {
-                    let msg = pkProveedor ? "Editado con éxito" : "Creado con éxito";
-                    Swal.fire("Éxito", msg, "success");
-                    $('#modalProveedor').modal('hide');
-                    cargarProveedores();
-                }
+                Swal.fire("Éxito", "Proveedor registrado", "success");
+                $('#modalProveedor').modal('hide');
+                cargarProveedores();
             } else {
-                Swal.fire("Error", response.mensaje || "Ocurrió un error general.", "error");
+                Swal.fire("Error", response.mensaje, "error");
             }
-        },
-        error: function(xhr, status, error) {
-            Swal.fire("Error", "Error al guardar: " + error, "error");
         }
     });
 }
 
 function cambiarEstadoProveedor(pkProveedor) {
-    Swal.fire({
-        title: '¿Estás seguro?',
-        text: "Se cambiará el estado de este proveedor",
-        icon: 'warning',
-        showCancelButton: true,
-        confirmButtonColor: '#3085d6',
-        cancelButtonColor: '#d33',
-        confirmButtonText: 'Sí, continuar',
-        cancelButtonText: 'Cancelar'
-    }).then((result) => {
-        if (result.isConfirmed) {
-            $.ajax({
-                url: "{% url 'ACTIVO:update_estado_proveedor' %}",
-                type: 'POST',
-                data: {
-                    pkProveedor: pkProveedor,
-                    csrfmiddlewaretoken: $('[name=csrfmiddlewaretoken]').val()
-                },
-                success: function (response) {
-                    if (response.save == 1) {
-                        Swal.fire("Éxito", response.mensaje || "Estado actualizado correctamente", "success");
-                        cargarProveedores();
-                    } else {
-                        Swal.fire("Error", response.mensaje, "error");
-                    }
-                }
-            });
+    $.ajax({
+        url: "{% url 'ACTIVO:update_estado_proveedor' %}",
+        type: 'POST',
+        data: {
+            pkProveedor: pkProveedor,
+            csrfmiddlewaretoken: $('[name=csrfmiddlewaretoken]').val()
+        },
+        success: function (response) {
+            if (response.save == 1) {
+                cargarProveedores();
+            } else {
+                Swal.fire("Error", response.mensaje, "error");
+            }
         }
     });
 }
 
 function eliminarProveedor(pkProveedor) {
     Swal.fire({
-        title: '¿Estás seguro?',
-        text: "¡No podrás revertir esto!",
+        title: '¿Confirmar eliminación?',
         icon: 'warning',
-        showCancelButton: true,
-        confirmButtonColor: '#3085d6',
-        cancelButtonColor: '#d33',
-        confirmButtonText: 'Sí, eliminar',
-        cancelButtonText: 'Cancelar'
+        showCancelButton: true
     }).then((result) => {
         if (result.isConfirmed) {
             $.ajax({
@@ -307,12 +271,11 @@ function eliminarProveedor(pkProveedor) {
                 type: 'POST',
                 data: {
                     pkProveedor: pkProveedor,
-                    estado: 3,
                     csrfmiddlewaretoken: $('[name=csrfmiddlewaretoken]').val()
                 },
                 success: function (response) {
                     if (response.save == 1) {
-                        Swal.fire("Eliminado", response.mensaje || "Proveedor eliminado con éxito", "success");
+                        Swal.fire("Eliminado", "Proveedor eliminado", "success");
                         cargarProveedores();
                     } else {
                         Swal.fire("Error", response.mensaje, "error");
@@ -323,13 +286,8 @@ function eliminarProveedor(pkProveedor) {
     });
 }
 
-function limpiarFormularioProveedor() {
-    $('#pkProveedor').val('');
-    $('#nombreProveedor').val('');
-    $('#rtn').val('');
-    $('#telefono').val('');
-    $('#email').val('');
-    $('#direccion').val('');
+function limpiarFormulario() {
+    $('#pkProveedor, #nombreProveedor, #rtn, #telefono, #email, #direccion').val('');
 }
 </script>
 {% endblock %}

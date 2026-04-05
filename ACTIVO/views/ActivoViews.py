@@ -29,8 +29,8 @@ def fill_categorias_activos(request):
 def fill_proveedores_activos(request):
     try:
         with connections['activo'].cursor() as cursor:
-            # Usando AF_GET_PROVEEDORES que sí existe en lugar de AF_FILL_PROVEEDORES
-            cursor.callproc('AF_GET_PROVEEDORES', [])
+            # Según captura: AF_FILL_PROVEEDORES
+            cursor.callproc('AF_FILL_PROVEEDORES', [])
             column_names = [desc[0] for desc in cursor.description]
             data = [dict(zip(map(str, column_names), row)) for row in cursor.fetchall()]
         return JsonResponse({'data': data})
@@ -39,8 +39,11 @@ def fill_proveedores_activos(request):
 
 def fill_ubicaciones_activos(request):
     try:
-        fkEmpresa = request.GET.get('fkEmpresa')
+        fkEmpresa = request.GET.get('fkEmpresa', 0)
+        if not fkEmpresa or str(fkEmpresa) == "": fkEmpresa = 0
+        
         with connections['activo'].cursor() as cursor:
+            # Según captura: AF_FILL_UBICACIONES
             cursor.callproc('AF_FILL_UBICACIONES', [fkEmpresa])
             column_names = [desc[0] for desc in cursor.description]
             data = [dict(zip(map(str, column_names), row)) for row in cursor.fetchall()]
@@ -50,11 +53,53 @@ def fill_ubicaciones_activos(request):
 
 def get_activos(request):
     try:
-        fkEmpresa = request.GET.get('fkEmpresa')
-        estado = request.GET.get('estado')
-        textoBusqueda = request.GET.get('textoBusqueda')
+        fkEmpresa = request.GET.get('fkEmpresa', 0)
+        if not fkEmpresa or str(fkEmpresa) == "": fkEmpresa = 0
+            
+        estado = request.GET.get('estado', 1)
+        textoBusqueda = request.GET.get('textoBusqueda', '')
+        
         with connections['activo'].cursor() as cursor:
             cursor.callproc('AF_GET_ACTIVOS', [fkEmpresa, estado, textoBusqueda])
+            column_names = [desc[0] for desc in cursor.description]
+            data = []
+            for row in cursor.fetchall():
+                row_dict = {}
+                for col, val in zip(column_names, row):
+                    if isinstance(val, (date, datetime)):
+                        row_dict[str(col)] = val.strftime('%Y-%m-%d')
+                    elif isinstance(val, decimal.Decimal):
+                        row_dict[str(col)] = float(val)
+                    else:
+                        row_dict[str(col)] = val if val is not None else ""
+                data.append(row_dict)
+        return JsonResponse({'data': data})
+    except Exception as e:
+        return JsonResponse({'data': [], 'error': str(e)})
+
+def get_depreciaciones_aplicadas(request):
+    try:
+        fkEmpresa = request.GET.get('fkEmpresa', 0)
+        if not fkEmpresa or str(fkEmpresa) == "": fkEmpresa = 0
+            
+        fechaDesde = request.GET.get('fechaDesde') or None
+        fechaHasta = request.GET.get('fechaHasta') or None
+        pkActivo = request.GET.get('pkActivo', 0)
+        if not pkActivo or str(pkActivo) == "": pkActivo = 0
+            
+        fkCategoria = request.GET.get('fkCategoria', 0)
+        if not fkCategoria or str(fkCategoria) == "": fkCategoria = 0
+            
+        fkUbicacion = request.GET.get('fkUbicacion', 0)
+        if not fkUbicacion or str(fkUbicacion) == "": fkUbicacion = 0
+            
+        textoBusqueda = request.GET.get('textoBusqueda', '')
+        
+        # El SP pide: (pFkEmpresa, pFechaDesde, pFechaHasta, pPkActivo, pFkCategoria, pFkUbicacion, pTextoBusqueda)
+        params = [fkEmpresa, fechaDesde, fechaHasta, pkActivo, fkCategoria, fkUbicacion, textoBusqueda]
+        
+        with connections['activo'].cursor() as cursor:
+            cursor.callproc('AF_GET_DEPRECIACIONES_APLICADAS', params)
             column_names = [desc[0] for desc in cursor.description]
             data = []
             for row in cursor.fetchall():
@@ -99,9 +144,11 @@ def insert_activo(request):
         if request.method != 'POST':
             return JsonResponse({'save': 0, 'mensaje': 'Método no permitido.'})
         
-        userName = request.session.get('userName')
+        userName = request.session.get('userName', 'admin')
         p = request.POST
         
+        # Parámetros para AF_INSERT_ACTIVO:
+        # [pCodigo, pNombre, pDesc, pFkCat, pFkProv, pFkUbi, pMarca, pModelo, pSerie, pFechaComp, pNumFact, pValorComp, pObs, pFkEmp, pUser]
         params = [
             p.get('codigoActivo'), p.get('nombreActivo'), p.get('descripcion'), p.get('fkCategoria'),
             p.get('fkProveedor'), p.get('fkUbicacionActual'), p.get('marca'), p.get('modelo'),
@@ -127,20 +174,20 @@ def update_activo(request):
         if request.method != 'POST':
             return JsonResponse({'save': 0, 'mensaje': 'Método no permitido.'})
             
-        userName = request.session.get('userName')
+        userName = request.session.get('userName', 'admin')
         p = request.POST
         
+        # Parámetros para AF_UPDATE_ACTIVO:
+        # [pPk, pCodigo, pNombre, pDesc, pFkCat, pFkProv, pFkUbi, pMarca, pModelo, pSerie, pFechaComp, pNumFact, pValorComp, pObs, pFkEmp, pUser]
         params = [
             p.get('pkActivo'), p.get('codigoActivo'), p.get('nombreActivo'), p.get('descripcion'),
             p.get('fkCategoria'), p.get('fkProveedor'), p.get('fkUbicacionActual'), p.get('marca'),
             p.get('modelo'), p.get('serie'), p.get('fechaCompra'), p.get('numeroFactura'),
-            p.get('valorCompra'), 0, 'BUENO',
-            'ACTIVO', None, p.get('observaciones'),
-            p.get('fkEmpresa'), userName
+            p.get('valorCompra'), p.get('observaciones'), p.get('fkEmpresa'), userName
         ]
         
         with connections['activo'].cursor() as cursor:
-            cursor.callproc('AF_UPD_ACTIVO', params)
+            cursor.callproc('AF_UPDATE_ACTIVO', params)
             row = cursor.fetchone()
             
         return JsonResponse({
@@ -156,12 +203,12 @@ def delete_activo(request):
         if request.method != 'POST':
             return JsonResponse({'save': 0, 'mensaje': 'Método no permitido.'})
             
-        userName = request.session.get('userName')
+        userName = request.session.get('userName', 'admin')
         pkActivo = request.POST.get('pkActivo')
         estado = request.POST.get('estado', 3)
         
         with connections['activo'].cursor() as cursor:
-            cursor.callproc('AF_DEL_ACTIVO', [pkActivo, estado, userName])
+            cursor.callproc('AF_DELETE_ACTIVO', [pkActivo, estado, userName])
             row = cursor.fetchone()
             
         return JsonResponse({
@@ -170,6 +217,18 @@ def delete_activo(request):
         })
     except Exception as e:
         return JsonResponse({'save': 0, 'mensaje': str(e)})
+
+def get_empresas_activas():
+    empresas = []
+    try:
+        with connections['activo'].cursor() as cursor:
+            # Según captura: AF_FILL_EMPRESAS
+            cursor.callproc('AF_FILL_EMPRESAS', [])
+            column_names = [desc[0] for desc in cursor.description]
+            empresas = [dict(zip(map(str, column_names), row)) for row in cursor.fetchall()]
+    except Exception as e:
+        empresas.append({'PkEmpresa': '', 'NombreEmpresa': f"ERROR BD: {str(e)}", 'Empresa': 'Err'})
+    return empresas
 
 def gestion_categorias_activos(request):
     return render(request, 'control_gestion/gestion_categorias_activos.html', {'empresas': get_empresas_activas()})
@@ -182,6 +241,7 @@ def get_categorias_activos(request):
         textoBusqueda = request.GET.get('textoBusqueda')
         
         with connections['activo'].cursor() as cursor:
+            # Restauramos parámetros originales (pEstado, pTexto)
             cursor.callproc('AF_GET_CATEGORIAS', [estado, textoBusqueda])
             column_names = [desc[0] for desc in cursor.description]
             data = []
@@ -275,17 +335,18 @@ def delete_categoria_activo(request):
         if request.method != 'POST':
             return JsonResponse({'save': 0, 'mensaje': 'Método no permitido.'})
             
-        userName = request.session.get('userName')
+        userName = request.session.get('userName', 'admin')
         pkCategoria = request.POST.get('pkCategoria')
         estado = request.POST.get('estado', 3)
         
         with connections['activo'].cursor() as cursor:
-            cursor.callproc('AF_DEL_CATEGORIA', [pkCategoria, estado, userName])
+            # Según captura: AF_DELETE_CATEGORIA
+            cursor.callproc('AF_DELETE_CATEGORIA', [pkCategoria, estado, userName])
             row = cursor.fetchone()
             
         return JsonResponse({
-            'save': row[0],
-            'mensaje': row[1]
+            'save': row[0] if row else 1,
+            'mensaje': row[1] if row and len(row) > 1 else 'Operación realizada'
         })
     except Exception as e:
         return JsonResponse({'save': 0, 'mensaje': str(e)})
@@ -392,15 +453,16 @@ def update_estado_proveedor(request):
         if request.method != 'POST':
             return JsonResponse({'save': 0, 'mensaje': 'Método no permitido.'})
             
-        userName = request.session.get('userName')
-        p = request.POST
-        
-        pkProveedor = p.get('pkProveedor')
+        pkProveedor = request.POST.get('pkProveedor')
         with connections['activo'].cursor() as cursor:
-            cursor.callproc('AF_UPDATE_ESTADO_PROVEEDOR', [pkProveedor, userName])
+            # Según captura: AF_UPDATE_ESTADO_PROVEEDOR
+            cursor.callproc('AF_UPDATE_ESTADO_PROVEEDOR', [pkProveedor])
             row = cursor.fetchone()
             
-        return JsonResponse({'save': row[0], 'mensaje': row[1]})
+        return JsonResponse({
+            'save': row[0] if row else 1,
+            'mensaje': 'Estado actualizado'
+        })
     except Exception as e:
         return JsonResponse({'save': 0, 'mensaje': str(e)})
 
@@ -512,13 +574,18 @@ def insert_ubicacion(request):
         ]
         
         with connections['activo'].cursor() as cursor:
-            cursor.callproc('AF_INSERT_UBICACION', params)
+            if int(pkUbicacion) > 0:
+                # Según captura: AF_UPDATE_UBICACION_ACTIVO
+                cursor.callproc('AF_UPDATE_UBICACION_ACTIVO', params)
+            else:
+                # Según captura: AF_INSERT_UBICACION
+                cursor.callproc('AF_INSERT_UBICACION', params)
             row = cursor.fetchone()
             
         return JsonResponse({
-            'save': row[0],
-            'lastID': row[1] if len(row) > 1 else pkUbicacion,
-            'mensaje': row[2] if len(row) > 2 else 'Operación realizada correctamente'
+            'save': row[0] if row else 1,
+            'lastID': row[1] if row and len(row) > 1 else pkUbicacion,
+            'mensaje': row[2] if row and len(row) > 2 else 'Operación realizada correctamente'
         })
     except Exception as e:
         return JsonResponse({'save': 0, 'mensaje': str(e)})
@@ -654,7 +721,8 @@ def get_empresas_activas():
     empresas = []
     try:
         with connections['activo'].cursor() as cursor:
-            cursor.execute("SELECT PkEmpresa, NombreEmpresa, Empresa, Estado FROM global_security.empresas WHERE Estado = 1")
+            # Según captura: AF_FILL_EMPRESAS
+            cursor.callproc('AF_FILL_EMPRESAS', [])
             column_names = [desc[0] for desc in cursor.description]
             empresas = [dict(zip(map(str, column_names), row)) for row in cursor.fetchall()]
     except Exception as e:

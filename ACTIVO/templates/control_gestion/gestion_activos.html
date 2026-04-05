@@ -6,12 +6,13 @@ Gestión de Activos
 {% endblock %}
 
 {% block body %}
+{% csrf_token %}
 
 <!-- Encabezado de la Pantalla -->
 <div class="d-flex justify-content-between align-items-end mb-4 flex-wrap gap-2">
     <div>
         <h2 class="mb-1" style="color: var(--text-primary); font-weight: 700; font-size: 1.5rem;">Gestión de Activos</h2>
-        <p class="text-muted mb-0" style="font-size: 0.9rem;">Catálogo completo de activos fijos, equipos y mobiliario.</p>
+        <p class="text-muted mb-0" style="font-size: 0.9rem;">Panel de control y administración de inventario de activos fijos.</p>
     </div>
     <div>
         <button class="btn btn-primary d-flex align-items-center gap-2 px-3 py-2 shadow-sm" id="btnNuevoActivo" style="border-radius: 8px;">
@@ -21,13 +22,14 @@ Gestión de Activos
     </div>
 </div>
 
-<!-- Tarjeta Principal -->
-<div class="modern-card">
+<!-- Tarjeta de Filtros (CRÍTICO) -->
+<div class="modern-card mb-4">
     <div class="modern-card-body">
-        <div class="row g-3 mb-4">
+        <h6 class="text-uppercase fw-bold text-muted mb-3" style="font-size: 0.75rem; letter-spacing: 1px;">Área de Filtros</h6>
+        <div class="row g-3">
             <div class="col-md-3">
                 <label class="form-label text-muted fw-bold" style="font-size: 0.8rem;">Empresa</label>
-                <select class="form-select" id="fkEmpresa">
+                <select class="form-select" id="filtroEmpresa">
                     {% for emp in empresas %}
                         <option value="{{ emp.PkEmpresa }}">{{ emp.NombreEmpresa }}</option>
                     {% endfor %}
@@ -35,7 +37,7 @@ Gestión de Activos
             </div>
             <div class="col-md-3">
                 <label class="form-label text-muted fw-bold" style="font-size: 0.8rem;">Estado</label>
-                <select class="form-select" id="estadoFiltro">
+                <select class="form-select" id="filtroEstado">
                     <option value="0">Todos</option>
                     <option value="1" selected>Activos</option>
                     <option value="2">Inactivos</option>
@@ -43,26 +45,31 @@ Gestión de Activos
                 </select>
             </div>
             <div class="col-md-4">
-                <label class="form-label text-muted fw-bold" style="font-size: 0.8rem;">Buscar</label>
-                <input type="text" class="form-control" id="textoBusqueda" placeholder="Código, nombre, marca, serie, factura...">
+                <label class="form-label text-muted fw-bold" style="font-size: 0.8rem;">Búsqueda General</label>
+                <input type="text" class="form-control" id="filtroTexto" placeholder="Código, nombre, marca, serie...">
             </div>
             <div class="col-md-2 d-flex align-items-end">
-                <button class="btn btn-outline-secondary w-100 d-flex align-items-center justify-content-center gap-2" id="btnBuscarActivos" style="height: 42px; border-radius: 8px;">
+                <button class="btn btn-outline-secondary w-100 d-flex align-items-center justify-content-center gap-2" id="btnFiltrar" style="height: 42px; border-radius: 8px;">
                     <i class="material-icons" style="font-size: 18px;">search</i> Buscar
                 </button>
             </div>
         </div>
+    </div>
+</div>
 
+<!-- Tarjeta de Tabla -->
+<div class="modern-card">
+    <div class="modern-card-body">
         <div class="table-responsive">
             <table class="table table-hover w-100 align-middle" id="tablaActivos">
                 <thead>
                     <tr>
                         <th class="py-3">ID</th>
+                        <th class="py-3">Empresa</th>
                         <th class="py-3">Código</th>
                         <th class="py-3">Nombre</th>
                         <th class="py-3">Marca</th>
                         <th class="py-3">Modelo</th>
-                        <th class="py-3">Serie</th>
                         <th class="py-3">Fecha Compra</th>
                         <th class="py-3 text-end">Valor Compra</th>
                         <th class="py-3 text-center">Acciones</th>
@@ -74,114 +81,142 @@ Gestión de Activos
     </div>
 </div>
 
-
+<!-- Modal Crear/Editar -->
 <div class="modal fade" id="modalActivo" tabindex="-1" aria-hidden="true">
     <div class="modal-dialog modal-xl modal-dialog-scrollable">
         <div class="modal-content">
             <div class="modal-header">
-                <h5 class="modal-title">Activo</h5>
+                <h5 class="modal-title">Detalle del Activo</h5>
                 <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
             </div>
 
             <div class="modal-body">
                 <input type="hidden" id="pkActivo">
 
-                <div class="row g-2">
-                    <div class="col-md-3">
-                        <label class="form-label form-label-sm">Código Activo</label>
-                        <input type="text" class="form-control form-control-sm" id="codigoActivo">
-                    </div>
-
-                    <div class="col-md-5">
-                        <label class="form-label form-label-sm">Nombre Activo</label>
-                        <input type="text" class="form-control form-control-sm" id="nombreActivo">
-                    </div>
-
-                    <div class="col-md-4">
-                        <label class="form-label form-label-sm">Categoría</label>
-                        <select class="form-select form-select-sm" id="fkCategoria"></select>
-                    </div>
-
-                    <div class="col-md-4">
-                        <label class="form-label form-label-sm">Proveedor</label>
-                        <select class="form-select form-select-sm" id="fkProveedor"></select>
-                    </div>
-
-                    <div class="col-md-4">
-                        <label class="form-label form-label-sm">Ubicación Actual</label>
-                        <select class="form-select form-select-sm" id="fkUbicacionActual"></select>
-                    </div>
-
-                    <div class="col-md-2">
-                        <label class="form-label form-label-sm">Fecha Compra</label>
-                        <input type="date" class="form-control form-control-sm" id="fechaCompra">
+                <div class="row g-3">
+                    <!-- Sección Empresa (Mandatoria) -->
+                    <div class="col-md-6">
+                        <label class="form-label fw-bold">Empresa Propietaria <span class="text-danger">*</span></label>
+                        <select class="form-select" id="fkEmpresa" required>
+                            <option value="">Seleccione una empresa</option>
+                            {% for emp in empresas %}
+                                <option value="{{ emp.PkEmpresa }}">{{ emp.NombreEmpresa }}</option>
+                            {% endfor %}
+                        </select>
                     </div>
 
                     <div class="col-md-3">
-                        <label class="form-label form-label-sm">Marca</label>
-                        <input type="text" class="form-control form-control-sm" id="marca">
+                        <label class="form-label fw-bold">Código Activo <span class="text-danger">*</span></label>
+                        <input type="text" class="form-control" id="codigoActivo" required>
                     </div>
 
                     <div class="col-md-3">
-                        <label class="form-label form-label-sm">Modelo</label>
-                        <input type="text" class="form-control form-control-sm" id="modelo">
-                    </div>
-
-                    <div class="col-md-3">
-                        <label class="form-label form-label-sm">Serie</label>
-                        <input type="text" class="form-control form-control-sm" id="serie">
-                    </div>
-
-                    <div class="col-md-3">
-                        <label class="form-label form-label-sm">Número Factura</label>
-                        <input type="text" class="form-control form-control-sm" id="numeroFactura">
-                    </div>
-
-                    <div class="col-md-3">
-                        <label class="form-label form-label-sm">Valor Compra</label>
-                        <input type="number" step="0.01" class="form-control form-control-sm" id="valorCompra">
+                        <label class="form-label fw-bold">Categoría</label>
+                        <select class="form-select" id="fkCategoria"></select>
                     </div>
 
                     <div class="col-md-12">
-                        <label class="form-label form-label-sm">Descripción</label>
-                        <textarea class="form-control form-control-sm" id="descripcion" rows="2"></textarea>
+                        <label class="form-label fw-bold">Nombre del Activo <span class="text-danger">*</span></label>
+                        <input type="text" class="form-control" id="nombreActivo" required>
+                    </div>
+
+                    <div class="col-md-4">
+                        <label class="form-label">Ubicación Actual</label>
+                        <select class="form-select" id="fkUbicacionActual"></select>
+                    </div>
+
+                    <div class="col-md-4">
+                        <label class="form-label">Proveedor</label>
+                        <select class="form-select" id="fkProveedor"></select>
+                    </div>
+
+                    <div class="col-md-4">
+                        <label class="form-label">Fecha de Compra</label>
+                        <input type="date" class="form-control" id="fechaCompra">
+                    </div>
+
+                    <div class="col-md-3">
+                        <label class="form-label">Marca</label>
+                        <input type="text" class="form-control" id="marca">
+                    </div>
+
+                    <div class="col-md-3">
+                        <label class="form-label">Modelo</label>
+                        <input type="text" class="form-control" id="modelo">
+                    </div>
+
+                    <div class="col-md-3">
+                        <label class="form-label">Serie / Placa</label>
+                        <input type="text" class="form-control" id="serie">
+                    </div>
+
+                    <div class="col-md-3">
+                        <label class="form-label">Número Factura</label>
+                        <input type="text" class="form-control" id="numeroFactura">
+                    </div>
+
+                    <div class="col-md-4">
+                        <label class="form-label fw-bold">Valor de Compra (L.)</label>
+                        <input type="number" step="0.01" class="form-control" id="valorCompra" placeholder="0.00">
+                    </div>
+
+                    <div class="col-md-8">
+                        <label class="form-label">Descripción Breve</label>
+                        <input type="text" class="form-control" id="descripcion">
                     </div>
 
                     <div class="col-md-12">
-                        <label class="form-label form-label-sm">Observaciones</label>
-                        <textarea class="form-control form-control-sm" id="observaciones" rows="2"></textarea>
+                        <label class="form-label">Observaciones Adicionales</label>
+                        <textarea class="form-control" id="observaciones" rows="2"></textarea>
                     </div>
                 </div>
             </div>
 
             <div class="modal-footer">
-                <button class="btn btn-success btn-sm" id="btnGuardarActivo">Guardar</button>
-                <button class="btn btn-secondary btn-sm" data-bs-dismiss="modal">Cerrar</button>
+                <button type="button" class="btn btn-light" data-bs-dismiss="modal">Cancelar</button>
+                <button type="button" class="btn btn-primary" id="btnGuardarActivo">Guardar Cambios</button>
             </div>
         </div>
     </div>
 </div>
-
 {% endblock %}
 
 {% block scripts %}
-<script src="{% static 'app/activo/utils.js' %}"></script>
 <script>
     let tablaActivos = null;
 
 $(document).ready(function () {
     inicializarEventos();
-    cargarCombos();
+    
+    // Si hay una empresa seleccionada por defecto en el filtro, cargar sus combos
+    if ($('#filtroEmpresa').val()) {
+        cargarCombosModal($('#filtroEmpresa').val());
+    }
+    
     cargarActivos();
 });
 
 function inicializarEventos() {
-    $('#btnBuscarActivos').on('click', function () {
+    $('#btnFiltrar').on('click', function () {
         cargarActivos();
+    });
+
+    $('#filtroEmpresa').on('change', function () {
+        cargarActivos();
+        cargarCombosModal($(this).val());
+    });
+
+    $('#fkEmpresa').on('change', function() {
+        cargarCombosModal($(this).val());
     });
 
     $('#btnNuevoActivo').on('click', function () {
         limpiarFormularioActivo();
+        // Pre-seleccionar la empresa del filtro si existe
+        if ($('#filtroEmpresa').val()) {
+            $('#fkEmpresa').val($('#filtroEmpresa').val());
+            cargarCombosModal($('#filtroEmpresa').val());
+        }
         $('#modalActivo').modal('show');
     });
 
@@ -189,75 +224,55 @@ function inicializarEventos() {
         guardarActivo();
     });
 
-    $('#textoBusqueda').on('keypress', function (e) {
-        if (e.which === 13) {
-            cargarActivos();
-        }
+    $('#filtroTexto').on('keypress', function (e) {
+        if (e.which === 13) cargarActivos();
     });
 }
 
-function cargarCombos() {
-    fillCategorias();
-    fillProveedores();
-    fillUbicaciones();
-}
+function cargarCombosModal(fkEmpresa) {
+    if (!fkEmpresa) return;
 
-function fillCategorias() {
-    ActivoUtils.ajax("{% url 'ACTIVO:fill_categorias_activos' %}", {
-        fkEmpresa: $('#fkEmpresa').val()
-    }, function (response) {
-        let html = `<option value="">Seleccione</option>`;
+    // Categorías
+    ActivoUtils.ajax("{% url 'ACTIVO:fill_categorias_activos' %}", { fkEmpresa: fkEmpresa }, function (response) {
+        let html = `<option value="">Seleccione Categoría</option>`;
         $.each(response.data, function (i, item) {
-            html += `<option value="${item.PkCategoria}">${item.NombreCategoria}</option>`;
+            html += `<option value="${ActivoUtils.getVal(item, 'PkCategoria')}">${ActivoUtils.getVal(item, 'NombreCategoria')}</option>`;
         });
         $('#fkCategoria').html(html);
     });
-}
 
-function fillProveedores() {
-    $.ajax({
-        url: "{% url 'ACTIVO:fill_proveedores_activos' %}",
-        type: 'GET',
-        data: {
-            fkEmpresa: $('#fkEmpresa').val()
-        },
-        success: function (response) {
-            let html = `<option value="">Seleccione</option>`;
-            $.each(response.data, function (i, item) {
-                html += `<option value="${item.PkProveedor}">${item.NombreProveedor}</option>`;
-            });
-            $('#fkProveedor').html(html);
-        }
+    // Ubicaciones
+    ActivoUtils.ajax("{% url 'ACTIVO:fill_ubicaciones_activos' %}", { fkEmpresa: fkEmpresa }, function (response) {
+        let html = `<option value="">Seleccione Ubicación</option>`;
+        $.each(response.data, function (i, item) {
+            html += `<option value="${ActivoUtils.getVal(item, 'PkUbicacion')}">${ActivoUtils.getVal(item, 'NombreUbicacion')}</option>`;
+        });
+        $('#fkUbicacionActual').html(html);
     });
-}
 
-function fillUbicaciones() {
-    $.ajax({
-        url: "{% url 'ACTIVO:fill_ubicaciones_activos' %}",
-        type: 'GET',
-        data: {
-            fkEmpresa: $('#fkEmpresa').val()
-        },
-        success: function (response) {
-            let html = `<option value="">Seleccione</option>`;
-            $.each(response.data, function (i, item) {
-                html += `<option value="${item.PkUbicacion}">${item.NombreUbicacion}</option>`;
-            });
-            $('#fkUbicacionActual').html(html);
-        }
+    // Proveedores
+    ActivoUtils.ajax("{% url 'ACTIVO:fill_proveedores_activos' %}", { fkEmpresa: fkEmpresa }, function (response) {
+        let html = `<option value="">Seleccione Proveedor</option>`;
+        $.each(response.data, function (i, item) {
+            html += `<option value="${ActivoUtils.getVal(item, 'PkProveedor')}">${ActivoUtils.getVal(item, 'NombreProveedor')}</option>`;
+        });
+        $('#fkProveedor').html(html);
     });
 }
 
 function cargarActivos() {
-    ActivoUtils.ajax("{% url 'ACTIVO:get_activos' %}", {
-        fkEmpresa: $('#fkEmpresa').val(),
-        estado: $('#estadoFiltro').val(),
-        textoBusqueda: $('#textoBusqueda').val()
-    }, function (response) {
+    const params = {
+        fkEmpresa: $('#filtroEmpresa').val() || 0,
+        estado: $('#filtroEstado').val() || 1,
+        textoBusqueda: $('#filtroTexto').val() || ''
+    };
+
+    ActivoUtils.ajax("{% url 'ACTIVO:get_activos' %}", params, function (response) {
         if (response.error) {
-            Swal.fire("Error BD", "Ocurrió un error consultando activos: " + response.error, "error");
+            Swal.fire("Error", response.error, "error");
             return;
         }
+
         if ($.fn.DataTable.isDataTable('#tablaActivos')) {
             $('#tablaActivos').DataTable().destroy();
         }
@@ -265,23 +280,31 @@ function cargarActivos() {
         $('#tablaActivos tbody').empty();
 
         $.each(response.data, function (i, item) {
+            let pk = ActivoUtils.getVal(item, 'PkActivo');
+            let empresa = ActivoUtils.getVal(item, 'NombreEmpresa', 'N/A');
+            let codigo = ActivoUtils.getVal(item, 'CodigoActivo');
+            let nombre = ActivoUtils.getVal(item, 'NombreActivo');
+            let valor = ActivoUtils.getVal(item, 'ValorCompra', 0);
+
             $('#tablaActivos tbody').append(`
                 <tr>
-                    <td>${item.PkActivo}</td>
-                    <td>${item.CodigoActivo || ''}</td>
-                    <td>${item.NombreActivo || ''}</td>
-                    <td>${item.Marca || ''}</td>
-                    <td>${item.Modelo || ''}</td>
-                    <td>${item.Serie || ''}</td>
-                    <td>${item.FechaCompra || ''}</td>
-                    <td class="text-end">${ActivoUtils.formatNumber(item.ValorCompra)}</td>
+                    <td>${pk}</td>
+                    <td><span class="badge bg-light text-dark border">${empresa}</span></td>
+                    <td class="fw-bold text-primary">${codigo}</td>
+                    <td>${nombre}</td>
+                    <td>${ActivoUtils.getVal(item, 'Marca')}</td>
+                    <td>${ActivoUtils.getVal(item, 'Modelo')}</td>
+                    <td class="small">${ActivoUtils.getVal(item, 'FechaCompra')}</td>
+                    <td class="text-end fw-bold text-success">${ActivoUtils.formatNumber(valor)}</td>
                     <td class="text-center">
-                        <button class="btn btn-primary btn-sm me-1" title="Editar" onclick="editarActivo(${item.PkActivo})">
-                            <i class="fas fa-pen"></i>
-                        </button>
-                        <button class="btn btn-danger btn-sm" title="Eliminar" onclick="eliminarActivo(${item.PkActivo})">
-                            <i class="fas fa-trash"></i>
-                        </button>
+                        <div class="btn-group">
+                            <button class="btn btn-primary btn-sm" onclick="editarActivo(${pk})" title="Editar">
+                                <i class="fas fa-edit"></i>
+                            </button>
+                            <button class="btn btn-danger btn-sm" onclick="eliminarActivo(${pk})" title="Eliminar">
+                                <i class="fas fa-trash"></i>
+                            </button>
+                        </div>
                     </td>
                 </tr>
             `);
@@ -298,92 +321,99 @@ function cargarActivos() {
 
 function editarActivo(pkActivo) {
     limpiarFormularioActivo();
-
     $.ajax({
         url: "{% url 'ACTIVO:get_activo_x_id' %}",
         type: 'GET',
-        data: {
-            pkActivo: pkActivo
-        },
+        data: { pkActivo: pkActivo },
         success: function (response) {
             if (!response.success) {
-                Swal.fire("Atención", response.mensaje, "warning");
+                Swal.fire("Error", response.mensaje, "error");
                 return;
             }
 
             let d = response.data;
+            const empId = ActivoUtils.getVal(d, 'fkEmpresa');
+            
+            // Primero cargamos los combos de esa empresa para que el .val() funcione
+            cargarCombosModal(empId);
+            
+            setTimeout(() => {
+                $('#pkActivo').val(ActivoUtils.getVal(d, 'PkActivo'));
+                $('#fkEmpresa').val(empId);
+                $('#codigoActivo').val(ActivoUtils.getVal(d, 'CodigoActivo'));
+                $('#nombreActivo').val(ActivoUtils.getVal(d, 'NombreActivo'));
+                $('#descripcion').val(ActivoUtils.getVal(d, 'Descripcion'));
+                $('#fkCategoria').val(ActivoUtils.getVal(d, 'fkCategoria'));
+                $('#fkProveedor').val(ActivoUtils.getVal(d, 'fkProveedor'));
+                $('#fkUbicacionActual').val(ActivoUtils.getVal(d, 'fkUbicacionActual'));
+                $('#marca').val(ActivoUtils.getVal(d, 'Marca'));
+                $('#modelo').val(ActivoUtils.getVal(d, 'Modelo'));
+                $('#serie').val(ActivoUtils.getVal(d, 'Serie'));
+                $('#fechaCompra').val(ActivoUtils.getVal(d, 'FechaCompra'));
+                $('#numeroFactura').val(ActivoUtils.getVal(d, 'NumeroFactura'));
+                $('#valorCompra').val(ActivoUtils.getVal(d, 'ValorCompra'));
+                $('#observaciones').val(ActivoUtils.getVal(d, 'Observaciones'));
 
-            $('#pkActivo').val(d.PkActivo);
-            $('#codigoActivo').val(d.CodigoActivo);
-            $('#nombreActivo').val(d.NombreActivo);
-            $('#descripcion').val(d.Descripcion);
-            $('#fkCategoria').val(d.fkCategoria);
-            $('#fkProveedor').val(d.fkProveedor);
-            $('#fkUbicacionActual').val(d.fkUbicacionActual);
-            $('#marca').val(d.Marca);
-            $('#modelo').val(d.Modelo);
-            $('#serie').val(d.Serie);
-            $('#fechaCompra').val(d.FechaCompra);
-            $('#numeroFactura').val(d.NumeroFactura);
-            $('#valorCompra').val(d.ValorCompra);
-            $('#observaciones').val(d.Observaciones);
-
-            $('#modalActivo').modal('show');
+                $('#modalActivo').modal('show');
+            }, 300);
         }
     });
 }
 
 function guardarActivo() {
     let pkActivo = $('#pkActivo').val();
-
     let url = pkActivo ? "{% url 'ACTIVO:update_activo' %}" : "{% url 'ACTIVO:insert_activo' %}";
+
+    let data = {
+        pkActivo: pkActivo,
+        fkEmpresa: $('#fkEmpresa').val(),
+        codigoActivo: $('#codigoActivo').val(),
+        nombreActivo: $('#nombreActivo').val(),
+        descripcion: $('#descripcion').val(),
+        fkCategoria: $('#fkCategoria').val(),
+        fkProveedor: $('#fkProveedor').val(),
+        fkUbicacionActual: $('#fkUbicacionActual').val(),
+        marca: $('#marca').val(),
+        modelo: $('#modelo').val(),
+        serie: $('#serie').val(),
+        fechaCompra: $('#fechaCompra').val(),
+        numeroFactura: $('#numeroFactura').val(),
+        valorCompra: $('#valorCompra').val(),
+        observaciones: $('#observaciones').val(),
+        csrfmiddlewaretoken: $('[name=csrfmiddlewaretoken]').val()
+    };
+
+    if (!data.fkEmpresa) {
+        Swal.fire("Atención", "Debe seleccionar una empresa.", "warning");
+        return;
+    }
+    if (!data.nombreActivo || !data.codigoActivo) {
+        Swal.fire("Atención", "El código y el nombre son obligatorios.", "warning");
+        return;
+    }
 
     $.ajax({
         url: url,
         type: 'POST',
-        data: {
-            pkActivo: pkActivo,
-            codigoActivo: $('#codigoActivo').val(),
-            nombreActivo: $('#nombreActivo').val(),
-            descripcion: $('#descripcion').val(),
-            fkCategoria: $('#fkCategoria').val(),
-            fkProveedor: $('#fkProveedor').val(),
-            fkUbicacionActual: $('#fkUbicacionActual').val(),
-            marca: $('#marca').val(),
-            modelo: $('#modelo').val(),
-            serie: $('#serie').val(),
-            fechaCompra: $('#fechaCompra').val(),
-            numeroFactura: $('#numeroFactura').val(),
-            valorCompra: $('#valorCompra').val(),
-            observaciones: $('#observaciones').val(),
-            fkEmpresa: $('#fkEmpresa').val(),
-            csrfmiddlewaretoken: $('[name=csrfmiddlewaretoken]').val()
-        },
+        data: data,
         success: function (response) {
             if (response.save == 1) {
-                let msg = pkActivo ? "Editado con éxito" : "Creado con éxito";
-                Swal.fire("Éxito", msg, "success");
+                Swal.fire("Éxito", response.mensaje || "Guardado correctamente", "success");
                 $('#modalActivo').modal('hide');
                 cargarActivos();
             } else {
                 Swal.fire("Error", response.mensaje, "error");
             }
-        },
-        error: function(xhr, status, error) {
-            Swal.fire("Error", "Error al guardar: " + (xhr.responseJSON ? xhr.responseJSON.mensaje : error), "error");
-            console.error(xhr.responseText);
         }
     });
 }
 
 function eliminarActivo(pkActivo) {
     Swal.fire({
-        title: '¿Estás seguro?',
-        text: "¡No podrás revertir esto!",
+        title: '¿Deseas eliminar este activo?',
+        text: "Se marcará como inactivo/eliminado.",
         icon: 'warning',
         showCancelButton: true,
-        confirmButtonColor: '#3085d6',
-        cancelButtonColor: '#d33',
         confirmButtonText: 'Sí, eliminar',
         cancelButtonText: 'Cancelar'
     }).then((result) => {
@@ -393,7 +423,6 @@ function eliminarActivo(pkActivo) {
                 type: 'POST',
                 data: {
                     pkActivo: pkActivo,
-                    estado: 3,
                     csrfmiddlewaretoken: $('[name=csrfmiddlewaretoken]').val()
                 },
                 success: function (response) {
@@ -410,25 +439,8 @@ function eliminarActivo(pkActivo) {
 }
 
 function limpiarFormularioActivo() {
+    $('#modalActivo input, #modalActivo select, #modalActivo textarea').val('');
     $('#pkActivo').val('');
-    $('#codigoActivo').val('');
-    $('#nombreActivo').val('');
-    $('#descripcion').val('');
-    $('#fkCategoria').val('');
-    $('#fkProveedor').val('');
-    $('#fkUbicacionActual').val('');
-    $('#marca').val('');
-    $('#modelo').val('');
-    $('#serie').val('');
-    $('#fechaCompra').val('');
-    $('#numeroFactura').val('');
-    $('#valorCompra').val('');
-    $('#observaciones').val('');
-}
-
-function formatoNumero(valor) {
-    return ActivoUtils.formatNumber(valor);
 }
 </script>
-
 {% endblock %}

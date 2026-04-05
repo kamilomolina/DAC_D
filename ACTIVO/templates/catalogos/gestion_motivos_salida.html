@@ -6,8 +6,8 @@ Gestión de Motivos de Salida
 {% endblock %}
 
 {% block body %}
+{% csrf_token %}
 <div class="container-fluid mt-3">
-    {% csrf_token %}
 
     <div class="card shadow-sm border-0">
         <div class="card-header bg-white">

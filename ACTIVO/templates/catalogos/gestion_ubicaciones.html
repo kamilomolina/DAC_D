@@ -6,36 +6,50 @@ Gestión de Ubicaciones
 {% endblock %}
 
 {% block body %}
+{% csrf_token %}
 <!-- Encabezado de la Pantalla -->
 <div class="d-flex justify-content-between align-items-end mb-4 flex-wrap gap-2">
     <div>
         <h2 class="mb-1" style="color: var(--text-primary); font-weight: 700; font-size: 1.5rem;">Gestión de Ubicaciones</h2>
-        <p class="text-muted mb-0" style="font-size: 0.9rem;">Catálogo global de ubicaciones registradas en el sistema.</p>
+        <p class="text-muted mb-0" style="font-size: 0.9rem;">Organización física de los activos fijos.</p>
     </div>
     <div>
-        <button class="btn btn-primary d-flex align-items-center gap-2 px-3 py-2 shadow-sm" id="btnNuevaUbicacion" style="background-color: var(--brand-primary); border-color: var(--brand-primary); border-radius: 8px;">
+        <button class="btn btn-primary d-flex align-items-center gap-2 px-3 py-2 shadow-sm" id="btnNuevaUbicacion" style="border-radius: 8px;">
             <i class="material-icons">add_circle</i>
             <span>Nueva Ubicación</span>
         </button>
     </div>
 </div>
 
-<!-- Tarjeta Principal (Card Blanca/Oscura) -->
-<div class="modern-card">
+<!-- Tarjeta de Filtros -->
+<div class="modern-card mb-4">
     <div class="modern-card-body">
-        
-        <div class="row g-2 mb-4">
-            <div class="col-md-8">
-                <label class="form-label form-label-sm text-muted fw-bold">Buscar</label>
-                <input type="text" class="form-control" id="textoBusqueda" placeholder="Código, Nombre, Tipo...">
+        <h6 class="text-uppercase fw-bold text-muted mb-3" style="font-size: 0.75rem; letter-spacing: 1px;">Área de Filtros</h6>
+        <div class="row g-3">
+            <div class="col-md-3">
+                <label class="form-label text-muted fw-bold" style="font-size: 0.8rem;">Empresa</label>
+                <select class="form-select" id="filtroEmpresa">
+                    {% for emp in empresas %}
+                        <option value="{{ emp.PkEmpresa }}">{{ emp.NombreEmpresa }}</option>
+                    {% endfor %}
+                </select>
             </div>
-            <div class="col-md-4 d-flex align-items-end">
-                <button class="btn btn-outline-secondary d-flex align-items-center justify-content-center gap-1 w-100" id="btnBuscarUbicaciones" style="border-radius: 8px;">
-                    <i class="material-icons" style="font-size: 18px;">refresh</i> Actualizar Lista
+            <div class="col-md-7">
+                <label class="form-label text-muted fw-bold" style="font-size: 0.8rem;">Búsqueda</label>
+                <input type="text" class="form-control" id="filtroTexto" placeholder="Código, Nombre, Tipo...">
+            </div>
+            <div class="col-md-2 d-flex align-items-end">
+                <button class="btn btn-outline-secondary w-100 d-flex align-items-center justify-content-center gap-2" id="btnFiltrar" style="height: 42px; border-radius: 8px;">
+                    <i class="material-icons" style="font-size: 18px;">search</i> Buscar
                 </button>
             </div>
         </div>
+    </div>
+</div>
 
+<!-- Tarjeta de Tabla -->
+<div class="modern-card">
+    <div class="modern-card-body">
         <div class="table-responsive">
             <table class="table table-hover w-100 align-middle" id="tablaUbicaciones">
                 <thead>
@@ -51,56 +65,50 @@ Gestión de Ubicaciones
                 <tbody></tbody>
             </table>
         </div>
-        
     </div>
 </div>
 
 <div class="modal fade" id="modalUbicacion" tabindex="-1" aria-hidden="true">
-    <div class="modal-dialog modal-lg modal-dialog-centered">
-        <div class="modal-content border-0 shadow-lg" style="border-radius: 16px;">
-            <div class="modal-header border-bottom-0 pb-0">
-                <h5 class="modal-title fw-bold">Ubicación</h5>
+    <div class="modal-dialog modal-lg modal-dialog-scrollable">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title">Detalle de Ubicación</h5>
                 <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
             </div>
 
             <div class="modal-body px-4 py-3">
                 <input type="hidden" id="pkUbicacion">
-
                 <div class="row g-3">
-                    <div class="col-md-6">
-                        <label class="form-label text-muted fw-bold" style="font-size: 0.8rem;">Código de Ubicación</label>
-                        <input type="text" class="form-control" id="codigoUbicacion" required>
-                    </div>
-
-                    <div class="col-md-6">
-                        <label class="form-label text-muted fw-bold" style="font-size: 0.8rem;">Nombre de Ubicación</label>
-                        <input type="text" class="form-control" id="nombreUbicacion" required>
-                    </div>
-
-                    <div class="col-md-6">
-                        <label class="form-label text-muted fw-bold" style="font-size: 0.8rem;">Tipo de Ubicación</label>
-                        <input type="text" class="form-control" id="tipoUbicacion">
-                    </div>
-
-                    <div class="col-md-6">
-                        <label class="form-label text-muted fw-bold" style="font-size: 0.8rem;">Empresa</label>
-                        <select class="form-select" id="fkEmpresa">
+                    <div class="col-md-12">
+                        <label class="form-label fw-bold">Empresa <span class="text-danger">*</span></label>
+                        <select class="form-select" id="modalFkEmpresa" required>
                             {% for emp in empresas %}
                                 <option value="{{ emp.PkEmpresa }}">{{ emp.NombreEmpresa }}</option>
                             {% endfor %}
                         </select>
                     </div>
-
+                    <div class="col-md-6">
+                        <label class="form-label fw-bold">Código <span class="text-danger">*</span></label>
+                        <input type="text" class="form-control" id="codigoUbicacion" required>
+                    </div>
+                    <div class="col-md-6">
+                        <label class="form-label fw-bold">Nombre <span class="text-danger">*</span></label>
+                        <input type="text" class="form-control" id="nombreUbicacion" required>
+                    </div>
                     <div class="col-md-12">
-                        <label class="form-label text-muted fw-bold" style="font-size: 0.8rem;">Descripción</label>
+                        <label class="form-label">Tipo de Ubicación</label>
+                        <input type="text" class="form-control" id="tipoUbicacion">
+                    </div>
+                    <div class="col-md-12">
+                        <label class="form-label">Descripción</label>
                         <textarea class="form-control" id="descripcionUbicacion" rows="3"></textarea>
                     </div>
                 </div>
             </div>
 
-            <div class="modal-footer border-top-0 pt-0 px-4 pb-4">
-                <button class="btn btn-light" data-bs-dismiss="modal" style="border-radius: 8px;">Cancelar</button>
-                <button class="btn btn-primary px-4" id="btnGuardarUbicacion" style="background-color: var(--brand-primary); border-color: var(--brand-primary); border-radius: 8px;">Guardar</button>
+            <div class="modal-footer">
+                <button class="btn btn-light" data-bs-dismiss="modal">Cancelar</button>
+                <button class="btn btn-primary" id="btnGuardarUbicacion">Guardar Cambios</button>
             </div>
         </div>
     </div>
@@ -108,9 +116,8 @@ Gestión de Ubicaciones
 {% endblock %}
 
 {% block scripts %}
-<script src="{% static 'app/activo/utils.js' %}"></script>
 <script>
-    let tablaUbicaciones = null;
+let tablaUbicaciones = null;
 
 $(document).ready(function () {
     inicializarEventos();
@@ -118,101 +125,89 @@ $(document).ready(function () {
 });
 
 function inicializarEventos() {
-    $('#btnBuscarUbicaciones').on('click', function () {
-        cargarUbicaciones();
-    });
-
+    $('#btnFiltrar').on('click', cargarUbicaciones);
+    $('#filtroEmpresa').on('change', cargarUbicaciones);
+    
     $('#btnNuevaUbicacion').on('click', function () {
-        limpiarFormularioUbicacion();
+        limpiarFormulario();
+        // Sincronizar empresa del filtro con el modal
+        $('#modalFkEmpresa').val($('#filtroEmpresa').val());
         $('#modalUbicacion').modal('show');
     });
 
-    $('#btnGuardarUbicacion').on('click', function () {
-        guardarUbicacion();
-    });
+    $('#btnGuardarUbicacion').on('click', guardarUbicacion);
 
-    $('#textoBusqueda').on('keyup', function () {
-        if (tablaUbicaciones) {
-            tablaUbicaciones.search(this.value).draw();
-        }
+    $('#filtroTexto').on('keyup', function () {
+        if (tablaUbicaciones) tablaUbicaciones.search(this.value).draw();
     });
 }
 
 function cargarUbicaciones() {
-    $.ajax({
-        url: "{% url 'ACTIVO:get_ubicaciones' %}",
-        type: 'GET',
-        success: function (response) {
-            if ($.fn.DataTable.isDataTable('#tablaUbicaciones')) {
-                $('#tablaUbicaciones').DataTable().destroy();
-            }
+    const params = {
+        fkEmpresa: $('#filtroEmpresa').val()
+    };
 
-            $('#tablaUbicaciones tbody').empty();
+    ActivoUtils.ajax("{% url 'ACTIVO:get_ubicaciones' %}", params, function (response) {
+        if ($.fn.DataTable.isDataTable('#tablaUbicaciones')) {
+            $('#tablaUbicaciones').DataTable().destroy();
+        }
 
-            $.each(response.data, function (i, item) {
-                // Adjust property names based on exactly what AF_FILL_UBICACIONES returns. Defaulting to general assumptions
-                let pk = item.PkUbicacion || item.pkUbicacion || item.PKUBICACION;
-                let codigo = item.CodigoUbicacion || item.codigoUbicacion || item.CODIGOUBICACION || '';
-                let nombre = item.NombreUbicacion || item.nombreUbicacion || item.NOMBREUBICACION || '';
-                let tipo = item.TipoUbicacion || item.tipoUbicacion || item.TIPOUBICACION || '';
-                let descripcion = item.Descripcion || item.descripcion || item.DESCRIPCION || '';
-                
-                $('#tablaUbicaciones tbody').append(`
-                    <tr>
-                        <td>${pk}</td>
-                        <td>${codigo}</td>
-                        <td>${nombre}</td>
-                        <td>${tipo}</td>
-                        <td>${descripcion}</td>
-                        <td class="text-center">
-                            <button class="btn btn-primary btn-sm me-1" title="Editar" onclick="editarUbicacion(${pk})">
-                                <i class="fas fa-pen"></i>
+        $('#tablaUbicaciones tbody').empty();
+
+        $.each(response.data, function (i, item) {
+            let pk = ActivoUtils.getVal(item, 'PkUbicacion');
+            
+            $('#tablaUbicaciones tbody').append(`
+                <tr>
+                    <td><span class="small text-muted">${pk}</span></td>
+                    <td class="fw-bold">${ActivoUtils.getVal(item, 'CodigoUbicacion')}</td>
+                    <td class="text-primary fw-bold">${ActivoUtils.getVal(item, 'NombreUbicacion')}</td>
+                    <td>${ActivoUtils.getVal(item, 'TipoUbicacion') || ''}</td>
+                    <td>${ActivoUtils.getVal(item, 'Descripcion') || ''}</td>
+                    <td class="text-center">
+                        <div class="btn-group">
+                            <button class="btn btn-primary btn-sm" onclick="editarUbicacion(${pk})" title="Editar">
+                                <i class="fas fa-edit"></i>
                             </button>
-                            <button class="btn btn-danger btn-sm" title="Eliminar/Inactivar" onclick="eliminarUbicacion(${pk})">
+                            <button class="btn btn-danger btn-sm" onclick="eliminarUbicacion(${pk})" title="Eliminar">
                                 <i class="fas fa-trash"></i>
                             </button>
-                        </td>
-                    </tr>
-                `);
-            });
+                        </div>
+                    </td>
+                </tr>
+            `);
+        });
 
-            tablaUbicaciones = $('#tablaUbicaciones').DataTable({
-                destroy: true,
-                pageLength: 10,
-                order: [[0, 'desc']],
-                language: { url: '//cdn.datatables.net/plug-ins/1.13.7/i18n/es-ES.json' }
-            });
-        }
+        tablaUbicaciones = $('#tablaUbicaciones').DataTable({
+            destroy: true,
+            pageLength: 10,
+            order: [[0, 'desc']],
+            language: { url: '//cdn.datatables.net/plug-ins/1.13.7/i18n/es-ES.json' }
+        });
     });
 }
 
 function editarUbicacion(pkUbicacion) {
-    limpiarFormularioUbicacion();
-
+    limpiarFormulario();
     $.ajax({
         url: "{% url 'ACTIVO:get_ubicacion_x_id' %}",
         type: 'GET',
-        data: {
-            pkUbicacion: pkUbicacion
+        data: { 
+            pkUbicacion: pkUbicacion,
+            fkEmpresa: $('#filtroEmpresa').val()
         },
         success: function (response) {
             if (!response.success) {
-                Swal.fire("Atención", response.mensaje, "warning");
+                Swal.fire("Error", response.mensaje, "error");
                 return;
             }
-
             let d = response.data;
-
-            $('#pkUbicacion').val(d.PkUbicacion || d.pkUbicacion || d.PKUBICACION);
-            $('#codigoUbicacion').val(d.CodigoUbicacion || d.codigoUbicacion || d.CODIGOUBICACION);
-            $('#nombreUbicacion').val(d.NombreUbicacion || d.nombreUbicacion || d.NOMBREUBICACION);
-            $('#tipoUbicacion').val(d.TipoUbicacion || d.tipoUbicacion || d.TIPOUBICACION);
-            $('#descripcionUbicacion').val(d.Descripcion || d.descripcion || d.DESCRIPCION);
-            
-            if (d.FkEmpresa || d.fkEmpresa || d.FKEMPRESA) {
-                $('#fkEmpresa').val(d.FkEmpresa || d.fkEmpresa || d.FKEMPRESA);
-            }
-
+            $('#pkUbicacion').val(ActivoUtils.getVal(d, 'PkUbicacion'));
+            $('#codigoUbicacion').val(ActivoUtils.getVal(d, 'CodigoUbicacion'));
+            $('#nombreUbicacion').val(ActivoUtils.getVal(d, 'NombreUbicacion'));
+            $('#tipoUbicacion').val(ActivoUtils.getVal(d, 'TipoUbicacion'));
+            $('#descripcionUbicacion').val(ActivoUtils.getVal(d, 'Descripcion'));
+            $('#modalFkEmpresa').val(ActivoUtils.getVal(d, 'FkEmpresa'));
             $('#modalUbicacion').modal('show');
         }
     });
@@ -220,57 +215,42 @@ function editarUbicacion(pkUbicacion) {
 
 function guardarUbicacion() {
     let pkUbicacion = $('#pkUbicacion').val();
-    let url = "{% url 'ACTIVO:insert_ubicacion' %}";
+    let data = {
+        pkUbicacion: pkUbicacion,
+        codigoUbicacion: $('#codigoUbicacion').val(),
+        nombreUbicacion: $('#nombreUbicacion').val(),
+        tipoUbicacion: $('#tipoUbicacion').val(),
+        descripcion: $('#descripcionUbicacion').val(),
+        fkEmpresa: $('#modalFkEmpresa').val(),
+        csrfmiddlewaretoken: $('[name=csrfmiddlewaretoken]').val()
+    };
 
-    // Validaciones básicas
-    if (!$('#nombreUbicacion').val() || $('#nombreUbicacion').val().trim() === '') {
-        Swal.fire("Atención", "El nombre de la ubicación es obligatorio", "warning");
-        return;
-    }
-    
-    if (!$('#codigoUbicacion').val() || $('#codigoUbicacion').val().trim() === '') {
-        Swal.fire("Atención", "El código de la ubicación es obligatorio", "warning");
+    if (!data.nombreUbicacion || !data.codigoUbicacion) {
+        Swal.fire("Atención", "Nombre y Código son obligatorios", "warning");
         return;
     }
 
     $.ajax({
-        url: url,
+        url: "{% url 'ACTIVO:insert_ubicacion' %}",
         type: 'POST',
-        data: {
-            pkUbicacion: pkUbicacion,
-            codigoUbicacion: $('#codigoUbicacion').val(),
-            nombreUbicacion: $('#nombreUbicacion').val(),
-            tipoUbicacion: $('#tipoUbicacion').val(),
-            descripcion: $('#descripcionUbicacion').val(),
-            fkEmpresa: $('#fkEmpresa').val(),
-            csrfmiddlewaretoken: $('[name=csrfmiddlewaretoken]').val()
-        },
+        data: data,
         success: function (response) {
             if (response.save == 1) {
-                let msg = pkUbicacion ? "Editado con éxito" : "Creado con éxito";
-                Swal.fire("Éxito", response.mensaje || msg, "success");
+                Swal.fire("Éxito", "Ubicación guardada", "success");
                 $('#modalUbicacion').modal('hide');
                 cargarUbicaciones();
             } else {
-                Swal.fire("Error", response.mensaje || "Ocurrió un error general.", "error");
+                Swal.fire("Error", response.mensaje, "error");
             }
-        },
-        error: function(xhr, status, error) {
-            Swal.fire("Error", "Error al guardar: " + error, "error");
         }
     });
 }
 
 function eliminarUbicacion(pkUbicacion) {
     Swal.fire({
-        title: '¿Estás seguro?',
-        text: "¡Se inactivará / eliminará lógicamente esta ubicación!",
+        title: '¿Eliminar ubicación?',
         icon: 'warning',
-        showCancelButton: true,
-        confirmButtonColor: '#3085d6',
-        cancelButtonColor: '#d33',
-        confirmButtonText: 'Sí, eliminar',
-        cancelButtonText: 'Cancelar'
+        showCancelButton: true
     }).then((result) => {
         if (result.isConfirmed) {
             $.ajax({
@@ -281,28 +261,20 @@ function eliminarUbicacion(pkUbicacion) {
                     csrfmiddlewaretoken: $('[name=csrfmiddlewaretoken]').val()
                 },
                 success: function (response) {
-                    if (response.deleted == 1 || response.save == 1) {
-                        Swal.fire("Eliminado", response.mensaje || "Ubicación eliminada con éxito", "success");
+                    if (response.save == 1) {
+                        Swal.fire("Eliminado", "Ubicación eliminada", "success");
                         cargarUbicaciones();
                     } else {
-                        Swal.fire("Error", response.mensaje || "Error al eliminar", "error");
+                        Swal.fire("Error", response.mensaje, "error");
                     }
-                },
-                error: function(xhr, status, error) {
-                    Swal.fire("Error", "Error al comunicarse con el servidor", "error");
                 }
             });
         }
     });
 }
 
-function limpiarFormularioUbicacion() {
-    $('#pkUbicacion').val('');
-    $('#codigoUbicacion').val('');
-    $('#nombreUbicacion').val('');
-    $('#tipoUbicacion').val('');
-    $('#descripcionUbicacion').val('');
-    $('#fkEmpresa').val('0'); // Default to generic option
+function limpiarFormulario() {
+    $('#pkUbicacion, #codigoUbicacion, #nombreUbicacion, #tipoUbicacion, #descripcionUbicacion').val('');
 }
 </script>
 {% endblock %}

@@ -6,6 +6,7 @@ Depreciaciones Aplicadas
 {% endblock %}
 
 {% block body %}
+{% csrf_token %}
 <!-- Encabezado de la Pantalla -->
 <div class="d-flex justify-content-between align-items-end mb-4 flex-wrap gap-2">
     <div>
@@ -22,7 +23,6 @@ Depreciaciones Aplicadas
             <div class="col-md-3">
                 <label class="form-label text-muted fw-bold" style="font-size: 0.8rem;">Empresa</label>
                 <select class="form-select" id="filtroEmpresa">
-                    <option value="">Todas las empresas</option>
                     {% for emp in empresas %}
                         <option value="{{ emp.PkEmpresa }}">{{ emp.NombreEmpresa }}</option>
                     {% endfor %}
@@ -39,7 +39,7 @@ Depreciaciones Aplicadas
             <div class="col-md-2">
                 <label class="form-label text-muted fw-bold" style="font-size: 0.8rem;">Categoría</label>
                 <select class="form-select" id="filtroCategoria">
-                    <option value="">Todas</option>
+                    <option value="0">Todas</option>
                     {% for cat in categorias %}
                         <option value="{{ cat.PkCategoria }}">{{ cat.NombreCategoria }}</option>
                     {% endfor %}
@@ -48,7 +48,7 @@ Depreciaciones Aplicadas
             <div class="col-md-3">
                 <label class="form-label text-muted fw-bold" style="font-size: 0.8rem;">Ubicación</label>
                 <select class="form-select" id="filtroUbicacion">
-                    <option value="">Todas</option>
+                    <option value="0">Todas</option>
                     {% for ubi in ubicaciones %}
                         <option value="{{ ubi.PkUbicacion }}">{{ ubi.NombreUbicacion }}</option>
                     {% endfor %}
@@ -77,7 +77,6 @@ Depreciaciones Aplicadas
                         <th class="py-3">Código</th>
                         <th class="py-3">Nombre Activo</th>
                         <th class="py-3">Categoría</th>
-                        <th class="py-3">Ubicación</th>
                         <th class="py-3">Fecha</th>
                         <th class="py-3">Año</th>
                         <th class="py-3">Mes</th>
@@ -96,11 +95,75 @@ Depreciaciones Aplicadas
 
 {% block scripts %}
 <script>
+    let tablaDepreciaciones = null;
+
     $(document).ready(function() {
-        $('#tablaDepreciaciones').DataTable({
-            language: { url: '//cdn.datatables.net/plug-ins/1.13.7/i18n/es-ES.json' },
-            pageLength: 10
+        $('#btnConsultar').on('click', function() {
+            cargarDepreciaciones();
         });
+
+        $('#textoBusqueda').on('keypress', function(e) {
+            if (e.which === 13) cargarDepreciaciones();
+        });
+
+        cargarDepreciaciones();
     });
+
+    function cargarDepreciaciones() {
+        ActivoUtils.ajax("{% url 'ACTIVO:get_depreciaciones_aplicadas' %}", {
+            fkEmpresa: $('#filtroEmpresa').val(),
+            fechaDesde: $('#fechaDesde').val(),
+            fechaHasta: $('#fechaHasta').val(),
+            fkCategoria: $('#filtroCategoria').val(),
+            fkUbicacion: $('#filtroUbicacion').val(),
+            textoBusqueda: $('#textoBusqueda').val()
+        }, function (response) {
+            if (response.error) {
+                Swal.fire("Error BD", response.error, "error");
+                return;
+            }
+
+            if ($.fn.DataTable.isDataTable('#tablaDepreciaciones')) {
+                $('#tablaDepreciaciones').DataTable().destroy();
+            }
+
+            $('#tablaDepreciaciones tbody').empty();
+
+            $.each(response.data, function (i, item) {
+                let codigo = ActivoUtils.getVal(item, 'CodigoActivo');
+                let nombre = ActivoUtils.getVal(item, 'NombreActivo');
+                let categoria = ActivoUtils.getVal(item, 'NombreCategoria', 'N/A');
+                let fecha = ActivoUtils.getVal(item, 'FechaDepreciacion');
+                let anio = ActivoUtils.getVal(item, 'Anio');
+                let mes = ActivoUtils.getVal(item, 'Mes');
+                let valorDep = ActivoUtils.getVal(item, 'ValorDepreciacion', 0);
+                let acum = ActivoUtils.getVal(item, 'DepreciacionAcumuladaNueva', 0);
+                let libros = ActivoUtils.getVal(item, 'ValorEnLibros', 0);
+                let obs = ActivoUtils.getVal(item, 'Observacion');
+
+                $('#tablaDepreciaciones tbody').append(`
+                    <tr>
+                        <td class="fw-bold">${codigo}</td>
+                        <td>${nombre}</td>
+                        <td><span class="badge bg-light text-dark border">${categoria}</span></td>
+                        <td>${fecha}</td>
+                        <td>${anio}</td>
+                        <td>${mes}</td>
+                        <td class="text-end fw-bold text-primary">${ActivoUtils.formatNumber(valorDep)}</td>
+                        <td class="text-end">${ActivoUtils.formatNumber(acum)}</td>
+                        <td class="text-end text-success">${ActivoUtils.formatNumber(libros)}</td>
+                        <td class="small text-muted">${obs}</td>
+                    </tr>
+                `);
+            });
+
+            tablaDepreciaciones = $('#tablaDepreciaciones').DataTable({
+                destroy: true,
+                pageLength: 10,
+                order: [[3, 'desc']],
+                language: { url: '//cdn.datatables.net/plug-ins/1.13.7/i18n/es-ES.json' }
+            });
+        });
+    }
 </script>
 {% endblock %}
