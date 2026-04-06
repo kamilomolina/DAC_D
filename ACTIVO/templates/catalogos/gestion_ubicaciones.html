@@ -137,52 +137,68 @@ function inicializarEventos() {
 
     $('#btnGuardarUbicacion').on('click', guardarUbicacion);
 
-    $('#filtroTexto').on('keyup', function () {
-        if (tablaUbicaciones) tablaUbicaciones.search(this.value).draw();
+    $('#filtroTexto').on('keyup', function (e) {
+        if (e.which === 13) {
+            cargarUbicaciones();
+        } else if (tablaUbicaciones) {
+            tablaUbicaciones.search(this.value).draw();
+        }
     });
 }
 
 function cargarUbicaciones() {
     const params = {
-        fkEmpresa: $('#filtroEmpresa').val()
+        fkEmpresa: $('#filtroEmpresa').val() || 0,
+        estado: 1,
+        textoBusqueda: $('#filtroTexto').val() || ''
     };
 
     ActivoUtils.ajax("{% url 'ACTIVO:get_ubicaciones' %}", params, function (response) {
+        if (response.error) {
+            console.warn('Error al cargar ubicaciones:', response.error);
+        }
+
         if ($.fn.DataTable.isDataTable('#tablaUbicaciones')) {
             $('#tablaUbicaciones').DataTable().destroy();
         }
 
         $('#tablaUbicaciones tbody').empty();
 
-        $.each(response.data, function (i, item) {
-            let pk = ActivoUtils.getVal(item, 'PkUbicacion');
-            
-            $('#tablaUbicaciones tbody').append(`
-                <tr>
-                    <td><span class="small text-muted">${pk}</span></td>
-                    <td class="fw-bold">${ActivoUtils.getVal(item, 'CodigoUbicacion')}</td>
-                    <td class="text-primary fw-bold">${ActivoUtils.getVal(item, 'NombreUbicacion')}</td>
-                    <td>${ActivoUtils.getVal(item, 'TipoUbicacion') || ''}</td>
-                    <td>${ActivoUtils.getVal(item, 'Descripcion') || ''}</td>
-                    <td class="text-center">
-                        <div class="btn-group">
-                            <button class="btn btn-primary btn-sm" onclick="editarUbicacion(${pk})" title="Editar">
-                                <i class="fas fa-edit"></i>
-                            </button>
-                            <button class="btn btn-danger btn-sm" onclick="eliminarUbicacion(${pk})" title="Eliminar">
-                                <i class="fas fa-trash"></i>
-                            </button>
-                        </div>
-                    </td>
-                </tr>
-            `);
-        });
+        // Solo agregar filas si hay datos (DataTables maneja el estado vacío nativamente)
+        if (response.data && response.data.length > 0) {
+            $.each(response.data, function (i, item) {
+                let pk = ActivoUtils.getVal(item, 'PkUbicacion');
+
+                $('#tablaUbicaciones tbody').append(`
+                    <tr>
+                        <td><span class="small text-muted">${pk}</span></td>
+                        <td class="fw-bold">${ActivoUtils.getVal(item, 'CodigoUbicacion')}</td>
+                        <td class="text-primary fw-bold">${ActivoUtils.getVal(item, 'NombreUbicacion')}</td>
+                        <td>${ActivoUtils.getVal(item, 'TipoUbicacion') || ''}</td>
+                        <td>${ActivoUtils.getVal(item, 'Descripcion') || ''}</td>
+                        <td class="text-center">
+                            <div class="btn-group">
+                                <button class="btn btn-primary btn-sm" onclick="editarUbicacion(${pk})" title="Editar">
+                                    <i class="fas fa-edit"></i>
+                                </button>
+                                <button class="btn btn-danger btn-sm" onclick="eliminarUbicacion(${pk})" title="Eliminar">
+                                    <i class="fas fa-trash"></i>
+                                </button>
+                            </div>
+                        </td>
+                    </tr>
+                `);
+            });
+        }
 
         tablaUbicaciones = $('#tablaUbicaciones').DataTable({
             destroy: true,
             pageLength: 10,
             order: [[0, 'desc']],
-            language: { url: '//cdn.datatables.net/plug-ins/1.13.7/i18n/es-ES.json' }
+            language: {
+                url: '//cdn.datatables.net/plug-ins/1.13.7/i18n/es-ES.json',
+                emptyTable: 'No se encontraron ubicaciones registradas.'
+            }
         });
     });
 }

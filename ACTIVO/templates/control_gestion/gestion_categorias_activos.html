@@ -26,15 +26,7 @@ Gestión de Categorías de Activos
     <div class="modern-card-body">
         <h6 class="text-uppercase fw-bold text-muted mb-3" style="font-size: 0.75rem; letter-spacing: 1px;">Área de Filtros</h6>
         <div class="row g-3">
-            <div class="col-md-3">
-                <label class="form-label text-muted fw-bold" style="font-size: 0.8rem;">Empresa</label>
-                <select class="form-select" id="filtroEmpresa">
-                    {% for emp in empresas %}
-                        <option value="{{ emp.PkEmpresa }}">{{ emp.NombreEmpresa }}</option>
-                    {% endfor %}
-                </select>
-            </div>
-            <div class="col-md-3">
+            <div class="col-md-4">
                 <label class="form-label text-muted fw-bold" style="font-size: 0.8rem;">Estado</label>
                 <select class="form-select" id="filtroEstado">
                     <option value="0">Todos</option>
@@ -43,7 +35,7 @@ Gestión de Categorías de Activos
                     <option value="3">Eliminados</option>
                 </select>
             </div>
-            <div class="col-md-4">
+            <div class="col-md-6">
                 <label class="form-label text-muted fw-bold" style="font-size: 0.8rem;">Búsqueda</label>
                 <input type="text" class="form-control" id="filtroTexto" placeholder="Nombre o descripción...">
             </div>
@@ -119,7 +111,7 @@ $(document).ready(function () {
 
 function inicializarEventos() {
     $('#btnFiltrar').on('click', cargarCategoriasActivos);
-    $('#filtroEmpresa, #filtroEstado').on('change', cargarCategoriasActivos);
+    $('#filtroEstado').on('change', cargarCategoriasActivos);
     
     $('#btnNuevaCategoria').on('click', function () {
         limpiarFormulario();
@@ -128,16 +120,19 @@ function inicializarEventos() {
 
     $('#btnGuardarCategoria').on('click', guardarCategoriaActivo);
 
-    $('#filtroTexto').on('keypress', function (e) {
-        if (e.which === 13) cargarCategoriasActivos();
+    $('#filtroTexto').on('keyup', function (e) {
+        if (e.which === 13) {
+            cargarCategoriasActivos();
+        } else if (tablaCategoriasActivos) {
+            tablaCategoriasActivos.search(this.value).draw();
+        }
     });
 }
 
 function cargarCategoriasActivos() {
     const params = {
-        fkEmpresa: $('#filtroEmpresa').val(),
         estado: $('#filtroEstado').val(),
-        textoBusqueda: $('#filtroTexto').val()
+        textoBusqueda: $('#filtroTexto').val() || ''
     };
 
     ActivoUtils.ajax("{% url 'ACTIVO:get_categorias_activos' %}", params, function (response) {
@@ -208,7 +203,6 @@ function guardarCategoriaActivo() {
         pkCategoria: pkCategoria,
         nombreCategoria: $('#nombreCategoria').val(),
         descripcion: $('#descripcion').val(),
-        fkEmpresa: $('#filtroEmpresa').val(),
         csrfmiddlewaretoken: $('[name=csrfmiddlewaretoken]').val()
     };
 

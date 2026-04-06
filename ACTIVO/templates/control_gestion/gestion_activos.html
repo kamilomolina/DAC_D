@@ -187,12 +187,10 @@ Gestión de Activos
 
 $(document).ready(function () {
     inicializarEventos();
-    
-    // Si hay una empresa seleccionada por defecto en el filtro, cargar sus combos
-    if ($('#filtroEmpresa').val()) {
-        cargarCombosModal($('#filtroEmpresa').val());
-    }
-    
+
+    // Cargar combos siempre al inicio (con empresa 0 = todos)
+    cargarCombosModal($('#filtroEmpresa').val() || 0);
+
     cargarActivos();
 });
 
@@ -230,32 +228,39 @@ function inicializarEventos() {
 }
 
 function cargarCombosModal(fkEmpresa) {
-    if (!fkEmpresa) return;
+    // Si no hay empresa, usar 0 para traer todos (según SP fill)
+    const emp = fkEmpresa || 0;
 
     // Categorías
-    ActivoUtils.ajax("{% url 'ACTIVO:fill_categorias_activos' %}", { fkEmpresa: fkEmpresa }, function (response) {
+    ActivoUtils.ajax("{% url 'ACTIVO:fill_categorias_activos' %}", { fkEmpresa: emp }, function (response) {
         let html = `<option value="">Seleccione Categoría</option>`;
-        $.each(response.data, function (i, item) {
-            html += `<option value="${ActivoUtils.getVal(item, 'PkCategoria')}">${ActivoUtils.getVal(item, 'NombreCategoria')}</option>`;
-        });
+        if (response.data && response.data.length > 0) {
+            $.each(response.data, function (i, item) {
+                html += `<option value="${ActivoUtils.getVal(item, 'PkCategoria')}">${ActivoUtils.getVal(item, 'NombreCategoria')}</option>`;
+            });
+        }
         $('#fkCategoria').html(html);
     });
 
     // Ubicaciones
-    ActivoUtils.ajax("{% url 'ACTIVO:fill_ubicaciones_activos' %}", { fkEmpresa: fkEmpresa }, function (response) {
+    ActivoUtils.ajax("{% url 'ACTIVO:fill_ubicaciones_activos' %}", { fkEmpresa: emp }, function (response) {
         let html = `<option value="">Seleccione Ubicación</option>`;
-        $.each(response.data, function (i, item) {
-            html += `<option value="${ActivoUtils.getVal(item, 'PkUbicacion')}">${ActivoUtils.getVal(item, 'NombreUbicacion')}</option>`;
-        });
+        if (response.data && response.data.length > 0) {
+            $.each(response.data, function (i, item) {
+                html += `<option value="${ActivoUtils.getVal(item, 'PkUbicacion')}">${ActivoUtils.getVal(item, 'NombreUbicacion')}</option>`;
+            });
+        }
         $('#fkUbicacionActual').html(html);
     });
 
-    // Proveedores
-    ActivoUtils.ajax("{% url 'ACTIVO:fill_proveedores_activos' %}", { fkEmpresa: fkEmpresa }, function (response) {
+    // Proveedores (no dependen de empresa)
+    ActivoUtils.ajax("{% url 'ACTIVO:fill_proveedores_activos' %}", {}, function (response) {
         let html = `<option value="">Seleccione Proveedor</option>`;
-        $.each(response.data, function (i, item) {
-            html += `<option value="${ActivoUtils.getVal(item, 'PkProveedor')}">${ActivoUtils.getVal(item, 'NombreProveedor')}</option>`;
-        });
+        if (response.data && response.data.length > 0) {
+            $.each(response.data, function (i, item) {
+                html += `<option value="${ActivoUtils.getVal(item, 'PkProveedor')}">${ActivoUtils.getVal(item, 'NombreProveedor')}</option>`;
+            });
+        }
         $('#fkProveedor').html(html);
     });
 }

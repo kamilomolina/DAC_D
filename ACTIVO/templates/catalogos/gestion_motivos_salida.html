@@ -7,45 +7,53 @@ Gestión de Motivos de Salida
 
 {% block body %}
 {% csrf_token %}
-<div class="container-fluid mt-3">
+<!-- Encabezado de la Pantalla -->
+<div class="d-flex justify-content-between align-items-end mb-4 flex-wrap gap-2">
+    <div>
+        <h2 class="mb-1" style="color: var(--text-primary); font-weight: 700; font-size: 1.5rem;">Gesti&oacute;n de Motivos de Salida</h2>
+        <p class="text-muted mb-0" style="font-size: 0.9rem;">Causas y motivos para dar de baja activos fijos.</p>
+    </div>
+    <div>
+        <button class="btn btn-primary d-flex align-items-center gap-2 px-3 py-2 shadow-sm" id="btnNuevoMotivo" style="border-radius: 8px;">
+            <i class="material-icons">add_circle</i>
+            <span>Nuevo Motivo</span>
+        </button>
+    </div>
+</div>
 
-    <div class="card shadow-sm border-0">
-        <div class="card-header bg-white">
-            <div class="d-flex justify-content-between align-items-center flex-wrap gap-2">
-                <h5 class="mb-0">Gestión de Motivos de Salida</h5>
-                <button class="btn btn-primary btn-sm" id="btnNuevoMotivo">
-                    <i class="material-icons align-middle" style="font-size:18px;">add</i>
-                    Nuevo Motivo
+<!-- Tarjeta de Filtros -->
+<div class="modern-card mb-4">
+    <div class="modern-card-body">
+        <h6 class="text-uppercase fw-bold text-muted mb-3" style="font-size: 0.75rem; letter-spacing: 1px;">&Aacute;rea de Filtros</h6>
+        <div class="row g-3">
+            <div class="col-md-10">
+                <label class="form-label text-muted fw-bold" style="font-size: 0.8rem;">B&uacute;squeda</label>
+                <input type="text" class="form-control" id="textoBusqueda" placeholder="Buscar por descripci&oacute;n del motivo...">
+            </div>
+            <div class="col-md-2 d-flex align-items-end">
+                <button class="btn btn-outline-secondary w-100 d-flex align-items-center justify-content-center gap-2" id="btnBuscarMotivos" style="height: 42px; border-radius: 8px;">
+                    <i class="material-icons" style="font-size: 18px;">search</i> Buscar
                 </button>
             </div>
         </div>
+    </div>
+</div>
 
-        <div class="card-body">
-            <div class="row g-2 mb-3">
-                <div class="col-md-8">
-                    <label class="form-label form-label-sm">Buscar</label>
-                    <input type="text" class="form-control form-control-sm" id="textoBusqueda" placeholder="Buscar por descripción...">
-                </div>
-                <div class="col-md-4 d-flex align-items-end">
-                    <button class="btn btn-secondary btn-sm w-100" id="btnBuscarMotivos">
-                        Actualizar Lista
-                    </button>
-                </div>
-            </div>
-
-            <div class="table-responsive">
-                <table class="table table-bordered table-hover table-sm w-100" id="tablaMotivos">
-                    <thead class="table-light">
-                        <tr>
-                            <th>ID</th>
-                            <th>Descripción del Motivo</th>
-                            <th>Estado</th>
-                            <th>Acciones</th>
-                        </tr>
-                    </thead>
-                    <tbody></tbody>
-                </table>
-            </div>
+<!-- Tarjeta de Tabla -->
+<div class="modern-card">
+    <div class="modern-card-body">
+        <div class="table-responsive">
+            <table class="table table-hover w-100 align-middle" id="tablaMotivos">
+                <thead>
+                    <tr>
+                        <th class="py-3" style="width: 60px;">ID</th>
+                        <th class="py-3">Descripci&oacute;n del Motivo</th>
+                        <th class="py-3 text-center" style="width: 120px;">Estado</th>
+                        <th class="py-3 text-center" style="width: 120px;">Acciones</th>
+                    </tr>
+                </thead>
+                <tbody></tbody>
+            </table>
         </div>
     </div>
 </div>
@@ -57,26 +65,22 @@ Gestión de Motivos de Salida
                 <h5 class="modal-title">Motivo de Salida</h5>
                 <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
             </div>
-
-            <div class="modal-body">
+            <div class="modal-body px-4 py-3">
                 <input type="hidden" id="pkMotivoSalida">
-
-                <div class="row g-2">
+                <div class="row g-3">
                     <div class="col-md-12">
-                        <label class="form-label form-label-sm">Descripción del Motivo</label>
-                        <textarea class="form-control form-control-sm" id="descripcionMotivo" rows="3" required></textarea>
+                        <label class="form-label fw-bold">Descripci&oacute;n del Motivo <span class="text-danger">*</span></label>
+                        <textarea class="form-control" id="descripcionMotivo" rows="3" required></textarea>
                     </div>
                 </div>
             </div>
-
             <div class="modal-footer">
-                <button class="btn btn-success btn-sm" id="btnGuardarMotivo">Guardar</button>
-                <button class="btn btn-secondary btn-sm" data-bs-dismiss="modal">Cerrar</button>
+                <button class="btn btn-light" data-bs-dismiss="modal">Cancelar</button>
+                <button class="btn btn-primary" id="btnGuardarMotivo">Guardar Cambios</button>
             </div>
         </div>
     </div>
 </div>
-
 {% endblock %}
 
 {% block scripts %}

@@ -6,20 +6,30 @@ from django.db import connections
 
 # Create your views here.
 
+def get_user_context(request):
+    """Extrae datos del usuario de session para pasar al template."""
+    return {
+        'userName': request.session.get('userName', ''),
+        'fullName': request.session.get('fullName', request.session.get('userName', '')),
+    }
+
 def panel_activo(request):
     """
     Main dashboard view for the ACTIVO FIJO application.
     """
-    return render(request, 'activo_panel.html')
+    return render(request, 'activo_panel.html', get_user_context(request))
 
 def gestion_activos(request):
-    return render(request, 'control_gestion/gestion_activos.html', {'empresas': get_empresas_activas()})
+    ctx = {'empresas': get_empresas_activas(), **get_user_context(request)}
+    return render(request, 'control_gestion/gestion_activos.html', ctx)
 
 
 def fill_categorias_activos(request):
+    """Llena el combo de categorías en el modal de activos."""
     try:
         with connections['activo'].cursor() as cursor:
-            cursor.callproc('AF_FILL_CATEGORIAS', [])
+            # Usamos AF_GET_CATEGORIAS que es el SP verificado
+            cursor.callproc('AF_GET_CATEGORIAS', [1, ''])
             column_names = [desc[0] for desc in cursor.description]
             data = [dict(zip(map(str, column_names), row)) for row in cursor.fetchall()]
         return JsonResponse({'data': data})
@@ -27,10 +37,11 @@ def fill_categorias_activos(request):
         return JsonResponse({'data': [], 'error': str(e)})
 
 def fill_proveedores_activos(request):
+    """Llena el combo de proveedores en el modal de activos."""
     try:
         with connections['activo'].cursor() as cursor:
-            # Según captura: AF_FILL_PROVEEDORES
-            cursor.callproc('AF_FILL_PROVEEDORES', [])
+            # Usamos AF_GET_PROVEEDORES que es el SP verificado
+            cursor.callproc('AF_GET_PROVEEDORES', [])
             column_names = [desc[0] for desc in cursor.description]
             data = [dict(zip(map(str, column_names), row)) for row in cursor.fetchall()]
         return JsonResponse({'data': data})
@@ -231,7 +242,8 @@ def get_empresas_activas():
     return empresas
 
 def gestion_categorias_activos(request):
-    return render(request, 'control_gestion/gestion_categorias_activos.html', {'empresas': get_empresas_activas()})
+    # Categorías son globales, no filtran por empresa
+    return render(request, 'control_gestion/gestion_categorias_activos.html', get_user_context(request))
 
 
 def get_categorias_activos(request):
@@ -357,7 +369,8 @@ def delete_categoria_activo(request):
 
 # Catálogos
 def gestion_proveedores(request):
-    return render(request, 'catalogos/gestion_proveedores.html', {'empresas': get_empresas_activas()})
+    # Proveedores son globales, no filtran por empresa
+    return render(request, 'catalogos/gestion_proveedores.html', get_user_context(request))
 
 def get_proveedores(request):
     try:
@@ -485,15 +498,17 @@ def delete_proveedor(request):
         return JsonResponse({'save': 0, 'mensaje': str(e)})
 
 def gestion_ubicaciones(request):
-    return render(request, 'catalogos/gestion_ubicaciones.html', {'empresas': get_empresas_activas()})
+    ctx = {'empresas': get_empresas_activas(), **get_user_context(request)}
+    return render(request, 'catalogos/gestion_ubicaciones.html', ctx)
 
 def get_ubicaciones(request):
     try:
         fkEmpresa = request.GET.get('fkEmpresa', 0)
         if not fkEmpresa or str(fkEmpresa) == "":
             fkEmpresa = 0
-            
+
         with connections['activo'].cursor() as cursor:
+            # AF_FILL_UBICACIONES(pFkEmpresa): trae todas si pFkEmpresa=0
             cursor.callproc('AF_FILL_UBICACIONES', [fkEmpresa])
             column_names = [desc[0] for desc in cursor.description]
             data = []
@@ -611,7 +626,7 @@ def delete_ubicacion(request):
         return JsonResponse({'deleted': 0, 'save': 0, 'mensaje': str(e)})
 
 def gestion_motivos_salida(request):
-    return render(request, 'catalogos/gestion_motivos_salida.html')
+    return render(request, 'catalogos/gestion_motivos_salida.html', get_user_context(request))
 
 def get_motivos_salida(request):
     try:
@@ -756,7 +771,8 @@ def depreciaciones_aplicadas(request):
     context = {
         'empresas': get_empresas_activas(),
         'categorias': get_categorias_todas(),
-        'ubicaciones': get_ubicaciones_todas()
+        'ubicaciones': get_ubicaciones_todas(),
+        **get_user_context(request)
     }
     return render(request, 'depreciacion/depreciaciones_aplicadas.html', context)
 
@@ -764,23 +780,24 @@ def depreciaciones_aplicadas(request):
 
 # Consultas
 def consulta_estado_actual(request):
-    return render(request, 'consultas/estado_actual.html')
+    return render(request, 'consultas/estado_actual.html', get_user_context(request))
 
 def consulta_estado_mes(request):
-    return render(request, 'consultas/estado_mes.html')
+    return render(request, 'consultas/estado_mes.html', get_user_context(request))
 
 # Reportes
 def reporte_general(request):
-    return render(request, 'reportes/reporte_general.html')
+    return render(request, 'reportes/reporte_general.html', get_user_context(request))
 
 def reporte_bajas(request):
-    return render(request, 'reportes/reporte_bajas.html')
+    return render(request, 'reportes/reporte_bajas.html', get_user_context(request))
 
 def reporte_depreciacion(request):
     context = {
         'empresas': get_empresas_activas(),
         'categorias': get_categorias_todas(),
-        'ubicaciones': get_ubicaciones_todas()
+        'ubicaciones': get_ubicaciones_todas(),
+        **get_user_context(request)
     }
     return render(request, 'reportes/reporte_depreciacion.html', context)
 

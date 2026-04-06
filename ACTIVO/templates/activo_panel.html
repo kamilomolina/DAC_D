@@ -146,18 +146,45 @@
 
     <!-- Secciones Inferiores -->
     <div class="row g-4">
-        <!-- Próximas Depreciaciones / Mantenimientos -->
+        <!-- Historial de Activos -->
         <div class="col-12 col-lg-8">
             <div class="modern-card">
                 <div class="modern-card-body">
                     <div class="d-flex justify-content-between align-items-center mb-4">
-                        <h5 class="fw-bold mb-0">Próximos Movimientos</h5>
-                        <a href="#" class="text-decoration-none text-primary fw-bold" style="font-size: 0.85rem;">Ver histórico</a>
+                        <h5 class="fw-bold mb-0">
+                            <i class="material-icons align-middle me-2" style="color: #3b82f6; font-size: 20px;">history</i>
+                            Historial de Activos
+                        </h5>
+                        <a href="{% url 'ACTIVO:gestion_activos' %}" class="text-decoration-none text-primary fw-bold" style="font-size: 0.85rem;">
+                            Ver todos <i class="material-icons align-middle" style="font-size: 16px;">arrow_forward</i>
+                        </a>
                     </div>
-                    
-                    <div class="text-center py-5 opacity-50">
-                        <i class="material-icons" style="font-size: 48px;">event_busy</i>
-                        <p class="mt-2">No hay movimientos programados para los próximos días.</p>
+
+                    <div id="loadingHistorial" class="text-center py-4 opacity-50">
+                        <div class="spinner-border spinner-border-sm text-primary" role="status"></div>
+                        <p class="mt-2 small">Cargando historial...</p>
+                    </div>
+
+                    <div id="tablaHistorialWrapper" style="display:none;">
+                        <div class="table-responsive">
+                            <table class="table table-hover align-middle mb-0" id="tablaHistorialActivos" style="font-size: 0.84rem;">
+                                <thead>
+                                    <tr style="font-size: 0.72rem; text-transform: uppercase; letter-spacing: 0.5px;">
+                                        <th class="text-muted fw-bold pb-2" style="width: 110px;">Código</th>
+                                        <th class="text-muted fw-bold pb-2">Activo</th>
+                                        <th class="text-muted fw-bold pb-2" style="width: 180px;">Empresa</th>
+                                        <th class="text-muted fw-bold pb-2 text-end" style="width: 130px;">Valor Compra</th>
+                                        <th class="text-muted fw-bold pb-2 text-center" style="width: 95px;">Fecha</th>
+                                    </tr>
+                                </thead>
+                                <tbody id="tbodyHistorial"></tbody>
+                            </table>
+                        </div>
+                    </div>
+
+                    <div id="emptyHistorial" class="text-center py-5 opacity-50" style="display:none;">
+                        <i class="material-icons" style="font-size: 48px;">inbox</i>
+                        <p class="mt-2">No hay activos registrados aún.</p>
                     </div>
                 </div>
             </div>
@@ -191,9 +218,8 @@
 <script src="{% static 'app/activo/utils.js' %}"></script>
 <script>
     $(document).ready(function() {
-        const fkEmpresa = 1; // Valor de ejemplo
-
-        ActivoUtils.ajax("{% url 'ACTIVO:get_activos' %}", { fkEmpresa, estado: 1 }, function(resp) {
+        // Cargar KPIs (todos los activos, fkEmpresa=0 = todos)
+        ActivoUtils.ajax("{% url 'ACTIVO:get_activos' %}", { fkEmpresa: 0, estado: 1 }, function(resp) {
             if (resp.data) {
                 $('#totalActivos').text(resp.data.length);
                 let total = 0;
@@ -202,11 +228,51 @@
             }
         });
 
-        ActivoUtils.ajax("{% url 'ACTIVO:get_categorias_activos' %}", { fkEmpresa, estado: 1 }, function(resp) {
+        ActivoUtils.ajax("{% url 'ACTIVO:get_categorias_activos' %}", { estado: 1, textoBusqueda: '' }, function(resp) {
             if (resp.data) {
                 $('#totalCategorias').text(resp.data.length);
             }
         });
+
+        // Cargar Historial de Activos (últimos 10 registros)
+        cargarHistorialActivos();
     });
+
+    function cargarHistorialActivos() {
+        ActivoUtils.ajax("{% url 'ACTIVO:get_activos' %}", { fkEmpresa: 0, estado: 1, textoBusqueda: '' }, function(resp) {
+            $('#loadingHistorial').hide();
+
+            if (!resp.data || resp.data.length === 0) {
+                $('#emptyHistorial').show();
+                return;
+            }
+
+            const activos = resp.data.slice(0, 10); // Últimos 10
+            let html = '';
+
+            activos.forEach(function(item) {
+                const codigo  = ActivoUtils.getVal(item, 'CodigoActivo') || '--';
+                const nombre  = ActivoUtils.getVal(item, 'NombreActivo') || '--';
+                const empresa = ActivoUtils.getVal(item, 'NombreEmpresa') || '--';
+                const cat     = ActivoUtils.getVal(item, 'NombreCategoria') || '--';
+                const valor   = parseFloat(ActivoUtils.getVal(item, 'ValorCompra') || 0);
+                const fecha   = ActivoUtils.getVal(item, 'FechaCompra') || '--';
+
+                html += `
+                    <tr>
+                        <td><span class="badge" style="background:rgba(59,130,246,0.15);color:#3b82f6;font-weight:700;font-size:0.78rem;letter-spacing:0.3px;">${codigo}</span></td>
+                        <td class="fw-semibold" style="max-width:160px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;" title="${nombre}">${nombre}</td>
+                        <td style="max-width:160px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;">
+                            <span class="badge bg-light text-dark border" style="font-size:0.72rem;max-width:100%;overflow:hidden;text-overflow:ellipsis;" title="${empresa}">${empresa}</span>
+                        </td>
+                        <td class="text-end fw-bold" style="color:#10b981;white-space:nowrap;">L. ${ActivoUtils.formatNumber(valor)}</td>
+                        <td class="text-center"><span class="small text-muted">${fecha}</span></td>
+                    </tr>`;
+            });
+
+            $('#tbodyHistorial').html(html);
+            $('#tablaHistorialWrapper').show();
+        });
+    }
 </script>
 {% endblock %}
