@@ -55,7 +55,11 @@ urlpatterns = [
     
     # Reportes
     path('reporte-general/', reporte_general, name='reporte_general'),
+    path('get-reporte-general/', get_reporte_general, name='get_reporte_general'),
     path('reporte-bajas/', reporte_bajas, name='reporte_bajas'),
     path('reporte-depreciacion/', reporte_depreciacion, name='reporte_depreciacion'),
+    path('reporte-calendario/', reporte_calendario, name='reporte_calendario'),
+    path('get-activos-calendario/', get_activos_calendario, name='get_activos_calendario'),
+    path('get-activos-por-fecha/', get_activos_por_fecha, name='get_activos_por_fecha'),
 
 ]

@@ -98,6 +98,15 @@ Depreciaciones Aplicadas
     let tablaDepreciaciones = null;
 
     $(document).ready(function() {
+        // Inicializar DataTable vacío
+        tablaDepreciaciones = $('#tablaDepreciaciones').DataTable({
+            language: { url: '//cdn.datatables.net/plug-ins/1.13.7/i18n/es-ES.json' },
+            pageLength: 10,
+            columnDefs: [
+                { targets: [6, 7, 8], className: 'text-end' }
+            ]
+        });
+
         $('#btnConsultar').on('click', function() {
             cargarDepreciaciones();
         });
@@ -105,29 +114,33 @@ Depreciaciones Aplicadas
         $('#textoBusqueda').on('keypress', function(e) {
             if (e.which === 13) cargarDepreciaciones();
         });
-
-        cargarDepreciaciones();
     });
 
     function cargarDepreciaciones() {
+        const btn = $('#btnConsultar');
+        const originalHtml = btn.html();
+        
+        // Efecto loading
+        btn.prop('disabled', true).html('<span class="spinner-border spinner-border-sm" role="status" aria-hidden="true"></span> Consultando...');
+
         ActivoUtils.ajax("{% url 'ACTIVO:get_depreciaciones_aplicadas' %}", {
             fkEmpresa: $('#filtroEmpresa').val(),
+            // Enviamos filtros adicionales por si el SP se expande en el futuro
             fechaDesde: $('#fechaDesde').val(),
             fechaHasta: $('#fechaHasta').val(),
             fkCategoria: $('#filtroCategoria').val(),
             fkUbicacion: $('#filtroUbicacion').val(),
             textoBusqueda: $('#textoBusqueda').val()
         }, function (response) {
+            btn.prop('disabled', false).html(originalHtml);
+
             if (response.error) {
-                Swal.fire("Error BD", response.error, "error");
+                Swal.fire("Error", response.error, "error");
                 return;
             }
 
-            if ($.fn.DataTable.isDataTable('#tablaDepreciaciones')) {
-                $('#tablaDepreciaciones').DataTable().destroy();
-            }
-
-            $('#tablaDepreciaciones tbody').empty();
+            // Limpiar y Recargar por API de DataTables
+            tablaDepreciaciones.clear();
 
             $.each(response.data, function (i, item) {
                 let codigo = ActivoUtils.getVal(item, 'CodigoActivo');
@@ -141,28 +154,21 @@ Depreciaciones Aplicadas
                 let libros = ActivoUtils.getVal(item, 'ValorEnLibros', 0);
                 let obs = ActivoUtils.getVal(item, 'Observacion');
 
-                $('#tablaDepreciaciones tbody').append(`
-                    <tr>
-                        <td class="fw-bold">${codigo}</td>
-                        <td>${nombre}</td>
-                        <td><span class="badge bg-light text-dark border">${categoria}</span></td>
-                        <td>${fecha}</td>
-                        <td>${anio}</td>
-                        <td>${mes}</td>
-                        <td class="text-end fw-bold text-primary">${ActivoUtils.formatNumber(valorDep)}</td>
-                        <td class="text-end">${ActivoUtils.formatNumber(acum)}</td>
-                        <td class="text-end text-success">${ActivoUtils.formatNumber(libros)}</td>
-                        <td class="small text-muted">${obs}</td>
-                    </tr>
-                `);
+                tablaDepreciaciones.row.add([
+                    `<span class="fw-bold text-primary">${codigo}</span>`,
+                    nombre,
+                    `<span class="badge bg-light text-dark border">${categoria}</span>`,
+                    fecha,
+                    anio,
+                    mes,
+                    `<span class="fw-bold">${ActivoUtils.formatNumber(valorDep)}</span>`,
+                    ActivoUtils.formatNumber(acum),
+                    `<span class="text-success fw-bold">${ActivoUtils.formatNumber(libros)}</span>`,
+                    `<span class="small text-muted">${obs}</span>`
+                ]);
             });
 
-            tablaDepreciaciones = $('#tablaDepreciaciones').DataTable({
-                destroy: true,
-                pageLength: 10,
-                order: [[3, 'desc']],
-                language: { url: '//cdn.datatables.net/plug-ins/1.13.7/i18n/es-ES.json' }
-            });
+            tablaDepreciaciones.draw();
         });
     }
 </script>

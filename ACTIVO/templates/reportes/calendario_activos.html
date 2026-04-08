@@ -1,0 +1,319 @@
+{% extends 'componentes/menu_activo.html' %}
+{% load static %}
+
+{% block title %}Calendario de Activos{% endblock %}
+
+{% block meta %}
+<!-- FullCalendar CSS/JS -->
+<script src='https://cdn.jsdelivr.net/npm/fullcalendar@6.1.10/index.global.min.js'></script>
+<script src='https://cdn.jsdelivr.net/npm/@fullcalendar/core@6.1.10/locales-all.global.min.js'></script>
+<!-- DataTables Buttons CSS -->
+<link rel="stylesheet" href="https://cdn.datatables.net/buttons/2.4.2/css/buttons.dataTables.min.css">
+<style>
+    :root {
+        --fc-border-color: rgba(255, 255, 255, 0.08);
+        --fc-daygrid-event-dot-width: 6px;
+    }
+    .fc { font-family: 'Montserrat', sans-serif; font-size: 0.85rem; height: 750px; }
+    .fc .fc-toolbar-title { color: var(--text-primary); font-weight: 800; font-size: 1.4rem; text-transform: capitalize; }
+    .fc .fc-button { 
+        z-index: 5 !important; 
+        opacity: 1 !important; 
+        cursor: pointer !important;
+        display: inline-flex !important;
+        align-items: center;
+        justify-content: center;
+    }
+    .fc .fc-button-primary { 
+        background-color: var(--brand-primary) !important; 
+        border: none !important; 
+        font-weight: 600; 
+        padding: 0.5rem 1.2rem !important;
+        box-shadow: 0 2px 4px rgba(0,0,0,0.2);
+    }
+    .fc .fc-button-primary:hover { background-color: var(--brand-hover) !important; }
+    .fc .fc-button-group { gap: 5px; }
+    .fc .fc-button-group .fc-button { border-radius: 8px !important; margin: 0 2px !important; }
+    .fc-day-today { background: rgba(99, 102, 241, 0.08) !important; }
+    
+    /* Eventos como Dot (Puntos) */
+    .fc-event { cursor: pointer; transition: all 0.2s; border: none !important; background: transparent !important; color: var(--brand-primary) !important; }
+    .fc-event:hover { transform: translateY(-2px); }
+    .fc-event-title { font-weight: 700; font-size: 0.75rem; }
+
+    /* La "Pleca" o indicador de esquina */
+    .has-assets-mark {
+        position: relative;
+    }
+    .has-assets-mark::after {
+        content: "";
+        position: absolute;
+        top: 0;
+        right: 0;
+        width: 0;
+        height: 0;
+        border-style: solid;
+        border-width: 0 25px 25px 0;
+        border-color: transparent var(--brand-primary) transparent transparent;
+        z-index: 1;
+    }
+
+    /* Modal Fullscreen Estilizado */
+    .modal-fullscreen .modal-content {
+        background: #0f172a; /* Fondo muy oscuro premium */
+        color: #f8fafc;
+    }
+    .modal-fullscreen .modal-header {
+        border-bottom: 1px solid rgba(255,255,255,0.05);
+        padding: 1.5rem 2rem;
+    }
+    .modal-fullscreen .modal-body {
+        padding: 2rem;
+    }
+    
+    .report-filter-area {
+        background: rgba(255,255,255,0.03);
+        border-radius: 12px;
+        padding: 1.5rem;
+        margin-bottom: 2rem;
+        border: 1px solid rgba(255,255,255,0.05);
+    }
+
+    /* Mejora de botones de exportación */
+    .btn-export {
+        padding: 0.6rem 1.2rem !important;
+        border-radius: 10px !important;
+        font-weight: 700 !important;
+        text-transform: uppercase;
+        letter-spacing: 0.5px;
+        transition: all 0.3s;
+    }
+    .btn-export:hover { transform: translateY(-3px); box-shadow: 0 5px 15px rgba(0,0,0,0.3); }
+
+    .btn-dt-excel { background: #22c55e !important; color: white !important; }
+    .btn-dt-pdf { background: #ef4444 !important; color: white !important; }
+    .btn-dt-print { background: #3b82f6 !important; color: white !important; }
+
+    /* Selector de fecha personalizado en toolbar */
+    .fc-datepicker-toolbar {
+        display: flex;
+        align-items: center;
+        gap: 10px;
+        margin-left: 10px;
+    }
+</style>
+{% endblock %}
+
+{% block body %}
+<!-- Encabezado -->
+<div class="d-flex justify-content-between align-items-center mb-4 flex-wrap gap-3">
+    <div>
+        <h2 class="mb-1" style="color: var(--text-primary); font-weight: 800; font-size: 1.6rem;">Calendario de Activos fijos</h2>
+        <p class="text-muted mb-0" style="font-size: 0.95rem;">Explora los activos creados por fecha y genera reportes globales.</p>
+    </div>
+</div>
+
+<!-- Tarjeta del Calendario -->
+<div class="modern-card shadow-lg">
+    <div class="modern-card-body p-4">
+        <div id='calendar'></div>
+    </div>
+</div>
+
+<!-- Modal de Reporte Diario Full Screen -->
+<div class="modal fade" id="modalReporteDia" tabindex="-1" aria-hidden="true">
+    <div class="modal-dialog modal-fullscreen">
+        <div class="modal-content">
+            <div class="modal-header d-flex justify-content-between align-items-center">
+                <div>
+                    <h3 class="modal-title fw-800 mb-0">Reporte de Activos: <span id="labelFecha" class="text-primary italic"></span></h3>
+                    <p class="text-muted mb-0">Listado consolidado de ingresos de mercadería y activos fijos.</p>
+                </div>
+                <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal" aria-label="Close" style="font-size: 1.5rem;"></button>
+            </div>
+            <div class="modal-body">
+                <div class="container-fluid">
+                    <div class="report-filter-area shadow-sm">
+                        <div class="row align-items-center g-4">
+                            <div class="col-lg-4">
+                                <label class="form-label text-primary fw-bold small text-uppercase mb-2" style="letter-spacing: 1px;">Empresa a Consultar</label>
+                                <select class="form-select form-select-lg bg-dark text-white border-secondary" id="filtroEmpresaModal" style="border-radius: 12px;">
+                                    <option value="0">--- TODAS LAS EMPRESAS ---</option>
+                                    {% for emp in empresas %}
+                                        <option value="{{ emp.PkEmpresa }}">{{ emp.NombreEmpresa }}</option>
+                                    {% endfor %}
+                                </select>
+                            </div>
+                            <div class="col-lg-8 text-lg-end">
+                                <label class="form-label text-muted fw-bold small text-uppercase mb-2 d-block" style="letter-spacing: 1px;">Acciones de Exportación</label>
+                                <div id="contenedorBotonesDataTable" class="d-flex justify-content-lg-end gap-2 flex-wrap"></div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="modern-card p-0 border-0 shadow-none bg-transparent">
+                        <div class="table-responsive">
+                            <table class="table table-dark table-hover w-100 align-middle" id="tablaReporteDia" style="border-radius: 15px; overflow: hidden;">
+                                <thead class="bg-primary text-white">
+                                    <tr>
+                                        <th class="py-4 px-3 border-0">CÓDIGO</th>
+                                        <th class="py-4 border-0">NOMBRE ACTIVO</th>
+                                        <th class="py-4 border-0">CATEGORÍA</th>
+                                        <th class="py-4 border-0">UBICACIÓN</th>
+                                        <th class="py-4 border-0">EMPRESA</th>
+                                        <th class="py-4 px-3 border-0 text-end">VALOR COMPRA</th>
+                                    </tr>
+                                </thead>
+                                <tbody class="border-0"></tbody>
+                            </table>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            <div class="modal-footer border-0 p-4">
+                <button type="button" class="btn btn-outline-light px-5 py-2" data-bs-dismiss="modal" style="border-radius: 10px;">Cerrar Reporte</button>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block scripts %}
+<!-- DataTables Buttons y Dependencias -->
+<script src="https://cdn.datatables.net/buttons/2.4.2/js/dataTables.buttons.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/jszip/3.10.1/jszip.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/pdfmake/0.1.53/pdfmake.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/pdfmake/0.1.53/vfs_fonts.js"></script>
+<script src="https://cdn.datatables.net/buttons/2.4.2/js/buttons.html5.min.js"></script>
+<script src="https://cdn.datatables.net/buttons/2.4.2/js/buttons.print.min.js"></script>
+
+<script>
+    let calendar = null;
+    let tablaReporte = null;
+    let fechaSeleccionada = null;
+
+    $(document).ready(function() {
+        initCalendar();
+
+        $('#filtroEmpresaModal').on('change', function() {
+            if (fechaSeleccionada) cargarDatosDia(fechaSeleccionada);
+        });
+    });
+
+    function initCalendar() {
+        const calendarEl = document.getElementById('calendar');
+        calendar = new FullCalendar.Calendar(calendarEl, {
+            initialView: 'dayGridMonth',
+            locale: 'es',
+            firstDay: 1, // Lunes
+            headerToolbar: {
+                left: 'prev,next today',
+                center: 'title',
+                right: '' // Quitamos los botones de vista
+            },
+            buttonText: { today: 'Hoy' },
+            events: "{% url 'ACTIVO:get_activos_calendario' %}",
+            
+            // Refrescar marcas cuando cambian los eventos (La Pleca)
+            eventDidMount: function(info) {
+                const dateStr = info.event.startStr;
+                const cell = document.querySelector(`.fc-daygrid-day[data-date="${dateStr}"]`);
+                if (cell) {
+                    cell.classList.add('has-assets-mark');
+                }
+            },
+            
+            // Limpiar marcas antes de renderizar nuevos eventos (para cuando cambias de mes)
+            datesSet: function() {
+                $('.has-assets-mark').removeClass('has-assets-mark');
+            },
+
+            dateClick: function(info) {
+                abrirReporteDia(info.dateStr);
+            },
+            eventClick: function(info) {
+                abrirReporteDia(info.event.extendedProps.fecha);
+            }
+        });
+        calendar.render();
+    }
+
+    function abrirReporteDia(fecha) {
+        fechaSeleccionada = fecha;
+        $('#labelFecha').text(fecha);
+        $('#modalReporteDia').modal('show');
+        cargarDatosDia(fecha);
+    }
+
+    function cargarDatosDia(fecha) {
+        const fkEmpresa = $('#filtroEmpresaModal').val();
+        const modalBody = $('#modalReporteDia .modal-body');
+        
+        ActivoUtils.ajax("{% url 'ACTIVO:get_activos_por_fecha' %}", {
+            fecha: fecha,
+            fkEmpresa: fkEmpresa
+        }, function(response) {
+            if (response.error) {
+                Swal.fire("Error", response.error, "error");
+                return;
+            }
+
+            if ($.fn.DataTable.isDataTable('#tablaReporteDia')) {
+                tablaReporte.destroy();
+            }
+
+            $('#tablaReporteDia tbody').empty();
+
+            $.each(response.data, function(i, item) {
+                $('#tablaReporteDia tbody').append(`
+                    <tr>
+                        <td class="fw-bold text-primary p-3">${item.CodigoActivo}</td>
+                        <td class="fw-600">${item.NombreActivo}</td>
+                        <td><span class="badge bg-light text-dark border px-2 py-1">${item.NombreCategoria || 'SIN CATEGORÍA'}</span></td>
+                        <td><span class="text-muted"><i class="fas fa-map-marker-alt me-1"></i> ${item.NombreUbicacion || 'N/A'}</span></td>
+                        <td><div class="small fw-bold">${item.NombreEmpresa}</div></td>
+                        <td class="text-end fw-bold text-success p-3" style="font-size: 1.1rem;">L. ${ActivoUtils.formatNumber(item.ValorCompra)}</td>
+                    </tr>
+                `);
+            });
+
+            tablaReporte = $('#tablaReporteDia').DataTable({
+                dom: 'Bfrtip',
+                pageLength: 25,
+                buttons: [
+                    {
+                        extend: 'excelHtml5',
+                        text: '<i class="fas fa-file-excel me-2"></i> EXCEL',
+                        className: 'btn btn-export btn-dt-excel me-2',
+                        title: 'REPORTE_ACTIVOS_' + fecha
+                    },
+                    {
+                        extend: 'pdfHtml5',
+                        text: '<i class="fas fa-file-pdf me-2"></i> PDF',
+                        className: 'btn btn-export btn-dt-pdf me-2',
+                        title: 'Reporte de Activos - ' + fecha,
+                        orientation: 'landscape',
+                        pageSize: 'LETTER',
+                        customize: function (doc) {
+                            doc.defaultStyle.fontSize = 9;
+                            doc.styles.tableHeader.fontSize = 11;
+                        }
+                    },
+                    {
+                        extend: 'print',
+                        text: '<i class="fas fa-print me-2"></i> IMPRIMIR',
+                        className: 'btn btn-export btn-dt-print'
+                    }
+                ],
+                language: { 
+                    url: '//cdn.datatables.net/plug-ins/1.13.7/i18n/es-ES.json',
+                    search: "Buscar en tabla:"
+                },
+                order: [[1, 'asc']]
+            });
+
+            $('#contenedorBotonesDataTable').empty().append(tablaReporte.buttons().container());
+        });
+    }
+</script>
+{% endblock %}

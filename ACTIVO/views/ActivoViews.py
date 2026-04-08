@@ -93,21 +93,11 @@ def get_depreciaciones_aplicadas(request):
         fkEmpresa = request.GET.get('fkEmpresa', 0)
         if not fkEmpresa or str(fkEmpresa) == "": fkEmpresa = 0
             
-        fechaDesde = request.GET.get('fechaDesde') or None
-        fechaHasta = request.GET.get('fechaHasta') or None
         pkActivo = request.GET.get('pkActivo', 0)
         if not pkActivo or str(pkActivo) == "": pkActivo = 0
             
-        fkCategoria = request.GET.get('fkCategoria', 0)
-        if not fkCategoria or str(fkCategoria) == "": fkCategoria = 0
-            
-        fkUbicacion = request.GET.get('fkUbicacion', 0)
-        if not fkUbicacion or str(fkUbicacion) == "": fkUbicacion = 0
-            
-        textoBusqueda = request.GET.get('textoBusqueda', '')
-        
-        # El SP pide: (pFkEmpresa, pFechaDesde, pFechaHasta, pPkActivo, pFkCategoria, pFkUbicacion, pTextoBusqueda)
-        params = [fkEmpresa, fechaDesde, fechaHasta, pkActivo, fkCategoria, fkUbicacion, textoBusqueda]
+        # El SP proporcionado pide solo 2 parámetros: (pFkEmpresa, pFkActivo)
+        params = [fkEmpresa, pkActivo]
         
         with connections['activo'].cursor() as cursor:
             cursor.callproc('AF_GET_DEPRECIACIONES_APLICADAS', params)
@@ -158,24 +148,27 @@ def insert_activo(request):
         userName = request.session.get('userName', 'admin')
         p = request.POST
         
-        # Parámetros para AF_INSERT_ACTIVO:
-        # [pCodigo, pNombre, pDesc, pFkCat, pFkProv, pFkUbi, pMarca, pModelo, pSerie, pFechaComp, pNumFact, pValorComp, pObs, pFkEmp, pUser]
+        # Parámetros para AF_INSERT_ACTIVO (19 total):
+        # pCodigo, pNombre, pDesc, pFkCat, pFkProv, pFkUbi, pMarca, pModelo, pSerie, 
+        # pFechaComp, pNumFact, pValorComp, pValorResid, pEstFisico, pEstSist, pFechaBaja, pObs, pFkEmp, pUser
         params = [
             p.get('codigoActivo'), p.get('nombreActivo'), p.get('descripcion'), p.get('fkCategoria'),
             p.get('fkProveedor'), p.get('fkUbicacionActual'), p.get('marca'), p.get('modelo'),
             p.get('serie'), p.get('fechaCompra'), p.get('numeroFactura'), p.get('valorCompra'),
-            p.get('observaciones'), p.get('fkEmpresa'), userName
+            p.get('valorResidual', 0.00), p.get('estadoFisico', 'BUENO'), p.get('estadoSistema', 'COMPRADO'),
+            p.get('fechaBaja', None), p.get('observaciones'), p.get('fkEmpresa'), userName
         ]
         
         with connections['activo'].cursor() as cursor:
             cursor.callproc('AF_INSERT_ACTIVO', params)
             row = cursor.fetchone()
             
+        # El SP retorna: SELECT vPkActivo AS lastID, 1 AS existe;
         return JsonResponse({
-            'save': row[0],
+            'save': 1 if row[0] > 0 else 0,
+            'lastID': row[0],
             'existe': row[1],
-            'lastID': row[2],
-            'mensaje': row[3]
+            'mensaje': 'Activo guardado correctamente' if row[0] > 0 else 'Error al guardar activo'
         })
     except Exception as e:
         return JsonResponse({'save': 0, 'mensaje': str(e)})
@@ -787,7 +780,74 @@ def consulta_estado_mes(request):
 
 # Reportes
 def reporte_general(request):
-    return render(request, 'reportes/reporte_general.html', get_user_context(request))
+    context = {
+        'empresas': get_empresas_activas(),
+        'categorias': get_categorias_todas(),
+        **get_user_context(request)
+    }
+    return render(request, 'reportes/reporte_general.html', context)
+
+def get_reporte_general(request):
+    try:
+        fkEmpresa = request.GET.get('fkEmpresa', 0)
+        fkCategoria = request.GET.get('fkCategoria', 0)
+        estado = request.GET.get('estado', 0)
+        textoBusqueda = request.GET.get('textoBusqueda', '')
+        
+        # Filtros de fecha (para procesar en Python puesto que el SP no los tiene)
+        fechaInicioStr = request.GET.get('fechaInicio', '')
+        fechaFinStr = request.GET.get('fechaFin', '')
+        
+        with connections['activo'].cursor() as cursor:
+            params = [fkEmpresa, fkCategoria, estado, textoBusqueda]
+            cursor.callproc('AF_GET_REPORTE_GENERAL', params)
+            
+            column_names = [desc[0] for desc in cursor.description]
+            raw_data = [dict(zip(column_names, row)) for row in cursor.fetchall()]
+            
+            filtered_data = []
+            
+            # Preparar fechas para comparación
+            date_start = None
+            date_end = None
+            if fechaInicioStr:
+                try:
+                    date_start = date.fromisoformat(fechaInicioStr)
+                except: pass
+            if fechaFinStr:
+                try:
+                    date_end = date.fromisoformat(fechaFinStr)
+                except: pass
+
+            for item in raw_data:
+                # Procesar Decimales y Fechas para filtrado y JSON
+                fecha_compra_obj = item.get('FechaCompra')
+                
+                # Normalizar a date si es datetime
+                if isinstance(fecha_compra_obj, datetime):
+                    fecha_compra_obj = fecha_compra_obj.date()
+                
+                # Aplicar filtro de fecha sobre FechaCompra
+                if date_start and (not fecha_compra_obj or fecha_compra_obj < date_start):
+                    continue
+                if date_end and (not fecha_compra_obj or fecha_compra_obj > date_end):
+                    continue
+
+                # Formatear para JSON
+                processed_item = {}
+                for key, val in item.items():
+                    if isinstance(val, decimal.Decimal):
+                        processed_item[key] = float(val)
+                    elif isinstance(val, (date, datetime)):
+                        processed_item[key] = val.strftime('%Y-%m-%d')
+                    else:
+                        processed_item[key] = val if val is not None else ""
+                
+                filtered_data.append(processed_item)
+                
+        return JsonResponse({'data': filtered_data})
+    except Exception as e:
+        return JsonResponse({'data': [], 'error': str(e)})
 
 def reporte_bajas(request):
     return render(request, 'reportes/reporte_bajas.html', get_user_context(request))
@@ -800,4 +860,89 @@ def reporte_depreciacion(request):
         **get_user_context(request)
     }
     return render(request, 'reportes/reporte_depreciacion.html', context)
+
+
+# ==========================================
+# REPORTES - CALENDARIO
+# ==========================================
+
+def reporte_calendario(request):
+    context = {
+        'empresas': get_empresas_activas(),
+        **get_user_context(request)
+    }
+    return render(request, 'reportes/calendario_activos.html', context)
+
+def get_activos_calendario(request):
+    try:
+        with connections['activo'].cursor() as cursor:
+            # Traemos conteo de activos agrupados por fecha de compra
+            query = """
+                SELECT FechaCompra, COUNT(*) as Total 
+                FROM af_activos 
+                WHERE estado = 1 
+                GROUP BY FechaCompra
+            """
+            cursor.execute(query)
+            data = []
+            for row in cursor.fetchall():
+                if row[0]: # Solo si tiene fecha
+                    data.append({
+                        'title': f'{row[1]} Activo(s)',
+                        'start': row[0].strftime('%Y-%m-%d'),
+                        'allDay': True,
+                        'backgroundColor': '#6366f1',
+                        'borderColor': '#6366f1',
+                        'extendedProps': {
+                            'fecha': row[0].strftime('%Y-%m-%d'),
+                            'total': row[1]
+                        }
+                    })
+        return JsonResponse({'events': data})
+    except Exception as e:
+        return JsonResponse({'events': [], 'error': str(e)})
+
+def get_activos_por_fecha(request):
+    try:
+        fecha = request.GET.get('fecha')
+        fkEmpresa = request.GET.get('fkEmpresa', 0)
+        if not fkEmpresa or str(fkEmpresa) == "": fkEmpresa = 0
+            
+        with connections['activo'].cursor() as cursor:
+            # Query base con JOINs para traer nombres descriptivos
+            query = """
+                SELECT 
+                    a.CodigoActivo, 
+                    a.NombreActivo, 
+                    c.NombreCategoria, 
+                    a.ValorCompra, 
+                    u.NombreUbicacion,
+                    e.NombreEmpresa
+                FROM af_activos a
+                LEFT JOIN af_categorias c ON a.fkCategoria = c.PkCategoria
+                LEFT JOIN af_ubicaciones u ON a.fkUbicacionActual = u.PkUbicacion
+                LEFT JOIN af_empresas e ON a.fkEmpresa = e.PkEmpresa
+                WHERE a.FechaCompra = %s AND a.estado = 1
+            """
+            params = [fecha]
+            
+            if int(fkEmpresa) > 0:
+                query += " AND a.fkEmpresa = %s"
+                params.append(fkEmpresa)
+                
+            cursor.execute(query, params)
+            column_names = [desc[0] for desc in cursor.description]
+            data = []
+            for row in cursor.fetchall():
+                row_dict = {}
+                for col, val in zip(column_names, row):
+                    if isinstance(val, decimal.Decimal):
+                        row_dict[str(col)] = float(val)
+                    else:
+                        row_dict[str(col)] = val if val is not None else ""
+                data.append(row_dict)
+                    
+        return JsonResponse({'data': data})
+    except Exception as e:
+        return JsonResponse({'data': [], 'error': str(e)})
 

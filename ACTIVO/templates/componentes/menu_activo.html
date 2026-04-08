@@ -99,8 +99,8 @@
                     </a>
                     <div class="collapse" id="collapseReportes">
                         <ul class="sidebar-submenu">
-                            <li><a href="{% url 'ACTIVO:consulta_estado_actual' %}" class="nav-link text-decoration-none {% if 'estado_actual' in request.path %}active{% endif %}">Estado Actual</a></li>
                             <li><a href="{% url 'ACTIVO:reporte_general' %}" class="nav-link text-decoration-none {% if 'reporte_general' in request.path %}active{% endif %}">Reporte General</a></li>
+                            <li><a href="{% url 'ACTIVO:reporte_calendario' %}" class="nav-link text-decoration-none {% if 'calendario' in request.path %}active{% endif %}">Calendario</a></li>
                         </ul>
                     </div>
                 </div>
