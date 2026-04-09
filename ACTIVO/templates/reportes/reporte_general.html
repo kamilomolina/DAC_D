@@ -8,11 +8,22 @@
 <link rel="stylesheet" href="https://cdn.datatables.net/buttons/2.4.2/css/buttons.dataTables.min.css">
 <style>
     .filter-card {
-        background: rgba(255, 255, 255, 0.03);
-        border: 1px solid rgba(255, 255, 255, 0.05);
+        background: rgba(255, 255, 255, 0.05);
+        border: 1px solid rgba(255, 255, 255, 0.1);
         border-radius: 15px;
         padding: 1.5rem;
         margin-bottom: 2rem;
+    }
+    .form-select, .form-control {
+        background-color: #1a1b1e !important;
+        border: 1px solid rgba(255, 255, 255, 0.1) !important;
+        color: #fff !important;
+        transition: all 0.3s;
+    }
+    .form-select:focus, .form-control:focus {
+        border-color: var(--brand-primary) !important;
+        box-shadow: 0 0 0 0.25rem rgba(99, 102, 241, 0.25) !important;
+        background-color: #25262b !important;
     }
     .table-container {
         background: var(--bg-card);
@@ -20,6 +31,7 @@
         padding: 1.5rem;
         box-shadow: 0 10px 30px rgba(0,0,0,0.2);
     }
+    .dataTables_filter { display: none; } /* Ocultar búsqueda nativa */
     .dt-buttons {
         margin-bottom: 1.5rem;
         display: flex;
@@ -78,7 +90,7 @@
     <div class="row g-3 align-items-end">
         <div class="col-md-3">
             <label class="form-label small fw-bold text-muted text-uppercase">Empresa</label>
-            <select class="form-select bg-dark text-white border-secondary" id="filtroEmpresa">
+            <select class="form-select" id="filtroEmpresa">
                 <option value="0">--- Todas las Empresas ---</option>
                 {% for emp in empresas %}
                     <option value="{{ emp.PkEmpresa }}">{{ emp.NombreEmpresa }}</option>
@@ -87,7 +99,7 @@
         </div>
         <div class="col-md-3">
             <label class="form-label small fw-bold text-muted text-uppercase">Categoría</label>
-            <select class="form-select bg-dark text-white border-secondary" id="filtroCategoria">
+            <select class="form-select" id="filtroCategoria">
                 <option value="0">--- Todas las Categorías ---</option>
                 {% for cat in categorias %}
                     <option value="{{ cat.PkCategoria }}">{{ cat.NombreCategoria }}</option>
@@ -96,23 +108,23 @@
         </div>
         <div class="col-md-2">
             <label class="form-label small fw-bold text-muted text-uppercase">Desde (Compra)</label>
-            <input type="date" class="form-control bg-dark text-white border-secondary" id="filtroFechaInicio">
+            <input type="date" class="form-control" id="filtroFechaInicio">
         </div>
         <div class="col-md-2">
             <label class="form-label small fw-bold text-muted text-uppercase">Hasta (Compra)</label>
-            <input type="date" class="form-control bg-dark text-white border-secondary" id="filtroFechaFin">
+            <input type="date" class="form-control" id="filtroFechaFin">
         </div>
         <div class="col-md-2">
-            <button class="btn btn-primary w-100 fw-bold py-2 shadow-sm" id="btnConsultar">
-                <i class="fas fa-search me-2"></i> CONSULTAR
+            <button class="btn btn-primary w-100 fw-bold py-2 shadow-sm d-flex align-items-center justify-content-center gap-2" id="btnConsultar">
+                <i class="material-icons" style="font-size: 18px;">search</i> CONSULTAR
             </button>
         </div>
     </div>
     <div class="row mt-3">
         <div class="col-md-12">
             <div class="input-group">
-                <span class="input-group-text bg-dark border-secondary text-muted"><i class="fas fa-filter"></i></span>
-                <input type="text" class="form-control bg-dark text-white border-secondary" id="textoBusqueda" placeholder="Buscar por código, nombre, serie, marca, factura u observaciones...">
+                <span class="input-group-text bg-transparent border-end-0 border-secondary text-muted"><i class="material-icons" style="font-size: 18px;">filter_alt</i></span>
+                <input type="text" class="form-control border-start-0" id="textoBusqueda" placeholder="Buscar por código, nombre, serie, marca, factura u observaciones...">
             </div>
         </div>
     </div>
@@ -240,7 +252,7 @@
         });
 
         tabla = $('#tablaReporte').DataTable({
-            dom: 'Bfrtip',
+            dom: 'Brtip',
             scrollX: true,
             pageLength: 25,
             buttons: [

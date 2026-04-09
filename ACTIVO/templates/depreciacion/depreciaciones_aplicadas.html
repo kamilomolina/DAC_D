@@ -76,7 +76,7 @@ Depreciaciones Aplicadas
                     <tr>
                         <th class="py-3">Código</th>
                         <th class="py-3">Nombre Activo</th>
-                        <th class="py-3">Categoría</th>
+                        <th class="py-3 text-end">Valor Activo</th>
                         <th class="py-3">Fecha</th>
                         <th class="py-3">Año</th>
                         <th class="py-3">Mes</th>
@@ -103,7 +103,7 @@ Depreciaciones Aplicadas
             language: { url: '//cdn.datatables.net/plug-ins/1.13.7/i18n/es-ES.json' },
             pageLength: 10,
             columnDefs: [
-                { targets: [6, 7, 8], className: 'text-end' }
+                { targets: [2, 6, 7, 8], className: 'text-end' }
             ]
         });
 
@@ -125,7 +125,6 @@ Depreciaciones Aplicadas
 
         ActivoUtils.ajax("{% url 'ACTIVO:get_depreciaciones_aplicadas' %}", {
             fkEmpresa: $('#filtroEmpresa').val(),
-            // Enviamos filtros adicionales por si el SP se expande en el futuro
             fechaDesde: $('#fechaDesde').val(),
             fechaHasta: $('#fechaHasta').val(),
             fkCategoria: $('#filtroCategoria').val(),
@@ -145,7 +144,7 @@ Depreciaciones Aplicadas
             $.each(response.data, function (i, item) {
                 let codigo = ActivoUtils.getVal(item, 'CodigoActivo');
                 let nombre = ActivoUtils.getVal(item, 'NombreActivo');
-                let categoria = ActivoUtils.getVal(item, 'NombreCategoria', 'N/A');
+                let valorCompra = ActivoUtils.getVal(item, 'ValorCompra', 0);
                 let fecha = ActivoUtils.getVal(item, 'FechaDepreciacion');
                 let anio = ActivoUtils.getVal(item, 'Anio');
                 let mes = ActivoUtils.getVal(item, 'Mes');
@@ -157,7 +156,7 @@ Depreciaciones Aplicadas
                 tablaDepreciaciones.row.add([
                     `<span class="fw-bold text-primary">${codigo}</span>`,
                     nombre,
-                    `<span class="badge bg-light text-dark border">${categoria}</span>`,
+                    `<span class="fw-bold">${ActivoUtils.formatNumber(valorCompra)}</span>`,
                     fecha,
                     anio,
                     mes,

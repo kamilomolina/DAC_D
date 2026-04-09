@@ -804,6 +804,9 @@ def get_reporte_general(request):
             
             column_names = [desc[0] for desc in cursor.description]
             raw_data = [dict(zip(column_names, row)) for row in cursor.fetchall()]
+
+            # Mapeo de Empresas (porque el SP no las devuelve)
+            empresas_map = {e['PkEmpresa']: e['NombreEmpresa'] for e in get_empresas_activas()}
             
             filtered_data = []
             
@@ -842,6 +845,10 @@ def get_reporte_general(request):
                         processed_item[key] = val.strftime('%Y-%m-%d')
                     else:
                         processed_item[key] = val if val is not None else ""
+                
+                # Inyectar el nombre de la empresa
+                fkEmp = item.get('fkEmpresa', 0)
+                processed_item['NombreEmpresa'] = empresas_map.get(fkEmp, 'N/A')
                 
                 filtered_data.append(processed_item)
                 
