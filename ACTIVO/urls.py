@@ -36,12 +36,6 @@ urlpatterns = [
     path('get-ubicacion-x-id/', get_ubicacion_x_id, name='get_ubicacion_x_id'),
     path('insert-ubicacion/', insert_ubicacion, name='insert_ubicacion'),
     path('delete-ubicacion/', delete_ubicacion, name='delete_ubicacion'),
-
-    path('gestion-motivos-salida/', gestion_motivos_salida, name='gestion_motivos_salida'),
-    path('get-motivos-salida/', get_motivos_salida, name='get_motivos_salida'),
-    path('get-motivo-salida-x-id/', get_motivo_salida_x_id, name='get_motivo_salida_x_id'),
-    path('insert-motivo-salida/', insert_motivo_salida, name='insert_motivo_salida'),
-    path('delete-motivo-salida/', delete_motivo_salida, name='delete_motivo_salida'),
     
 
     

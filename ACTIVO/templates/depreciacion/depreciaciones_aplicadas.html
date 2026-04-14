@@ -1,8 +1,27 @@
 {% extends 'componentes/menu_activo.html' %}
 {% load static %}
 
-{% block title %}
-Depreciaciones Aplicadas
+{% block title %}Depreciaciones Aplicadas{% endblock %}
+
+{% block meta %}
+<!-- DataTables Buttons CSS -->
+<link rel="stylesheet" href="https://cdn.datatables.net/buttons/2.4.2/css/buttons.dataTables.min.css">
+<style>
+    .dt-buttons { margin-bottom: 1rem; display: flex; gap: 8px; flex-wrap: wrap; }
+    .btn-export {
+        padding: 0.55rem 1.1rem !important;
+        border-radius: 10px !important;
+        font-weight: 700 !important;
+        text-transform: uppercase;
+        font-size: 0.75rem !important;
+        border: none !important;
+        transition: all 0.3s;
+    }
+    .btn-export:hover { transform: translateY(-2px); box-shadow: 0 5px 15px rgba(0,0,0,0.3); }
+    .btn-excel { background: #10b981 !important; color: white !important; }
+    .btn-pdf   { background: #ef4444 !important; color: white !important; }
+    .btn-print { background: #6366f1 !important; color: white !important; }
+</style>
 {% endblock %}
 
 {% block body %}
@@ -94,6 +113,14 @@ Depreciaciones Aplicadas
 {% endblock %}
 
 {% block scripts %}
+<!-- DataTables Buttons y Dependencias -->
+<script src="https://cdn.datatables.net/buttons/2.4.2/js/dataTables.buttons.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/jszip/3.10.1/jszip.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/pdfmake/0.1.53/pdfmake.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/pdfmake/0.1.53/vfs_fonts.js"></script>
+<script src="https://cdn.datatables.net/buttons/2.4.2/js/buttons.html5.min.js"></script>
+<script src="https://cdn.datatables.net/buttons/2.4.2/js/buttons.print.min.js"></script>
+
 <script>
     let tablaDepreciaciones = null;
 
@@ -102,6 +129,32 @@ Depreciaciones Aplicadas
         tablaDepreciaciones = $('#tablaDepreciaciones').DataTable({
             language: { url: '//cdn.datatables.net/plug-ins/1.13.7/i18n/es-ES.json' },
             pageLength: 10,
+            dom: 'Bfrtip',
+            buttons: [
+                {
+                    extend: 'excelHtml5',
+                    text: '<i class="fas fa-file-excel me-2"></i> EXCEL',
+                    className: 'btn-export btn-excel',
+                    title: 'Depreciaciones_Aplicadas'
+                },
+                {
+                    extend: 'pdfHtml5',
+                    text: '<i class="fas fa-file-pdf me-2"></i> PDF',
+                    className: 'btn-export btn-pdf',
+                    title: 'Depreciaciones Aplicadas',
+                    orientation: 'landscape',
+                    pageSize: 'LEGAL',
+                    customize: function(doc) {
+                        doc.defaultStyle.fontSize = 8;
+                        doc.styles.tableHeader.fontSize = 9;
+                    }
+                },
+                {
+                    extend: 'print',
+                    text: '<i class="fas fa-print me-2"></i> IMPRIMIR',
+                    className: 'btn-export btn-print'
+                }
+            ],
             columnDefs: [
                 { targets: [2, 6, 7, 8], className: 'text-end' }
             ]

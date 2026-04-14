@@ -11,18 +11,23 @@
 <link rel="stylesheet" href="https://cdn.datatables.net/buttons/2.4.2/css/buttons.dataTables.min.css">
 <style>
     :root {
-        --fc-border-color: rgba(255, 255, 255, 0.08);
+        --fc-border-color: rgba(0, 0, 0, 0.08);
         --fc-daygrid-event-dot-width: 6px;
     }
     .fc { font-family: 'Montserrat', sans-serif; font-size: 0.85rem; height: 750px; }
     .fc .fc-toolbar-title { color: var(--text-primary); font-weight: 800; font-size: 1.4rem; text-transform: capitalize; }
-    .fc .fc-button { 
-        z-index: 5 !important; 
-        opacity: 1 !important; 
+
+    /* Botones de navegacion — asegurar que sean clicables siempre */
+    .fc .fc-button,
+    .fc .fc-button-primary,
+    .fc .fc-prev-button,
+    .fc .fc-next-button,
+    .fc .fc-today-button {
+        pointer-events: auto !important;
         cursor: pointer !important;
-        display: inline-flex !important;
-        align-items: center;
-        justify-content: center;
+        z-index: 10 !important;
+        opacity: 1 !important;
+        position: relative !important;
     }
     .fc .fc-button-primary { 
         background-color: var(--brand-primary) !important; 
@@ -31,53 +36,25 @@
         padding: 0.5rem 1.2rem !important;
         box-shadow: 0 2px 4px rgba(0,0,0,0.2);
     }
-    .fc .fc-button-primary:hover { background-color: var(--brand-hover) !important; }
+    .fc .fc-button-primary:not(:disabled):hover { background-color: var(--brand-hover) !important; }
+    .fc .fc-button-primary:disabled { opacity: 0.5 !important; }
     .fc .fc-button-group { gap: 5px; }
     .fc .fc-button-group .fc-button { border-radius: 8px !important; margin: 0 2px !important; }
     .fc-day-today { background: rgba(99, 102, 241, 0.08) !important; }
     
-    /* Eventos como Dot (Puntos) */
-    .fc-event { cursor: pointer; transition: all 0.2s; border: none !important; background: transparent !important; color: var(--brand-primary) !important; }
-    .fc-event:hover { transform: translateY(-2px); }
-    .fc-event-title { font-weight: 700; font-size: 0.75rem; }
-
-    /* La "Pleca" o indicador de esquina */
-    .has-assets-mark {
-        position: relative;
-    }
-    .has-assets-mark::after {
-        content: "";
-        position: absolute;
-        top: 0;
-        right: 0;
-        width: 0;
-        height: 0;
-        border-style: solid;
-        border-width: 0 25px 25px 0;
-        border-color: transparent var(--brand-primary) transparent transparent;
-        z-index: 1;
-    }
-
-    /* Modal Fullscreen Estilizado */
-    .modal-fullscreen .modal-content {
-        background: #0f172a; /* Fondo muy oscuro premium */
-        color: #f8fafc;
-    }
-    .modal-fullscreen .modal-header {
-        border-bottom: 1px solid rgba(255,255,255,0.05);
-        padding: 1.5rem 2rem;
-    }
-    .modal-fullscreen .modal-body {
-        padding: 2rem;
-    }
+    /* Asegurar que nada del layout tape los botones */
+    .fc-toolbar { position: relative; z-index: 10; }
+    .fc-toolbar-chunk { display: flex; align-items: center; gap: 4px; }
     
-    .report-filter-area {
-        background: rgba(255,255,255,0.03);
-        border-radius: 12px;
-        padding: 1.5rem;
-        margin-bottom: 2rem;
-        border: 1px solid rgba(255,255,255,0.05);
+    /* El estilo de los dias con eventos (NUEVA NOTIFICACION requerida por usuario) */
+    .day-has-activity { 
+        color: #f97316 !important; /* Naranja fuerte */
+        font-weight: 800 !important; 
+        font-size: 1.15rem; 
+        background-color: rgba(249, 115, 22, 0.1); /* Ligero fondo naranja */
+        border-radius: 4px;
     }
+
 
     /* Mejora de botones de exportación */
     .btn-export {
@@ -93,14 +70,6 @@
     .btn-dt-excel { background: #22c55e !important; color: white !important; }
     .btn-dt-pdf { background: #ef4444 !important; color: white !important; }
     .btn-dt-print { background: #3b82f6 !important; color: white !important; }
-
-    /* Selector de fecha personalizado en toolbar */
-    .fc-datepicker-toolbar {
-        display: flex;
-        align-items: center;
-        gap: 10px;
-        margin-left: 10px;
-    }
 </style>
 {% endblock %}
 
@@ -126,10 +95,10 @@
         <div class="modal-content">
             <div class="modal-header d-flex justify-content-between align-items-center">
                 <div>
-                    <h3 class="modal-title fw-800 mb-0">Reporte de Activos: <span id="labelFecha" class="text-primary italic"></span></h3>
+                    <h3 class="modal-title fw-800 mb-0">Reporte de Activos: <span id="labelFecha" class="text-primary"></span></h3>
                     <p class="text-muted mb-0">Listado consolidado de ingresos de mercadería y activos fijos.</p>
                 </div>
-                <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal" aria-label="Close" style="font-size: 1.5rem;"></button>
+                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
             </div>
             <div class="modal-body">
                 <div class="container-fluid">
@@ -137,7 +106,7 @@
                         <div class="row align-items-center g-4">
                             <div class="col-lg-4">
                                 <label class="form-label text-primary fw-bold small text-uppercase mb-2" style="letter-spacing: 1px;">Empresa a Consultar</label>
-                                <select class="form-select form-select-lg bg-dark text-white border-secondary" id="filtroEmpresaModal" style="border-radius: 12px;">
+                                <select class="form-select form-select-lg" id="filtroEmpresaModal" style="border-radius: 12px;">
                                     <option value="0">--- TODAS LAS EMPRESAS ---</option>
                                     {% for emp in empresas %}
                                         <option value="{{ emp.PkEmpresa }}">{{ emp.NombreEmpresa }}</option>
@@ -153,25 +122,25 @@
 
                     <div class="modern-card p-0 border-0 shadow-none bg-transparent">
                         <div class="table-responsive">
-                            <table class="table table-dark table-hover w-100 align-middle" id="tablaReporteDia" style="border-radius: 15px; overflow: hidden;">
-                                <thead class="bg-primary text-white">
+                            <table class="table table-hover w-100 align-middle" id="tablaReporteDia">
+                                <thead class="table-primary">
                                     <tr>
-                                        <th class="py-4 px-3 border-0">CÓDIGO</th>
-                                        <th class="py-4 border-0">NOMBRE ACTIVO</th>
-                                        <th class="py-4 border-0">CATEGORÍA</th>
-                                        <th class="py-4 border-0">UBICACIÓN</th>
-                                        <th class="py-4 border-0">EMPRESA</th>
-                                        <th class="py-4 px-3 border-0 text-end">VALOR COMPRA</th>
+                                        <th class="py-3 px-3">CÓDIGO</th>
+                                        <th class="py-3">NOMBRE ACTIVO</th>
+                                        <th class="py-3">CATEGORÍA</th>
+                                        <th class="py-3">UBICACIÓN</th>
+                                        <th class="py-3">EMPRESA</th>
+                                        <th class="py-3 px-3 text-end">VALOR COMPRA</th>
                                     </tr>
                                 </thead>
-                                <tbody class="border-0"></tbody>
+                                <tbody></tbody>
                             </table>
                         </div>
                     </div>
                 </div>
             </div>
-            <div class="modal-footer border-0 p-4">
-                <button type="button" class="btn btn-outline-light px-5 py-2" data-bs-dismiss="modal" style="border-radius: 10px;">Cerrar Reporte</button>
+            <div class="modal-footer p-4">
+                <button type="button" class="btn btn-outline-secondary px-5 py-2" data-bs-dismiss="modal" style="border-radius: 10px;">Cerrar Reporte</button>
             </div>
         </div>
     </div>
@@ -205,27 +174,31 @@
         calendar = new FullCalendar.Calendar(calendarEl, {
             initialView: 'dayGridMonth',
             locale: 'es',
-            firstDay: 1, // Lunes
+            firstDay: 1,
             headerToolbar: {
                 left: 'prev,next today',
                 center: 'title',
-                right: '' // Quitamos los botones de vista
+                right: ''
             },
-            buttonText: { today: 'Hoy' },
+            buttonText: { 
+                today: 'Hoy',
+                prev: '‹',
+                next: '›'
+            },
             events: "{% url 'ACTIVO:get_activos_calendario' %}",
             
-            // Refrescar marcas cuando cambian los eventos (La Pleca)
             eventDidMount: function(info) {
                 const dateStr = info.event.startStr;
                 const cell = document.querySelector(`.fc-daygrid-day[data-date="${dateStr}"]`);
                 if (cell) {
-                    cell.classList.add('has-assets-mark');
+                    const numberEl = cell.querySelector('.fc-daygrid-day-number');
+                    if (numberEl) {
+                        numberEl.classList.add('day-has-activity');
+                        numberEl.setAttribute('title', info.event.title + ' registrado(s)');
+                    }
                 }
-            },
-            
-            // Limpiar marcas antes de renderizar nuevos eventos (para cuando cambias de mes)
-            datesSet: function() {
-                $('.has-assets-mark').removeClass('has-assets-mark');
+                // Ocultar la barra del evento, solo notificamos con color en el numerito
+                info.el.style.display = 'none';
             },
 
             dateClick: function(info) {
@@ -247,7 +220,6 @@
 
     function cargarDatosDia(fecha) {
         const fkEmpresa = $('#filtroEmpresaModal').val();
-        const modalBody = $('#modalReporteDia .modal-body');
         
         ActivoUtils.ajax("{% url 'ACTIVO:get_activos_por_fecha' %}", {
             fecha: fecha,

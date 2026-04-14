@@ -8,28 +8,17 @@
 <link rel="stylesheet" href="https://cdn.datatables.net/buttons/2.4.2/css/buttons.dataTables.min.css">
 <style>
     .filter-card {
-        background: rgba(255, 255, 255, 0.05);
-        border: 1px solid rgba(255, 255, 255, 0.1);
+        background: var(--bg-surface);
+        border: 1px solid var(--border-color);
         border-radius: 15px;
         padding: 1.5rem;
         margin-bottom: 2rem;
     }
-    .form-select, .form-control {
-        background-color: #1a1b1e !important;
-        border: 1px solid rgba(255, 255, 255, 0.1) !important;
-        color: #fff !important;
-        transition: all 0.3s;
-    }
-    .form-select:focus, .form-control:focus {
-        border-color: var(--brand-primary) !important;
-        box-shadow: 0 0 0 0.25rem rgba(99, 102, 241, 0.25) !important;
-        background-color: #25262b !important;
-    }
     .table-container {
-        background: var(--bg-card);
+        background: var(--bg-surface);
         border-radius: 15px;
         padding: 1.5rem;
-        box-shadow: 0 10px 30px rgba(0,0,0,0.2);
+        box-shadow: var(--shadow-md);
     }
     .dataTables_filter { display: none; } /* Ocultar búsqueda nativa */
     .dt-buttons {
@@ -66,7 +55,7 @@
     #tablaReporte tbody td {
         font-size: 0.85rem;
         padding: 0.8rem 0.5rem;
-        border-bottom: 1px solid rgba(255,255,255,0.05);
+        border-bottom: 1px solid var(--border-color);
     }
     .badge-estado {
         font-size: 0.7rem;

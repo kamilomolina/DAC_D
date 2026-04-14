@@ -88,7 +88,7 @@
     <!-- KPI Row -->
     <div class="row g-4 mb-5">
         <!-- Totales -->
-        <div class="col-12 col-md-6 col-xl-3">
+        <div class="col-12 col-md-6 col-xl-4">
             <div class="kpi-card kpi-blue">
                 <div class="kpi-icon-wrapper">
                     <i class="material-icons">inventory_2</i>
@@ -101,22 +101,8 @@
             </div>
         </div>
 
-        <!-- Categorías -->
-        <div class="col-12 col-md-6 col-xl-3">
-            <div class="kpi-card kpi-green">
-                <div class="kpi-icon-wrapper">
-                    <i class="material-icons">category</i>
-                </div>
-                <div class="kpi-label">Categorías</div>
-                <div class="kpi-value" id="totalCategorias">0</div>
-                <div class="kpi-trend text-success">
-                    <i class="material-icons" style="font-size: 16px;">check_circle</i> Tipos base
-                </div>
-            </div>
-        </div>
-
         <!-- Inversión Total -->
-        <div class="col-12 col-md-6 col-xl-3">
+        <div class="col-12 col-md-6 col-xl-4">
             <div class="kpi-card kpi-orange">
                 <div class="kpi-icon-wrapper">
                     <i class="material-icons">payments</i>
@@ -130,7 +116,7 @@
         </div>
 
         <!-- Eficiencia / Depreciación (MNT Ref) -->
-        <div class="col-12 col-md-6 col-xl-3">
+        <div class="col-12 col-md-6 col-xl-4">
             <div class="kpi-card kpi-purple">
                 <div class="kpi-icon-wrapper">
                     <i class="material-icons">speed</i>
@@ -228,11 +214,7 @@
             }
         });
 
-        ActivoUtils.ajax("{% url 'ACTIVO:get_categorias_activos' %}", { estado: 1, textoBusqueda: '' }, function(resp) {
-            if (resp.data) {
-                $('#totalCategorias').text(resp.data.length);
-            }
-        });
+
 
         // Cargar Historial de Activos (últimos 10 registros)
         cargarHistorialActivos();
@@ -263,7 +245,7 @@
                         <td><span class="badge" style="background:rgba(59,130,246,0.15);color:#3b82f6;font-weight:700;font-size:0.78rem;letter-spacing:0.3px;">${codigo}</span></td>
                         <td class="fw-semibold" style="max-width:160px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;" title="${nombre}">${nombre}</td>
                         <td style="max-width:160px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;">
-                            <span class="badge bg-light text-dark border" style="font-size:0.72rem;max-width:100%;overflow:hidden;text-overflow:ellipsis;" title="${empresa}">${empresa}</span>
+                            <span class="badge border" style="background:rgba(99,102,241,0.12);color:var(--text-primary);font-size:0.72rem;max-width:100%;overflow:hidden;text-overflow:ellipsis;" title="${empresa}">${empresa}</span>
                         </td>
                         <td class="text-end fw-bold" style="color:#10b981;white-space:nowrap;">L. ${ActivoUtils.formatNumber(valor)}</td>
                         <td class="text-center"><span class="small text-muted">${fecha}</span></td>
