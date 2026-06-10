@@ -1,0 +1,140 @@
+{% extends 'netwatch/netwatch_base.html' %}
+{% load static %}
+
+{% block title %}Monitor de Red | NETWATCH{% endblock %}
+
+{% block content %}
+<div class="d-flex justify-content-between align-items-center mb-4">
+    <div class="section-title mb-0">Centro de Monitoreo</div>
+    <div class="d-flex gap-2">
+        <div class="glass-card px-3 py-2 d-flex align-items-center">
+            <div class="status-indicator status-online me-2"></div>
+            <span class="small text-dim">Sistemas OK</span>
+        </div>
+        <button class="btn btn-nw px-4" id="btnRefresh">
+            <i class="fas fa-sync-alt me-2" id="refreshIcon"></i> Escanear Red
+        </button>
+    </div>
+</div>
+
+<div class="row g-4 mb-5">
+    <div class="col-md-3">
+        <div class="glass-card p-4 text-center">
+            <h3 class="fw-bold text-white mb-0" id="stat-total">{{ devices|length }}</h3>
+            <span class="text-dim small uppercase tracking-wider">Dispositivos</span>
+        </div>
+    </div>
+    <div class="col-md-3">
+        <div class="glass-card p-4 text-center border-bottom border-success border-3">
+            <h3 class="fw-bold text-success mb-0" id="stat-online">--</h3>
+            <span class="text-dim small uppercase tracking-wider">Online</span>
+        </div>
+    </div>
+    <div class="col-md-3">
+        <div class="glass-card p-4 text-center border-bottom border-warning border-3">
+            <h3 class="fw-bold text-warning mb-0" id="stat-warning">--</h3>
+            <span class="text-dim small uppercase tracking-wider">Con UPS</span>
+        </div>
+    </div>
+    <div class="col-md-3">
+        <div class="glass-card p-4 text-center border-bottom border-danger border-3">
+            <h3 class="fw-bold text-danger mb-0" id="stat-offline">--</h3>
+            <span class="text-dim small uppercase tracking-wider">Offline</span>
+        </div>
+    </div>
+</div>
+
+<div class="row g-4" id="devices-container">
+    {% for device in devices %}
+    <div class="col-md-6 col-lg-4 col-xl-3 device-card-wrapper" data-id="{{ device.id }}">
+        <div class="glass-card p-4 h-100 transition-all device-card status-loading">
+            <div class="d-flex justify-content-between align-items-start mb-3">
+                <div class="rounded-3 p-3 d-flex align-items-center justify-content-center" 
+                     style="background: rgba(255,255,255,0.05); width: 50px; height: 50px;">
+                    <i class="{% if device.type == 'UPS' %}fas fa-battery-three-quarters{% else %}fas fa-network-wired{% endif %} fa-lg text-dim"></i>
+                </div>
+                <div class="status-badge">
+                    <span class="badge rounded-pill bg-dark text-dim border border-secondary px-3">PENDIENTE</span>
+                </div>
+            </div>
+            
+            <h5 class="fw-bold text-white mb-1">{{ device.name }}</h5>
+            <div class="d-flex align-items-center mb-3">
+                <code class="text-nw small me-2">{{ device.ip }}</code>
+                <span class="text-dim" style="font-size: 0.7rem;">{{ device.marca }}</span>
+            </div>
+            
+            <div class="mt-3 pt-3 border-top border-secondary opacity-50">
+                <div class="d-flex justify-content-between small">
+                    <span class="text-dim"><i class="fas fa-map-marker-alt me-1"></i> {{ device.sucursal }}</span>
+                    <span class="text-nw">{{ device.area }}</span>
+                </div>
+            </div>
+        </div>
+    </div>
+    {% endfor %}
+</div>
+
+<style>
+    .device-card { border: 1px solid rgba(255,255,255,0.05); transition: all 0.3s; position: relative; overflow: hidden; }
+    .device-card:hover { transform: translateY(-5px); background: rgba(255,255,255,0.07); border-color: var(--nw-accent); }
+    
+    .status-indicator { width: 10px; height: 10px; border-radius: 50%; display: inline-block; }
+    .status-online { background: #00ff88; box-shadow: 0 0 10px #00ff88; }
+    
+    /* Animaciones de estado */
+    .status-loading { opacity: 0.6; }
+    .status-up { border-left: 4px solid #00ff88 !important; }
+    .status-down { border-left: 4px solid #ff4444 !important; }
+    .status-ups { border-left: 4px solid #ffbb33 !important; animation: pulse-warning 2s infinite; }
+    
+    @keyframes pulse-warning {
+        0% { box-shadow: inset 0 0 0px rgba(255, 187, 51, 0); }
+        50% { box-shadow: inset 0 0 20px rgba(255, 187, 51, 0.2); }
+        100% { box-shadow: inset 0 0 0px rgba(255, 187, 51, 0); }
+    }
+</style>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+    function updateStatuses() {
+        $('#refreshIcon').addClass('fa-spin');
+        $.get("{% url 'get_network_status' %}", function(data) {
+            let online = 0, offline = 0, warning = 0;
+            
+            data.statuses.forEach(device => {
+                const $card = $(`.device-card-wrapper[data-id="${device.id}"] .device-card`);
+                const $badge = $card.find('.status-badge');
+                
+                $card.removeClass('status-loading status-up status-down status-ups');
+                
+                if (device.status === 'online') {
+                    $card.addClass('status-up');
+                    $badge.html('<span class="badge rounded-pill bg-success px-3">ONLINE</span>');
+                    online++;
+                } else if (device.status === 'warning') {
+                    $card.addClass('status-ups');
+                    $badge.html('<span class="badge rounded-pill bg-warning text-dark px-3">CON UPS</span>');
+                    warning++;
+                } else {
+                    $card.addClass('status-down');
+                    $badge.html('<span class="badge rounded-pill bg-danger px-3">OFFLINE</span>');
+                    offline++;
+                }
+            });
+            
+            $('#stat-online').text(online);
+            $('#stat-warning').text(warning);
+            $('#stat-offline').text(offline);
+            $('#refreshIcon').removeClass('fa-spin');
+        });
+    }
+
+    $(document).ready(function() {
+        updateStatuses();
+        $('#btnRefresh').click(updateStatuses);
+        setInterval(updateStatuses, 60000); // Auto-refresh cada 60s
+    });
+</script>
+{% endblock %}
