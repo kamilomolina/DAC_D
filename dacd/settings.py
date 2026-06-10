@@ -69,6 +69,7 @@ INSTALLED_APPS = [
     "ACTIVO",
     "BANCARIO",
     "GLOBAL",
+    "NETWATCH",
 ]
 CORS_ALLOW_ALL_ORIGINS = True
 
@@ -133,6 +134,7 @@ TEMPLATES = [
             os.path.join(BASE_DIR, "ACTIVO", "templates"),
             os.path.join(BASE_DIR, "BANCARIO", "templates"),
             os.path.join(BASE_DIR, "GLOBAL", "templates"),
+            os.path.join(BASE_DIR, "NETWATCH", "templates"),
         ],
         "APP_DIRS": True,
         "OPTIONS": {
@@ -312,6 +314,14 @@ DATABASES = {
         "PASSWORD": os.getenv("DB_PASSWORD_SUPER_CAFE"),
         "HOST": os.getenv("DB_HOST_SUPER_CAFE"),
         "PORT": os.getenv("DB_PORT_SUPER_CAFE"),
+    },
+    "netwatch_db": {
+        "ENGINE": "django.db.backends.mysql",
+        "NAME": "netwatch",
+        "USER": os.getenv("DB_USER_ZEUS"),
+        "PASSWORD": os.getenv("DB_PASS_ZEUS"),
+        "HOST": os.getenv("DB_HOST_ZEUS"),
+        "PORT": os.getenv("DB_PORT_ZEUS"),
     },
 }
 

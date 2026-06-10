@@ -18,6 +18,7 @@ urlpatterns = [
     path("CWS/modulos/activo/", include("ACTIVO.urls")),
     path("CWS/modulos/bancario/", include("BANCARIO.urls")),
     path("CWS/modulos/global/", include("GLOBAL.urls")),
+    path("CWS/modulos/netwatch/", include("NETWATCH.urls")),
     path("CWS/", include("CWS.urls")),
 ]
 
