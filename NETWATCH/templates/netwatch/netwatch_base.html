@@ -1,194 +1,134 @@
 {% load static %}
 <!DOCTYPE html>
-<html lang="es">
+<html lang="es" data-theme="dark">
 
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>{% block title %}NETWATCH | Monitoreo de Red{% endblock %}</title>
+    <title>{% block title %}NETWATCH | Monitor de Red{% endblock %}</title>
 
     <!-- Bootstrap 5 -->
-    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.0.2/dist/css/bootstrap.min.css" rel="stylesheet">
-    <!-- Font Awesome -->
-    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.2/css/all.min.css">
-    <!-- Google Fonts: Outfit -->
-    <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/css/bootstrap.min.css" rel="stylesheet">
+    <!-- Font Awesome 6 -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css">
+    <!-- Google Fonts -->
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800;900&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
     <!-- SweetAlert2 -->
     <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
     <!-- jQuery -->
-    <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
+    <script src="https://code.jquery.com/jquery-3.7.1.min.js"></script>
 
-    <link rel="stylesheet" href="{% static 'app/css/MANT_CSS.css' %}">
+    <!-- NETWATCH Theme -->
+    <link rel="stylesheet" href="{% static 'app/css/NETWATCH.css' %}">
 
+    <!-- Apply theme immediately to avoid flicker -->
     <script>
         (function () {
-            const theme = localStorage.getItem('cws_theme') || 'dark';
-            if (theme === 'light') {
-                document.documentElement.classList.add('light-preload');
-            }
-            const sidebarState = localStorage.getItem('nw_sidebar_collapsed');
-            if (sidebarState === 'true') {
-                document.documentElement.classList.add('sidebar-is-collapsed');
-            }
+            const theme = localStorage.getItem('nw_theme') || 'dark';
+            document.documentElement.setAttribute('data-theme', theme);
         })();
     </script>
 
-    <style>
-        :root {
-            --nw-accent: #00ff88;
-            --nw-accent-soft: rgba(0, 255, 136, 0.1);
-            --nw-primary: #00d2ff;
-            --glass-bg: rgba(255, 255, 255, 0.03);
-            --glass-border: rgba(255, 255, 255, 0.08);
-            --text-dim: #94a3b8;
-        }
-
-        body.light-theme {
-            --nw-accent: #00a85a;
-            --nw-accent-soft: rgba(0, 168, 90, 0.08);
-            --nw-primary: #008eb0;
-        }
-
-        .sidebar {
-            width: 280px;
-            border-right: 1px solid var(--glass-border);
-            height: 100vh;
-            overflow-y: auto;
-            transition: width 0.3s cubic-bezier(0.4, 0, 0.2, 1);
-            position: fixed;
-            left: 0; top: 0; z-index: 100;
-        }
-
-        .main-content {
-            margin-left: 280px;
-            padding: 2rem 3rem;
-            transition: margin-left 0.3s cubic-bezier(0.4, 0, 0.2, 1);
-        }
-
-        .sidebar-is-collapsed .sidebar { width: 85px; padding: 2rem 0.5rem !important; }
-        .sidebar-is-collapsed .main-content { margin-left: 85px; }
-        .sidebar-is-collapsed .sidebar-text, 
-        .sidebar-is-collapsed .sidebar-category-header,
-        .sidebar-is-collapsed .sidebar-logo-text { display: none; }
-        .sidebar-is-collapsed .nav-link { justify-content: center; }
-
-        .nav-link.active {
-            background: var(--nw-accent-soft) !important;
-            color: var(--nw-accent) !important;
-            border-right: 3px solid var(--nw-accent);
-        }
-
-        .text-nw {
-            background: linear-gradient(135deg, var(--nw-primary) 0%, var(--nw-accent) 100%);
-            -webkit-background-clip: text;
-            background-clip: text;
-            -webkit-text-fill-color: transparent;
-            font-weight: bold;
-        }
-
-        .btn-nw {
-            background: linear-gradient(135deg, var(--nw-primary) 0%, var(--nw-accent) 100%);
-            border: none; color: white;
-            box-shadow: 0 4px 15px rgba(0, 255, 136, 0.2);
-            transition: all 0.3s;
-        }
-        .btn-nw:hover { transform: translateY(-2px); color: white; opacity: 0.9; }
-
-        .btn-toggle-sidebar {
-            position: absolute; top: 15px; right: 15px;
-            background: rgba(255, 255, 255, 0.05);
-            border: 1px solid var(--glass-border);
-            color: var(--text-dim);
-            width: 32px; height: 32px; border-radius: 8px;
-            display: flex; align-items: center; justify-content: center;
-            cursor: pointer; z-index: 10;
-        }
-    </style>
     {% block extra_css %}{% endblock %}
 </head>
 
 <body>
-    <div class="sidebar glass-card">
-        <button class="btn-toggle-sidebar" id="sidebar-toggle">
-            <i class="fas fa-chevron-left"></i>
-        </button>
+<div class="nw-wrapper">
 
-        <div class="d-flex align-items-center mb-5 px-3 mt-4">
-            <div class="me-3 d-flex align-items-center justify-content-center" style="width: 45px; height: 45px;">
-                <i class="fas fa-microchip text-nw fa-2x"></i>
+    <!-- ============ SIDEBAR ============ -->
+    <aside class="nw-sidebar" id="nwSidebar">
+        <!-- Logo -->
+        <div class="nw-sidebar-header">
+            <div class="nw-logo-icon">
+                <i class="fas fa-network-wired"></i>
             </div>
-            <h4 class="fw-bold mb-0 sidebar-logo-text">NET<span class="text-nw">WATCH</span></h4>
+            <span class="nw-logo-text">NET<span>WATCH</span></span>
         </div>
 
-        <nav>
-            <a href="{% url 'panel_netwatch' %}" class="nav-link {% if request.resolver_match.url_name == 'panel_netwatch' %}active{% endif %}">
-                <i class="fas fa-tower-broadcast"></i> <span class="sidebar-text">Monitor de Red</span>
+        <!-- Navigation -->
+        <nav class="nw-sidebar-nav">
+            <div class="nw-nav-section-label">Monitoreo</div>
+            <a href="{% url 'panel_netwatch' %}"
+               class="nw-nav-link {% if request.resolver_match.url_name == 'panel_netwatch' %}active{% endif %}">
+                <i class="fas fa-tower-broadcast"></i>
+                <span>Centro de Monitoreo</span>
             </a>
 
-            <div class="px-4 mt-4 mb-2 small text-dim uppercase fw-bold sidebar-category-header" style="font-size: 0.7rem;">ADMINISTRACIÓN</div>
-            
-            <a href="{% url 'admin_netwatch' %}" class="nav-link {% if request.resolver_match.url_name == 'admin_netwatch' %}active{% endif %}">
-                <i class="fas fa-server"></i> <span class="sidebar-text">Gestionar Equipos</span>
-            </a>
-
-            <div style="height: 100px;"></div>
-            <a href="{% url 'modulos_aplicaciones' %}" class="nav-link">
-                <i class="fas fa-arrow-left"></i> <span class="sidebar-text">Volver al Portal</span>
+            <div class="nw-nav-section-label mt-3">Administración</div>
+            <a href="{% url 'admin_netwatch' %}"
+               class="nw-nav-link {% if request.resolver_match.url_name == 'admin_netwatch' %}active{% endif %}">
+                <i class="fas fa-server"></i>
+                <span>Gestionar Equipos</span>
             </a>
         </nav>
-    </div>
 
-    <div class="main-content">
-        <header class="d-flex justify-content-between align-items-center mb-5">
-            <div>
-                <span class="text-dim">Estado de Infraestructura,</span>
-                <h5 class="fw-bold mb-0">{{ userName }}</h5>
+        <!-- Footer -->
+        <div class="nw-sidebar-footer">
+            <a href="{% url 'modulos_aplicaciones' %}" class="nw-nav-link nav-back">
+                <i class="fas fa-arrow-left"></i>
+                <span>Volver al Portal</span>
+            </a>
+        </div>
+    </aside>
+
+    <!-- ============ MAIN AREA ============ -->
+    <div class="nw-main">
+
+        <!-- Header -->
+        <header class="nw-header">
+            <div class="nw-header-greeting">
+                <span class="nw-header-label">Estado de Infraestructura,</span>
+                <span class="nw-header-name">{{ userName }}</span>
             </div>
-            <div class="d-flex align-items-center gap-3">
-                <button id="bi-theme-toggle" class="btn-theme-toggle" style="background: none; border: none; color: var(--text-dim);">
-                    <i class="fas fa-moon" id="bi-theme-icon"></i>
+            <div class="nw-header-actions">
+                <button class="nw-theme-btn" id="nwThemeToggle" title="Cambiar tema">
+                    <i class="fas fa-moon" id="nwThemeIcon"></i>
                 </button>
-                <img src="{% static 'app/ticketit/images/avatar-01.png' %}" class="rounded-circle border border-secondary" width="45" height="45">
+                <img src="{% static 'app/ticketit/images/avatar-01.png' %}"
+                     class="nw-avatar" alt="Avatar">
             </div>
         </header>
 
-        {% block content %}{% endblock %}
-    </div>
+        <!-- Page Content -->
+        <main class="nw-content">
+            {% block content %}{% endblock %}
+        </main>
 
-    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.0.2/dist/js/bootstrap.bundle.min.js"></script>
-    <script>
-        (function () {
-            const body = document.body;
-            const toggleBtn = document.getElementById('bi-theme-toggle');
-            const themeIcon = document.getElementById('bi-theme-icon');
+    </div><!-- /nw-main -->
+</div><!-- /nw-wrapper -->
 
-            function applyTheme(theme) {
-                if (theme === 'light') {
-                    body.classList.add('light-theme');
-                    themeIcon.classList.replace('fa-moon', 'fa-sun');
-                } else {
-                    body.classList.remove('light-theme');
-                    themeIcon.classList.replace('fa-sun', 'fa-moon');
-                }
+<!-- Bootstrap JS -->
+<script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/js/bootstrap.bundle.min.js"></script>
+
+<!-- Theme Toggle Logic -->
+<script>
+    (function () {
+        const html    = document.documentElement;
+        const btn     = document.getElementById('nwThemeToggle');
+        const icon    = document.getElementById('nwThemeIcon');
+        const STORAGE = 'nw_theme';
+
+        function applyTheme(theme) {
+            html.setAttribute('data-theme', theme);
+            if (theme === 'dark') {
+                icon.classList.replace('fa-sun', 'fa-moon');
+            } else {
+                icon.classList.replace('fa-moon', 'fa-sun');
             }
+        }
 
-            applyTheme(localStorage.getItem('cws_theme') || 'dark');
+        // Apply on load (already done in head, but sync icon)
+        applyTheme(localStorage.getItem(STORAGE) || 'dark');
 
-            toggleBtn.addEventListener('click', () => {
-                const newTheme = body.classList.contains('light-theme') ? 'dark' : 'light';
-                localStorage.setItem('cws_theme', newTheme);
-                applyTheme(newTheme);
-            });
+        btn.addEventListener('click', function () {
+            const current = html.getAttribute('data-theme');
+            const next = current === 'dark' ? 'light' : 'dark';
+            localStorage.setItem(STORAGE, next);
+            applyTheme(next);
+        });
+    })();
+</script>
 
-            const sidebarBtn = document.getElementById('sidebar-toggle');
-            sidebarBtn.addEventListener('click', () => {
-                const isCollapsed = document.documentElement.classList.toggle('sidebar-is-collapsed');
-                localStorage.setItem('nw_sidebar_collapsed', isCollapsed);
-                sidebarBtn.querySelector('i').classList.toggle('fa-chevron-left');
-                sidebarBtn.querySelector('i').classList.toggle('fa-chevron-right');
-            });
-        })();
-    </script>
-    {% block extra_js %}{% endblock %}
+{% block extra_js %}{% endblock %}
 </body>
 </html>

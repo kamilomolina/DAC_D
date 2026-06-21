@@ -1,185 +1,276 @@
 {% extends 'netwatch/netwatch_base.html' %}
 {% load static %}
 
-{% block title %}Administración de Red | NETWATCH{% endblock %}
+{% block title %}Gestión de Equipos | NETWATCH{% endblock %}
 
 {% block content %}
-<div class="d-flex justify-content-between align-items-center mb-4">
+
+<!-- Page Header -->
+<div class="nw-page-header">
     <div>
-        <div class="section-title mb-0">Gestión de Inventario</div>
-        <p class="text-dim small">Configura los switches y routers que serán monitoreados por el sistema.</p>
+        <h1 class="nw-page-title">Gestión de Equipos</h1>
+        <p class="nw-page-subtitle">Administra los dispositivos monitoreados por el sistema</p>
     </div>
-    <button class="btn btn-nw px-4" onclick="openModal('add')">
-        <i class="fas fa-plus me-2"></i> Agregar Equipo
+    <button class="nw-btn-add" onclick="openModal('add')">
+        <i class="fas fa-plus"></i>
+        Agregar Equipo
     </button>
 </div>
 
-<div class="glass-card p-0 overflow-hidden">
-    <div class="table-responsive">
-        <table class="table table-hover mb-0" id="devicesTable" style="color: var(--text-dim);">
-            <thead style="background: rgba(255,255,255,0.02);">
+<!-- ====== TABLE CARD ====== -->
+<div class="nw-card">
+    <div class="nw-card-header">
+        <h2 class="nw-card-title">
+            <i class="fas fa-server"></i>
+            Inventario de Dispositivos
+        </h2>
+        <span style="font-size: 0.8rem; color: var(--nw-text-muted);">
+            {{ devices|length }} equipo{{ devices|length|pluralize:"s" }} registrado{{ devices|length|pluralize:"s" }}
+        </span>
+    </div>
+
+    {% if devices %}
+    <div class="nw-table-wrapper">
+        <table class="nw-table" id="devicesTable">
+            <thead>
                 <tr>
-                    <th class="ps-4 py-3 border-0">DISPOSITIVO</th>
-                    <th class="py-3 border-0">DIRECCIÓN IP</th>
-                    <th class="py-3 border-0">UBICACIÓN</th>
-                    <th class="py-3 border-0">TIPO / MARCA</th>
-                    <th class="py-3 border-0">SNMP</th>
-                    <th class="pe-4 py-3 border-0 text-end">ACCIONES</th>
+                    <th>Dispositivo</th>
+                    <th>Dirección IP</th>
+                    <th>Ubicación</th>
+                    <th>Tipo / Marca</th>
+                    <th>SNMP Community</th>
+                    <th class="text-end" style="padding-right: 1.5rem;">Acciones</th>
                 </tr>
             </thead>
             <tbody>
                 {% for d in devices %}
-                <tr style="border-bottom: 1px solid rgba(255,255,255,0.03);">
-                    <td class="ps-4 py-3">
-                        <div class="d-flex align-items-center">
-                            <div class="rounded-circle me-3 d-flex align-items-center justify-content-center" 
-                                 style="width: 35px; height: 35px; background: var(--nw-accent-soft); color: var(--nw-accent);">
-                                <i class="fas fa-microchip"></i>
+                <tr>
+                    <!-- Device Name + Description -->
+                    <td>
+                        <div class="d-flex align-items-center gap-3">
+                            <div style="width: 36px; height: 36px; border-radius: 9px;
+                                        background: var(--nw-brand-soft); color: var(--nw-brand);
+                                        display: flex; align-items: center; justify-content: center;
+                                        font-size: 0.95rem; flex-shrink: 0;">
+                                {% if d.type == 'UPS' %}
+                                    <i class="fas fa-battery-three-quarters"></i>
+                                {% elif d.type == 'ROUTER' %}
+                                    <i class="fas fa-route"></i>
+                                {% elif d.type == 'SERVIDOR' %}
+                                    <i class="fas fa-server"></i>
+                                {% else %}
+                                    <i class="fas fa-network-wired"></i>
+                                {% endif %}
                             </div>
                             <div>
-                                <div class="text-white fw-bold">{{ d.name }}</div>
-                                <div class="small opacity-50">{{ d.descripcion|default:"Sin descripción" }}</div>
+                                <div style="font-weight: 700; color: var(--nw-text-primary); font-size: 0.875rem;">
+                                    {{ d.name }}
+                                </div>
+                                <div style="font-size: 0.75rem; color: var(--nw-text-muted);">
+                                    {{ d.descripcion|default:"Sin descripción" }}
+                                </div>
                             </div>
                         </div>
                     </td>
-                    <td class="py-3"><code class="text-nw">{{ d.ip }}</code></td>
-                    <td class="py-3">
-                        <div class="small text-white">{{ d.sucursal }}</div>
-                        <div class="small opacity-50">{{ d.area }}</div>
+
+                    <!-- IP Address -->
+                    <td><span class="nw-ip-code">{{ d.ip }}</span></td>
+
+                    <!-- Location -->
+                    <td>
+                        <div style="font-weight: 600; font-size: 0.875rem;">{{ d.sucursal }}</div>
+                        <div style="font-size: 0.75rem; color: var(--nw-text-muted);">{{ d.area }}</div>
                     </td>
-                    <td class="py-3">
-                        <span class="badge rounded-pill bg-dark border border-secondary">{{ d.type }}</span>
-                        <div class="small mt-1">{{ d.marca }}</div>
+
+                    <!-- Type / Brand -->
+                    <td>
+                        <span class="nw-type-chip">{{ d.type }}</span>
+                        <div style="font-size: 0.75rem; color: var(--nw-text-muted); margin-top: 4px;">{{ d.marca }}</div>
                     </td>
-                    <td class="py-3"><span class="small opacity-75">{{ d.community }}</span></td>
-                    <td class="pe-4 py-3 text-end">
-                        <button class="btn btn-sm btn-outline-light border-0" onclick="editDevice({{ d|safe }})">
-                            <i class="fas fa-edit"></i>
-                        </button>
-                        <button class="btn btn-sm btn-outline-danger border-0" onclick="deleteDevice({{ d.id }}, '{{ d.name }}')">
-                            <i class="fas fa-trash"></i>
-                        </button>
+
+                    <!-- SNMP -->
+                    <td>
+                        <span style="font-family: 'JetBrains Mono', monospace; font-size: 0.78rem;
+                                     color: var(--nw-text-secondary);">{{ d.community }}</span>
+                    </td>
+
+                    <!-- Actions -->
+                    <td class="text-end" style="padding-right: 1.5rem;">
+                        <div class="d-flex justify-content-end gap-2">
+                            <button class="nw-btn-icon" title="Editar" onclick="editDevice({{ d|safe }})">
+                                <i class="fas fa-pen"></i>
+                            </button>
+                            <button class="nw-btn-icon btn-delete" title="Dar de baja"
+                                    onclick="deleteDevice({{ d.id }}, '{{ d.name }}')">
+                                <i class="fas fa-trash-can"></i>
+                            </button>
+                        </div>
                     </td>
                 </tr>
                 {% endfor %}
             </tbody>
         </table>
     </div>
+    {% else %}
+    <!-- Empty State -->
+    <div class="nw-card-body text-center py-5">
+        <i class="fas fa-server" style="font-size: 3rem; color: var(--nw-text-muted); margin-bottom: 1rem;"></i>
+        <h5 style="color: var(--nw-text-secondary); font-weight: 700;">No hay equipos registrados</h5>
+        <p style="color: var(--nw-text-muted); font-size: 0.875rem; margin-bottom: 1.5rem;">
+            Registra tu primer dispositivo para comenzar el monitoreo de red.
+        </p>
+        <button class="nw-btn-add" onclick="openModal('add')">
+            <i class="fas fa-plus"></i> Agregar primer equipo
+        </button>
+    </div>
+    {% endif %}
 </div>
 
-<!-- Modal Form (Siguiendo el estilo de BI) -->
-<div class="modal fade" id="deviceModal" tabindex="-1">
+<!-- ====== MODAL ADD / EDIT ====== -->
+<div class="modal fade nw-modal" id="deviceModal" tabindex="-1" aria-labelledby="modalTitle" aria-hidden="true">
     <div class="modal-dialog modal-dialog-centered">
-        <div class="modal-content glass-card border-0" style="background: #1e293b;">
-            <div class="modal-header border-bottom border-secondary">
-                <h5 class="modal-title fw-bold text-white" id="modalTitle">Nuevo Dispositivo</h5>
-                <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"></button>
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title" id="modalTitle">
+                    <i class="fas fa-circle-plus" id="modalIcon"></i>
+                    <span id="modalTitleText">Registrar Nuevo Equipo</span>
+                </h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
             </div>
+
             <div class="modal-body p-4">
                 <form id="deviceForm">
                     {% csrf_token %}
-                    <input type="hidden" id="action" name="action" value="add">
+                    <input type="hidden" id="action"    name="action"    value="add">
                     <input type="hidden" id="id_device" name="id_device">
-                    
-                    <div class="mb-4">
-                        <label class="form-label text-dim small fw-bold">NOMBRE DEL DISPOSITIVO</label>
-                        <input type="text" class="form-control glass-input" name="nombre" required placeholder="Ej: Switch Core N1">
+
+                    <!-- Nombre -->
+                    <div class="nw-form-group">
+                        <label class="nw-form-label">Nombre del Dispositivo *</label>
+                        <input type="text" class="nw-form-control" name="nombre" required
+                               placeholder="Ej: Switch Core Principal">
                     </div>
 
-                    <div class="row">
-                        <div class="col-md-6 mb-4">
-                            <label class="form-label text-dim small fw-bold">DIRECCIÓN IP</label>
-                            <input type="text" class="form-control glass-input" name="ip" required placeholder="192.168.1.1">
+                    <!-- IP / Tipo -->
+                    <div class="row g-3">
+                        <div class="col-7">
+                            <div class="nw-form-group">
+                                <label class="nw-form-label">Dirección IP *</label>
+                                <input type="text" class="nw-form-control" name="ip" required
+                                       placeholder="192.168.1.1">
+                            </div>
                         </div>
-                        <div class="col-md-6 mb-4">
-                            <label class="form-label text-dim small fw-bold">TIPO</label>
-                            <select class="form-select glass-input" name="tipo">
-                                <option value="SWITCH">SWITCH</option>
-                                <option value="UPS">UPS</option>
-                                <option value="ROUTER">ROUTER</option>
-                                <option value="SERVIDOR">SERVIDOR</option>
-                            </select>
-                        </div>
-                    </div>
-
-                    <div class="row">
-                        <div class="col-md-6 mb-4">
-                            <label class="form-label text-dim small fw-bold">SUCURSAL</label>
-                            <input type="text" class="form-control glass-input" name="sucursal">
-                        </div>
-                        <div class="col-md-6 mb-4">
-                            <label class="form-label text-dim small fw-bold">ÁREA</label>
-                            <input type="text" class="form-control glass-input" name="area">
+                        <div class="col-5">
+                            <div class="nw-form-group">
+                                <label class="nw-form-label">Tipo</label>
+                                <select class="nw-form-select" name="tipo">
+                                    <option value="SWITCH">Switch</option>
+                                    <option value="ROUTER">Router</option>
+                                    <option value="SERVIDOR">Servidor</option>
+                                    <option value="UPS">UPS</option>
+                                    <option value="OTRO">Otro</option>
+                                </select>
+                            </div>
                         </div>
                     </div>
 
-                    <div class="row">
-                        <div class="col-md-6 mb-4">
-                            <label class="form-label text-dim small fw-bold">MARCA</label>
-                            <input type="text" class="form-control glass-input" name="marca">
+                    <!-- Sucursal / Área -->
+                    <div class="row g-3">
+                        <div class="col-6">
+                            <div class="nw-form-group">
+                                <label class="nw-form-label">Sucursal</label>
+                                <input type="text" class="nw-form-control" name="sucursal" placeholder="Ej: Sede Central">
+                            </div>
                         </div>
-                        <div class="col-md-6 mb-4">
-                            <label class="form-label text-dim small fw-bold">SNMP COMMUNITY</label>
-                            <input type="text" class="form-control glass-input" name="community" value="public">
+                        <div class="col-6">
+                            <div class="nw-form-group">
+                                <label class="nw-form-label">Área</label>
+                                <input type="text" class="nw-form-control" name="area" placeholder="Ej: Data Center">
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Marca / SNMP -->
+                    <div class="row g-3">
+                        <div class="col-6">
+                            <div class="nw-form-group">
+                                <label class="nw-form-label">Marca</label>
+                                <input type="text" class="nw-form-control" name="marca" placeholder="Ej: Cisco, MikroTik">
+                            </div>
+                        </div>
+                        <div class="col-6">
+                            <div class="nw-form-group">
+                                <label class="nw-form-label">SNMP Community</label>
+                                <input type="text" class="nw-form-control" name="community" value="public">
+                            </div>
                         </div>
                     </div>
                 </form>
             </div>
-            <div class="modal-footer border-top border-secondary">
-                <button type="button" class="btn btn-outline-light border-0" data-bs-dismiss="modal">Cancelar</button>
-                <button type="button" class="btn btn-nw px-4" onclick="saveDevice()">Guardar Equipo</button>
+
+            <div class="modal-footer">
+                <button type="button" class="btn btn-light" data-bs-dismiss="modal"
+                        style="border-radius: 8px; font-weight: 600; font-size: 0.875rem;">
+                    Cancelar
+                </button>
+                <button type="button" class="nw-btn-add" onclick="saveDevice()">
+                    <i class="fas fa-floppy-disk"></i>
+                    Guardar Equipo
+                </button>
             </div>
         </div>
     </div>
 </div>
 
-<style>
-    .glass-input {
-        background: rgba(0,0,0,0.2) !important;
-        border: 1px solid var(--glass-border) !important;
-        color: white !important;
-        padding: 0.7rem 1rem;
-    }
-    .glass-input:focus {
-        border-color: var(--nw-accent) !important;
-        box-shadow: 0 0 10px var(--nw-accent-soft);
-    }
-    .table-hover tbody tr:hover {
-        background: rgba(255,255,255,0.02) !important;
-    }
-</style>
 {% endblock %}
+
 
 {% block extra_js %}
 <script>
+    let _deviceModal;
+
     function openModal(mode) {
-        $('#deviceForm')[0].reset();
-        $('#action').val(mode);
-        $('#modalTitle').text(mode === 'add' ? 'Registrar Nuevo Equipo' : 'Editar Información de Equipo');
-        new bootstrap.Modal(document.getElementById('deviceModal')).show();
+        document.getElementById('deviceForm').reset();
+        document.getElementById('action').value = mode;
+        const titleText = document.getElementById('modalTitleText');
+        const icon      = document.getElementById('modalIcon');
+
+        if (mode === 'add') {
+            titleText.textContent = 'Registrar Nuevo Equipo';
+            icon.className = 'fas fa-circle-plus';
+        } else {
+            titleText.textContent = 'Editar Información de Equipo';
+            icon.className = 'fas fa-pen-to-square';
+        }
+
+        _deviceModal = new bootstrap.Modal(document.getElementById('deviceModal'));
+        _deviceModal.show();
     }
 
     function editDevice(d) {
-        $('#action').val('edit');
-        $('#id_device').val(d.id);
-        $('[name="nombre"]').val(d.name);
-        $('[name="ip"]').val(d.ip);
-        $('[name="area"]').val(d.area);
-        $('[name="sucursal"]').val(d.sucursal);
-        $('[name="tipo"]').val(d.type);
-        $('[name="marca"]').val(d.marca);
-        $('[name="community"]').val(d.community);
-        $('#modalTitle').text('Editar Equipo');
-        new bootstrap.Modal(document.getElementById('deviceModal')).show();
+        openModal('edit');
+        document.getElementById('id_device').value    = d.id;
+        document.querySelector('[name="nombre"]').value    = d.name;
+        document.querySelector('[name="ip"]').value        = d.ip;
+        document.querySelector('[name="area"]').value      = d.area;
+        document.querySelector('[name="sucursal"]').value  = d.sucursal;
+        document.querySelector('[name="tipo"]').value      = d.type;
+        document.querySelector('[name="marca"]').value     = d.marca;
+        document.querySelector('[name="community"]').value = d.community;
     }
 
     function saveDevice() {
-        let data = $('#deviceForm').serialize();
-        $.post("{% url 'manage_device' %}", data, function(res) {
-            if(res.success) {
-                Swal.fire('¡Guardado!', 'El equipo se actualizó correctamente', 'success').then(() => location.reload());
+        const data = $('#deviceForm').serialize();
+        $.post("{% url 'manage_device' %}", data, function (res) {
+            if (res.success) {
+                Swal.fire({
+                    title: '¡Guardado!',
+                    text: 'El equipo se actualizó correctamente.',
+                    icon: 'success',
+                    confirmButtonColor: '#0891b2'
+                }).then(() => location.reload());
             } else {
-                Swal.fire('Error', res.error, 'error');
+                Swal.fire({ title: 'Error', text: res.error, icon: 'error', confirmButtonColor: '#0891b2' });
             }
         });
     }
@@ -187,19 +278,20 @@
     function deleteDevice(id, name) {
         Swal.fire({
             title: '¿Dar de baja?',
-            text: `El dispositivo ${name} dejará de ser monitoreado.`,
+            html: `El dispositivo <strong>${name}</strong> dejará de ser monitoreado.`,
             icon: 'warning',
             showCancelButton: true,
-            confirmButtonText: 'Sí, eliminar',
-            cancelButtonText: 'Cancelar',
-            confirmButtonColor: '#ff4444'
-        }).then((result) => {
+            confirmButtonText: 'Sí, dar de baja',
+            cancelButtonText:  'Cancelar',
+            confirmButtonColor: '#ef4444',
+            cancelButtonColor:  '#64748b'
+        }).then(function (result) {
             if (result.isConfirmed) {
                 $.post("{% url 'manage_device' %}", {
                     action: 'delete',
                     id_device: id,
                     csrfmiddlewaretoken: '{{ csrf_token }}'
-                }, function(res) {
+                }, function () {
                     location.reload();
                 });
             }
