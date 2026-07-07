@@ -53,6 +53,11 @@
                 <i class="fas fa-tower-broadcast"></i>
                 <span>Centro de Monitoreo</span>
             </a>
+            <a href="{% url 'mapa_red' %}"
+               class="nw-nav-link {% if request.resolver_match.url_name == 'mapa_red' %}active{% endif %}">
+                <i class="fas fa-diagram-project"></i>
+                <span>Mapa de Red</span>
+            </a>
 
             <div class="nw-nav-section-label mt-3">Administración</div>
             <a href="{% url 'admin_netwatch' %}"

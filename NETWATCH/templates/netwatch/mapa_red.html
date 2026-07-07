@@ -1,0 +1,504 @@
+{% extends 'netwatch/netwatch_base.html' %}
+{% load static %}
+
+{% block title %}Mapa de Red | NETWATCH{% endblock %}
+
+{% block extra_css %}
+<style>
+    /* El content en esta vista ocupa el ancho completo, sin padding extra */
+    .nw-content { padding: 1.5rem; }
+</style>
+{% endblock %}
+
+{% block content %}
+
+<!-- ====== PAGE HEADER ====== -->
+<div class="nw-page-header">
+    <div>
+        <h1 class="nw-page-title">Mapa de Red</h1>
+        <p class="nw-page-subtitle">Topología interactiva de la infraestructura — Haz clic en un nodo para ver detalles</p>
+    </div>
+    <div class="d-flex align-items-center gap-2">
+        <div class="nw-status-pill" id="mapStatusPill">
+            <span class="nw-live-dot"></span>
+            Sistemas activos
+        </div>
+        <button class="nw-btn-scan" id="btnRefreshMap">
+            <i class="fas fa-rotate" id="mapRefreshIcon"></i>
+            Escanear Red
+        </button>
+    </div>
+</div>
+
+<!-- ====== KPI STATS ====== -->
+<div class="row g-3 mb-4">
+    <div class="col-6 col-sm-6 col-lg-3">
+        <div class="nw-stat-card stat-total">
+            <div class="nw-stat-icon"><i class="fas fa-network-wired"></i></div>
+            <div class="nw-stat-info">
+                <div class="nw-stat-label">Total Dispositivos</div>
+                <div class="nw-stat-value" id="stat-total">--</div>
+            </div>
+        </div>
+    </div>
+    <div class="col-6 col-sm-6 col-lg-3">
+        <div class="nw-stat-card stat-online">
+            <div class="nw-stat-icon"><i class="fas fa-circle-check"></i></div>
+            <div class="nw-stat-info">
+                <div class="nw-stat-label">En Línea</div>
+                <div class="nw-stat-value" id="stat-online">--</div>
+            </div>
+        </div>
+    </div>
+    <div class="col-6 col-sm-6 col-lg-3">
+        <div class="nw-stat-card stat-warning">
+            <div class="nw-stat-icon"><i class="fas fa-battery-three-quarters"></i></div>
+            <div class="nw-stat-info">
+                <div class="nw-stat-label">Con UPS</div>
+                <div class="nw-stat-value" id="stat-warning">--</div>
+            </div>
+        </div>
+    </div>
+    <div class="col-6 col-sm-6 col-lg-3">
+        <div class="nw-stat-card stat-offline">
+            <div class="nw-stat-icon"><i class="fas fa-circle-xmark"></i></div>
+            <div class="nw-stat-info">
+                <div class="nw-stat-label">Fuera de Línea</div>
+                <div class="nw-stat-value" id="stat-offline">--</div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- ====== MAPA DE RED (CARD) ====== -->
+<div class="nw-map-wrapper mb-4">
+
+    <!-- Toolbar del mapa -->
+    <div class="nw-map-toolbar">
+        <div class="nw-map-toolbar-left">
+            <span style="font-size:0.78rem; font-weight:700; color:var(--nw-text-muted); margin-right:0.25rem;">Filtrar:</span>
+            <button class="nw-map-filter-btn active" id="filterAll" onclick="applyFilter('all')">
+                <i class="fas fa-layer-group"></i> Todos
+            </button>
+            <button class="nw-map-filter-btn f-online" id="filterOnline" onclick="applyFilter('online')">
+                <i class="fas fa-circle-check"></i> Online
+            </button>
+            <button class="nw-map-filter-btn f-warning" id="filterWarning" onclick="applyFilter('warning')">
+                <i class="fas fa-triangle-exclamation"></i> Con UPS
+            </button>
+            <button class="nw-map-filter-btn f-offline" id="filterOffline" onclick="applyFilter('offline')">
+                <i class="fas fa-circle-xmark"></i> Offline
+            </button>
+        </div>
+        <div style="font-size:0.75rem; color:var(--nw-text-muted);">
+            <i class="fas fa-info-circle me-1"></i>
+            Scroll para hacer zoom · Arrastra para mover · Clic en nodo para detalles
+        </div>
+    </div>
+
+    <!-- Grid de fondo del canvas -->
+    <div class="nw-map-grid-bg"></div>
+
+    <!-- Canvas de Vis.js -->
+    <div id="nw-topology-canvas"></div>
+
+    <!-- Overlay de scanning -->
+    <div class="nw-map-scan-overlay" id="mapScanOverlay">
+        <div class="nw-scan-spinner"></div>
+        <div class="nw-map-scan-text">Escaneando infraestructura...</div>
+    </div>
+
+    <!-- Leyenda -->
+    <div class="nw-map-legend">
+        <div class="nw-map-legend-title">Estado</div>
+        <div class="nw-legend-item"><span class="nw-legend-dot online"></span> Online</div>
+        <div class="nw-legend-item"><span class="nw-legend-dot warning"></span> Con UPS</div>
+        <div class="nw-legend-item"><span class="nw-legend-dot offline"></span> Offline</div>
+        <div class="nw-legend-item"><span class="nw-legend-dot unknown"></span> Sin datos</div>
+    </div>
+
+    <!-- Controles de zoom -->
+    <div class="nw-map-controls">
+        <button class="nw-map-ctrl-btn" id="ctrlZoomIn"  title="Acercar"><i class="fas fa-plus"></i></button>
+        <button class="nw-map-ctrl-btn" id="ctrlZoomOut" title="Alejar"><i class="fas fa-minus"></i></button>
+        <button class="nw-map-ctrl-btn" id="ctrlFit"     title="Ajustar vista"><i class="fas fa-expand"></i></button>
+    </div>
+
+</div><!-- /nw-map-wrapper -->
+
+<!-- ====== PANEL DE DETALLES (deslizable desde la derecha) ====== -->
+<div class="nw-device-detail-panel" id="deviceDetailPanel">
+
+    <!-- Header del panel -->
+    <div class="nw-detail-header">
+        <div class="nw-detail-device-icon unknown" id="detailIcon">
+            <i class="fas fa-network-wired" id="detailIconInner"></i>
+        </div>
+        <div class="nw-detail-title-block">
+            <div class="nw-detail-device-name" id="detailName">—</div>
+            <div class="nw-detail-device-ip"   id="detailIp">—</div>
+        </div>
+        <button class="nw-detail-close-btn" onclick="closeDetailPanel()" title="Cerrar">
+            <i class="fas fa-xmark"></i>
+        </button>
+    </div>
+
+    <!-- Body del panel -->
+    <div class="nw-detail-body">
+
+        <!-- Estado -->
+        <div class="nw-detail-section">
+            <div class="nw-detail-section-label">Estado Actual</div>
+            <div id="detailStatusBadge">
+                <span class="nw-detail-status-badge unknown">
+                    <i class="fas fa-circle"></i> Sin datos
+                </span>
+            </div>
+        </div>
+
+        <!-- Info general -->
+        <div class="nw-detail-section">
+            <div class="nw-detail-section-label">Información General</div>
+            <div class="nw-detail-row">
+                <span class="nw-detail-row-label">Tipo</span>
+                <span class="nw-detail-row-value" id="detailTipo">—</span>
+            </div>
+            <div class="nw-detail-row">
+                <span class="nw-detail-row-label">Marca</span>
+                <span class="nw-detail-row-value" id="detailMarca">—</span>
+            </div>
+            <div class="nw-detail-row">
+                <span class="nw-detail-row-label">Sucursal</span>
+                <span class="nw-detail-row-value" id="detailSucursal">—</span>
+            </div>
+            <div class="nw-detail-row">
+                <span class="nw-detail-row-label">Área</span>
+                <span class="nw-detail-row-value" id="detailArea">—</span>
+            </div>
+            <div class="nw-detail-row">
+                <span class="nw-detail-row-label">Descripción</span>
+                <span class="nw-detail-row-value" id="detailDesc">—</span>
+            </div>
+        </div>
+
+        <!-- Config de red -->
+        <div class="nw-detail-section">
+            <div class="nw-detail-section-label">Configuración de Red</div>
+            <div class="nw-detail-row">
+                <span class="nw-detail-row-label">SNMP Community</span>
+                <span class="nw-detail-row-value" id="detailCommunity" style="font-family:'JetBrains Mono',monospace; font-size:0.78rem;">—</span>
+            </div>
+        </div>
+
+    </div>
+</div>
+
+{% endblock %}
+
+
+{% block extra_js %}
+<!-- Vis.js Network (CDN) -->
+<script src="https://cdn.jsdelivr.net/npm/vis-network@9.1.9/dist/vis-network.min.js"></script>
+
+<script>
+// ============================================================
+//  NETWATCH — Mapa de Red Interactivo con Vis.js
+// ============================================================
+
+let network = null;       // Instancia del grafo Vis.js
+let allNodes = null;      // DataSet original de nodos
+let allEdges = null;      // DataSet original de aristas
+let currentFilter = 'all';
+
+// Íconos por tipo (Font Awesome unicode)
+const TIPO_ICON = {
+    'ROUTER':   'fa-route',
+    'SWITCH':   'fa-network-wired',
+    'SERVIDOR': 'fa-server',
+    'UPS':      'fa-battery-three-quarters',
+    'OTRO':     'fa-question-circle',
+};
+
+// ---- Inicialización ----------------------------------------
+$(document).ready(function () {
+    loadTopology();
+    initControls();
+    $('#btnRefreshMap').on('click', function () { refreshStatuses(); });
+    setInterval(refreshStatuses, 60000); // auto-refresh cada 60s
+});
+
+// ---- Carga de la topología desde el endpoint ---------------
+function loadTopology() {
+    showScanOverlay(true);
+
+    $.get("{% url 'get_topology_data' %}", function (data) {
+
+        const nodes = new vis.DataSet(data.nodes);
+        const edges = new vis.DataSet(data.edges);
+
+        allNodes = nodes;
+        allEdges = edges;
+
+        updateKPIs(data.nodes);
+
+        const container = document.getElementById('nw-topology-canvas');
+
+        // Detectar si estamos en dark mode
+        const isDark = document.documentElement.getAttribute('data-theme') === 'dark';
+        const fontColor   = isDark ? '#f1f5f9' : '#0f172a';
+        const bgColor     = isDark ? '#111827' : '#ffffff';
+
+        const options = {
+            nodes: {
+                shape: 'dot',
+                size: 20,
+                font: {
+                    size: 12,
+                    color: fontColor,
+                    face: 'Inter, system-ui, sans-serif',
+                    bold: { size: 13, color: fontColor },
+                    strokeWidth: 3,
+                    strokeColor: bgColor,
+                },
+                borderWidth: 2,
+                borderWidthSelected: 3,
+            },
+            edges: {
+                width: 2,
+                color: {
+                    color: '#475569',
+                    highlight: '#22d3ee',
+                    hover: '#22d3ee',
+                    inherit: false,
+                },
+                arrows: {
+                    to: { enabled: false },
+                },
+                smooth: {
+                    type: 'curvedCW',
+                    roundness: 0.1,
+                },
+                font: {
+                    size: 11,
+                    color: fontColor,
+                    align: 'middle',
+                    strokeWidth: 2,
+                    strokeColor: bgColor,
+                },
+                selectionWidth: 3,
+            },
+            physics: {
+                enabled: true,
+                barnesHut: {
+                    gravitationalConstant: -5000,
+                    centralGravity: 0.4,
+                    springLength: 180,
+                    springConstant: 0.04,
+                    damping: 0.12,
+                },
+                stabilization: {
+                    enabled: true,
+                    iterations: 200,
+                    updateInterval: 25,
+                    fit: true,
+                },
+            },
+            interaction: {
+                hover: true,
+                hoverConnectedEdges: true,
+                tooltipDelay: 200,
+                zoomView: true,
+                dragView: true,
+                selectConnectedEdges: false,
+            },
+            layout: {
+                improvedLayout: true,
+            },
+        };
+
+        network = new vis.Network(container, { nodes, edges }, options);
+
+        // Cuando estabilice, quitar overlay
+        network.on('stabilizationIterationsDone', function () {
+            showScanOverlay(false);
+            network.setOptions({ physics: { enabled: false } });
+        });
+
+        // Clic en nodo → abrir panel de detalles
+        network.on('click', function (params) {
+            if (params.nodes.length > 0) {
+                const nodeId = params.nodes[0];
+                const node   = allNodes.get(nodeId);
+                openDetailPanel(node);
+            } else {
+                closeDetailPanel();
+            }
+        });
+
+        // Doble clic → hacer fit al nodo
+        network.on('doubleClick', function (params) {
+            if (params.nodes.length > 0) {
+                network.focus(params.nodes[0], { scale: 1.5, animation: true });
+            }
+        });
+
+    }).fail(function () {
+        showScanOverlay(false);
+    });
+}
+
+// ---- Refresh de estados ICMP sin recargar el grafo ---------
+function refreshStatuses() {
+    const icon = document.getElementById('mapRefreshIcon');
+    icon.classList.add('fa-spin');
+    showScanOverlay(true);
+
+    $.get("{% url 'get_network_status' %}", function (data) {
+        const statusMap = {};
+        data.statuses.forEach(d => { statusMap[d.id] = d.status; });
+
+        let online = 0, warning = 0, offline = 0, unknown = 0;
+
+        allNodes.forEach(function (node) {
+            const newStatus = statusMap[node.id] || 'unknown';
+            const col = STATUS_COLORS[newStatus] || STATUS_COLORS['unknown'];
+
+            allNodes.update({
+                id: node.id,
+                status: newStatus,
+                color: {
+                    background: col.background,
+                    border:     col.border,
+                    highlight:  { background: col.background, border: '#fff' },
+                    hover:      { background: col.background, border: '#fff' },
+                },
+                shadow: { enabled: true, color: col.glow, size: 12, x: 0, y: 4 },
+            });
+
+            if      (newStatus === 'online')  online++;
+            else if (newStatus === 'warning') warning++;
+            else if (newStatus === 'offline') offline++;
+            else                              unknown++;
+        });
+
+        const total = online + warning + offline + unknown;
+        $('#stat-total').text(total);
+        $('#stat-online').text(online);
+        $('#stat-warning').text(warning);
+        $('#stat-offline').text(offline);
+
+        icon.classList.remove('fa-spin');
+        showScanOverlay(false);
+    }).fail(function () {
+        icon.classList.remove('fa-spin');
+        showScanOverlay(false);
+    });
+}
+
+// Colores de estado (JS, duplica los de Django para el refresh)
+const STATUS_COLORS = {
+    online:  { background: '#10b981', border: '#059669', glow: 'rgba(16,185,129,0.5)' },
+    warning: { background: '#f59e0b', border: '#d97706', glow: 'rgba(245,158,11,0.5)' },
+    offline: { background: '#ef4444', border: '#dc2626', glow: 'rgba(239,68,68,0.5)' },
+    unknown: { background: '#64748b', border: '#475569', glow: 'rgba(100,116,139,0.4)' },
+};
+
+// ---- Panel de detalles del dispositivo ---------------------
+function openDetailPanel(node) {
+    const panel  = document.getElementById('deviceDetailPanel');
+    const status = node.status || 'unknown';
+
+    // Header
+    document.getElementById('detailName').textContent = node.label || '—';
+    document.getElementById('detailIp').textContent   = node.ip    || '—';
+
+    // Ícono por tipo
+    const iconClass = TIPO_ICON[node.tipo] || 'fa-question-circle';
+    document.getElementById('detailIconInner').className = `fas ${iconClass}`;
+    const iconWrap = document.getElementById('detailIcon');
+    iconWrap.className = `nw-detail-device-icon ${status}`;
+
+    // Badge de estado
+    const statusLabels = { online:'En Línea', warning:'Con UPS', offline:'Offline', unknown:'Sin Datos' };
+    const statusIcons  = { online:'fa-circle-check', warning:'fa-battery-three-quarters', offline:'fa-circle-xmark', unknown:'fa-circle' };
+    document.getElementById('detailStatusBadge').innerHTML =
+        `<span class="nw-detail-status-badge ${status}">
+            <i class="fas ${statusIcons[status] || 'fa-circle'}"></i>
+            ${statusLabels[status] || 'Sin datos'}
+         </span>`;
+
+    // Info
+    document.getElementById('detailTipo').textContent      = node.tipo      || '—';
+    document.getElementById('detailMarca').textContent     = node.marca     || '—';
+    document.getElementById('detailSucursal').textContent  = node.sucursal  || '—';
+    document.getElementById('detailArea').textContent      = node.area      || '—';
+    document.getElementById('detailDesc').textContent      = node.descripcion || '—';
+    document.getElementById('detailCommunity').textContent = node.community  || '—';
+
+    panel.classList.add('open');
+}
+
+function closeDetailPanel() {
+    document.getElementById('deviceDetailPanel').classList.remove('open');
+    if (network) network.unselectAll();
+}
+
+// ---- Filtros por estado ------------------------------------
+function applyFilter(filterType) {
+    currentFilter = filterType;
+
+    // Botones activos
+    document.querySelectorAll('.nw-map-filter-btn').forEach(b => b.classList.remove('active'));
+    document.getElementById('filter' + filterType.charAt(0).toUpperCase() + filterType.slice(1))
+        ?.classList.add('active');
+
+    if (!allNodes) return;
+
+    allNodes.forEach(function (node) {
+        const visible = (filterType === 'all') || (node.status === filterType);
+        allNodes.update({ id: node.id, hidden: !visible });
+    });
+
+    // Ocultar aristas cuyos nodos estén ocultos
+    allEdges.forEach(function (edge) {
+        const fromNode = allNodes.get(edge.from);
+        const toNode   = allNodes.get(edge.to);
+        const show = !fromNode?.hidden && !toNode?.hidden;
+        allEdges.update({ id: edge.id, hidden: !show });
+    });
+}
+
+// ---- Controles de zoom -------------------------------------
+function initControls() {
+    document.getElementById('ctrlZoomIn').addEventListener('click', function () {
+        if (network) network.moveTo({ scale: network.getScale() * 1.3, animation: true });
+    });
+    document.getElementById('ctrlZoomOut').addEventListener('click', function () {
+        if (network) network.moveTo({ scale: network.getScale() * 0.75, animation: true });
+    });
+    document.getElementById('ctrlFit').addEventListener('click', function () {
+        if (network) network.fit({ animation: true });
+    });
+}
+
+// ---- KPIs --------------------------------------------------
+function updateKPIs(nodes) {
+    let online = 0, warning = 0, offline = 0;
+    nodes.forEach(function (n) {
+        if      (n.status === 'online')  online++;
+        else if (n.status === 'warning') warning++;
+        else if (n.status === 'offline') offline++;
+    });
+    $('#stat-total').text(nodes.length);
+    $('#stat-online').text(online);
+    $('#stat-warning').text(warning);
+    $('#stat-offline').text(offline);
+}
+
+// ---- Overlay de scanning -----------------------------------
+function showScanOverlay(show) {
+    const el = document.getElementById('mapScanOverlay');
+    el.classList.toggle('active', show);
+}
+</script>
+{% endblock %}

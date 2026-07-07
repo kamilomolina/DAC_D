@@ -317,7 +317,7 @@ DATABASES = {
     },
     "netwatch_db": {
         "ENGINE": "django.db.backends.mysql",
-        "NAME": "netwatch",
+        "NAME": os.getenv("DB_NAME_ZEUS", "kamilo_testing"),
         "USER": os.getenv("DB_USER_ZEUS"),
         "PASSWORD": os.getenv("DB_PASS_ZEUS"),
         "HOST": os.getenv("DB_HOST_ZEUS"),
