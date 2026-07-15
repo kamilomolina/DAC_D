@@ -52,9 +52,7 @@
                                         background: var(--nw-brand-soft); color: var(--nw-brand);
                                         display: flex; align-items: center; justify-content: center;
                                         font-size: 0.95rem; flex-shrink: 0;">
-                                {% if d.type == 'UPS' %}
-                                    <i class="fas fa-battery-three-quarters"></i>
-                                {% elif d.type == 'ROUTER' %}
+                                {% if d.type == 'ROUTER' %}
                                     <i class="fas fa-route"></i>
                                 {% elif d.type == 'SERVIDOR' %}
                                     <i class="fas fa-server"></i>
@@ -167,7 +165,6 @@
                                     <option value="SWITCH">Switch</option>
                                     <option value="ROUTER">Router</option>
                                     <option value="SERVIDOR">Servidor</option>
-                                    <option value="UPS">UPS</option>
                                     <option value="OTRO">Otro</option>
                                 </select>
                             </div>

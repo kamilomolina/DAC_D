@@ -245,7 +245,7 @@ def nw_get_events(limit=50):
 
 def ping_device(device):
     """
-    Hace ping a un dispositivo y retorna su estado.
+    Hace ping a un dispositivo y retorna su estado ('online' u 'offline').
     También persiste el nuevo estado en BD via NW_UPDATE_DEVICE_STATUS
     y registra en bitácora si hubo cambio de estado.
     """
@@ -263,15 +263,7 @@ def ping_device(device):
             stderr=subprocess.DEVNULL,
             timeout=2
         )
-
-        if result.returncode == 0:
-            # TODO: Reemplazar simulación con consulta SNMP real para fuente de poder
-            # is_on_ups = check_snmp_power_status(ip, device['community'])
-            is_on_ups = ip.endswith('.100') or ip.endswith('.101')
-            nuevo_estado = 'warning' if is_on_ups else 'online'
-        else:
-            nuevo_estado = 'offline'
-
+        nuevo_estado = 'online' if result.returncode == 0 else 'offline'
     except Exception:
         nuevo_estado = 'offline'
 
@@ -280,12 +272,7 @@ def ping_device(device):
 
     # Registrar en bitácora solo si el estado cambió
     if nuevo_estado != estado_anterior:
-        tipo_evento = {
-            'online':  'DEVICE_UP',
-            'warning': 'UPS_ACTIVE',
-            'offline': 'DEVICE_DOWN',
-        }.get(nuevo_estado, 'STATUS_CHANGE')
-
+        tipo_evento = 'DEVICE_UP' if nuevo_estado == 'online' else 'DEVICE_DOWN'
         nw_log_event(
             id_device,
             tipo_evento,
@@ -296,21 +283,26 @@ def ping_device(device):
 
 
 # ============================================================================
-# COLORES Y TAMAÑOS DE NODOS PARA VIS.JS
+# COLORES, ÍCONOS Y TAMAÑOS DE NODOS PARA VIS.JS
 # ============================================================================
 DEVICE_COLORS = {
     'online':  {'background': '#10b981', 'border': '#059669', 'glow': 'rgba(16,185,129,0.5)'},
-    'warning': {'background': '#f59e0b', 'border': '#d97706', 'glow': 'rgba(245,158,11,0.5)'},
     'offline': {'background': '#ef4444', 'border': '#dc2626', 'glow': 'rgba(239,68,68,0.5)'},
     'unknown': {'background': '#64748b', 'border': '#475569', 'glow': 'rgba(100,116,139,0.4)'},
 }
 
+DEVICE_ICONS = {
+    'ROUTER':    '\uf4d0',   # fa-route
+    'SWITCH':    '\uf6ff',   # fa-network-wired
+    'SERVIDOR':  '\uf233',   # fa-server
+    'OTRO':      '\uf10b',   # fa-laptop / dispositivo genérico
+}
+
 DEVICE_SIZE = {
-    'ROUTER':   24,
-    'SWITCH':   22,
-    'SERVIDOR': 18,
-    'UPS':      16,
-    'OTRO':     15,
+    'ROUTER':   32,
+    'SWITCH':   30,
+    'SERVIDOR': 28,
+    'OTRO':     26,
 }
 
 
@@ -392,8 +384,16 @@ def get_topology_data(request):
         nodes = []
         for d in devices:
             status = d.get('estado_actual', 'unknown') or 'unknown'
+            # Mapear warning a online ya que quitamos UPS
+            if status == 'warning':
+                status = 'online'
             col    = DEVICE_COLORS.get(status, DEVICE_COLORS['unknown'])
             tipo   = (d.get('type') or 'OTRO').upper()
+            if tipo not in DEVICE_ICONS:
+                tipo = 'OTRO'
+
+            icon_code = DEVICE_ICONS[tipo]
+            size      = DEVICE_SIZE.get(tipo, 26)
 
             nodes.append({
                 'id':          d['id'],
@@ -407,20 +407,20 @@ def get_topology_data(request):
                 'community':   d.get('community', 'public'),
                 'descripcion': d.get('descripcion', ''),
                 'status':      status,
-                'color': {
-                    'background': col['background'],
-                    'border':     col['border'],
-                    'highlight':  {'background': col['background'], 'border': '#fff'},
-                    'hover':      {'background': col['background'], 'border': '#fff'},
+                'shape':       'icon',
+                'icon': {
+                    'face':    '"Font Awesome 6 Free"',
+                    'weight':  '900',
+                    'code':    icon_code,
+                    'size':    size,
+                    'color':   col['background'],
                 },
                 'shadow': {
                     'enabled': True,
                     'color':   col['glow'],
-                    'size':    12,
-                    'x': 0, 'y': 4,
-                },
-                'shape': 'dot',
-                'size':  DEVICE_SIZE.get(tipo, 15),
+                    'size':    10,
+                    'x': 0, 'y': 2,
+                }
             })
 
         # Construir aristas Vis.js

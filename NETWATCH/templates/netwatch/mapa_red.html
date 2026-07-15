@@ -5,8 +5,148 @@
 
 {% block extra_css %}
 <style>
-    /* El content en esta vista ocupa el ancho completo, sin padding extra */
     .nw-content { padding: 1.5rem; }
+
+    /* ── TOOLBAR MODE CONNECT BUTTON ── */
+    .nw-btn-connect {
+        display: inline-flex; align-items: center; gap: 0.45rem;
+        padding: 0.38rem 0.95rem; border-radius: 50px;
+        border: 1px solid var(--nw-border); background: transparent;
+        color: var(--nw-text-secondary); font-size: 0.75rem;
+        font-weight: 700; cursor: pointer;
+        transition: all var(--nw-transition);
+    }
+    .nw-btn-connect:hover { border-color: #f59e0b; color: #f59e0b; background: rgba(245,158,11,0.08); }
+    .nw-btn-connect.connect-active { border-color: #f59e0b; color: #f59e0b; background: rgba(245,158,11,0.12); animation: pulse-connect 1.5s ease-in-out infinite; }
+    @keyframes pulse-connect { 0%,100% { box-shadow: 0 0 0 0 rgba(245,158,11,0.4); } 50% { box-shadow: 0 0 0 6px rgba(245,158,11,0); } }
+
+    /* Modo conexión: cursor crosshair sobre el canvas */
+    .map-mode-connect #nw-topology-canvas { cursor: crosshair !important; }
+
+    /* Banner de modo conexión */
+    .nw-connect-banner {
+        display: none; align-items: center; gap: 0.6rem;
+        padding: 0.55rem 1rem; background: rgba(245,158,11,0.12);
+        border-bottom: 1px solid rgba(245,158,11,0.3);
+        font-size: 0.78rem; font-weight: 600; color: #f59e0b;
+    }
+    .nw-connect-banner.active { display: flex; }
+
+    /* ── PANEL LATERAL MEJORADO ── */
+    /* Tabs del panel */
+    .nw-panel-tabs { display: flex; border-bottom: 1px solid var(--nw-border); }
+    .nw-panel-tab {
+        flex: 1; padding: 0.7rem; text-align: center;
+        font-size: 0.72rem; font-weight: 700; text-transform: uppercase;
+        letter-spacing: 0.5px; cursor: pointer; color: var(--nw-text-muted);
+        border-bottom: 2px solid transparent; transition: all 0.2s;
+    }
+    .nw-panel-tab:hover { color: var(--nw-brand); }
+    .nw-panel-tab.active { color: var(--nw-brand); border-bottom-color: var(--nw-brand); }
+
+    /* Form de edición dentro del panel */
+    .nw-panel-edit-form { padding: 1.25rem; }
+    .nw-panel-form-group { margin-bottom: 0.9rem; }
+    .nw-panel-form-label {
+        display: block; font-size: 0.65rem; font-weight: 800;
+        text-transform: uppercase; letter-spacing: 0.7px;
+        color: var(--nw-text-muted); margin-bottom: 0.35rem;
+    }
+    .nw-panel-form-input, .nw-panel-form-select {
+        width: 100%; padding: 0.55rem 0.85rem;
+        border: 1px solid var(--nw-border); border-radius: var(--nw-radius-sm);
+        background: var(--nw-bg-input); color: var(--nw-text-primary);
+        font-size: 0.8rem; font-family: inherit;
+        outline: none; transition: border-color 0.2s, box-shadow 0.2s;
+        -webkit-appearance: none; appearance: none;
+    }
+    .nw-panel-form-input:focus, .nw-panel-form-select:focus {
+        border-color: var(--nw-brand); box-shadow: 0 0 0 3px var(--nw-brand-soft);
+    }
+
+    /* Botones del panel */
+    .nw-panel-actions { display: flex; gap: 0.5rem; margin-top: 1.25rem; }
+    .nw-panel-btn {
+        flex: 1; padding: 0.55rem; border: none; border-radius: var(--nw-radius-sm);
+        font-size: 0.8rem; font-weight: 700; cursor: pointer; transition: all 0.2s;
+        display: flex; align-items: center; justify-content: center; gap: 0.4rem;
+    }
+    .nw-panel-btn-primary { background: var(--nw-brand); color: #fff; }
+    .nw-panel-btn-primary:hover { background: var(--nw-brand-dark); transform: translateY(-1px); }
+    .nw-panel-btn-danger { background: rgba(239,68,68,0.1); color: var(--nw-offline); border: 1px solid rgba(239,68,68,0.25); }
+    .nw-panel-btn-danger:hover { background: rgba(239,68,68,0.2); }
+    .nw-panel-btn-connect-node { background: rgba(245,158,11,0.1); color: #f59e0b; border: 1px solid rgba(245,158,11,0.25); }
+    .nw-panel-btn-connect-node:hover { background: rgba(245,158,11,0.2); }
+
+    /* Sección de conexiones en el panel */
+    .nw-conn-item {
+        display: flex; align-items: center; justify-content: space-between;
+        padding: 0.55rem 0.75rem; background: var(--nw-bg-input);
+        border: 1px solid var(--nw-border); border-radius: var(--nw-radius-sm);
+        margin-bottom: 0.5rem; font-size: 0.75rem;
+    }
+    .nw-conn-item-info { display: flex; flex-direction: column; gap: 1px; }
+    .nw-conn-item-device { font-weight: 700; color: var(--nw-text-primary); }
+    .nw-conn-item-ports { color: var(--nw-text-muted); font-family: 'JetBrains Mono', monospace; font-size: 0.68rem; }
+    .nw-conn-del-btn {
+        width: 26px; height: 26px; border-radius: 6px; border: 1px solid var(--nw-border);
+        background: transparent; color: var(--nw-text-muted); cursor: pointer;
+        display: flex; align-items: center; justify-content: center; font-size: 0.75rem;
+        transition: all 0.2s;
+    }
+    .nw-conn-del-btn:hover { border-color: var(--nw-offline); color: var(--nw-offline); background: rgba(239,68,68,0.08); }
+
+    /* ── MODAL DE NUEVA CONEXIÓN ── */
+    .nw-link-modal-backdrop {
+        position: fixed; inset: 0; background: rgba(0,0,0,0.55);
+        z-index: 5000; display: flex; align-items: center; justify-content: center;
+        opacity: 0; pointer-events: none; transition: opacity 0.25s;
+        backdrop-filter: blur(2px);
+    }
+    .nw-link-modal-backdrop.open { opacity: 1; pointer-events: all; }
+    .nw-link-modal {
+        background: var(--nw-bg-surface); border: 1px solid var(--nw-border);
+        border-radius: var(--nw-radius-lg); box-shadow: var(--nw-shadow-lg);
+        width: 380px; max-width: 94vw;
+        transform: translateY(20px) scale(0.97);
+        transition: transform 0.25s cubic-bezier(0.4,0,0.2,1);
+    }
+    .nw-link-modal-backdrop.open .nw-link-modal { transform: translateY(0) scale(1); }
+    .nw-link-modal-header {
+        padding: 1.25rem 1.5rem; border-bottom: 1px solid var(--nw-border);
+        display: flex; align-items: center; justify-content: space-between;
+        background: linear-gradient(135deg, rgba(245,158,11,0.08) 0%, transparent 100%);
+        border-radius: var(--nw-radius-lg) var(--nw-radius-lg) 0 0;
+    }
+    .nw-link-modal-title {
+        font-size: 0.95rem; font-weight: 800; color: var(--nw-text-primary);
+        display: flex; align-items: center; gap: 0.5rem;
+    }
+    .nw-link-modal-title i { color: #f59e0b; }
+    .nw-link-modal-body { padding: 1.5rem; }
+    .nw-link-preview {
+        display: flex; align-items: center; justify-content: center; gap: 0.75rem;
+        padding: 0.85rem; background: var(--nw-bg-input); border-radius: var(--nw-radius-sm);
+        margin-bottom: 1.25rem; font-size: 0.78rem; font-weight: 600;
+    }
+    .nw-link-preview-node {
+        display: flex; flex-direction: column; align-items: center; gap: 4px;
+        text-align: center; max-width: 100px;
+    }
+    .nw-link-preview-node .icon { width: 36px; height: 36px; border-radius: 8px; background: var(--nw-brand-soft); color: var(--nw-brand); display: flex; align-items: center; justify-content: center; font-size: 1rem; }
+    .nw-link-preview-node .name { color: var(--nw-text-primary); word-break: break-word; }
+    .nw-link-preview-arrow { color: var(--nw-text-muted); font-size: 1.1rem; }
+    .nw-link-modal-footer { padding: 1rem 1.5rem; border-top: 1px solid var(--nw-border); display: flex; gap: 0.5rem; }
+
+    /* Indicador de nodo fuente en modo conexión */
+    .map-source-indicator {
+        position: absolute; top: 0.75rem; left: 50%; transform: translateX(-50%);
+        background: rgba(245,158,11,0.9); color: #000; font-size: 0.73rem; font-weight: 800;
+        padding: 0.35rem 0.9rem; border-radius: 50px; z-index: 15;
+        display: none; white-space: nowrap;
+        box-shadow: 0 4px 12px rgba(245,158,11,0.4);
+    }
+    .map-source-indicator.visible { display: block; }
 </style>
 {% endblock %}
 
@@ -32,7 +172,7 @@
 
 <!-- ====== KPI STATS ====== -->
 <div class="row g-3 mb-4">
-    <div class="col-6 col-sm-6 col-lg-3">
+    <div class="col-12 col-md-4">
         <div class="nw-stat-card stat-total">
             <div class="nw-stat-icon"><i class="fas fa-network-wired"></i></div>
             <div class="nw-stat-info">
@@ -41,7 +181,7 @@
             </div>
         </div>
     </div>
-    <div class="col-6 col-sm-6 col-lg-3">
+    <div class="col-6 col-md-4">
         <div class="nw-stat-card stat-online">
             <div class="nw-stat-icon"><i class="fas fa-circle-check"></i></div>
             <div class="nw-stat-info">
@@ -50,16 +190,7 @@
             </div>
         </div>
     </div>
-    <div class="col-6 col-sm-6 col-lg-3">
-        <div class="nw-stat-card stat-warning">
-            <div class="nw-stat-icon"><i class="fas fa-battery-three-quarters"></i></div>
-            <div class="nw-stat-info">
-                <div class="nw-stat-label">Con UPS</div>
-                <div class="nw-stat-value" id="stat-warning">--</div>
-            </div>
-        </div>
-    </div>
-    <div class="col-6 col-sm-6 col-lg-3">
+    <div class="col-6 col-md-4">
         <div class="nw-stat-card stat-offline">
             <div class="nw-stat-icon"><i class="fas fa-circle-xmark"></i></div>
             <div class="nw-stat-info">
@@ -70,51 +201,70 @@
     </div>
 </div>
 
-<!-- ====== MAPA DE RED (CARD) ====== -->
-<div class="nw-map-wrapper mb-4">
+<!-- ====== MAPA DE RED ====== -->
+<div class="nw-map-wrapper mb-4" id="mapWrapper">
 
-    <!-- Toolbar del mapa -->
+    <!-- Toolbar -->
     <div class="nw-map-toolbar">
         <div class="nw-map-toolbar-left">
             <span style="font-size:0.78rem; font-weight:700; color:var(--nw-text-muted); margin-right:0.25rem;">Filtrar:</span>
-            <button class="nw-map-filter-btn active" id="filterAll" onclick="applyFilter('all')">
-                <i class="fas fa-layer-group"></i> Todos
-            </button>
-            <button class="nw-map-filter-btn f-online" id="filterOnline" onclick="applyFilter('online')">
-                <i class="fas fa-circle-check"></i> Online
-            </button>
-            <button class="nw-map-filter-btn f-warning" id="filterWarning" onclick="applyFilter('warning')">
-                <i class="fas fa-triangle-exclamation"></i> Con UPS
-            </button>
-            <button class="nw-map-filter-btn f-offline" id="filterOffline" onclick="applyFilter('offline')">
-                <i class="fas fa-circle-xmark"></i> Offline
+            <button class="nw-map-filter-btn active" id="filterAll"     onclick="applyFilter('all')">    <i class="fas fa-layer-group"></i> Todos</button>
+            <button class="nw-map-filter-btn f-online" id="filterOnline" onclick="applyFilter('online')"><i class="fas fa-circle-check"></i> Online</button>
+            <button class="nw-map-filter-btn f-offline" id="filterOffline" onclick="applyFilter('offline')"><i class="fas fa-circle-xmark"></i> Offline</button>
+            <div style="width:1px; height:20px; background:var(--nw-border); margin:0 0.4rem;"></div>
+            <button class="nw-btn-connect" id="btnConnectMode" onclick="toggleConnectMode()">
+                <i class="fas fa-link"></i> Conectar
             </button>
         </div>
         <div style="font-size:0.75rem; color:var(--nw-text-muted);">
             <i class="fas fa-info-circle me-1"></i>
-            Scroll para hacer zoom · Arrastra para mover · Clic en nodo para detalles
+            Scroll = Zoom · Arrastrar = Mover · Clic = Detalles · Doble Clic = Enfocar
         </div>
     </div>
 
-    <!-- Grid de fondo del canvas -->
+    <!-- Banner modo conexión -->
+    <div class="nw-connect-banner" id="connectBanner">
+        <i class="fas fa-link"></i>
+        <span id="connectBannerText">Modo Conexión activo — <strong>Clic en el dispositivo de origen</strong></span>
+        <button onclick="toggleConnectMode()" style="margin-left:auto; background:none; border:none; color:#f59e0b; cursor:pointer; font-size:0.8rem; font-weight:700;">Cancelar <i class="fas fa-xmark"></i></button>
+    </div>
+
+    <!-- Grid de fondo -->
     <div class="nw-map-grid-bg"></div>
 
-    <!-- Canvas de Vis.js -->
+    <!-- Indicador de origen seleccionado -->
+    <div class="map-source-indicator" id="sourceIndicator"></div>
+
+    <!-- Canvas Vis.js -->
     <div id="nw-topology-canvas"></div>
 
-    <!-- Overlay de scanning -->
+    <!-- Overlay scanning -->
     <div class="nw-map-scan-overlay" id="mapScanOverlay">
         <div class="nw-scan-spinner"></div>
-        <div class="nw-map-scan-text">Escaneando infraestructura...</div>
+        <div class="nw-map-scan-text">Cargando topología...</div>
     </div>
 
     <!-- Leyenda -->
     <div class="nw-map-legend">
-        <div class="nw-map-legend-title">Estado</div>
-        <div class="nw-legend-item"><span class="nw-legend-dot online"></span> Online</div>
-        <div class="nw-legend-item"><span class="nw-legend-dot warning"></span> Con UPS</div>
-        <div class="nw-legend-item"><span class="nw-legend-dot offline"></span> Offline</div>
-        <div class="nw-legend-item"><span class="nw-legend-dot unknown"></span> Sin datos</div>
+        <div class="nw-map-legend-title">Dispositivos</div>
+        <div class="nw-legend-item" style="gap:0.6rem;">
+            <img src="" id="lgRouter" style="width:18px; height:18px; object-fit:contain;"> Router
+        </div>
+        <div class="nw-legend-item" style="gap:0.6rem;">
+            <img src="" id="lgSwitch" style="width:18px; height:18px; object-fit:contain;"> Switch
+        </div>
+        <div class="nw-legend-item" style="gap:0.6rem;">
+            <img src="" id="lgServer" style="width:18px; height:18px; object-fit:contain;"> Servidor
+        </div>
+        <div class="nw-legend-item" style="gap:0.6rem;">
+            <img src="" id="lgOther" style="width:18px; height:18px; object-fit:contain;"> Otro
+        </div>
+        <div style="margin-top:0.5rem; padding-top:0.5rem; border-top:1px solid var(--nw-border);">
+            <div class="nw-map-legend-title">Estado</div>
+            <div class="nw-legend-item"><span class="nw-legend-dot online"></span> Online</div>
+            <div class="nw-legend-item"><span class="nw-legend-dot offline"></span> Offline</div>
+            <div class="nw-legend-item"><span class="nw-legend-dot unknown"></span> Sin datos</div>
+        </div>
     </div>
 
     <!-- Controles de zoom -->
@@ -126,70 +276,185 @@
 
 </div><!-- /nw-map-wrapper -->
 
-<!-- ====== PANEL DE DETALLES (deslizable desde la derecha) ====== -->
+<!-- ====== PANEL LATERAL DE DETALLES ====== -->
 <div class="nw-device-detail-panel" id="deviceDetailPanel">
 
-    <!-- Header del panel -->
+    <!-- Header -->
     <div class="nw-detail-header">
         <div class="nw-detail-device-icon unknown" id="detailIcon">
             <i class="fas fa-network-wired" id="detailIconInner"></i>
         </div>
         <div class="nw-detail-title-block">
-            <div class="nw-detail-device-name" id="detailName">—</div>
-            <div class="nw-detail-device-ip"   id="detailIp">—</div>
+            <div class="nw-detail-device-name" id="detailNameDisplay">—</div>
+            <div class="nw-detail-device-ip"   id="detailIpDisplay">—</div>
         </div>
         <button class="nw-detail-close-btn" onclick="closeDetailPanel()" title="Cerrar">
             <i class="fas fa-xmark"></i>
         </button>
     </div>
 
+    <!-- Tabs -->
+    <div class="nw-panel-tabs">
+        <div class="nw-panel-tab active" id="tabInfo"    onclick="switchTab('info')">   <i class="fas fa-circle-info me-1"></i>Info</div>
+        <div class="nw-panel-tab"        id="tabEdit"    onclick="switchTab('edit')">   <i class="fas fa-pen me-1"></i>Editar</div>
+        <div class="nw-panel-tab"        id="tabConns"   onclick="switchTab('conns')">  <i class="fas fa-link me-1"></i>Conexiones</div>
+    </div>
+
     <!-- Body del panel -->
     <div class="nw-detail-body">
 
-        <!-- Estado -->
-        <div class="nw-detail-section">
-            <div class="nw-detail-section-label">Estado Actual</div>
-            <div id="detailStatusBadge">
-                <span class="nw-detail-status-badge unknown">
-                    <i class="fas fa-circle"></i> Sin datos
-                </span>
+        <!-- ─ TAB: INFO ─ -->
+        <div id="tabContentInfo">
+            <div class="nw-detail-section">
+                <div class="nw-detail-section-label">Estado Actual</div>
+                <div id="detailStatusBadge">
+                    <span class="nw-detail-status-badge unknown"><i class="fas fa-circle"></i> Sin datos</span>
+                </div>
+            </div>
+            <div class="nw-detail-section">
+                <div class="nw-detail-section-label">Información</div>
+                <div class="nw-detail-row"><span class="nw-detail-row-label">Tipo</span><span class="nw-detail-row-value" id="detailTipo">—</span></div>
+                <div class="nw-detail-row"><span class="nw-detail-row-label">Marca</span><span class="nw-detail-row-value" id="detailMarca">—</span></div>
+                <div class="nw-detail-row"><span class="nw-detail-row-label">Modelo</span><span class="nw-detail-row-value" id="detailModelo">—</span></div>
+                <div class="nw-detail-row"><span class="nw-detail-row-label">Sucursal</span><span class="nw-detail-row-value" id="detailSucursal">—</span></div>
+                <div class="nw-detail-row"><span class="nw-detail-row-label">Área</span><span class="nw-detail-row-value" id="detailArea">—</span></div>
+                <div class="nw-detail-row"><span class="nw-detail-row-label">Descripción</span><span class="nw-detail-row-value" id="detailDesc">—</span></div>
+                <div class="nw-detail-row"><span class="nw-detail-row-label">SNMP Community</span><span class="nw-detail-row-value" id="detailCommunity" style="font-family:'JetBrains Mono',monospace; font-size:0.75rem;">—</span></div>
+            </div>
+            <div class="nw-panel-actions">
+                <button class="nw-panel-btn nw-panel-btn-connect-node" onclick="startConnectFromPanel()">
+                    <i class="fas fa-link"></i> Conectar este nodo
+                </button>
             </div>
         </div>
 
-        <!-- Info general -->
-        <div class="nw-detail-section">
-            <div class="nw-detail-section-label">Información General</div>
-            <div class="nw-detail-row">
-                <span class="nw-detail-row-label">Tipo</span>
-                <span class="nw-detail-row-value" id="detailTipo">—</span>
-            </div>
-            <div class="nw-detail-row">
-                <span class="nw-detail-row-label">Marca</span>
-                <span class="nw-detail-row-value" id="detailMarca">—</span>
-            </div>
-            <div class="nw-detail-row">
-                <span class="nw-detail-row-label">Sucursal</span>
-                <span class="nw-detail-row-value" id="detailSucursal">—</span>
-            </div>
-            <div class="nw-detail-row">
-                <span class="nw-detail-row-label">Área</span>
-                <span class="nw-detail-row-value" id="detailArea">—</span>
-            </div>
-            <div class="nw-detail-row">
-                <span class="nw-detail-row-label">Descripción</span>
-                <span class="nw-detail-row-value" id="detailDesc">—</span>
-            </div>
+        <!-- ─ TAB: EDITAR ─ -->
+        <div id="tabContentEdit" style="display:none;">
+            <form id="editDeviceForm" class="nw-panel-edit-form" onsubmit="saveDevice(event)">
+                <input type="hidden" id="editDeviceId" name="id_device">
+                <div class="nw-panel-form-group">
+                    <label class="nw-panel-form-label">Nombre *</label>
+                    <input type="text" class="nw-panel-form-input" id="editNombre" name="nombre" required placeholder="Nombre del dispositivo">
+                </div>
+                <div class="nw-panel-form-group">
+                    <label class="nw-panel-form-label">Dirección IP *</label>
+                    <input type="text" class="nw-panel-form-input" id="editIp" name="ip" required placeholder="192.168.0.1">
+                </div>
+                <div class="row g-2">
+                    <div class="col-6">
+                        <div class="nw-panel-form-group">
+                            <label class="nw-panel-form-label">Tipo</label>
+                            <select class="nw-panel-form-select" id="editTipo" name="tipo">
+                                <option value="SWITCH">Switch</option>
+                                <option value="ROUTER">Router</option>
+                                <option value="SERVIDOR">Servidor</option>
+                                <option value="OTRO">Otro</option>
+                            </select>
+                        </div>
+                    </div>
+                    <div class="col-6">
+                        <div class="nw-panel-form-group">
+                            <label class="nw-panel-form-label">Marca</label>
+                            <input type="text" class="nw-panel-form-input" id="editMarca" name="marca" placeholder="Cisco, HP...">
+                        </div>
+                    </div>
+                </div>
+                <div class="row g-2">
+                    <div class="col-6">
+                        <div class="nw-panel-form-group">
+                            <label class="nw-panel-form-label">Sucursal</label>
+                            <input type="text" class="nw-panel-form-input" id="editSucursal" name="sucursal" placeholder="Principal">
+                        </div>
+                    </div>
+                    <div class="col-6">
+                        <div class="nw-panel-form-group">
+                            <label class="nw-panel-form-label">Área</label>
+                            <input type="text" class="nw-panel-form-input" id="editArea" name="area" placeholder="TI">
+                        </div>
+                    </div>
+                </div>
+                <div class="nw-panel-form-group">
+                    <label class="nw-panel-form-label">Descripción</label>
+                    <input type="text" class="nw-panel-form-input" id="editDesc" name="descripcion" placeholder="Descripción del equipo">
+                </div>
+                <div class="nw-panel-form-group">
+                    <label class="nw-panel-form-label">SNMP Community</label>
+                    <input type="text" class="nw-panel-form-input" id="editCommunity" name="community" value="public">
+                </div>
+                <div class="nw-panel-actions">
+                    <button type="submit" class="nw-panel-btn nw-panel-btn-primary">
+                        <i class="fas fa-floppy-disk"></i> Guardar
+                    </button>
+                    <button type="button" class="nw-panel-btn nw-panel-btn-danger" onclick="deleteDeviceFromPanel()">
+                        <i class="fas fa-trash"></i>
+                    </button>
+                </div>
+            </form>
         </div>
 
-        <!-- Config de red -->
-        <div class="nw-detail-section">
-            <div class="nw-detail-section-label">Configuración de Red</div>
-            <div class="nw-detail-row">
-                <span class="nw-detail-row-label">SNMP Community</span>
-                <span class="nw-detail-row-value" id="detailCommunity" style="font-family:'JetBrains Mono',monospace; font-size:0.78rem;">—</span>
+        <!-- ─ TAB: CONEXIONES ─ -->
+        <div id="tabContentConns" style="display:none; padding:1.25rem;">
+            <div class="nw-detail-section-label mb-3">Conexiones de este nodo</div>
+            <div id="connsList">
+                <div style="text-align:center; color:var(--nw-text-muted); font-size:0.82rem; padding:2rem 0;">
+                    <i class="fas fa-diagram-project" style="font-size:1.5rem; margin-bottom:0.5rem;"></i><br>
+                    Sin conexiones registradas
+                </div>
             </div>
+            <button class="nw-panel-btn nw-panel-btn-connect-node w-100 mt-3" onclick="startConnectFromPanel()">
+                <i class="fas fa-plus"></i> Agregar conexión
+            </button>
         </div>
 
+    </div>
+</div>
+
+<!-- ====== MODAL: NUEVA CONEXIÓN ====== -->
+<div class="nw-link-modal-backdrop" id="linkModalBackdrop">
+    <div class="nw-link-modal">
+        <div class="nw-link-modal-header">
+            <div class="nw-link-modal-title"><i class="fas fa-link"></i> Nueva Conexión</div>
+            <button onclick="closeLinkModal()" style="background:none; border:none; color:var(--nw-text-muted); cursor:pointer; font-size:1rem;"><i class="fas fa-xmark"></i></button>
+        </div>
+        <div class="nw-link-modal-body">
+            <div class="nw-link-preview">
+                <div class="nw-link-preview-node">
+                    <div class="icon" id="linkModalSrcIcon"><i class="fas fa-network-wired"></i></div>
+                    <div class="name" id="linkModalSrcName">—</div>
+                </div>
+                <div class="nw-link-preview-arrow"><i class="fas fa-arrows-left-right"></i></div>
+                <div class="nw-link-preview-node">
+                    <div class="icon" id="linkModalDstIcon"><i class="fas fa-network-wired"></i></div>
+                    <div class="name" id="linkModalDstName">—</div>
+                </div>
+            </div>
+
+            <div class="row g-2 mb-2">
+                <div class="col-6">
+                    <label class="nw-panel-form-label">Puerto Origen</label>
+                    <input type="text" class="nw-panel-form-input" id="linkPuertoOrigen" placeholder="Gi0/0/1">
+                </div>
+                <div class="col-6">
+                    <label class="nw-panel-form-label">Puerto Destino</label>
+                    <input type="text" class="nw-panel-form-input" id="linkPuertoDestino" placeholder="Gi1/0/24">
+                </div>
+            </div>
+            <div class="nw-panel-form-group">
+                <label class="nw-panel-form-label">Tipo de Enlace</label>
+                <select class="nw-panel-form-select" id="linkTipoEnlace">
+                    <option value="Cobre">Cobre (UTP)</option>
+                    <option value="Fibra">Fibra Óptica</option>
+                    <option value="WiFi">WiFi</option>
+                    <option value="Serial">Serial</option>
+                </select>
+            </div>
+        </div>
+        <div class="nw-link-modal-footer">
+            <button class="nw-panel-btn nw-panel-btn-primary flex-grow-1" onclick="saveLinkFromModal()">
+                <i class="fas fa-link"></i> Crear Conexión
+            </button>
+            <button class="nw-panel-btn" style="background:var(--nw-bg-input); color:var(--nw-text-secondary); border:1px solid var(--nw-border);" onclick="closeLinkModal()">Cancelar</button>
+        </div>
     </div>
 </div>
 
@@ -197,308 +462,660 @@
 
 
 {% block extra_js %}
-<!-- Vis.js Network (CDN) -->
 <script src="https://cdn.jsdelivr.net/npm/vis-network@9.1.9/dist/vis-network.min.js"></script>
 
 <script>
 // ============================================================
-//  NETWATCH — Mapa de Red Interactivo con Vis.js
+//  NETWATCH — Mapa de Red Interactivo (Cisco PT Style)
 // ============================================================
 
-let network = null;       // Instancia del grafo Vis.js
-let allNodes = null;      // DataSet original de nodos
-let allEdges = null;      // DataSet original de aristas
+let network    = null;
+let allNodes   = null;
+let allEdges   = null;
+let rawEdges   = [];       // Copia plana de aristas para búsquedas
 let currentFilter = 'all';
 
-// Íconos por tipo (Font Awesome unicode)
-const TIPO_ICON = {
-    'ROUTER':   'fa-route',
-    'SWITCH':   'fa-network-wired',
-    'SERVIDOR': 'fa-server',
-    'UPS':      'fa-battery-three-quarters',
-    'OTRO':     'fa-question-circle',
+// Estado del modo de conexión
+let connectMode   = false;
+let connectSource = null;  // { id, label, tipo }
+
+// Nodo actualmente seleccionado en el panel
+let selectedNodeId = null;
+
+// ── CSRF TOKEN ─────────────────────────────────────────────
+function getCookie(name) {
+    const v = document.cookie.match('(^|;) ?' + name + '=([^;]*)(;|$)');
+    return v ? v[2] : null;
+}
+
+// ── GENERADOR DE ÍCONOS SVG ESTILO CISCO PT ────────────────
+const STATUS_COLORS = {
+    online:  { fill: '#10b981', glow: '#10b981' },
+    offline: { fill: '#ef4444', glow: '#ef4444' },
+    unknown: { fill: '#64748b', glow: '#64748b' },
 };
 
-// ---- Inicialización ----------------------------------------
+function buildSVG(tipo, status) {
+    const col = (STATUS_COLORS[status] || STATUS_COLORS.unknown).fill;
+
+    const shapes = {
+        // Router — círculo con flechas Cisco-style
+        ROUTER: `
+          <circle cx="40" cy="40" r="28" fill="${col}" opacity="0.15"/>
+          <circle cx="40" cy="40" r="28" fill="none" stroke="${col}" stroke-width="2.5"/>
+          <!-- Body -->
+          <rect x="26" y="33" width="28" height="14" rx="4" fill="${col}" opacity="0.9"/>
+          <!-- Antenas / ports -->
+          <line x1="30" y1="33" x2="30" y2="28" stroke="${col}" stroke-width="2" stroke-linecap="round"/>
+          <line x1="40" y1="33" x2="40" y2="26" stroke="${col}" stroke-width="2" stroke-linecap="round"/>
+          <line x1="50" y1="33" x2="50" y2="28" stroke="${col}" stroke-width="2" stroke-linecap="round"/>
+          <!-- Flecha entrada -->
+          <polyline points="18,40 24,36 24,44" fill="${col}" stroke="none" opacity="0.8"/>
+          <!-- Flecha salida -->
+          <polyline points="62,40 56,36 56,44" fill="${col}" stroke="none" opacity="0.8"/>
+        `,
+        // Switch — caja horizontal con puertos
+        SWITCH: `
+          <rect x="14" y="30" width="52" height="20" rx="5" fill="${col}" opacity="0.15" stroke="${col}" stroke-width="2"/>
+          <rect x="14" y="30" width="52" height="20" rx="5" fill="none" stroke="${col}" stroke-width="2.2"/>
+          <!-- Puertos -->
+          <rect x="19" y="35" width="6" height="10" rx="1.5" fill="${col}" opacity="0.7"/>
+          <rect x="28" y="35" width="6" height="10" rx="1.5" fill="${col}" opacity="0.7"/>
+          <rect x="37" y="35" width="6" height="10" rx="1.5" fill="${col}" opacity="0.7"/>
+          <rect x="46" y="35" width="6" height="10" rx="1.5" fill="${col}" opacity="0.7"/>
+          <rect x="55" y="35" width="6" height="10" rx="1.5" fill="${col}" opacity="0.4"/>
+          <!-- LED indicador -->
+          <circle cx="66" cy="34" r="2.5" fill="${col}"/>
+          <!-- Cables arriba -->
+          <line x1="22" y1="30" x2="22" y2="22" stroke="${col}" stroke-width="1.5" stroke-dasharray="2,2"/>
+          <line x1="31" y1="30" x2="31" y2="22" stroke="${col}" stroke-width="1.5" stroke-dasharray="2,2"/>
+          <line x1="40" y1="30" x2="40" y2="22" stroke="${col}" stroke-width="1.5" stroke-dasharray="2,2"/>
+          <line x1="49" y1="30" x2="49" y2="22" stroke="${col}" stroke-width="1.5" stroke-dasharray="2,2"/>
+          <line x1="58" y1="30" x2="58" y2="22" stroke="${col}" stroke-width="1.5" stroke-dasharray="2,2"/>
+        `,
+        // Servidor — rack box
+        SERVIDOR: `
+          <rect x="24" y="16" width="32" height="48" rx="3" fill="${col}" opacity="0.12" stroke="${col}" stroke-width="2.2"/>
+          <!-- Unidades del rack -->
+          <rect x="26" y="20" width="28" height="7" rx="2" fill="${col}" opacity="0.7"/>
+          <rect x="26" y="30" width="28" height="7" rx="2" fill="${col}" opacity="0.6"/>
+          <rect x="26" y="40" width="28" height="7" rx="2" fill="${col}" opacity="0.5"/>
+          <rect x="26" y="50" width="28" height="7" rx="2" fill="${col}" opacity="0.4"/>
+          <!-- LEDs -->
+          <circle cx="50" cy="23.5" r="2" fill="${col}"/>
+          <circle cx="50" cy="33.5" r="2" fill="${col}" opacity="0.6"/>
+          <circle cx="50" cy="43.5" r="2" fill="${col}" opacity="0.5"/>
+          <!-- Ventiladores pequeños -->
+          <circle cx="33" cy="23.5" r="2.5" fill="none" stroke="${col}" stroke-width="1"/>
+          <circle cx="33" cy="33.5" r="2.5" fill="none" stroke="${col}" stroke-width="1"/>
+        `,
+        // PC / Otro — monitor workstation
+        OTRO: `
+          <!-- Monitor -->
+          <rect x="16" y="18" width="40" height="28" rx="3" fill="${col}" opacity="0.12" stroke="${col}" stroke-width="2"/>
+          <!-- Pantalla -->
+          <rect x="20" y="22" width="32" height="20" rx="2" fill="${col}" opacity="0.25"/>
+          <!-- Pie del monitor -->
+          <rect x="33" y="46" width="6" height="6" rx="1" fill="${col}" opacity="0.7"/>
+          <rect x="26" y="52" width="20" height="3" rx="1.5" fill="${col}" opacity="0.6"/>
+          <!-- LED -->
+          <circle cx="36" cy="20" r="1.5" fill="${col}"/>
+        `,
+    };
+
+    const body = shapes[tipo] || shapes.OTRO;
+    const svg = `<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 80 80" width="80" height="80">${body}</svg>`;
+    return 'data:image/svg+xml;charset=utf-8,' + encodeURIComponent(svg);
+}
+
+// Pregenerar íconos de leyenda
+function initLegend() {
+    document.getElementById('lgRouter').src = buildSVG('ROUTER', 'online');
+    document.getElementById('lgSwitch').src = buildSVG('SWITCH', 'online');
+    document.getElementById('lgServer').src = buildSVG('SERVIDOR', 'online');
+    document.getElementById('lgOther').src  = buildSVG('OTRO', 'online');
+}
+
+// ── CARGA INICIAL ──────────────────────────────────────────
 $(document).ready(function () {
+    initLegend();
     loadTopology();
     initControls();
-    $('#btnRefreshMap').on('click', function () { refreshStatuses(); });
-    setInterval(refreshStatuses, 60000); // auto-refresh cada 60s
+    $('#btnRefreshMap').on('click', refreshStatuses);
+    setInterval(refreshStatuses, 60000);
 });
 
-// ---- Carga de la topología desde el endpoint ---------------
+// ── TOPOLOGÍA ──────────────────────────────────────────────
 function loadTopology() {
-    showScanOverlay(true);
+    showScanOverlay(true, 'Cargando topología...');
 
     $.get("{% url 'get_topology_data' %}", function (data) {
 
-        const nodes = new vis.DataSet(data.nodes);
-        const edges = new vis.DataSet(data.edges);
+        // Convertir nodos a shape:image con SVG
+        const visnodes = data.nodes.map(n => nodeToVisNode(n));
+        rawEdges = data.edges;
 
-        allNodes = nodes;
-        allEdges = edges;
+        allNodes = new vis.DataSet(visnodes);
+        allEdges = new vis.DataSet(data.edges);
 
         updateKPIs(data.nodes);
 
         const container = document.getElementById('nw-topology-canvas');
-
-        // Detectar si estamos en dark mode
-        const isDark = document.documentElement.getAttribute('data-theme') === 'dark';
-        const fontColor   = isDark ? '#f1f5f9' : '#0f172a';
-        const bgColor     = isDark ? '#111827' : '#ffffff';
+        const isDark    = document.documentElement.getAttribute('data-theme') === 'dark';
+        const fontColor = isDark ? '#f1f5f9' : '#0f172a';
+        const bgColor   = isDark ? '#111827' : '#ffffff';
 
         const options = {
             nodes: {
-                shape: 'dot',
-                size: 20,
+                shape: 'image',
+                size:  38,
                 font: {
-                    size: 12,
-                    color: fontColor,
+                    size: 11, color: fontColor,
                     face: 'Inter, system-ui, sans-serif',
-                    bold: { size: 13, color: fontColor },
-                    strokeWidth: 3,
-                    strokeColor: bgColor,
+                    strokeWidth: 3, strokeColor: bgColor,
                 },
-                borderWidth: 2,
-                borderWidthSelected: 3,
+                shapeProperties: { useImageSize: false, useBorderWithImage: false },
+                borderWidth: 0,
+                shadow: false,
             },
             edges: {
                 width: 2,
-                color: {
-                    color: '#475569',
-                    highlight: '#22d3ee',
-                    hover: '#22d3ee',
-                    inherit: false,
-                },
-                arrows: {
-                    to: { enabled: false },
-                },
-                smooth: {
-                    type: 'curvedCW',
-                    roundness: 0.1,
-                },
+                color: { color: '#475569', highlight: '#22d3ee', hover: '#22d3ee', inherit: false },
+                arrows: { to: { enabled: false } },
+                smooth: { type: 'curvedCW', roundness: 0.08 },
                 font: {
-                    size: 11,
-                    color: fontColor,
-                    align: 'middle',
-                    strokeWidth: 2,
-                    strokeColor: bgColor,
+                    size: 10, color: fontColor, align: 'middle',
+                    strokeWidth: 2, strokeColor: bgColor,
                 },
                 selectionWidth: 3,
             },
             physics: {
                 enabled: true,
                 barnesHut: {
-                    gravitationalConstant: -5000,
-                    centralGravity: 0.4,
-                    springLength: 180,
-                    springConstant: 0.04,
-                    damping: 0.12,
+                    gravitationalConstant: -6000,
+                    centralGravity: 0.35,
+                    springLength: 200,
+                    springConstant: 0.035,
+                    damping: 0.15,
                 },
-                stabilization: {
-                    enabled: true,
-                    iterations: 200,
-                    updateInterval: 25,
-                    fit: true,
-                },
+                stabilization: { enabled: true, iterations: 200, fit: true },
             },
             interaction: {
                 hover: true,
                 hoverConnectedEdges: true,
-                tooltipDelay: 200,
+                tooltipDelay: 150,
                 zoomView: true,
                 dragView: true,
                 selectConnectedEdges: false,
             },
-            layout: {
-                improvedLayout: true,
-            },
+            layout: { improvedLayout: true },
         };
 
-        network = new vis.Network(container, { nodes, edges }, options);
+        network = new vis.Network(container, { nodes: allNodes, edges: allEdges }, options);
 
-        // Cuando estabilice, quitar overlay
-        network.on('stabilizationIterationsDone', function () {
+        network.on('stabilizationIterationsDone', () => {
             showScanOverlay(false);
             network.setOptions({ physics: { enabled: false } });
         });
 
-        // Clic en nodo → abrir panel de detalles
+        // Clic en nodo
         network.on('click', function (params) {
             if (params.nodes.length > 0) {
                 const nodeId = params.nodes[0];
                 const node   = allNodes.get(nodeId);
-                openDetailPanel(node);
+                handleNodeClick(node);
             } else {
-                closeDetailPanel();
+                if (!connectMode) closeDetailPanel();
             }
         });
 
-        // Doble clic → hacer fit al nodo
+        // Doble clic — enfocar
         network.on('doubleClick', function (params) {
-            if (params.nodes.length > 0) {
-                network.focus(params.nodes[0], { scale: 1.5, animation: true });
-            }
+            if (params.nodes.length > 0)
+                network.focus(params.nodes[0], { scale: 1.6, animation: true });
         });
 
-    }).fail(function () {
-        showScanOverlay(false);
-    });
-}
-
-// ---- Refresh de estados ICMP sin recargar el grafo ---------
-function refreshStatuses() {
-    const icon = document.getElementById('mapRefreshIcon');
-    icon.classList.add('fa-spin');
-    showScanOverlay(true);
-
-    $.get("{% url 'get_network_status' %}", function (data) {
-        const statusMap = {};
-        data.statuses.forEach(d => { statusMap[d.id] = d.status; });
-
-        let online = 0, warning = 0, offline = 0, unknown = 0;
-
-        allNodes.forEach(function (node) {
-            const newStatus = statusMap[node.id] || 'unknown';
-            const col = STATUS_COLORS[newStatus] || STATUS_COLORS['unknown'];
-
-            allNodes.update({
-                id: node.id,
-                status: newStatus,
-                color: {
-                    background: col.background,
-                    border:     col.border,
-                    highlight:  { background: col.background, border: '#fff' },
-                    hover:      { background: col.background, border: '#fff' },
-                },
-                shadow: { enabled: true, color: col.glow, size: 12, x: 0, y: 4 },
-            });
-
-            if      (newStatus === 'online')  online++;
-            else if (newStatus === 'warning') warning++;
-            else if (newStatus === 'offline') offline++;
-            else                              unknown++;
+        // Hover tooltip enriquecido (Vis lo muestra con title)
+        data.nodes.forEach(n => {
+            allNodes.update({ id: n.id, title: `<b>${n.label}</b><br>${n.ip}<br>Status: ${n.status}` });
         });
 
-        const total = online + warning + offline + unknown;
-        $('#stat-total').text(total);
-        $('#stat-online').text(online);
-        $('#stat-warning').text(warning);
-        $('#stat-offline').text(offline);
-
-        icon.classList.remove('fa-spin');
-        showScanOverlay(false);
-    }).fail(function () {
-        icon.classList.remove('fa-spin');
-        showScanOverlay(false);
-    });
+    }).fail(function () { showScanOverlay(false); });
 }
 
-// Colores de estado (JS, duplica los de Django para el refresh)
-const STATUS_COLORS = {
-    online:  { background: '#10b981', border: '#059669', glow: 'rgba(16,185,129,0.5)' },
-    warning: { background: '#f59e0b', border: '#d97706', glow: 'rgba(245,158,11,0.5)' },
-    offline: { background: '#ef4444', border: '#dc2626', glow: 'rgba(239,68,68,0.5)' },
-    unknown: { background: '#64748b', border: '#475569', glow: 'rgba(100,116,139,0.4)' },
-};
+// Convierte un nodo del API a formato Vis.js con SVG icon
+function nodeToVisNode(n) {
+    const status = n.status || 'unknown';
+    const tipo   = (n.tipo || 'OTRO').toUpperCase();
+    const imgSrc = buildSVG(tipo, status);
+    return {
+        // Datos Vis
+        id:    n.id,
+        label: n.label,
+        image: imgSrc,
+        shape: 'image',
+        size:  tipo === 'ROUTER' ? 40 : tipo === 'SWITCH' ? 38 : tipo === 'SERVIDOR' ? 36 : 30,
+        // Datos extra (persistidos en el DataSet)
+        ip:          n.ip,
+        area:        n.area,
+        sucursal:    n.sucursal,
+        tipo:        tipo,
+        marca:       n.marca,
+        modelo:      n.modelo,
+        community:   n.community,
+        descripcion: n.descripcion,
+        status:      status,
+        title: `<b>${n.label}</b><br>${n.ip}`,
+    };
+}
 
-// ---- Panel de detalles del dispositivo ---------------------
+// ── MODO CONEXIÓN ──────────────────────────────────────────
+function toggleConnectMode() {
+    connectMode = !connectMode;
+    connectSource = null;
+
+    const btn    = document.getElementById('btnConnectMode');
+    const banner = document.getElementById('connectBanner');
+    const wrap   = document.getElementById('mapWrapper');
+    const srcInd = document.getElementById('sourceIndicator');
+
+    btn.classList.toggle('connect-active', connectMode);
+    banner.classList.toggle('active', connectMode);
+    wrap.classList.toggle('map-mode-connect', connectMode);
+    srcInd.classList.remove('visible');
+
+    if (connectMode) {
+        document.getElementById('connectBannerText').innerHTML =
+            'Modo Conexión activo — <strong>Clic en el dispositivo de ORIGEN</strong>';
+    }
+}
+
+function startConnectFromPanel() {
+    if (!connectMode) toggleConnectMode();
+    // Pre-seleccionar el nodo actual como origen si hay uno seleccionado
+    if (selectedNodeId) {
+        const node = allNodes.get(selectedNodeId);
+        if (node) {
+            connectSource = node;
+            updateConnectBanner(node);
+        }
+    }
+    closeDetailPanel();
+}
+
+function updateConnectBanner(srcNode) {
+    const srcInd = document.getElementById('sourceIndicator');
+    srcInd.textContent = `Origen: ${srcNode.label}`;
+    srcInd.classList.add('visible');
+    document.getElementById('connectBannerText').innerHTML =
+        `Origen seleccionado: <strong>${srcNode.label}</strong> — Ahora clic en el dispositivo DESTINO`;
+}
+
+function handleNodeClick(node) {
+    if (connectMode) {
+        if (!connectSource) {
+            // Primer clic — seleccionar origen
+            connectSource = node;
+            updateConnectBanner(node);
+        } else if (connectSource.id !== node.id) {
+            // Segundo clic — abrir modal de configuración del enlace
+            openLinkModal(connectSource, node);
+        }
+        return;
+    }
+    // Modo normal — abrir panel de detalles
+    openDetailPanel(node);
+}
+
+// ── MODAL DE NUEVA CONEXIÓN ────────────────────────────────
+function getNodeIcon(tipo) {
+    const icons = { ROUTER:'fa-route', SWITCH:'fa-network-wired', SERVIDOR:'fa-server', OTRO:'fa-laptop' };
+    return icons[tipo] || 'fa-laptop';
+}
+
+function openLinkModal(src, dst) {
+    document.getElementById('linkModalSrcName').textContent = src.label;
+    document.getElementById('linkModalDstName').textContent = dst.label;
+    document.getElementById('linkModalSrcIcon').innerHTML = `<i class="fas ${getNodeIcon(src.tipo)}"></i>`;
+    document.getElementById('linkModalDstIcon').innerHTML = `<i class="fas ${getNodeIcon(dst.tipo)}"></i>`;
+    document.getElementById('linkPuertoOrigen').value  = '';
+    document.getElementById('linkPuertoDestino').value = '';
+    document.getElementById('linkTipoEnlace').value    = 'Cobre';
+
+    // Guardar IDs para el submit
+    document.getElementById('linkModalBackdrop').dataset.srcId = src.id;
+    document.getElementById('linkModalBackdrop').dataset.dstId = dst.id;
+
+    document.getElementById('linkModalBackdrop').classList.add('open');
+}
+
+function closeLinkModal() {
+    document.getElementById('linkModalBackdrop').classList.remove('open');
+    // Resetear modo conexión después de guardar/cancelar
+    if (connectMode) toggleConnectMode();
+}
+
+function saveLinkFromModal() {
+    const backdrop = document.getElementById('linkModalBackdrop');
+    const fd = new FormData();
+    fd.append('action',         'add');
+    fd.append('id_origen',      backdrop.dataset.srcId);
+    fd.append('id_destino',     backdrop.dataset.dstId);
+    fd.append('puerto_origen',  document.getElementById('linkPuertoOrigen').value.trim());
+    fd.append('puerto_destino', document.getElementById('linkPuertoDestino').value.trim());
+    fd.append('tipo_enlace',    document.getElementById('linkTipoEnlace').value);
+
+    fetch("{% url 'manage_link' %}", {
+        method: 'POST',
+        headers: { 'X-CSRFToken': getCookie('csrftoken') },
+        body: fd,
+    })
+    .then(r => r.json())
+    .then(data => {
+        if (data.success) {
+            closeLinkModal();
+            // Agregar arista al mapa sin recargar todo
+            const newEdge = {
+                id:     data.lastID,
+                from:   parseInt(backdrop.dataset.srcId),
+                to:     parseInt(backdrop.dataset.dstId),
+                title:  `${document.getElementById('linkPuertoOrigen').value} → ${document.getElementById('linkPuertoDestino').value} (${document.getElementById('linkTipoEnlace').value})`,
+                label:  document.getElementById('linkTipoEnlace').value !== 'Cobre' ? document.getElementById('linkTipoEnlace').value : '',
+                color:  { color: '#10b981', highlight: '#22d3ee', hover: '#22d3ee' },
+                width:  2,
+                smooth: { type: 'curvedCW', roundness: 0.08 },
+                dashes: false,
+            };
+            allEdges.add(newEdge);
+            rawEdges.push(newEdge);
+            showToast('Conexión creada correctamente', 'success');
+        } else {
+            showToast(data.mensaje || 'Error al crear la conexión', 'error');
+        }
+    })
+    .catch(() => showToast('Error de red', 'error'));
+}
+
+// ── PANEL DE DETALLES ──────────────────────────────────────
+const TIPO_ICONS = { ROUTER:'fa-route', SWITCH:'fa-network-wired', SERVIDOR:'fa-server', OTRO:'fa-laptop' };
+
 function openDetailPanel(node) {
-    const panel  = document.getElementById('deviceDetailPanel');
+    selectedNodeId = node.id;
+    switchTab('info');
+
     const status = node.status || 'unknown';
 
     // Header
-    document.getElementById('detailName').textContent = node.label || '—';
-    document.getElementById('detailIp').textContent   = node.ip    || '—';
-
-    // Ícono por tipo
-    const iconClass = TIPO_ICON[node.tipo] || 'fa-question-circle';
-    document.getElementById('detailIconInner').className = `fas ${iconClass}`;
-    const iconWrap = document.getElementById('detailIcon');
-    iconWrap.className = `nw-detail-device-icon ${status}`;
+    document.getElementById('detailNameDisplay').textContent = node.label || '—';
+    document.getElementById('detailIpDisplay').textContent   = node.ip    || '—';
+    const iconInner = document.getElementById('detailIconInner');
+    iconInner.className = `fas ${TIPO_ICONS[node.tipo] || 'fa-network-wired'}`;
+    document.getElementById('detailIcon').className = `nw-detail-device-icon ${status}`;
 
     // Badge de estado
-    const statusLabels = { online:'En Línea', warning:'Con UPS', offline:'Offline', unknown:'Sin Datos' };
-    const statusIcons  = { online:'fa-circle-check', warning:'fa-battery-three-quarters', offline:'fa-circle-xmark', unknown:'fa-circle' };
+    const statusLabels = { online:'En Línea', offline:'Offline', unknown:'Sin Datos' };
+    const statusIcons  = { online:'fa-circle-check', offline:'fa-circle-xmark', unknown:'fa-circle' };
     document.getElementById('detailStatusBadge').innerHTML =
         `<span class="nw-detail-status-badge ${status}">
             <i class="fas ${statusIcons[status] || 'fa-circle'}"></i>
             ${statusLabels[status] || 'Sin datos'}
          </span>`;
 
-    // Info
-    document.getElementById('detailTipo').textContent      = node.tipo      || '—';
-    document.getElementById('detailMarca').textContent     = node.marca     || '—';
-    document.getElementById('detailSucursal').textContent  = node.sucursal  || '—';
-    document.getElementById('detailArea').textContent      = node.area      || '—';
+    // Campos de info
+    document.getElementById('detailTipo').textContent      = node.tipo        || '—';
+    document.getElementById('detailMarca').textContent     = node.marca       || '—';
+    document.getElementById('detailModelo').textContent    = node.modelo      || '—';
+    document.getElementById('detailSucursal').textContent  = node.sucursal    || '—';
+    document.getElementById('detailArea').textContent      = node.area        || '—';
     document.getElementById('detailDesc').textContent      = node.descripcion || '—';
-    document.getElementById('detailCommunity').textContent = node.community  || '—';
+    document.getElementById('detailCommunity').textContent = node.community   || '—';
 
-    panel.classList.add('open');
+    // Prellenar formulario de edición
+    document.getElementById('editDeviceId').value   = node.id;
+    document.getElementById('editNombre').value     = node.label       || '';
+    document.getElementById('editIp').value         = node.ip          || '';
+    document.getElementById('editTipo').value       = node.tipo        || 'SWITCH';
+    document.getElementById('editMarca').value      = node.marca       || '';
+    document.getElementById('editSucursal').value   = node.sucursal    || '';
+    document.getElementById('editArea').value       = node.area        || '';
+    document.getElementById('editDesc').value       = node.descripcion || '';
+    document.getElementById('editCommunity').value  = node.community   || 'public';
+
+    // Cargar conexiones del nodo
+    loadNodeConnections(node.id, node.label);
+
+    document.getElementById('deviceDetailPanel').classList.add('open');
 }
 
 function closeDetailPanel() {
     document.getElementById('deviceDetailPanel').classList.remove('open');
+    selectedNodeId = null;
     if (network) network.unselectAll();
 }
 
-// ---- Filtros por estado ------------------------------------
+// ── TABS DEL PANEL ─────────────────────────────────────────
+function switchTab(tab) {
+    ['info','edit','conns'].forEach(t => {
+        document.getElementById('tab' + t.charAt(0).toUpperCase() + t.slice(1)).classList.toggle('active', t === tab);
+        document.getElementById('tabContent' + t.charAt(0).toUpperCase() + t.slice(1)).style.display = t === tab ? '' : 'none';
+    });
+}
+
+// ── GUARDAR DISPOSITIVO DESDE PANEL ───────────────────────
+function saveDevice(e) {
+    e.preventDefault();
+    const fd = new FormData(e.target);
+    fd.append('action', 'edit');
+    fd.append('modelo', '');
+    fd.append('snmp_version', 'v2c');
+    fd.append('snmp_port', '161');
+
+    fetch("{% url 'manage_device' %}", {
+        method: 'POST',
+        headers: { 'X-CSRFToken': getCookie('csrftoken') },
+        body: fd,
+    })
+    .then(r => r.json())
+    .then(data => {
+        if (data.success) {
+            // Actualizar el nodo en el DataSet sin recargar
+            const newLabel  = document.getElementById('editNombre').value.trim();
+            const newIp     = document.getElementById('editIp').value.trim();
+            const newTipo   = document.getElementById('editTipo').value;
+            const curNode   = allNodes.get(selectedNodeId);
+            const newStatus = curNode ? curNode.status : 'unknown';
+            const newImg    = buildSVG(newTipo, newStatus);
+
+            allNodes.update({
+                id:     selectedNodeId,
+                label:  newLabel,
+                image:  newImg,
+                ip:     newIp,
+                tipo:   newTipo,
+                marca:  document.getElementById('editMarca').value,
+                sucursal: document.getElementById('editSucursal').value,
+                area:   document.getElementById('editArea').value,
+                descripcion: document.getElementById('editDesc').value,
+                community: document.getElementById('editCommunity').value,
+                title: `<b>${newLabel}</b><br>${newIp}`,
+            });
+
+            document.getElementById('detailNameDisplay').textContent = newLabel;
+            document.getElementById('detailIpDisplay').textContent   = newIp;
+            switchTab('info');
+            showToast('Dispositivo guardado correctamente', 'success');
+        } else {
+            showToast(data.mensaje || 'Error al guardar', 'error');
+        }
+    })
+    .catch(() => showToast('Error de red', 'error'));
+}
+
+function deleteDeviceFromPanel() {
+    if (!selectedNodeId) return;
+    const node = allNodes.get(selectedNodeId);
+    if (!confirm(`¿Dar de baja el dispositivo "${node?.label}"?`)) return;
+
+    const fd = new FormData();
+    fd.append('action',    'delete');
+    fd.append('id_device', selectedNodeId);
+
+    fetch("{% url 'manage_device' %}", {
+        method: 'POST',
+        headers: { 'X-CSRFToken': getCookie('csrftoken') },
+        body: fd,
+    })
+    .then(r => r.json())
+    .then(data => {
+        if (data.success) {
+            allNodes.remove(selectedNodeId);
+            closeDetailPanel();
+            showToast('Dispositivo dado de baja', 'success');
+            updateKPIs(allNodes.get());
+        } else {
+            showToast(data.mensaje || 'Error al eliminar', 'error');
+        }
+    });
+}
+
+// ── CONEXIONES DEL NODO (TAB) ─────────────────────────────
+function loadNodeConnections(nodeId, nodeName) {
+    const list = document.getElementById('connsList');
+    // Filtrar aristas que involucran este nodo
+    const conns = rawEdges.filter(e => e.from === nodeId || e.to === nodeId);
+
+    if (!conns.length) {
+        list.innerHTML = `<div style="text-align:center; color:var(--nw-text-muted); font-size:0.82rem; padding:2rem 0;">
+            <i class="fas fa-diagram-project" style="font-size:1.5rem; margin-bottom:0.5rem;"></i><br>Sin conexiones registradas</div>`;
+        return;
+    }
+
+    list.innerHTML = conns.map(e => {
+        const other = allNodes.get(e.from === nodeId ? e.to : e.from);
+        const otherName = other ? other.label : 'Desconocido';
+        const portSrc  = e.from === nodeId ? (e.title?.split('→')[0]?.trim() || '—') : (e.title?.split('→')[1]?.split('(')[0]?.trim() || '—');
+        return `<div class="nw-conn-item">
+            <div class="nw-conn-item-info">
+                <span class="nw-conn-item-device"><i class="fas fa-network-wired" style="color:var(--nw-brand); margin-right:4px;"></i>${otherName}</span>
+                <span class="nw-conn-item-ports">${e.title || 'Sin detalle de puertos'}</span>
+            </div>
+            <button class="nw-conn-del-btn" title="Eliminar enlace" onclick="deleteLink(${e.id})">
+                <i class="fas fa-trash"></i>
+            </button>
+        </div>`;
+    }).join('');
+}
+
+function deleteLink(linkId) {
+    if (!confirm('¿Eliminar este enlace de red?')) return;
+    const fd = new FormData();
+    fd.append('action',  'delete');
+    fd.append('id_link', linkId);
+
+    fetch("{% url 'manage_link' %}", {
+        method: 'POST',
+        headers: { 'X-CSRFToken': getCookie('csrftoken') },
+        body: fd,
+    })
+    .then(r => r.json())
+    .then(data => {
+        if (data.success) {
+            allEdges.remove(linkId);
+            rawEdges = rawEdges.filter(e => e.id !== linkId);
+            if (selectedNodeId) loadNodeConnections(selectedNodeId, '');
+            showToast('Enlace eliminado', 'success');
+        } else {
+            showToast(data.mensaje || 'Error al eliminar', 'error');
+        }
+    });
+}
+
+// ── REFRESH DE ESTADOS ─────────────────────────────────────
+function refreshStatuses() {
+    const icon = document.getElementById('mapRefreshIcon');
+    icon.classList.add('fa-spin');
+    showScanOverlay(true, 'Escaneando red...');
+
+    $.get("{% url 'get_network_status' %}", function (data) {
+        const statusMap = {};
+        data.statuses.forEach(d => { statusMap[d.id] = d.status; });
+
+        let online = 0, offline = 0;
+
+        allNodes.forEach(function (node) {
+            let newStatus = statusMap[node.id] || 'unknown';
+            const newImg  = buildSVG(node.tipo || 'OTRO', newStatus);
+            allNodes.update({ id: node.id, status: newStatus, image: newImg });
+            if (newStatus === 'online')  online++;
+            if (newStatus === 'offline') offline++;
+        });
+
+        const total = allNodes.length;
+        $('#stat-total').text(total);
+        $('#stat-online').text(online);
+        $('#stat-offline').text(offline);
+
+        icon.classList.remove('fa-spin');
+        showScanOverlay(false);
+    }).fail(() => { icon.classList.remove('fa-spin'); showScanOverlay(false); });
+}
+
+// ── FILTROS ────────────────────────────────────────────────
 function applyFilter(filterType) {
     currentFilter = filterType;
-
-    // Botones activos
     document.querySelectorAll('.nw-map-filter-btn').forEach(b => b.classList.remove('active'));
-    document.getElementById('filter' + filterType.charAt(0).toUpperCase() + filterType.slice(1))
-        ?.classList.add('active');
+    document.getElementById('filter' + filterType.charAt(0).toUpperCase() + filterType.slice(1))?.classList.add('active');
 
     if (!allNodes) return;
-
-    allNodes.forEach(function (node) {
-        const visible = (filterType === 'all') || (node.status === filterType);
+    allNodes.forEach(node => {
+        const visible = filterType === 'all' || node.status === filterType;
         allNodes.update({ id: node.id, hidden: !visible });
     });
-
-    // Ocultar aristas cuyos nodos estén ocultos
-    allEdges.forEach(function (edge) {
-        const fromNode = allNodes.get(edge.from);
-        const toNode   = allNodes.get(edge.to);
-        const show = !fromNode?.hidden && !toNode?.hidden;
-        allEdges.update({ id: edge.id, hidden: !show });
+    allEdges.forEach(edge => {
+        const fn = allNodes.get(edge.from);
+        const tn = allNodes.get(edge.to);
+        allEdges.update({ id: edge.id, hidden: !fn || fn.hidden || !tn || tn.hidden });
     });
 }
 
-// ---- Controles de zoom -------------------------------------
+// ── CONTROLES DE ZOOM ──────────────────────────────────────
 function initControls() {
-    document.getElementById('ctrlZoomIn').addEventListener('click', function () {
-        if (network) network.moveTo({ scale: network.getScale() * 1.3, animation: true });
-    });
-    document.getElementById('ctrlZoomOut').addEventListener('click', function () {
-        if (network) network.moveTo({ scale: network.getScale() * 0.75, animation: true });
-    });
-    document.getElementById('ctrlFit').addEventListener('click', function () {
-        if (network) network.fit({ animation: true });
-    });
+    document.getElementById('ctrlZoomIn') .addEventListener('click', () => network?.moveTo({ scale: network.getScale() * 1.3, animation: true }));
+    document.getElementById('ctrlZoomOut').addEventListener('click', () => network?.moveTo({ scale: network.getScale() * 0.75, animation: true }));
+    document.getElementById('ctrlFit')    .addEventListener('click', () => network?.fit({ animation: true }));
 }
 
-// ---- KPIs --------------------------------------------------
+// ── KPIs ───────────────────────────────────────────────────
 function updateKPIs(nodes) {
-    let online = 0, warning = 0, offline = 0;
-    nodes.forEach(function (n) {
-        if      (n.status === 'online')  online++;
-        else if (n.status === 'warning') warning++;
-        else if (n.status === 'offline') offline++;
+    let online = 0, offline = 0;
+    nodes.forEach(n => {
+        if (n.status === 'online')  online++;
+        if (n.status === 'offline') offline++;
     });
-    $('#stat-total').text(nodes.length);
+    $('#stat-total').text(nodes.length || nodes.get?.()?.length || 0);
     $('#stat-online').text(online);
-    $('#stat-warning').text(warning);
     $('#stat-offline').text(offline);
 }
 
-// ---- Overlay de scanning -----------------------------------
-function showScanOverlay(show) {
+// ── OVERLAY ────────────────────────────────────────────────
+function showScanOverlay(show, text) {
     const el = document.getElementById('mapScanOverlay');
     el.classList.toggle('active', show);
+    if (text) el.querySelector('.nw-map-scan-text').textContent = text;
+}
+
+// ── TOAST ──────────────────────────────────────────────────
+function showToast(msg, type) {
+    const colors = { success: '#10b981', error: '#ef4444' };
+    const t = document.createElement('div');
+    t.style.cssText = `position:fixed;bottom:1.5rem;right:1.5rem;z-index:9999;padding:0.75rem 1.25rem;
+        border-radius:10px;background:${colors[type]||'#64748b'};color:#fff;font-size:0.82rem;
+        font-weight:700;box-shadow:0 8px 24px rgba(0,0,0,0.2);opacity:0;
+        transform:translateY(8px);transition:all 0.3s;max-width:300px;`;
+    t.textContent = msg;
+    document.body.appendChild(t);
+    setTimeout(() => { t.style.opacity = '1'; t.style.transform = 'translateY(0)'; }, 10);
+    setTimeout(() => { t.style.opacity = '0'; t.style.transform = 'translateY(8px)'; setTimeout(() => t.remove(), 300); }, 3500);
 }
 </script>
 {% endblock %}

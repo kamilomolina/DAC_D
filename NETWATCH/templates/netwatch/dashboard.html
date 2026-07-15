@@ -25,7 +25,7 @@
 
 <!-- ====== KPI STATS ====== -->
 <div class="row g-3 mb-4">
-    <div class="col-6 col-sm-6 col-lg-3">
+    <div class="col-12 col-md-4">
         <div class="nw-stat-card stat-total">
             <div class="nw-stat-icon">
                 <i class="fas fa-network-wired"></i>
@@ -36,7 +36,7 @@
             </div>
         </div>
     </div>
-    <div class="col-6 col-sm-6 col-lg-3">
+    <div class="col-6 col-md-4">
         <div class="nw-stat-card stat-online">
             <div class="nw-stat-icon">
                 <i class="fas fa-circle-check"></i>
@@ -47,18 +47,7 @@
             </div>
         </div>
     </div>
-    <div class="col-6 col-sm-6 col-lg-3">
-        <div class="nw-stat-card stat-warning">
-            <div class="nw-stat-icon">
-                <i class="fas fa-battery-three-quarters"></i>
-            </div>
-            <div class="nw-stat-info">
-                <div class="nw-stat-label">Con UPS</div>
-                <div class="nw-stat-value" id="stat-warning">--</div>
-            </div>
-        </div>
-    </div>
-    <div class="col-6 col-sm-6 col-lg-3">
+    <div class="col-6 col-md-4">
         <div class="nw-stat-card stat-offline">
             <div class="nw-stat-icon">
                 <i class="fas fa-circle-xmark"></i>
@@ -80,9 +69,7 @@
             <!-- Card Header -->
             <div class="nw-device-header">
                 <div class="nw-device-icon-wrap">
-                    {% if device.type == 'UPS' %}
-                        <i class="fas fa-battery-three-quarters"></i>
-                    {% elif device.type == 'ROUTER' %}
+                    {% if device.type == 'ROUTER' %}
                         <i class="fas fa-route"></i>
                     {% elif device.type == 'SERVIDOR' %}
                         <i class="fas fa-server"></i>
@@ -133,7 +120,7 @@
         icon.classList.add('fa-spin');
 
         $.get("{% url 'get_network_status' %}", function (data) {
-            let online = 0, offline = 0, warning = 0;
+            let online = 0, offline = 0;
 
             data.statuses.forEach(function (device) {
                 const $col  = $(`.device-card-col[data-id="${device.id}"]`);
@@ -141,16 +128,12 @@
                 const $badge = $card.find('.status-badge-wrap');
 
                 // Remove all status classes
-                $card.removeClass('status-loading status-up status-down status-ups');
+                $card.removeClass('status-loading status-up status-down');
 
                 if (device.status === 'online') {
                     $card.addClass('status-up');
                     $badge.html('<span class="nw-status-badge badge-online"><i class="fas fa-circle-check"></i>Online</span>');
                     online++;
-                } else if (device.status === 'warning') {
-                    $card.addClass('status-ups');
-                    $badge.html('<span class="nw-status-badge badge-warning"><i class="fas fa-battery-three-quarters"></i>Con UPS</span>');
-                    warning++;
                 } else {
                     $card.addClass('status-down');
                     $badge.html('<span class="nw-status-badge badge-offline"><i class="fas fa-circle-xmark"></i>Offline</span>');
@@ -159,7 +142,6 @@
             });
 
             $('#stat-online').text(online);
-            $('#stat-warning').text(warning);
             $('#stat-offline').text(offline);
             icon.classList.remove('fa-spin');
         }).fail(function () {
