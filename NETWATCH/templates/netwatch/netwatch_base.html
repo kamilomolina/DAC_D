@@ -58,6 +58,11 @@
                 <i class="fas fa-diagram-project"></i>
                 <span>Mapa de Red</span>
             </a>
+            <a href="{% url 'nw_inventario_ip' %}"
+               class="nw-nav-link {% if request.resolver_match.url_name == 'nw_inventario_ip' %}active{% endif %}">
+                <i class="fas fa-clipboard-list"></i>
+                <span>Inventario IPs</span>
+            </a>
 
             <div class="nw-nav-section-label mt-3">Administración</div>
             <a href="{% url 'admin_netwatch' %}"

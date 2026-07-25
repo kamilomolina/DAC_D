@@ -21,4 +21,9 @@ urlpatterns = [
 
     # ── API — CRUD de enlaces / topología ────────────────────────────────────
     path('manage/link/',   NetWatchView.manage_link,         name='manage_link'),
+
+    # ── IP SCANNER ───────────────────────────────────────────────────────────
+    path('api/scan/',      NetWatchView.start_network_scan,  name='nw_start_scan'),
+    path('api/discovered/',NetWatchView.get_discovered_api,  name='nw_get_discovered'),
+    path('inventario/',    NetWatchView.inventario_ip,       name='nw_inventario_ip'),
 ]

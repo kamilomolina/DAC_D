@@ -163,9 +163,12 @@
             <span class="nw-live-dot"></span>
             Sistemas activos
         </div>
-        <button class="nw-btn-scan" id="btnRefreshMap">
+        <button class="nw-btn-scan bg-primary text-white" data-bs-toggle="modal" data-bs-target="#scanModal">
+            <i class="fas fa-radar" id="mapScanIcon"></i>
+            Descubrir IPs
+        </button>
+        <button class="nw-btn-scan" id="btnRefreshMap" title="Actualizar Mapa">
             <i class="fas fa-rotate" id="mapRefreshIcon"></i>
-            Escanear Red
         </button>
     </div>
 </div>
@@ -274,9 +277,36 @@
         <button class="nw-map-ctrl-btn" id="ctrlFit"     title="Ajustar vista"><i class="fas fa-expand"></i></button>
     </div>
 
-</div><!-- /nw-map-wrapper -->
+</div><!-- /nw-device-detail-panel -->
 
-<!-- ====== PANEL LATERAL DE DETALLES ====== -->
+<!-- ====== MODAL DE ESCÁNER DE RED ====== -->
+<div class="modal fade" id="scanModal" tabindex="-1" aria-labelledby="scanModalLabel" aria-hidden="true" data-bs-theme="dark">
+    <div class="modal-dialog modal-dialog-centered">
+        <div class="modal-content" style="background: var(--nw-surface); border-color: var(--nw-border); color: var(--nw-text);">
+            <div class="modal-header" style="border-bottom-color: var(--nw-border);">
+                <h5 class="modal-title" id="scanModalLabel"><i class="fas fa-radar text-primary me-2"></i> Escáner de Red en Segundo Plano</h5>
+                <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal" aria-label="Close"></button>
+            </div>
+            <div class="modal-body">
+                <p class="text-muted" style="font-size: 0.9rem;">
+                    Ingresa el rango de direcciones IP o la subred que deseas escanear. El escáner buscará equipos activos (Ping + ARP) en segundo plano sin interrumpir el servicio.
+                </p>
+                <div class="mb-3">
+                    <label for="scanSubnet" class="form-label" style="font-size: 0.85rem; font-weight: 600;">Segmento o Rango IP:</label>
+                    <input type="text" class="form-control nw-panel-form-input" id="scanSubnet" placeholder="Ej: 192.168.0.1-254 o 192.168.1.0/24">
+                </div>
+            </div>
+            <div class="modal-footer" style="border-top-color: var(--nw-border);">
+                <button type="button" class="btn btn-secondary btn-sm" data-bs-dismiss="modal">Cancelar</button>
+                <button type="button" class="btn btn-primary btn-sm" onclick="startNetworkScan()">
+                    <i class="fas fa-play me-1"></i> Iniciar Escaneo
+                </button>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- ====== JS VIS.JS y APP ====== -->
 <div class="nw-device-detail-panel" id="deviceDetailPanel">
 
     <!-- Header -->
@@ -1116,6 +1146,43 @@ function showToast(msg, type) {
     document.body.appendChild(t);
     setTimeout(() => { t.style.opacity = '1'; t.style.transform = 'translateY(0)'; }, 10);
     setTimeout(() => { t.style.opacity = '0'; t.style.transform = 'translateY(8px)'; setTimeout(() => t.remove(), 300); }, 3500);
+}
+
+// ── IP SCANNER ─────────────────────────────────────────────
+function startNetworkScan() {
+    const subnet = $('#scanSubnet').val().trim();
+    if (!subnet) {
+        Swal.fire('Error', 'Debes ingresar un rango o subred', 'warning');
+        return;
+    }
+    
+    // Cerrar modal
+    $('#scanModal').modal('hide');
+    
+    // Toast iniciando
+    Swal.fire({
+        toast: true, position: 'top-end', showConfirmButton: false, timer: 3000,
+        icon: 'info', title: 'Iniciando escaneo para ' + subnet + '...'
+    });
+    
+    $.ajax({
+        url: "{% url 'nw_start_scan' %}",
+        type: "POST",
+        data: { subnet: subnet, csrfmiddlewaretoken: '{{ csrf_token }}' },
+        success: function(res) {
+            if (res.success) {
+                Swal.fire({
+                    toast: true, position: 'top-end', showConfirmButton: false, timer: 4000,
+                    icon: 'success', title: res.message
+                });
+            } else {
+                Swal.fire('Error', res.error, 'error');
+            }
+        },
+        error: function() {
+            Swal.fire('Error', 'No se pudo iniciar el escaneo', 'error');
+        }
+    });
 }
 </script>
 {% endblock %}

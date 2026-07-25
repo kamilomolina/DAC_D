@@ -6,6 +6,10 @@ from django.http import HttpResponseRedirect
 import subprocess
 import platform
 import concurrent.futures
+import threading
+import ipaddress
+import socket
+import re
 
 # ============================================================================
 # CONEXIÓN PRINCIPAL — Base de datos NETWATCH (kamilo_testing)
@@ -423,30 +427,75 @@ def get_topology_data(request):
                 }
             })
 
-        # Construir aristas Vis.js
+        # Construir aristas Vis.js (Enlaces)
         edges = []
-        for lnk in links:
-            edge_color = '#10b981' if lnk['activo'] else '#ef4444'
-            label      = f"{lnk['tipo']}"
-            if lnk['puerto_origen'] or lnk['puerto_destino']:
-                label = f"{lnk['puerto_origen']} → {lnk['puerto_destino']}"
+        for l in links:
+            # Color basado en estado
+            st = l.get('activo', True)
+            c  = '#10b981' if st else '#ef4444'
+
+            # Etiqueta
+            lbl = ''
+            if l.get('puerto_origen') and l.get('puerto_destino'):
+                lbl = f"{l['puerto_origen']} ↔ {l['puerto_destino']}"
 
             edges.append({
-                'id':     lnk['id'],
-                'from':   lnk['from'],
-                'to':     lnk['to'],
-                'title':  f"{lnk['nombre_origen']} [{lnk['puerto_origen']}] → {lnk['nombre_destino']} [{lnk['puerto_destino']}] ({lnk['tipo']})",
-                'label':  lnk['tipo'] if lnk['tipo'] not in ('Cobre',) else '',
-                'color':  {'color': edge_color, 'highlight': '#22d3ee', 'hover': '#22d3ee'},
+                'id':     l['id'],
+                'from':   l['from'],
+                'to':     l['to'],
+                'label':  lbl,
+                'font':   {'align': 'top', 'size': 9, 'color': '#94a3b8'},
+                'color':  {'color': c, 'highlight': '#f59e0b'},
                 'width':  2,
-                'smooth': {'type': 'curvedCW', 'roundness': 0.1},
-                'dashes': not lnk['activo'],
+                'smooth': {'type': 'cubicBezier', 'roundness': 0.4},
+                'arrows': 'to;from',
             })
 
-        return JsonResponse({'nodes': nodes, 'edges': edges})
+        # === INYECTAR DISPOSITIVOS DESCUBIERTOS (Floating Nodes) ===
+        discovered = nw_get_discovered_ips()
+        for d in discovered:
+            tipo = (d.get('tipo_dispositivo') or 'OTRO').upper()
+            if tipo not in DEVICE_ICONS: tipo = 'OTRO'
+            icon_code = DEVICE_ICONS[tipo]
+            
+            nodes.append({
+                'id':          f"desc_{d['id_discovered']}", # ID temporal para vis.js
+                'label':       d['hostname'] if d['hostname'] else d['ip_address'],
+                'ip':          d['ip_address'],
+                'area':        'Desconocida',
+                'sucursal':    'Detectado por Escáner',
+                'tipo':        tipo,
+                'marca':       '',
+                'modelo':      d['mac_address'] if d['mac_address'] else '',
+                'community':   '',
+                'descripcion': 'Dispositivo no administrado detectado automáticamente.',
+                'status':      'discovered', # Nuevo estado
+                'shape':       'icon',
+                'icon': {
+                    'face':    '"Font Awesome 6 Free"',
+                    'weight':  '900',
+                    'code':    icon_code,
+                    'size':    DEVICE_SIZE.get(tipo, 26),
+                    'color':   '#00d2ff', # Color cian brillante
+                },
+                'shadow': {
+                    'enabled': True,
+                    'color':   'rgba(0, 210, 255, 0.4)',
+                    'size':    10,
+                    'x': 0, 'y': 2,
+                }
+            })
+
+        return JsonResponse({
+            'success': True,
+            'nodes':   nodes,
+            'edges':   edges
+        })
 
     except Exception as e:
-        return JsonResponse({'nodes': [], 'edges': [], 'error': str(e)})
+        print(f"[NETWATCH] Error get_topology_data: {e}")
+        return JsonResponse({'success': False, 'error': str(e)})
+
 
 
 def manage_device(request):
@@ -565,3 +614,167 @@ def get_events(request):
             e['fecha_evento'] = e['fecha_evento'].strftime('%Y-%m-%d %H:%M:%S')
 
     return JsonResponse({'events': events})
+
+
+# ============================================================================
+# IP SCANNER — Escaneo de red en segundo plano
+# ============================================================================
+
+def nw_upsert_discovered_ip(ip, mac, hostname, tipo):
+    """Llama al SP NW_UPSERT_DISCOVERED_IP."""
+    try:
+        with connections[DB_NAME].cursor() as cursor:
+            cursor.callproc('NW_UPSERT_DISCOVERED_IP', [ip, mac, hostname, tipo])
+    except Exception as e:
+        print(f"[NETWATCH] Error en NW_UPSERT_DISCOVERED_IP: {e}")
+
+def nw_get_discovered_ips():
+    """Llama al SP NW_GET_DISCOVERED_IPS y retorna lista."""
+    ips = []
+    try:
+        with connections[DB_NAME].cursor() as cursor:
+            cursor.callproc('NW_GET_DISCOVERED_IPS')
+            cols = [desc[0] for desc in cursor.description]
+            for row in cursor.fetchall():
+                ips.append(dict(zip(cols, row)))
+    except Exception as e:
+        print(f"[NETWATCH] Error en NW_GET_DISCOVERED_IPS: {e}")
+    return ips
+
+def parse_subnet(subnet_str):
+    """
+    Parsea una cadena de subred y retorna una lista de IPs (strings).
+    Soporta formatos: '192.168.0.0/24' o '192.168.0.1-254'
+    """
+    subnet_str = subnet_str.strip()
+    ips = []
+    try:
+        # Formato CIDR (ej: 192.168.0.0/24)
+        if '/' in subnet_str:
+            network = ipaddress.ip_network(subnet_str, strict=False)
+            ips = [str(ip) for ip in network.hosts()]
+        # Formato Rango (ej: 192.168.0.1-254)
+        elif '-' in subnet_str:
+            base_ip, end_host = subnet_str.split('-')
+            base_ip = base_ip.strip()
+            end_host = end_host.strip()
+            parts = base_ip.split('.')
+            if len(parts) == 4 and end_host.isdigit():
+                start_host = int(parts[3])
+                end_host = int(end_host)
+                base_network = '.'.join(parts[:3])
+                for i in range(start_host, end_host + 1):
+                    ips.append(f"{base_network}.{i}")
+        else:
+            # Una sola IP
+            ipaddress.ip_address(subnet_str) # Valida que sea IP
+            ips = [subnet_str]
+    except Exception as e:
+        print(f"[NETWATCH] Error parseando subred '{subnet_str}': {e}")
+    return ips
+
+def _ping_and_discover(ip):
+    """
+    Hace un ping a una IP. Si responde, obtiene la MAC address mediante ARP
+    y el hostname. Luego lo guarda en la base de datos.
+    """
+    param = '-n' if platform.system().lower() == 'windows' else '-c'
+    # Solo 1 paquete, timeout rpido
+    command = ['ping', param, '1', '-w', '1000' if param == '-n' else '1', ip]
+    try:
+        result = subprocess.run(command, stdout=subprocess.PIPE, stderr=subprocess.PIPE, text=True)
+        if result.returncode == 0:
+            # Respondió al ping
+            mac = ""
+            hostname = ""
+            
+            # Obtener MAC via ARP
+            try:
+                arp_result = subprocess.run(['arp', '-a', ip], stdout=subprocess.PIPE, stderr=subprocess.PIPE, text=True)
+                # Buscar patrn de MAC address en la salida
+                mac_search = re.search(r'([0-9A-Fa-f]{2}[:-]){5}([0-9A-Fa-f]{2})', arp_result.stdout)
+                if mac_search:
+                    mac = mac_search.group(0).replace('-', ':').upper()
+            except Exception:
+                pass
+            
+            # Obtener Hostname
+            try:
+                host_info = socket.gethostbyaddr(ip)
+                if host_info and host_info[0]:
+                    hostname = host_info[0]
+            except Exception:
+                pass
+                
+            # Adivinar tipo de dispositivo basico
+            tipo_dispositivo = 'OTRO'
+            h = hostname.lower()
+            if 'sw' in h or 'switch' in h: tipo_dispositivo = 'SWITCH'
+            elif 'rt' in h or 'router' in h or 'gw' in h or 'unifi' in h or 'ap' in h: tipo_dispositivo = 'ROUTER'
+            elif 'srv' in h or 'server' in h: tipo_dispositivo = 'SERVIDOR'
+            elif 'pc' in h or 'desk' in h or 'lap' in h: tipo_dispositivo = 'PC'
+            
+            # Upsert en la base de datos
+            nw_upsert_discovered_ip(ip, mac, hostname, tipo_dispositivo)
+            
+    except Exception as e:
+        print(f"[NETWATCH] Error escaneando {ip}: {e}")
+
+def _network_scan_worker(subnet_str):
+    """
+    Funcin que se ejecuta en el hilo en segundo plano.
+    """
+    ips = parse_subnet(subnet_str)
+    if not ips:
+        print(f"[NETWATCH] No se detectaron IPs vlidas para escanear en: {subnet_str}")
+        return
+        
+    print(f"[NETWATCH] Iniciando escaneo de red en segundo plano para {len(ips)} IPs ({subnet_str})...")
+    # Limitar hilos a 50 para no congestionar el servidor ni la red
+    with concurrent.futures.ThreadPoolExecutor(max_workers=50) as executor:
+        executor.map(_ping_and_discover, ips)
+    print(f"[NETWATCH] Escaneo finalizado para {subnet_str}.")
+
+def start_network_scan(request):
+    """
+    Endpoint (API): Inicia el escaneo de red en segundo plano.
+    Parmetro POST: subnet (ej: 192.168.0.1-254)
+    """
+    auth = auth_required(request)
+    if auth: return auth
+    
+    if request.method != 'POST':
+        return JsonResponse({'success': False, 'error': 'Mtodo no permitido'})
+        
+    subnet = request.POST.get('subnet', '')
+    if not subnet:
+        return JsonResponse({'success': False, 'error': 'Debe especificar una subred a escanear'})
+        
+    # Iniciar hilo en segundo plano
+    scan_thread = threading.Thread(target=_network_scan_worker, args=(subnet,))
+    scan_thread.daemon = True
+    scan_thread.start()
+    
+    return JsonResponse({
+        'success': True,
+        'message': f'Escaneo iniciado en segundo plano para {subnet}'
+    })
+
+def inventario_ip(request):
+    """Vista: Página de inventario de IPs descubiertas."""
+    auth = auth_required(request)
+    if auth: return auth
+    
+    ctx = get_user_context(request)
+    # Las IPs se pueden cargar va API o pasar directamente al template
+    ctx['discovered_ips'] = nw_get_discovered_ips()
+    return render(request, 'netwatch/inventario_ip.html', ctx)
+
+def get_discovered_api(request):
+    """Endpoint (API): Retorna JSON de IPs descubiertas para el mapa/tablas."""
+    ips = nw_get_discovered_ips()
+    # Serializar fechas
+    for ip in ips:
+        if hasattr(ip.get('last_seen'), 'strftime'):
+            ip['last_seen'] = ip['last_seen'].strftime('%Y-%m-%d %H:%M:%S')
+    return JsonResponse({'success': True, 'ips': ips})

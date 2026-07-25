@@ -1,0 +1,161 @@
+{% extends 'netwatch/netwatch_base.html' %}
+
+{% block title %}NETWATCH | Inventario de IPs{% endblock %}
+
+{% block extra_css %}
+<!-- DataTables CSS -->
+<link rel="stylesheet" href="https://cdn.datatables.net/1.13.6/css/dataTables.bootstrap5.min.css">
+<style>
+    /* Estilos personalizados para la tabla estilo NETWATCH */
+    .nw-page-title {
+        font-size: 1.5rem;
+        font-weight: 700;
+        margin-bottom: 1.5rem;
+        color: var(--nw-text);
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+    }
+    .table-container {
+        background: var(--nw-surface);
+        border: 1px solid var(--nw-border);
+        border-radius: 12px;
+        padding: 1.5rem;
+        box-shadow: 0 4px 6px rgba(0, 0, 0, 0.05);
+    }
+    .table.dataTable {
+        color: var(--nw-text);
+    }
+    .table.dataTable thead th {
+        border-bottom-color: var(--nw-border);
+        color: var(--nw-text-muted);
+        font-weight: 600;
+        text-transform: uppercase;
+        font-size: 0.85rem;
+    }
+    .table.dataTable tbody td {
+        border-bottom-color: var(--nw-border);
+        vertical-align: middle;
+    }
+    .badge-status {
+        padding: 0.4em 0.8em;
+        border-radius: 20px;
+        font-size: 0.8rem;
+        font-weight: 600;
+    }
+    .badge-status.discovered {
+        background: rgba(0, 210, 255, 0.1);
+        color: var(--nw-primary);
+        border: 1px solid rgba(0, 210, 255, 0.2);
+    }
+    
+    /* Paginación DataTable Dark Mode Fix */
+    [data-theme="dark"] .page-link {
+        background-color: var(--nw-surface);
+        border-color: var(--nw-border);
+        color: var(--nw-text);
+    }
+    [data-theme="dark"] .page-item.active .page-link {
+        background-color: var(--nw-primary);
+        border-color: var(--nw-primary);
+        color: #fff;
+    }
+    [data-theme="dark"] .page-item.disabled .page-link {
+        background-color: var(--nw-bg);
+        border-color: var(--nw-border);
+        color: var(--nw-text-muted);
+    }
+    [data-theme="dark"] div.dataTables_wrapper div.dataTables_filter input,
+    [data-theme="dark"] div.dataTables_wrapper div.dataTables_length select {
+        background-color: var(--nw-bg);
+        border-color: var(--nw-border);
+        color: var(--nw-text);
+    }
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="container-fluid py-4">
+    <div class="nw-page-title">
+        <span><i class="fas fa-clipboard-list me-2 text-primary"></i> Inventario de IPs (No Administrados)</span>
+        <a href="{% url 'mapa_red' %}" class="btn btn-primary btn-sm rounded-pill">
+            <i class="fas fa-search me-1"></i> Ir al Escáner
+        </a>
+    </div>
+
+    <div class="table-container">
+        <table id="inventoryTable" class="table table-hover w-100">
+            <thead>
+                <tr>
+                    <th>Dirección IP</th>
+                    <th>MAC Address</th>
+                    <th>Hostname</th>
+                    <th>Última Vez Visto</th>
+                    <th>Estado</th>
+                    <th class="text-end">Acción</th>
+                </tr>
+            </thead>
+            <tbody>
+                {% for ip in discovered_ips %}
+                <tr>
+                    <td><strong>{{ ip.ip_address }}</strong></td>
+                    <td><code class="text-muted">{{ ip.mac_address|default:"Desconocida" }}</code></td>
+                    <td>{{ ip.hostname|default:"-" }}</td>
+                    <td>{{ ip.last_seen|date:"Y-m-d H:i" }}</td>
+                    <td>
+                        <span class="badge-status discovered">
+                            <i class="fas fa-eye me-1"></i> Detectado
+                        </span>
+                    </td>
+                    <td class="text-end">
+                        <button class="btn btn-sm btn-outline-success rounded-circle" title="Agregar a Gestión" onclick="addToManaged('{{ ip.ip_address }}', '{{ ip.mac_address }}', '{{ ip.hostname }}')">
+                            <i class="fas fa-plus"></i>
+                        </button>
+                    </td>
+                </tr>
+                {% empty %}
+                <tr>
+                    <td colspan="6" class="text-center py-4 text-muted">
+                        No hay IPs descubiertas actualmente. Usa el escáner en el Mapa de Red.
+                    </td>
+                </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+    </div>
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<!-- DataTables JS -->
+<script src="https://cdn.datatables.net/1.13.6/js/jquery.dataTables.min.js"></script>
+<script src="https://cdn.datatables.net/1.13.6/js/dataTables.bootstrap5.min.js"></script>
+
+<script>
+$(document).ready(function() {
+    $('#inventoryTable').DataTable({
+        language: {
+            url: 'https://cdn.datatables.net/plug-ins/1.13.6/i18n/es-ES.json'
+        },
+        order: [[0, 'asc']], // Ordenar por IP inicialmente
+        pageLength: 25
+    });
+});
+
+function addToManaged(ip, mac, hostname) {
+    Swal.fire({
+        title: 'Agregar a Dispositivos',
+        html: `Vas a registrar formalmente la IP <b>${ip}</b>. ¿Deseas ir al panel de administración?`,
+        icon: 'question',
+        showCancelButton: true,
+        confirmButtonText: 'Sí, ir al Panel',
+        cancelButtonText: 'Cancelar'
+    }).then((result) => {
+        if (result.isConfirmed) {
+            // Podríamos pasar los parámetros por URL o session para auto-completar el formulario
+            window.location.href = "{% url 'admin_netwatch' %}";
+        }
+    });
+}
+</script>
+{% endblock %}
