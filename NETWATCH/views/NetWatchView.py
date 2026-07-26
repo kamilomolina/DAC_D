@@ -49,7 +49,6 @@ def nw_get_devices(estado=1, busqueda=''):
             cols = [desc[0] for desc in cursor.description]
             for row in cursor.fetchall():
                 d = dict(zip(cols, row))
-                # Normalizar campos para compatibilidad con templates y Vis.js
                 devices.append({
                     'id':            d['id_device'],
                     'name':          d['nombre'],
@@ -159,9 +158,7 @@ def nw_update_device_status(id_device, estado):
 
 
 def nw_get_links():
-    """
-    Invoca NW_GET_LINKS y retorna lista de conexiones de red.
-    """
+    """Invoca NW_GET_LINKS y retorna lista de conexiones de red."""
     links = []
     try:
         with connections[DB_NAME].cursor() as cursor:
@@ -228,9 +225,7 @@ def nw_log_event(id_device, tipo_evento, detalles=''):
 
 
 def nw_get_events(limit=50):
-    """
-    Invoca NW_GET_EVENTS y retorna los últimos eventos de la bitácora.
-    """
+    """Invoca NW_GET_EVENTS y retorna los últimos eventos de la bitácora."""
     events = []
     try:
         with connections[DB_NAME].cursor() as cursor:
@@ -271,10 +266,8 @@ def ping_device(device):
     except Exception:
         nuevo_estado = 'offline'
 
-    # Persistir el nuevo estado en BD
     nw_update_device_status(id_device, nuevo_estado)
 
-    # Registrar en bitácora solo si el estado cambió
     if nuevo_estado != estado_anterior:
         tipo_evento = 'DEVICE_UP' if nuevo_estado == 'online' else 'DEVICE_DOWN'
         nw_log_event(
@@ -290,23 +283,28 @@ def ping_device(device):
 # COLORES, ÍCONOS Y TAMAÑOS DE NODOS PARA VIS.JS
 # ============================================================================
 DEVICE_COLORS = {
-    'online':  {'background': '#10b981', 'border': '#059669', 'glow': 'rgba(16,185,129,0.5)'},
-    'offline': {'background': '#ef4444', 'border': '#dc2626', 'glow': 'rgba(239,68,68,0.5)'},
-    'unknown': {'background': '#64748b', 'border': '#475569', 'glow': 'rgba(100,116,139,0.4)'},
+    'online':     {'background': '#10b981', 'border': '#059669', 'glow': 'rgba(16,185,129,0.5)'},
+    'offline':    {'background': '#ef4444', 'border': '#dc2626', 'glow': 'rgba(239,68,68,0.5)'},
+    'unknown':    {'background': '#64748b', 'border': '#475569', 'glow': 'rgba(100,116,139,0.4)'},
+    'discovered': {'background': '#00d2ff', 'border': '#0099cc', 'glow': 'rgba(0,210,255,0.4)'},
 }
 
 DEVICE_ICONS = {
     'ROUTER':    '\uf4d0',   # fa-route
     'SWITCH':    '\uf6ff',   # fa-network-wired
     'SERVIDOR':  '\uf233',   # fa-server
-    'OTRO':      '\uf10b',   # fa-laptop / dispositivo genérico
+    'AP':        '\uf1eb',   # fa-wifi
+    'PC':        '\uf109',   # fa-laptop
+    'OTRO':      '\uf10b',   # fa-mobile
 }
 
 DEVICE_SIZE = {
-    'ROUTER':   32,
-    'SWITCH':   30,
-    'SERVIDOR': 28,
-    'OTRO':     26,
+    'ROUTER':   34,
+    'SWITCH':   32,
+    'SERVIDOR': 30,
+    'AP':       28,
+    'PC':       26,
+    'OTRO':     24,
 }
 
 
@@ -352,7 +350,7 @@ def mapa_red(request):
 
 
 # ============================================================================
-# ENDPOINTS JSON / API
+# ENDPOINTS JSON / API — MONITOREO
 # ============================================================================
 
 def get_network_status(request):
@@ -379,25 +377,23 @@ def get_topology_data(request):
     """
     API: Devuelve nodos y enlaces para el mapa de red (Vis.js).
     Formato: { nodes: [...], edges: [...] }
+    Incluye también los dispositivos descubiertos por el escáner.
     """
     try:
-        devices = nw_get_devices(estado=1)
-        links   = nw_get_links()
+        devices    = nw_get_devices(estado=1)
+        links      = nw_get_links()
+        discovered = nw_get_discovered_ips()
 
-        # Construir nodos Vis.js
+        # ── Nodos de dispositivos administrados ──────────────────────────────
         nodes = []
         for d in devices:
             status = d.get('estado_actual', 'unknown') or 'unknown'
-            # Mapear warning a online ya que quitamos UPS
             if status == 'warning':
                 status = 'online'
-            col    = DEVICE_COLORS.get(status, DEVICE_COLORS['unknown'])
-            tipo   = (d.get('type') or 'OTRO').upper()
+            col  = DEVICE_COLORS.get(status, DEVICE_COLORS['unknown'])
+            tipo = (d.get('type') or 'OTRO').upper()
             if tipo not in DEVICE_ICONS:
                 tipo = 'OTRO'
-
-            icon_code = DEVICE_ICONS[tipo]
-            size      = DEVICE_SIZE.get(tipo, 26)
 
             nodes.append({
                 'id':          d['id'],
@@ -413,11 +409,11 @@ def get_topology_data(request):
                 'status':      status,
                 'shape':       'icon',
                 'icon': {
-                    'face':    '"Font Awesome 6 Free"',
-                    'weight':  '900',
-                    'code':    icon_code,
-                    'size':    size,
-                    'color':   col['background'],
+                    'face':   '"Font Awesome 6 Free"',
+                    'weight': '900',
+                    'code':   DEVICE_ICONS[tipo],
+                    'size':   DEVICE_SIZE.get(tipo, 26),
+                    'color':  col['background'],
                 },
                 'shadow': {
                     'enabled': True,
@@ -427,80 +423,78 @@ def get_topology_data(request):
                 }
             })
 
-        # Construir aristas Vis.js (Enlaces)
+        # ── Nodos de dispositivos DESCUBIERTOS (floating) ────────────────────
+        for d in discovered:
+            tipo = (d.get('tipo_dispositivo') or 'OTRO').upper()
+            if tipo not in DEVICE_ICONS:
+                tipo = 'OTRO'
+            icon_code = DEVICE_ICONS[tipo]
+            col       = DEVICE_COLORS['discovered']
+
+            # Etiqueta: hostname si existe, si no la IP
+            hostname = d.get('hostname') or ''
+            label    = hostname.split('.')[0] if hostname else d['ip_address']
+            sublabel = d['ip_address'] if hostname else ''
+            full_label = f"{label}\n{sublabel}" if sublabel else label
+
+            nodes.append({
+                'id':          f"disc_{d['id_discovered']}",
+                'label':       full_label,
+                'ip':          d['ip_address'],
+                'area':        'Escáner',
+                'sucursal':    d.get('vendor') or 'Desconocido',
+                'tipo':        tipo,
+                'marca':       d.get('vendor', ''),
+                'modelo':      d.get('mac_address', ''),
+                'community':   '',
+                'descripcion': f"MAC: {d.get('mac_address','?')} | TTL: {d.get('ttl','?')} | Detectado automáticamente",
+                'status':      'discovered',
+                'shape':       'icon',
+                'icon': {
+                    'face':   '"Font Awesome 6 Free"',
+                    'weight': '900',
+                    'code':   icon_code,
+                    'size':   DEVICE_SIZE.get(tipo, 24),
+                    'color':  col['background'],
+                },
+                'shadow': {
+                    'enabled': True,
+                    'color':   col['glow'],
+                    'size':    10,
+                    'x': 0, 'y': 2,
+                }
+            })
+
+        # ── Aristas / Conexiones ─────────────────────────────────────────────
         edges = []
-        for l in links:
-            # Color basado en estado
-            st = l.get('activo', True)
-            c  = '#10b981' if st else '#ef4444'
-
-            # Etiqueta
+        for lnk in links:
+            c   = '#10b981' if lnk['activo'] else '#ef4444'
             lbl = ''
-            if l.get('puerto_origen') and l.get('puerto_destino'):
-                lbl = f"{l['puerto_origen']} ↔ {l['puerto_destino']}"
-
+            if lnk.get('puerto_origen') and lnk.get('puerto_destino'):
+                lbl = f"{lnk['puerto_origen']} ↔ {lnk['puerto_destino']}"
             edges.append({
-                'id':     l['id'],
-                'from':   l['from'],
-                'to':     l['to'],
+                'id':     lnk['id'],
+                'from':   lnk['from'],
+                'to':     lnk['to'],
                 'label':  lbl,
                 'font':   {'align': 'top', 'size': 9, 'color': '#94a3b8'},
                 'color':  {'color': c, 'highlight': '#f59e0b'},
                 'width':  2,
                 'smooth': {'type': 'cubicBezier', 'roundness': 0.4},
                 'arrows': 'to;from',
+                'dashes': not lnk['activo'],
             })
 
-        # === INYECTAR DISPOSITIVOS DESCUBIERTOS (Floating Nodes) ===
-        discovered = nw_get_discovered_ips()
-        for d in discovered:
-            tipo = (d.get('tipo_dispositivo') or 'OTRO').upper()
-            if tipo not in DEVICE_ICONS: tipo = 'OTRO'
-            icon_code = DEVICE_ICONS[tipo]
-            
-            nodes.append({
-                'id':          f"desc_{d['id_discovered']}", # ID temporal para vis.js
-                'label':       d['hostname'] if d['hostname'] else d['ip_address'],
-                'ip':          d['ip_address'],
-                'area':        'Desconocida',
-                'sucursal':    'Detectado por Escáner',
-                'tipo':        tipo,
-                'marca':       '',
-                'modelo':      d['mac_address'] if d['mac_address'] else '',
-                'community':   '',
-                'descripcion': 'Dispositivo no administrado detectado automáticamente.',
-                'status':      'discovered', # Nuevo estado
-                'shape':       'icon',
-                'icon': {
-                    'face':    '"Font Awesome 6 Free"',
-                    'weight':  '900',
-                    'code':    icon_code,
-                    'size':    DEVICE_SIZE.get(tipo, 26),
-                    'color':   '#00d2ff', # Color cian brillante
-                },
-                'shadow': {
-                    'enabled': True,
-                    'color':   'rgba(0, 210, 255, 0.4)',
-                    'size':    10,
-                    'x': 0, 'y': 2,
-                }
-            })
-
-        return JsonResponse({
-            'success': True,
-            'nodes':   nodes,
-            'edges':   edges
-        })
+        return JsonResponse({'success': True, 'nodes': nodes, 'edges': edges})
 
     except Exception as e:
         print(f"[NETWATCH] Error get_topology_data: {e}")
-        return JsonResponse({'success': False, 'error': str(e)})
-
+        return JsonResponse({'success': False, 'error': str(e), 'nodes': [], 'edges': []})
 
 
 def manage_device(request):
     """
-    API: Crear / Editar / Dar de baja dispositivos.
+    API: CRUD de dispositivos.
     Usa los SPs: NW_INSERT_DEVICE, NW_UPDATE_DEVICE, NW_DELETE_DEVICE.
     """
     if request.method != 'POST':
@@ -509,12 +503,12 @@ def manage_device(request):
     p      = request.POST
     action = p.get('action')
 
-    # ── ALTA ──────────────────────────────────────────────────
-    if action == 'add':
+    # ── INSERTAR ───────────────────────────────────────────────
+    if action == 'insert':
         result = nw_insert_device(
             nombre         = p.get('nombre', ''),
-            ip             = p.get('ip', ''),
-            tipo           = p.get('tipo', 'SWITCH'),
+            ip             = p.get('ip_address', ''),
+            tipo           = p.get('tipo_dispositivo', 'OTRO'),
             marca          = p.get('marca', ''),
             modelo         = p.get('modelo', ''),
             sucursal       = p.get('sucursal', ''),
@@ -522,7 +516,7 @@ def manage_device(request):
             snmp_version   = p.get('snmp_version', 'v2c'),
             community      = p.get('community', 'public'),
             snmp_port      = int(p.get('snmp_port', 161)),
-            estado_monitoreo = 1,
+            estado_monitoreo = int(p.get('estado_monitoreo', 1)),
         )
         return JsonResponse({
             'success': bool(result['guardado']),
@@ -530,13 +524,13 @@ def manage_device(request):
             'mensaje': result['mensaje'],
         })
 
-    # ── EDICIÓN ───────────────────────────────────────────────
-    elif action == 'edit':
+    # ── ACTUALIZAR ─────────────────────────────────────────────
+    elif action == 'update':
         result = nw_update_device(
             id_device      = p.get('id_device'),
             nombre         = p.get('nombre', ''),
-            ip             = p.get('ip', ''),
-            tipo           = p.get('tipo', 'SWITCH'),
+            ip             = p.get('ip_address', ''),
+            tipo           = p.get('tipo_dispositivo', 'OTRO'),
             marca          = p.get('marca', ''),
             modelo         = p.get('modelo', ''),
             sucursal       = p.get('sucursal', ''),
@@ -574,7 +568,6 @@ def manage_link(request):
     p      = request.POST
     action = p.get('action')
 
-    # ── AGREGAR ENLACE ────────────────────────────────────────
     if action == 'add':
         result = nw_insert_link(
             id_origen      = p.get('id_origen'),
@@ -589,7 +582,6 @@ def manage_link(request):
             'mensaje': result['mensaje'],
         })
 
-    # ── ELIMINAR ENLACE ───────────────────────────────────────
     elif action == 'delete':
         result = nw_delete_link(p.get('id_link'))
         return JsonResponse({
@@ -608,7 +600,6 @@ def get_events(request):
     limit  = int(request.GET.get('limit', 50))
     events = nw_get_events(limit=limit)
 
-    # Serializar fechas
     for e in events:
         if hasattr(e.get('fecha_evento'), 'strftime'):
             e['fecha_evento'] = e['fecha_evento'].strftime('%Y-%m-%d %H:%M:%S')
@@ -617,19 +608,149 @@ def get_events(request):
 
 
 # ============================================================================
-# IP SCANNER — Escaneo de red en segundo plano
+# HELPERS — SEGMENTOS DE RED
 # ============================================================================
 
-def nw_upsert_discovered_ip(ip, mac, hostname, tipo):
-    """Llama al SP NW_UPSERT_DISCOVERED_IP."""
+def nw_get_segments():
+    """Retorna lista de segmentos de red guardados."""
+    segs = []
     try:
         with connections[DB_NAME].cursor() as cursor:
-            cursor.callproc('NW_UPSERT_DISCOVERED_IP', [ip, mac, hostname, tipo])
+            cursor.callproc('NW_GET_SEGMENTS')
+            cols = [desc[0] for desc in cursor.description]
+            for row in cursor.fetchall():
+                segs.append(dict(zip(cols, row)))
     except Exception as e:
-        print(f"[NETWATCH] Error en NW_UPSERT_DISCOVERED_IP: {e}")
+        print(f"[NETWATCH] Error en NW_GET_SEGMENTS: {e}")
+    return segs
 
-def nw_get_discovered_ips():
-    """Llama al SP NW_GET_DISCOVERED_IPS y retorna lista."""
+
+def nw_upsert_segment(nombre, subnet, descripcion=''):
+    """Inserta o actualiza un segmento de red."""
+    try:
+        with connections[DB_NAME].cursor() as cursor:
+            cursor.callproc('NW_UPSERT_SEGMENT', [nombre, subnet, descripcion])
+            row = cursor.fetchone()
+            if row:
+                return {'lastID': row[0], 'guardado': row[1], 'mensaje': row[2]}
+    except Exception as e:
+        print(f"[NETWATCH] Error en NW_UPSERT_SEGMENT: {e}")
+    return {'lastID': 0, 'guardado': 0, 'mensaje': 'Error'}
+
+
+def nw_save_segment_layout(subnet, layout_json):
+    """Guarda las posiciones X/Y del mapa de un segmento."""
+    try:
+        with connections[DB_NAME].cursor() as cursor:
+            cursor.callproc('NW_SAVE_SEGMENT_LAYOUT', [subnet, layout_json])
+    except Exception as e:
+        print(f"[NETWATCH] Error en NW_SAVE_SEGMENT_LAYOUT: {e}")
+
+
+def nw_get_discovered_by_segment(subnet):
+    """Retorna IPs descubiertas filtradas por el prefijo /24 del segmento."""
+    ips = []
+    try:
+        with connections[DB_NAME].cursor() as cursor:
+            cursor.callproc('NW_GET_DISCOVERED_BY_SEGMENT', [subnet])
+            cols = [desc[0] for desc in cursor.description]
+            for row in cursor.fetchall():
+                ips.append(dict(zip(cols, row)))
+    except Exception as e:
+        print(f"[NETWATCH] Error en NW_GET_DISCOVERED_BY_SEGMENT: {e}")
+    return ips
+
+
+# ============================================================================
+# IP SCANNER — Escaneo no invasivo en segundo plano
+# ============================================================================
+
+# Mapa de prefijos OUI -> Fabricante (primeros 3 octetos de la MAC en mayúscula)
+_OUI_MAP = {
+    '00:50:56': 'VMware',          '00:0C:29': 'VMware',
+    '00:1A:A0': 'Dell',            '00:14:22': 'Dell',
+    'B8:AC:6F': 'Dell',            '18:66:DA': 'Dell',
+    '3C:D9:2B': 'Hewlett-Packard', '00:26:55': 'Hewlett-Packard',
+    '00:18:FE': 'Cisco',           '00:1E:E5': 'Cisco',
+    '00:1B:D4': 'Cisco',           'F8:72:EA': 'Cisco',
+    '04:DA:D2': 'Cisco',           '00:11:92': 'Cisco',
+    'F8:C2:88': 'Ubiquiti',        '44:D9:E7': 'Ubiquiti',
+    '00:27:22': 'Ubiquiti',        '24:A4:3C': 'Ubiquiti',
+    '68:72:51': 'Ubiquiti',        'DC:9F:DB': 'Ubiquiti',
+    '80:2A:A8': 'Ubiquiti',        '74:83:C2': 'MikroTik',
+    '4C:5E:0C': 'MikroTik',        'D4:CA:6D': 'MikroTik',
+    'B8:27:EB': 'Raspberry Pi',    'DC:A6:32': 'Raspberry Pi',
+    '7C:2E:BD': 'Raspberry Pi',    '28:CD:C1': 'Apple',
+    'A4:5E:60': 'Apple',           '00:1C:B3': 'Apple',
+    '3C:15:C2': 'Apple',           '00:15:5D': 'Microsoft/Hyper-V',
+}
+
+
+def _get_vendor_from_mac(mac):
+    """Deduce fabricante por los primeros 3 octetos de la MAC (OUI)."""
+    if not mac or len(mac) < 8:
+        return ''
+    return _OUI_MAP.get(mac[:8].upper(), '')
+
+
+def _extract_ttl(ping_output):
+    """Extrae TTL de la salida del ping (Windows y Linux)."""
+    m = re.search(r'TTL=(\d+)', ping_output, re.IGNORECASE)
+    return int(m.group(1)) if m else 0
+
+
+def _guess_device_type(hostname, vendor, ttl):
+    """
+    Clasifica el dispositivo usando hostname, vendor y TTL.
+    - TTL ~255 → Network gear (Cisco/Ubiquiti)
+    - TTL ~128 → Windows PC
+    - TTL ~64  → Linux/Mac/servidor
+    """
+    h = (hostname or '').lower()
+    v = (vendor   or '').lower()
+
+    # Por vendor conocido
+    if 'cisco' in v:
+        return 'SWITCH' if any(x in h for x in ['sw', 'switch']) else 'ROUTER'
+    if any(x in v for x in ['ubiquiti', 'unifi', 'mikrotik']):
+        if any(x in h for x in ['ap', 'wifi', 'wireless', 'uap']): return 'AP'
+        if any(x in h for x in ['sw', 'switch']):                   return 'SWITCH'
+        return 'ROUTER'
+    if 'raspberry' in v:
+        return 'SERVIDOR'
+
+    # Por hostname
+    if any(x in h for x in ['sw', 'switch', 'swt']):                           return 'SWITCH'
+    if any(x in h for x in ['ap', 'wifi', 'wireless', 'uap']):                 return 'AP'
+    if any(x in h for x in ['rt', 'router', 'gw', 'gateway', 'usg', 'edge']):  return 'ROUTER'
+    if any(x in h for x in ['srv', 'server', 'nas', 'vm', 'esxi', 'proxmox']): return 'SERVIDOR'
+    if any(x in h for x in ['pc', 'desk', 'lap', 'wks', 'workstation']):       return 'PC'
+
+    # Por TTL como último recurso
+    if ttl and ttl >= 200: return 'ROUTER'    # Network gear ~255
+    if ttl and ttl >= 100: return 'PC'        # Windows ~128
+    if ttl and ttl >= 50:  return 'SERVIDOR'  # Linux ~64
+
+    return 'OTRO'
+
+
+def nw_upsert_discovered_ip(ip, mac, hostname, tipo, vendor='', ttl=0):
+    """Llama al SP NW_UPSERT_DISCOVERED_IP con todos los campos."""
+    try:
+        with connections[DB_NAME].cursor() as cursor:
+            cursor.callproc('NW_UPSERT_DISCOVERED_IP',
+                            [ip, mac, hostname, tipo, vendor, int(ttl) if ttl else 0])
+    except Exception as e:
+        print(f"[NETWATCH] Error en NW_UPSERT_DISCOVERED_IP ({ip}): {e}")
+
+
+def nw_get_discovered_ips(subnet=None):
+    """
+    Retorna IPs descubiertas.
+    Si se pasa subnet, filtra al prefijo /24 correspondiente.
+    """
+    if subnet:
+        return nw_get_discovered_by_segment(subnet)
     ips = []
     try:
         with connections[DB_NAME].cursor() as cursor:
@@ -641,140 +762,219 @@ def nw_get_discovered_ips():
         print(f"[NETWATCH] Error en NW_GET_DISCOVERED_IPS: {e}")
     return ips
 
+
 def parse_subnet(subnet_str):
     """
-    Parsea una cadena de subred y retorna una lista de IPs (strings).
-    Soporta formatos: '192.168.0.0/24' o '192.168.0.1-254'
+    Parsea una cadena de subred y retorna lista de IPs.
+    Formatos soportados: '192.168.0.0/24' o '192.168.0.1-254'
     """
     subnet_str = subnet_str.strip()
     ips = []
     try:
-        # Formato CIDR (ej: 192.168.0.0/24)
         if '/' in subnet_str:
             network = ipaddress.ip_network(subnet_str, strict=False)
             ips = [str(ip) for ip in network.hosts()]
-        # Formato Rango (ej: 192.168.0.1-254)
         elif '-' in subnet_str:
-            base_ip, end_host = subnet_str.split('-')
-            base_ip = base_ip.strip()
-            end_host = end_host.strip()
-            parts = base_ip.split('.')
-            if len(parts) == 4 and end_host.isdigit():
-                start_host = int(parts[3])
-                end_host = int(end_host)
-                base_network = '.'.join(parts[:3])
-                for i in range(start_host, end_host + 1):
-                    ips.append(f"{base_network}.{i}")
+            base_ip, end_host = subnet_str.rsplit('-', 1)
+            parts = base_ip.strip().split('.')
+            if len(parts) == 4 and end_host.strip().isdigit():
+                start = int(parts[3])
+                end   = int(end_host.strip())
+                base  = '.'.join(parts[:3])
+                ips   = [f"{base}.{i}" for i in range(start, end + 1)]
         else:
-            # Una sola IP
-            ipaddress.ip_address(subnet_str) # Valida que sea IP
+            ipaddress.ip_address(subnet_str)
             ips = [subnet_str]
     except Exception as e:
         print(f"[NETWATCH] Error parseando subred '{subnet_str}': {e}")
     return ips
 
+
 def _ping_and_discover(ip):
     """
-    Hace un ping a una IP. Si responde, obtiene la MAC address mediante ARP
-    y el hostname. Luego lo guarda en la base de datos.
+    Ping ICMP no invasivo (1 paquete, timeout 1 s).
+    Si el host responde: extrae MAC (ARP), Hostname (DNS inverso), TTL, Vendor.
     """
-    param = '-n' if platform.system().lower() == 'windows' else '-c'
-    # Solo 1 paquete, timeout rpido
-    command = ['ping', param, '1', '-w', '1000' if param == '-n' else '1', ip]
+    is_win = platform.system().lower() == 'windows'
+    param  = '-n' if is_win else '-c'
+    cmd    = ['ping', param, '1', '-w', '1000' if is_win else '1', ip]
+
     try:
-        result = subprocess.run(command, stdout=subprocess.PIPE, stderr=subprocess.PIPE, text=True)
-        if result.returncode == 0:
-            # Respondió al ping
-            mac = ""
-            hostname = ""
-            
-            # Obtener MAC via ARP
-            try:
-                arp_result = subprocess.run(['arp', '-a', ip], stdout=subprocess.PIPE, stderr=subprocess.PIPE, text=True)
-                # Buscar patrn de MAC address en la salida
-                mac_search = re.search(r'([0-9A-Fa-f]{2}[:-]){5}([0-9A-Fa-f]{2})', arp_result.stdout)
-                if mac_search:
-                    mac = mac_search.group(0).replace('-', ':').upper()
-            except Exception:
-                pass
-            
-            # Obtener Hostname
-            try:
-                host_info = socket.gethostbyaddr(ip)
-                if host_info and host_info[0]:
-                    hostname = host_info[0]
-            except Exception:
-                pass
-                
-            # Adivinar tipo de dispositivo basico
-            tipo_dispositivo = 'OTRO'
-            h = hostname.lower()
-            if 'sw' in h or 'switch' in h: tipo_dispositivo = 'SWITCH'
-            elif 'rt' in h or 'router' in h or 'gw' in h or 'unifi' in h or 'ap' in h: tipo_dispositivo = 'ROUTER'
-            elif 'srv' in h or 'server' in h: tipo_dispositivo = 'SERVIDOR'
-            elif 'pc' in h or 'desk' in h or 'lap' in h: tipo_dispositivo = 'PC'
-            
-            # Upsert en la base de datos
-            nw_upsert_discovered_ip(ip, mac, hostname, tipo_dispositivo)
-            
+        result = subprocess.run(cmd, stdout=subprocess.PIPE, stderr=subprocess.PIPE,
+                                text=True, timeout=3)
+        if result.returncode != 0:
+            return  # Host sin respuesta, ignorar
+
+        ttl      = _extract_ttl(result.stdout)
+        mac      = ''
+        hostname = ''
+
+        # MAC via ARP (solo funciona en misma subred local)
+        try:
+            arp = subprocess.run(['arp', '-a', ip], stdout=subprocess.PIPE,
+                                 stderr=subprocess.PIPE, text=True, timeout=2)
+            m = re.search(r'([0-9A-Fa-f]{2}[:\-]){5}[0-9A-Fa-f]{2}', arp.stdout)
+            if m:
+                mac = m.group(0).replace('-', ':').upper()
+        except Exception:
+            pass
+
+        # Hostname via DNS inverso (pasivo, sin paquetes extra)
+        try:
+            info = socket.gethostbyaddr(ip)
+            if info and info[0]:
+                hostname = info[0]
+        except Exception:
+            pass
+
+        vendor = _get_vendor_from_mac(mac)
+        tipo   = _guess_device_type(hostname, vendor, ttl)
+
+        nw_upsert_discovered_ip(ip, mac, hostname, tipo, vendor, ttl)
+
+    except subprocess.TimeoutExpired:
+        pass
     except Exception as e:
         print(f"[NETWATCH] Error escaneando {ip}: {e}")
 
+
+# Estado global del escaneo (para polling de progreso en frontend)
+_SCAN_STATE = {'running': False, 'subnet': '', 'total': 0, 'done': 0}
+_SCAN_LOCK  = threading.Lock()
+
+
 def _network_scan_worker(subnet_str):
-    """
-    Funcin que se ejecuta en el hilo en segundo plano.
-    """
+    """Worker que corre en hilo daemon y actualiza _SCAN_STATE."""
+    global _SCAN_STATE
     ips = parse_subnet(subnet_str)
     if not ips:
-        print(f"[NETWATCH] No se detectaron IPs vlidas para escanear en: {subnet_str}")
+        with _SCAN_LOCK:
+            _SCAN_STATE['running'] = False
         return
-        
-    print(f"[NETWATCH] Iniciando escaneo de red en segundo plano para {len(ips)} IPs ({subnet_str})...")
-    # Limitar hilos a 50 para no congestionar el servidor ni la red
-    with concurrent.futures.ThreadPoolExecutor(max_workers=50) as executor:
-        executor.map(_ping_and_discover, ips)
-    print(f"[NETWATCH] Escaneo finalizado para {subnet_str}.")
+
+    with _SCAN_LOCK:
+        _SCAN_STATE.update({'running': True, 'subnet': subnet_str,
+                            'total': len(ips), 'done': 0})
+
+    print(f"[NETWATCH] Escaneando {len(ips)} IPs en {subnet_str} ...")
+
+    def _run(ip):
+        _ping_and_discover(ip)
+        with _SCAN_LOCK:
+            _SCAN_STATE['done'] += 1
+
+    with concurrent.futures.ThreadPoolExecutor(max_workers=min(30, len(ips))) as ex:
+        ex.map(_run, ips)
+
+    with _SCAN_LOCK:
+        _SCAN_STATE['running'] = False
+
+    print(f"[NETWATCH] Escaneo finalizado: {subnet_str}")
+
+
+# ============================================================================
+# ENDPOINTS API — SCANNER + SEGMENTOS
+# ============================================================================
 
 def start_network_scan(request):
     """
-    Endpoint (API): Inicia el escaneo de red en segundo plano.
-    Parmetro POST: subnet (ej: 192.168.0.1-254)
+    POST /netwatch/api/scan/
+    Inicia el escaneo de red en segundo plano.
+    Body: subnet (str), segment_name (str, opcional)
     """
     auth = auth_required(request)
     if auth: return auth
-    
+
     if request.method != 'POST':
-        return JsonResponse({'success': False, 'error': 'Mtodo no permitido'})
-        
-    subnet = request.POST.get('subnet', '')
+        return JsonResponse({'success': False, 'error': 'Método no permitido'})
+
+    subnet = request.POST.get('subnet', '').strip()
+    nombre = request.POST.get('segment_name', subnet).strip()
+
     if not subnet:
-        return JsonResponse({'success': False, 'error': 'Debe especificar una subred a escanear'})
-        
-    # Iniciar hilo en segundo plano
-    scan_thread = threading.Thread(target=_network_scan_worker, args=(subnet,))
-    scan_thread.daemon = True
-    scan_thread.start()
-    
-    return JsonResponse({
-        'success': True,
-        'message': f'Escaneo iniciado en segundo plano para {subnet}'
-    })
+        return JsonResponse({'success': False, 'error': 'Debe especificar una subred'})
+
+    with _SCAN_LOCK:
+        if _SCAN_STATE['running']:
+            return JsonResponse({'success': False,
+                                 'error': f"Escaneo en curso: {_SCAN_STATE['subnet']}"})
+
+    nw_upsert_segment(nombre, subnet)
+
+    total = len(parse_subnet(subnet))
+    t = threading.Thread(target=_network_scan_worker, args=(subnet,))
+    t.daemon = True
+    t.start()
+
+    return JsonResponse({'success': True,
+                         'message': f'Escaneo iniciado para {subnet}',
+                         'total': total})
+
+
+def get_scan_status(request):
+    """
+    GET /netwatch/api/scan/status/
+    Progreso del escaneo actual (para polling en el frontend).
+    """
+    with _SCAN_LOCK:
+        state = dict(_SCAN_STATE)
+    pct = int((state['done'] / state['total'] * 100)) if state['total'] > 0 else 0
+    state['percent'] = pct
+    return JsonResponse({'success': True, **state})
+
 
 def inventario_ip(request):
-    """Vista: Página de inventario de IPs descubiertas."""
+    """Vista: Inventario de IPs con escáner integrado."""
     auth = auth_required(request)
     if auth: return auth
-    
-    ctx = get_user_context(request)
-    # Las IPs se pueden cargar va API o pasar directamente al template
-    ctx['discovered_ips'] = nw_get_discovered_ips()
+
+    subnet   = request.GET.get('subnet', '')
+    segments = nw_get_segments()
+    ctx = {
+        **get_user_context(request),
+        'segments':       segments,
+        'active_subnet':  subnet,
+        'discovered_ips': nw_get_discovered_ips(subnet=subnet) if subnet else [],
+    }
     return render(request, 'netwatch/inventario_ip.html', ctx)
 
+
 def get_discovered_api(request):
-    """Endpoint (API): Retorna JSON de IPs descubiertas para el mapa/tablas."""
-    ips = nw_get_discovered_ips()
-    # Serializar fechas
+    """GET /netwatch/api/discovered/ — JSON de IPs descubiertas."""
+    subnet = request.GET.get('subnet', '').strip()
+    ips    = nw_get_discovered_ips(subnet=subnet if subnet else None)
     for ip in ips:
         if hasattr(ip.get('last_seen'), 'strftime'):
             ip['last_seen'] = ip['last_seen'].strftime('%Y-%m-%d %H:%M:%S')
     return JsonResponse({'success': True, 'ips': ips})
+
+
+def manage_segments(request):
+    """
+    GET  /netwatch/api/segments/ — Lista segmentos.
+    POST /netwatch/api/segments/ — Crear/actualizar segmento o guardar layout.
+    """
+    if request.method == 'GET':
+        segs = nw_get_segments()
+        for s in segs:
+            for k in ('created_at', 'updated_at'):
+                if hasattr(s.get(k), 'strftime'):
+                    s[k] = s[k].strftime('%Y-%m-%d %H:%M:%S')
+        return JsonResponse({'success': True, 'segments': segs})
+
+    action = request.POST.get('action', 'upsert')
+
+    if action == 'save_layout':
+        subnet = request.POST.get('subnet', '')
+        layout = request.POST.get('layout_json', '{}')
+        nw_save_segment_layout(subnet, layout)
+        return JsonResponse({'success': True})
+
+    if action == 'upsert':
+        nombre = request.POST.get('nombre', '')
+        subnet = request.POST.get('subnet', '')
+        desc   = request.POST.get('descripcion', '')
+        res    = nw_upsert_segment(nombre, subnet, desc)
+        return JsonResponse({'success': bool(res.get('guardado', 0)), **res})
+
+    return JsonResponse({'success': False, 'error': 'Acción no reconocida'})

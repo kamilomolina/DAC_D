@@ -1,161 +1,659 @@
 {% extends 'netwatch/netwatch_base.html' %}
+{% load static %}
 
 {% block title %}NETWATCH | Inventario de IPs{% endblock %}
 
 {% block extra_css %}
-<!-- DataTables CSS -->
 <link rel="stylesheet" href="https://cdn.datatables.net/1.13.6/css/dataTables.bootstrap5.min.css">
 <style>
-    /* Estilos personalizados para la tabla estilo NETWATCH */
-    .nw-page-title {
-        font-size: 1.5rem;
-        font-weight: 700;
-        margin-bottom: 1.5rem;
-        color: var(--nw-text);
-        display: flex;
-        justify-content: space-between;
-        align-items: center;
+    /* ── LAYOUT ─────────────────────────────────────────────── */
+    .inv-grid {
+        display: grid;
+        grid-template-columns: 280px 1fr;
+        gap: 1.25rem;
+        height: calc(100vh - 120px);
     }
-    .table-container {
+
+    /* ── PANEL IZQUIERDO — Segmentos ─────────────────────────── */
+    .seg-panel {
         background: var(--nw-surface);
         border: 1px solid var(--nw-border);
-        border-radius: 12px;
-        padding: 1.5rem;
-        box-shadow: 0 4px 6px rgba(0, 0, 0, 0.05);
+        border-radius: 14px;
+        display: flex;
+        flex-direction: column;
+        overflow: hidden;
     }
-    .table.dataTable {
+    .seg-panel-header {
+        padding: 1rem 1.1rem 0.8rem;
+        border-bottom: 1px solid var(--nw-border);
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+    }
+    .seg-panel-title {
+        font-size: 0.8rem;
+        font-weight: 800;
+        text-transform: uppercase;
+        letter-spacing: 0.7px;
+        color: var(--nw-text-muted);
+    }
+    .seg-list { flex: 1; overflow-y: auto; padding: 0.6rem; }
+    .seg-item {
+        display: flex;
+        align-items: center;
+        gap: 0.7rem;
+        padding: 0.65rem 0.85rem;
+        border-radius: 10px;
+        cursor: pointer;
+        transition: all 0.18s;
+        margin-bottom: 3px;
+        border: 1px solid transparent;
+    }
+    .seg-item:hover { background: var(--nw-bg); }
+    .seg-item.active {
+        background: rgba(0, 210, 255, 0.08);
+        border-color: rgba(0, 210, 255, 0.25);
+    }
+    .seg-item-dot {
+        width: 8px; height: 8px; border-radius: 50%;
+        background: var(--nw-brand); flex-shrink: 0;
+    }
+    .seg-item-info { flex: 1; min-width: 0; }
+    .seg-item-name {
+        font-size: 0.82rem; font-weight: 700;
+        color: var(--nw-text); white-space: nowrap;
+        overflow: hidden; text-overflow: ellipsis;
+    }
+    .seg-item-subnet {
+        font-size: 0.7rem; color: var(--nw-text-muted);
+        font-family: 'JetBrains Mono', monospace;
+    }
+    .seg-count {
+        font-size: 0.7rem; font-weight: 700;
+        background: rgba(0,210,255,0.12);
+        color: var(--nw-brand);
+        padding: 0.15em 0.6em;
+        border-radius: 20px;
+    }
+
+    /* ── SCANNER FORM ───────────────────────────────────────── */
+    .scan-form-area {
+        padding: 0.8rem;
+        border-top: 1px solid var(--nw-border);
+        background: var(--nw-bg);
+    }
+    .scan-input-row {
+        display: flex; gap: 0.4rem; margin-bottom: 0.5rem;
+    }
+    .scan-input {
+        flex: 1;
+        padding: 0.5rem 0.75rem;
+        border: 1px solid var(--nw-border);
+        border-radius: 8px;
+        background: var(--nw-surface);
+        color: var(--nw-text);
+        font-size: 0.78rem;
+        font-family: 'JetBrains Mono', monospace;
+        outline: none;
+        transition: border-color 0.2s;
+    }
+    .scan-input:focus { border-color: var(--nw-brand); }
+    .btn-scan-go {
+        padding: 0.5rem 0.9rem;
+        border-radius: 8px;
+        border: none;
+        background: var(--nw-brand);
+        color: #fff;
+        font-size: 0.78rem;
+        font-weight: 700;
+        cursor: pointer;
+        transition: all 0.2s;
+        white-space: nowrap;
+    }
+    .btn-scan-go:hover { opacity: 0.85; transform: translateY(-1px); }
+    .btn-scan-go:disabled { opacity: 0.5; cursor: not-allowed; transform: none; }
+
+    /* ── PROGRESS BAR ───────────────────────────────────────── */
+    .scan-progress-wrap { display: none; }
+    .scan-progress-wrap.active { display: block; }
+    .scan-progress-bar-bg {
+        background: var(--nw-border);
+        border-radius: 20px;
+        height: 5px;
+        overflow: hidden;
+        margin-bottom: 0.35rem;
+    }
+    .scan-progress-bar-fill {
+        height: 100%; border-radius: 20px;
+        background: linear-gradient(90deg, var(--nw-brand), #0099cc);
+        transition: width 0.4s ease;
+        animation: scanPulse 1.5s ease-in-out infinite;
+    }
+    @keyframes scanPulse {
+        0%,100% { opacity:1; } 50% { opacity:0.7; }
+    }
+    .scan-progress-text {
+        font-size: 0.68rem; color: var(--nw-text-muted); text-align: center;
+    }
+
+    /* ── PANEL DERECHO — Tabla ───────────────────────────────── */
+    .table-panel {
+        background: var(--nw-surface);
+        border: 1px solid var(--nw-border);
+        border-radius: 14px;
+        display: flex;
+        flex-direction: column;
+        overflow: hidden;
+    }
+    .table-panel-header {
+        padding: 1rem 1.25rem 0.85rem;
+        border-bottom: 1px solid var(--nw-border);
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        gap: 1rem;
+    }
+    .panel-title-main {
+        font-size: 1rem;
+        font-weight: 700;
         color: var(--nw-text);
     }
+    .panel-subtitle {
+        font-size: 0.72rem;
+        color: var(--nw-text-muted);
+        margin-top: 1px;
+    }
+    .table-scroll { flex: 1; overflow: auto; padding: 1rem 1.25rem; }
+
+    /* ── TIPO BADGE ─────────────────────────────────────────── */
+    .tipo-badge {
+        display: inline-flex; align-items: center; gap: 0.3em;
+        padding: 0.25em 0.7em;
+        border-radius: 20px;
+        font-size: 0.72rem;
+        font-weight: 700;
+        text-transform: uppercase;
+    }
+    .tipo-ROUTER   { background: rgba(245,158,11,0.12); color: #f59e0b; }
+    .tipo-SWITCH   { background: rgba(59,130,246,0.12);  color: #3b82f6; }
+    .tipo-SERVIDOR { background: rgba(168,85,247,0.12);  color: #a855f7; }
+    .tipo-AP       { background: rgba(16,185,129,0.12);  color: #10b981; }
+    .tipo-PC       { background: rgba(100,116,139,0.12); color: #94a3b8; }
+    .tipo-OTRO     { background: rgba(71,85,105,0.1);    color: #64748b; }
+
+    /* ── DT Dark Mode ────────────────────────────────────────── */
+    .table.dataTable { color: var(--nw-text); border-color: transparent; }
     .table.dataTable thead th {
         border-bottom-color: var(--nw-border);
-        color: var(--nw-text-muted);
-        font-weight: 600;
-        text-transform: uppercase;
-        font-size: 0.85rem;
+        color: var(--nw-text-muted); font-weight: 700;
+        text-transform: uppercase; font-size: 0.72rem;
+        letter-spacing: 0.5px;
     }
-    .table.dataTable tbody td {
-        border-bottom-color: var(--nw-border);
-        vertical-align: middle;
-    }
-    .badge-status {
-        padding: 0.4em 0.8em;
-        border-radius: 20px;
-        font-size: 0.8rem;
-        font-weight: 600;
-    }
-    .badge-status.discovered {
-        background: rgba(0, 210, 255, 0.1);
-        color: var(--nw-primary);
-        border: 1px solid rgba(0, 210, 255, 0.2);
-    }
-    
-    /* Paginación DataTable Dark Mode Fix */
-    [data-theme="dark"] .page-link {
-        background-color: var(--nw-surface);
-        border-color: var(--nw-border);
-        color: var(--nw-text);
-    }
-    [data-theme="dark"] .page-item.active .page-link {
-        background-color: var(--nw-primary);
-        border-color: var(--nw-primary);
-        color: #fff;
-    }
-    [data-theme="dark"] .page-item.disabled .page-link {
-        background-color: var(--nw-bg);
-        border-color: var(--nw-border);
-        color: var(--nw-text-muted);
-    }
+    .table.dataTable tbody td { border-bottom-color: var(--nw-border); vertical-align: middle; }
+    [data-theme="dark"] .page-link { background: var(--nw-surface); border-color: var(--nw-border); color: var(--nw-text); }
+    [data-theme="dark"] .page-item.active .page-link { background: var(--nw-brand); border-color: var(--nw-brand); color:#fff; }
     [data-theme="dark"] div.dataTables_wrapper div.dataTables_filter input,
     [data-theme="dark"] div.dataTables_wrapper div.dataTables_length select {
-        background-color: var(--nw-bg);
+        background: var(--nw-bg); border-color: var(--nw-border); color: var(--nw-text);
+    }
+    div.dataTables_wrapper div.dataTables_info,
+    div.dataTables_wrapper div.dataTables_length label {
+        color: var(--nw-text-muted); font-size: 0.78rem;
+    }
+
+    /* ── EMPTY STATE ────────────────────────────────────────── */
+    .empty-state {
+        display: flex; flex-direction: column; align-items: center;
+        justify-content: center; padding: 4rem 2rem; text-align: center;
+        color: var(--nw-text-muted);
+    }
+    .empty-state i { font-size: 3rem; margin-bottom: 1rem; opacity: 0.3; }
+    .empty-state h3 { font-size: 1rem; font-weight: 700; margin-bottom: 0.4rem; }
+    .empty-state p { font-size: 0.8rem; }
+
+    /* ── Modal Nuevo Segmento ───────────────────────────────── */
+    .modal-content {
+        background: var(--nw-surface);
         border-color: var(--nw-border);
         color: var(--nw-text);
+    }
+    .modal-header, .modal-footer { border-color: var(--nw-border); }
+    .form-control, .form-label { color: var(--nw-text); }
+    .form-control {
+        background: var(--nw-bg);
+        border-color: var(--nw-border);
+        color: var(--nw-text);
+    }
+    .form-control:focus {
+        background: var(--nw-bg);
+        border-color: var(--nw-brand);
+        color: var(--nw-text);
+        box-shadow: 0 0 0 3px rgba(0,210,255,0.15);
     }
 </style>
 {% endblock %}
 
 {% block content %}
-<div class="container-fluid py-4">
-    <div class="nw-page-title">
-        <span><i class="fas fa-clipboard-list me-2 text-primary"></i> Inventario de IPs (No Administrados)</span>
-        <a href="{% url 'mapa_red' %}" class="btn btn-primary btn-sm rounded-pill">
-            <i class="fas fa-search me-1"></i> Ir al Escáner
-        </a>
-    </div>
+<div class="nw-content" style="padding: 1.25rem;">
 
-    <div class="table-container">
-        <table id="inventoryTable" class="table table-hover w-100">
-            <thead>
-                <tr>
-                    <th>Dirección IP</th>
-                    <th>MAC Address</th>
-                    <th>Hostname</th>
-                    <th>Última Vez Visto</th>
-                    <th>Estado</th>
-                    <th class="text-end">Acción</th>
-                </tr>
-            </thead>
-            <tbody>
-                {% for ip in discovered_ips %}
-                <tr>
-                    <td><strong>{{ ip.ip_address }}</strong></td>
-                    <td><code class="text-muted">{{ ip.mac_address|default:"Desconocida" }}</code></td>
-                    <td>{{ ip.hostname|default:"-" }}</td>
-                    <td>{{ ip.last_seen|date:"Y-m-d H:i" }}</td>
-                    <td>
-                        <span class="badge-status discovered">
-                            <i class="fas fa-eye me-1"></i> Detectado
-                        </span>
-                    </td>
-                    <td class="text-end">
-                        <button class="btn btn-sm btn-outline-success rounded-circle" title="Agregar a Gestión" onclick="addToManaged('{{ ip.ip_address }}', '{{ ip.mac_address }}', '{{ ip.hostname }}')">
-                            <i class="fas fa-plus"></i>
-                        </button>
-                    </td>
-                </tr>
-                {% empty %}
-                <tr>
-                    <td colspan="6" class="text-center py-4 text-muted">
-                        No hay IPs descubiertas actualmente. Usa el escáner en el Mapa de Red.
-                    </td>
-                </tr>
-                {% endfor %}
-            </tbody>
-        </table>
+    <div class="inv-grid">
+
+        <!-- ============ PANEL IZQUIERDO — Segmentos ============ -->
+        <div class="seg-panel">
+            <div class="seg-panel-header">
+                <span class="seg-panel-title"><i class="fas fa-sitemap me-1"></i> Segmentos</span>
+                <button class="btn btn-sm btn-outline-primary rounded-pill" style="font-size:0.72rem; padding: 0.2em 0.75em;"
+                    data-bs-toggle="modal" data-bs-target="#modalNewSegment">
+                    <i class="fas fa-plus me-1"></i>Nuevo
+                </button>
+            </div>
+
+            <div class="seg-list" id="segmentList">
+                {% if segments %}
+                    {% for seg in segments %}
+                    <div class="seg-item {% if active_subnet == seg.subnet %}active{% endif %}"
+                         onclick="loadSegment('{{ seg.subnet }}', '{{ seg.nombre }}', this)">
+                        <div class="seg-item-dot"></div>
+                        <div class="seg-item-info">
+                            <div class="seg-item-name">{{ seg.nombre }}</div>
+                            <div class="seg-item-subnet">{{ seg.subnet }}</div>
+                        </div>
+                        <span class="seg-count" id="count-{{ seg.subnet|slugify }}">—</span>
+                    </div>
+                    {% endfor %}
+                {% else %}
+                    <div class="empty-state" style="padding:2rem 1rem;">
+                        <i class="fas fa-sitemap" style="font-size:2rem;"></i>
+                        <p style="font-size:0.75rem;">Sin segmentos.<br>Agrega uno y haz tu primer escaneo.</p>
+                    </div>
+                {% endif %}
+            </div>
+
+            <!-- Formulario de Escaneo -->
+            <div class="scan-form-area">
+                <div style="font-size:0.7rem; font-weight:700; text-transform:uppercase; letter-spacing:0.5px; color:var(--nw-text-muted); margin-bottom:0.5rem;">
+                    <i class="fas fa-radar me-1"></i>Escanear Segmento
+                </div>
+                <div class="scan-input-row">
+                    <input type="text" class="scan-input" id="scanSubnetInput"
+                           placeholder="192.168.0.1-254"
+                           value="{{ active_subnet }}">
+                    <button class="btn-scan-go" id="btnStartScan" onclick="startScan()">
+                        <i class="fas fa-play me-1"></i>Scan
+                    </button>
+                </div>
+                <div class="scan-progress-wrap" id="scanProgressWrap">
+                    <div class="scan-progress-bar-bg">
+                        <div class="scan-progress-bar-fill" id="scanProgressBar" style="width:0%"></div>
+                    </div>
+                    <div class="scan-progress-text" id="scanProgressText">Iniciando...</div>
+                </div>
+            </div>
+        </div>
+
+        <!-- ============ PANEL DERECHO — Tabla de IPs ============ -->
+        <div class="table-panel">
+            <div class="table-panel-header">
+                <div>
+                    <div class="panel-title-main" id="tableTitle">
+                        <i class="fas fa-clipboard-list me-2" style="color:var(--nw-brand);"></i>
+                        {% if active_subnet %}{{ active_subnet }}{% else %}Inventario de IPs Descubiertas{% endif %}
+                    </div>
+                    <div class="panel-subtitle" id="tableSubtitle">
+                        {% if active_subnet %}Selecciona un segmento o haz clic en "Scan"{% else %}Selecciona un segmento del panel izquierdo{% endif %}
+                    </div>
+                </div>
+                <div class="d-flex gap-2">
+                    <button class="btn btn-sm btn-outline-secondary" style="font-size:0.75rem;" id="btnRefresh" onclick="refreshTable()" title="Actualizar resultados">
+                        <i class="fas fa-rotate"></i>
+                    </button>
+                    <a href="{% url 'mapa_red' %}" class="btn btn-sm btn-outline-primary" style="font-size:0.75rem;" title="Ver en mapa">
+                        <i class="fas fa-diagram-project me-1"></i>Mapa
+                    </a>
+                </div>
+            </div>
+
+            <div class="table-scroll">
+                <div id="emptyState" class="empty-state" style="{% if discovered_ips %}display:none{% endif %}">
+                    <i class="fas fa-radar"></i>
+                    <h3>Sin dispositivos</h3>
+                    <p>Selecciona un segmento y lanza un escaneo<br>para descubrir equipos en la red.</p>
+                </div>
+
+                <table id="inventoryTable" class="table table-hover w-100" style="{% if not discovered_ips %}display:none{% endif %}">
+                    <thead>
+                        <tr>
+                            <th>Tipo</th>
+                            <th>Dirección IP</th>
+                            <th>Hostname</th>
+                            <th>MAC Address</th>
+                            <th>Fabricante</th>
+                            <th>TTL</th>
+                            <th>Última Detección</th>
+                            <th class="text-end">Acción</th>
+                        </tr>
+                    </thead>
+                    <tbody id="inventoryBody">
+                        {% for ip in discovered_ips %}
+                        <tr>
+                            <td>
+                                {% with tipo=ip.tipo_dispositivo|default:"OTRO" %}
+                                <span class="tipo-badge tipo-{{ tipo }}">
+                                    <i class="{% if tipo == 'ROUTER' %}fas fa-route{% elif tipo == 'SWITCH' %}fas fa-network-wired{% elif tipo == 'SERVIDOR' %}fas fa-server{% elif tipo == 'AP' %}fas fa-wifi{% elif tipo == 'PC' %}fas fa-laptop{% else %}fas fa-question{% endif %}"></i>
+                                    {{ tipo }}
+                                </span>
+                                {% endwith %}
+                            </td>
+                            <td><code style="font-size:0.82rem; font-weight:700; color:var(--nw-text);">{{ ip.ip_address }}</code></td>
+                            <td style="font-size:0.82rem;">{{ ip.hostname|default:"—" }}</td>
+                            <td><code class="text-muted" style="font-size:0.75rem;">{{ ip.mac_address|default:"—" }}</code></td>
+                            <td style="font-size:0.78rem; color:var(--nw-text-muted);">{{ ip.vendor|default:"—" }}</td>
+                            <td style="font-size:0.78rem; color:var(--nw-text-muted);">{{ ip.ttl|default:"—" }}</td>
+                            <td style="font-size:0.75rem; color:var(--nw-text-muted);">{{ ip.last_seen|date:"Y-m-d H:i" }}</td>
+                            <td class="text-end">
+                                <button class="btn btn-sm btn-outline-success" style="font-size:0.7rem; border-radius:6px;"
+                                    onclick="addToManaged('{{ ip.ip_address }}', '{{ ip.mac_address }}', '{{ ip.hostname }}', '{{ ip.tipo_dispositivo }}')">
+                                    <i class="fas fa-plus me-1"></i>Gestionar
+                                </button>
+                            </td>
+                        </tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
+            </div>
+        </div>
+
+    </div><!-- /inv-grid -->
+</div>
+
+<!-- ============ MODAL NUEVO SEGMENTO ============ -->
+<div class="modal fade" id="modalNewSegment" tabindex="-1" aria-hidden="true">
+    <div class="modal-dialog modal-dialog-centered">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title"><i class="fas fa-sitemap me-2 text-primary"></i>Nuevo Segmento de Red</h5>
+                <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"></button>
+            </div>
+            <div class="modal-body">
+                <div class="mb-3">
+                    <label class="form-label" style="font-size:0.82rem; font-weight:600;">Nombre del Segmento</label>
+                    <input type="text" class="form-control" id="segNombre" placeholder="Ej: Sede Principal - LAN">
+                </div>
+                <div class="mb-3">
+                    <label class="form-label" style="font-size:0.82rem; font-weight:600;">Subred / Rango</label>
+                    <input type="text" class="form-control" id="segSubnet"
+                           placeholder="Ej: 192.168.0.1-254 o 192.168.1.0/24"
+                           style="font-family:'JetBrains Mono',monospace;">
+                </div>
+                <div class="mb-3">
+                    <label class="form-label" style="font-size:0.82rem; font-weight:600;">Descripción (opcional)</label>
+                    <input type="text" class="form-control" id="segDesc" placeholder="VLAN 10, edificio norte...">
+                </div>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-secondary btn-sm" data-bs-dismiss="modal">Cancelar</button>
+                <button type="button" class="btn btn-primary btn-sm" onclick="saveSegment()">
+                    <i class="fas fa-save me-1"></i>Guardar Segmento
+                </button>
+            </div>
+        </div>
     </div>
 </div>
 {% endblock %}
 
 {% block extra_js %}
-<!-- DataTables JS -->
 <script src="https://cdn.datatables.net/1.13.6/js/jquery.dataTables.min.js"></script>
 <script src="https://cdn.datatables.net/1.13.6/js/dataTables.bootstrap5.min.js"></script>
 
 <script>
-$(document).ready(function() {
-    $('#inventoryTable').DataTable({
-        language: {
-            url: 'https://cdn.datatables.net/plug-ins/1.13.6/i18n/es-ES.json'
-        },
-        order: [[0, 'asc']], // Ordenar por IP inicialmente
-        pageLength: 25
-    });
-});
+const CSRF   = '{{ csrf_token }}';
+const URL_SCAN     = "{% url 'nw_start_scan' %}";
+const URL_STATUS   = "{% url 'nw_scan_status' %}";
+const URL_DISC     = "{% url 'nw_get_discovered' %}";
+const URL_SEGMENTS = "{% url 'nw_segments' %}";
 
-function addToManaged(ip, mac, hostname) {
+let dtTable     = null;
+let pollTimer   = null;
+let activeSubnet = '{{ active_subnet }}';
+
+// ── DataTable ─────────────────────────────────────────────
+function initDT() {
+    if (dtTable) { dtTable.destroy(); dtTable = null; }
+    dtTable = $('#inventoryTable').DataTable({
+        language: { url: 'https://cdn.datatables.net/plug-ins/1.13.6/i18n/es-ES.json' },
+        order: [[1, 'asc']],
+        pageLength: 50,
+        columnDefs: [{ orderable: false, targets: 7 }]
+    });
+}
+
+// ── Cargar segmento ───────────────────────────────────────
+function loadSegment(subnet, nombre, el) {
+    activeSubnet = subnet;
+    document.getElementById('scanSubnetInput').value = subnet;
+    document.getElementById('tableTitle').innerHTML =
+        `<i class="fas fa-clipboard-list me-2" style="color:var(--nw-brand);"></i>${nombre}`;
+    document.getElementById('tableSubtitle').textContent = subnet;
+
+    // Highlight activo
+    document.querySelectorAll('.seg-item').forEach(e => e.classList.remove('active'));
+    if (el) el.classList.add('active');
+
+    fetchDiscovered(subnet);
+}
+
+// ── Obtener IPs descubiertas vía API ──────────────────────
+function fetchDiscovered(subnet) {
+    const url = `${URL_DISC}?subnet=${encodeURIComponent(subnet)}`;
+    $.getJSON(url, function(res) {
+        if (!res.success) return;
+        renderTable(res.ips);
+        // Actualizar contador del segmento
+        const slug = subnet.replace(/[^a-z0-9]/gi,'_').toLowerCase();
+        const el = document.getElementById(`count-${slug}`);
+        if (el) el.textContent = res.ips.length;
+    });
+}
+
+// ── Actualizar tabla en el DOM ────────────────────────────
+function renderTable(ips) {
+    const emptyEl = document.getElementById('emptyState');
+    const tblEl   = document.getElementById('inventoryTable');
+
+    if (!ips || ips.length === 0) {
+        emptyEl.style.display = 'flex';
+        tblEl.style.display   = 'none';
+        if (dtTable) { dtTable.destroy(); dtTable = null; }
+        return;
+    }
+
+    emptyEl.style.display = 'none';
+    tblEl.style.display   = '';
+
+    const tbody = document.getElementById('inventoryBody');
+    const iconMap = {
+        ROUTER:   'fas fa-route',
+        SWITCH:   'fas fa-network-wired',
+        SERVIDOR: 'fas fa-server',
+        AP:       'fas fa-wifi',
+        PC:       'fas fa-laptop',
+        OTRO:     'fas fa-question'
+    };
+
+    tbody.innerHTML = ips.map(ip => {
+        const tipo = (ip.tipo_dispositivo || 'OTRO').toUpperCase();
+        const ico  = iconMap[tipo] || 'fas fa-question';
+        return `<tr>
+            <td><span class="tipo-badge tipo-${tipo}"><i class="${ico}"></i>${tipo}</span></td>
+            <td><code style="font-size:0.82rem;font-weight:700;color:var(--nw-text);">${ip.ip_address}</code></td>
+            <td style="font-size:0.82rem;">${ip.hostname || '—'}</td>
+            <td><code class="text-muted" style="font-size:0.75rem;">${ip.mac_address || '—'}</code></td>
+            <td style="font-size:0.78rem;color:var(--nw-text-muted);">${ip.vendor || '—'}</td>
+            <td style="font-size:0.78rem;color:var(--nw-text-muted);">${ip.ttl || '—'}</td>
+            <td style="font-size:0.75rem;color:var(--nw-text-muted);">${ip.last_seen || '—'}</td>
+            <td class="text-end">
+                <button class="btn btn-sm btn-outline-success" style="font-size:0.7rem;border-radius:6px;"
+                    onclick="addToManaged('${ip.ip_address}','${ip.mac_address||''}','${ip.hostname||''}','${tipo}')">
+                    <i class="fas fa-plus me-1"></i>Gestionar
+                </button>
+            </td>
+        </tr>`;
+    }).join('');
+
+    if (dtTable) { dtTable.destroy(); dtTable = null; }
+    initDT();
+}
+
+// ── Iniciar escaneo ───────────────────────────────────────
+function startScan() {
+    const subnet = document.getElementById('scanSubnetInput').value.trim();
+    if (!subnet) {
+        Swal.fire({ icon:'warning', title:'Ingresa un segmento', toast:true, position:'top-end',
+                    showConfirmButton:false, timer:2500 });
+        return;
+    }
+
+    const btn = document.getElementById('btnStartScan');
+    btn.disabled = true;
+    btn.innerHTML = '<i class="fas fa-spinner fa-spin me-1"></i>Escaneando...';
+
+    $.post(URL_SCAN, {
+        subnet: subnet,
+        segment_name: subnet,
+        csrfmiddlewaretoken: CSRF
+    }, function(res) {
+        if (res.success) {
+            showProgress();
+            pollProgress();
+        } else {
+            Swal.fire({ icon:'error', title:'Error', text: res.error });
+            resetScanBtn();
+        }
+    }).fail(function() {
+        Swal.fire({ icon:'error', title:'Error de conexión' });
+        resetScanBtn();
+    });
+}
+
+// ── Barra de progreso ─────────────────────────────────────
+function showProgress() {
+    document.getElementById('scanProgressWrap').classList.add('active');
+    document.getElementById('scanProgressBar').style.width = '0%';
+    document.getElementById('scanProgressText').textContent = 'Iniciando escaneo...';
+}
+
+function hideProgress() {
+    document.getElementById('scanProgressWrap').classList.remove('active');
+}
+
+function pollProgress() {
+    if (pollTimer) clearInterval(pollTimer);
+    pollTimer = setInterval(function() {
+        $.getJSON(URL_STATUS, function(res) {
+            if (res.running) {
+                const pct = res.percent || 0;
+                document.getElementById('scanProgressBar').style.width = pct + '%';
+                document.getElementById('scanProgressText').textContent =
+                    `Escaneando... ${res.done}/${res.total} IPs (${pct}%)`;
+            } else {
+                clearInterval(pollTimer);
+                hideProgress();
+                resetScanBtn();
+                // Recargar tabla con resultados
+                const subnet = activeSubnet || document.getElementById('scanSubnetInput').value.trim();
+                if (subnet) {
+                    fetchDiscovered(subnet);
+                    Swal.fire({ icon:'success', title:'Escaneo completado',
+                                toast:true, position:'top-end',
+                                showConfirmButton:false, timer:3000 });
+                }
+            }
+        });
+    }, 1500); // Poll cada 1.5 segundos
+}
+
+function resetScanBtn() {
+    const btn = document.getElementById('btnStartScan');
+    btn.disabled = false;
+    btn.innerHTML = '<i class="fas fa-play me-1"></i>Scan';
+}
+
+// ── Refrescar tabla manualmente ───────────────────────────
+function refreshTable() {
+    const subnet = activeSubnet || document.getElementById('scanSubnetInput').value.trim();
+    if (subnet) fetchDiscovered(subnet);
+}
+
+// ── Guardar segmento nuevo ────────────────────────────────
+function saveSegment() {
+    const nombre = document.getElementById('segNombre').value.trim();
+    const subnet = document.getElementById('segSubnet').value.trim();
+    const desc   = document.getElementById('segDesc').value.trim();
+
+    if (!nombre || !subnet) {
+        Swal.fire({ icon:'warning', title:'Nombre y subred son requeridos',
+                    toast:true, position:'top-end', showConfirmButton:false, timer:2500 });
+        return;
+    }
+
+    $.post(URL_SEGMENTS, {
+        action: 'upsert',
+        nombre, subnet, descripcion: desc,
+        csrfmiddlewaretoken: CSRF
+    }, function(res) {
+        if (res.success || res.guardado) {
+            bootstrap.Modal.getInstance(document.getElementById('modalNewSegment')).hide();
+            Swal.fire({ icon:'success', title:'Segmento guardado',
+                        toast:true, position:'top-end', showConfirmButton:false, timer:2000 });
+            // Recargar página para mostrar el nuevo segmento
+            setTimeout(() => location.reload(), 1500);
+        } else {
+            Swal.fire({ icon:'error', title:'Error', text: res.mensaje });
+        }
+    });
+}
+
+// ── Agregar a dispositivos administrados ──────────────────
+function addToManaged(ip, mac, hostname, tipo) {
     Swal.fire({
-        title: 'Agregar a Dispositivos',
-        html: `Vas a registrar formalmente la IP <b>${ip}</b>. ¿Deseas ir al panel de administración?`,
+        title: 'Agregar a Dispositivos Administrados',
+        html: `<p>Vas a registrar formalmente:</p>
+               <b>${ip}</b>${hostname ? ' — ' + hostname : ''}<br>
+               <small class="text-muted">${mac || 'MAC desconocida'} | ${tipo || 'OTRO'}</small>`,
         icon: 'question',
         showCancelButton: true,
-        confirmButtonText: 'Sí, ir al Panel',
+        confirmButtonText: 'Ir al Panel de Administración',
         cancelButtonText: 'Cancelar'
     }).then((result) => {
         if (result.isConfirmed) {
-            // Podríamos pasar los parámetros por URL o session para auto-completar el formulario
+            // Guardamos en sessionStorage para pre-llenar el form en la otra página
+            sessionStorage.setItem('nw_prefill', JSON.stringify({ ip, mac, hostname, tipo }));
             window.location.href = "{% url 'admin_netwatch' %}";
         }
     });
 }
+
+// ── Inicialización ────────────────────────────────────────
+$(document).ready(function() {
+    // Si ya había IPs precargadas (server-side), init DT
+    if ($('#inventoryBody tr').length > 0) {
+        initDT();
+        document.getElementById('inventoryTable').style.display = '';
+        document.getElementById('emptyState').style.display     = 'none';
+    }
+
+    // Si hay subnet activa verificar si hay escaneo en curso
+    if (activeSubnet) {
+        $.getJSON(URL_STATUS, function(res) {
+            if (res.running && res.subnet === activeSubnet) {
+                showProgress();
+                pollProgress();
+                const btn = document.getElementById('btnStartScan');
+                btn.disabled = true;
+                btn.innerHTML = '<i class="fas fa-spinner fa-spin me-1"></i>Escaneando...';
+            }
+        });
+    }
+});
 </script>
 {% endblock %}
