@@ -23,6 +23,30 @@
     /* Modo conexión: cursor crosshair sobre el canvas */
     .map-mode-connect #nw-topology-canvas { cursor: crosshair !important; }
 
+    /* ── SELECTOR DE SEGMENTO ──────────────────────────── */
+    .seg-select-wrap {
+        display: flex; align-items: center; gap: 0.5rem;
+        padding: 0.28rem 0.75rem 0.28rem 0.6rem;
+        background: var(--nw-surface);
+        border: 1px solid var(--nw-border);
+        border-radius: 20px;
+        transition: border-color 0.2s;
+    }
+    .seg-select-wrap:hover { border-color: var(--nw-brand); }
+    .seg-select-wrap i { color: var(--nw-brand); font-size: 0.75rem; }
+    .seg-select {
+        background: transparent;
+        border: none;
+        outline: none;
+        color: var(--nw-text);
+        font-size: 0.75rem;
+        font-weight: 700;
+        font-family: inherit;
+        cursor: pointer;
+        padding-right: 0.25rem;
+    }
+    .seg-select option { background: var(--nw-surface); color: var(--nw-text); }
+
     /* Banner de modo conexión */
     .nw-connect-banner {
         display: none; align-items: center; gap: 0.6rem;
@@ -210,10 +234,27 @@
     <!-- Toolbar -->
     <div class="nw-map-toolbar">
         <div class="nw-map-toolbar-left">
-            <span style="font-size:0.78rem; font-weight:700; color:var(--nw-text-muted); margin-right:0.25rem;">Filtrar:</span>
-            <button class="nw-map-filter-btn active" id="filterAll"     onclick="applyFilter('all')">    <i class="fas fa-layer-group"></i> Todos</button>
-            <button class="nw-map-filter-btn f-online" id="filterOnline" onclick="applyFilter('online')"><i class="fas fa-circle-check"></i> Online</button>
-            <button class="nw-map-filter-btn f-offline" id="filterOffline" onclick="applyFilter('offline')"><i class="fas fa-circle-xmark"></i> Offline</button>
+
+            <!-- Selector de Segmento -->
+            <div class="seg-select-wrap">
+                <i class="fas fa-sitemap"></i>
+                <select class="seg-select" id="segmentSelect" onchange="onSegmentChange(this.value)">
+                    <option value="">Todos los segmentos</option>
+                    {% for seg in segments %}
+                    <option value="{{ seg.subnet }}">{{ seg.nombre }} ({{ seg.subnet }})</option>
+                    {% endfor %}
+                </select>
+            </div>
+
+            <div style="width:1px; height:20px; background:var(--nw-border); margin:0 0.4rem;"></div>
+
+            <span style="font-size:0.78rem; font-weight:700; color:var(--nw-text-muted); margin-right:0.25rem;">Estado:</span>
+            <button class="nw-map-filter-btn active" id="filterAll"     onclick="applyFilter('all')">
+                <i class="fas fa-layer-group"></i> Todos</button>
+            <button class="nw-map-filter-btn f-online" id="filterOnline" onclick="applyFilter('online')">
+                <i class="fas fa-circle-check"></i> Online</button>
+            <button class="nw-map-filter-btn f-offline" id="filterOffline" onclick="applyFilter('offline')">
+                <i class="fas fa-circle-xmark"></i> Offline</button>
             <div style="width:1px; height:20px; background:var(--nw-border); margin:0 0.4rem;"></div>
             <button class="nw-btn-connect" id="btnConnectMode" onclick="toggleConnectMode()">
                 <i class="fas fa-link"></i> Conectar
@@ -607,19 +648,32 @@ function initLegend() {
 }
 
 // ── CARGA INICIAL ──────────────────────────────────────────
+let activeMapSubnet = '';  // Segmento activo en el mapa
+
 $(document).ready(function () {
     initLegend();
-    loadTopology();
+    loadTopology('');
     initControls();
     $('#btnRefreshMap').on('click', refreshStatuses);
     setInterval(refreshStatuses, 60000);
 });
 
-// ── TOPOLOGÍA ──────────────────────────────────────────────
-function loadTopology() {
-    showScanOverlay(true, 'Cargando topología...');
+// ── Cambio de segmento ─────────────────────────────────────
+function onSegmentChange(subnet) {
+    activeMapSubnet = subnet;
+    applyFilter('all');  // Reset filtro de estado al cambiar segmento
+    loadTopology(subnet);
+}
 
-    $.get("{% url 'get_topology_data' %}", function (data) {
+// ── TOPOLOGÍA ──────────────────────────────────────────────
+function loadTopology(subnet) {
+    showScanOverlay(true, subnet ? `Cargando segmento ${subnet}...` : 'Cargando topología...');
+
+    const url = subnet
+        ? `{% url 'get_topology_data' %}?subnet=${encodeURIComponent(subnet)}`
+        : "{% url 'get_topology_data' %}";
+
+    $.get(url, function (data) {
 
         // Convertir nodos a shape:image con SVG
         const visnodes = data.nodes.map(n => nodeToVisNode(n));

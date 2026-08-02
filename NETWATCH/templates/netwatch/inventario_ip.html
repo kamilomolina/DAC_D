@@ -412,9 +412,10 @@ const URL_STATUS   = "{% url 'nw_scan_status' %}";
 const URL_DISC     = "{% url 'nw_get_discovered' %}";
 const URL_SEGMENTS = "{% url 'nw_segments' %}";
 
-let dtTable     = null;
-let pollTimer   = null;
+let dtTable      = null;
+let pollTimer    = null;
 let activeSubnet = '{{ active_subnet }}';
+let scanningSubnet = '';  // subnet que está siendo escaneada EN ESTE MOMENTO
 
 // ── DataTable ─────────────────────────────────────────────
 function initDT() {
@@ -439,8 +440,32 @@ function loadSegment(subnet, nombre, el) {
     document.querySelectorAll('.seg-item').forEach(e => e.classList.remove('active'));
     if (el) el.classList.add('active');
 
-    fetchDiscovered(subnet);
+    // ── Limpiar tabla inmediatamente al cambiar de segmento ──
+    clearTable(subnet);
 }
+
+// ── Vaciar la tabla y mostrar el estado "listo para escanear" ──
+function clearTable(subnet) {
+    // Destruir DataTable si existe
+    if (dtTable) { dtTable.destroy(); dtTable = null; }
+
+    // Limpiar filas
+    document.getElementById('inventoryBody').innerHTML = '';
+
+    // Ocultar tabla, mostrar estado vacío
+    document.getElementById('inventoryTable').style.display = 'none';
+
+    const emptyEl = document.getElementById('emptyState');
+    emptyEl.style.display = 'flex';
+    emptyEl.innerHTML = `
+        <i class="fas fa-radar" style="font-size:3rem; opacity:0.3; margin-bottom:1rem;"></i>
+        <h3 style="font-size:1rem; font-weight:700; margin-bottom:0.4rem;">Sin datos para este segmento</h3>
+        <p style="font-size:0.8rem; color:var(--nw-text-muted);">
+            Presiona <strong>Scan</strong> para descubrir dispositivos en<br>
+            <code style="font-size:0.82rem; color:var(--nw-brand);">${subnet}</code>
+        </p>`;
+}
+
 
 // ── Obtener IPs descubiertas vía API ──────────────────────
 function fetchDiscovered(subnet) {
@@ -513,6 +538,10 @@ function startScan() {
         return;
     }
 
+    // Actualizar activeSubnet con la subnet que vamos a escanear
+    activeSubnet   = subnet;
+    scanningSubnet = subnet;
+
     const btn = document.getElementById('btnStartScan');
     btn.disabled = true;
     btn.innerHTML = '<i class="fas fa-spinner fa-spin me-1"></i>Escaneando...';
@@ -524,14 +553,19 @@ function startScan() {
     }, function(res) {
         if (res.success) {
             showProgress();
-            pollProgress();
+            // Esperar 800ms para que el backend inicie el worker antes de empezar a hacer poll
+            setTimeout(function() {
+                pollProgress(subnet);
+            }, 800);
         } else {
-            Swal.fire({ icon:'error', title:'Error', text: res.error });
+            Swal.fire({ icon:'error', title: res.error || 'Error al iniciar escaneo' });
             resetScanBtn();
+            scanningSubnet = '';
         }
     }).fail(function() {
         Swal.fire({ icon:'error', title:'Error de conexión' });
         resetScanBtn();
+        scanningSubnet = '';
     });
 }
 
@@ -546,30 +580,54 @@ function hideProgress() {
     document.getElementById('scanProgressWrap').classList.remove('active');
 }
 
-function pollProgress() {
+function pollProgress(targetSubnet) {
+    // targetSubnet = la subnet que acabamos de lanzar a escanear
+    if (!targetSubnet) targetSubnet = scanningSubnet;
     if (pollTimer) clearInterval(pollTimer);
+
+    let emptyPolls = 0;  // Contador de polls donde running=false, para confirmar que realmente terminó
+
     pollTimer = setInterval(function() {
         $.getJSON(URL_STATUS, function(res) {
             if (res.running) {
+                emptyPolls = 0;  // Reset — sigue corriendo
                 const pct = res.percent || 0;
                 document.getElementById('scanProgressBar').style.width = pct + '%';
                 document.getElementById('scanProgressText').textContent =
                     `Escaneando... ${res.done}/${res.total} IPs (${pct}%)`;
             } else {
-                clearInterval(pollTimer);
-                hideProgress();
-                resetScanBtn();
-                // Recargar tabla con resultados
-                const subnet = activeSubnet || document.getElementById('scanSubnetInput').value.trim();
-                if (subnet) {
-                    fetchDiscovered(subnet);
-                    Swal.fire({ icon:'success', title:'Escaneo completado',
-                                toast:true, position:'top-end',
-                                showConfirmButton:false, timer:3000 });
+                emptyPolls++;
+                // Esperar 2 polls consecutivos con running=false para estar seguros
+                if (emptyPolls >= 2) {
+                    clearInterval(pollTimer);
+                    pollTimer = null;
+                    hideProgress();
+                    resetScanBtn();
+                    scanningSubnet = '';
+                    // Usar la subnet que se escaneó, NO activeSubnet (que pudo cambiar)
+                    const subnetToLoad = targetSubnet || activeSubnet;
+                    if (subnetToLoad) {
+                        fetchDiscovered(subnetToLoad);
+                        // Actualizar el titulo con la subnet escaneada
+                        document.getElementById('tableSubtitle').textContent = subnetToLoad;
+                        Swal.fire({ icon:'success', title:'Escaneo completado',
+                                    toast:true, position:'top-end',
+                                    showConfirmButton:false, timer:3000 });
+                    }
                 }
             }
+        }).fail(function() {
+            // Si el request falla, no bloquear indefinidamente
+            emptyPolls++;
+            if (emptyPolls >= 5) {
+                clearInterval(pollTimer);
+                pollTimer = null;
+                hideProgress();
+                resetScanBtn();
+                scanningSubnet = '';
+            }
         });
-    }, 1500); // Poll cada 1.5 segundos
+    }, 1500);
 }
 
 function resetScanBtn() {
@@ -635,19 +693,31 @@ function addToManaged(ip, mac, hostname, tipo) {
 
 // ── Inicialización ────────────────────────────────────────
 $(document).ready(function() {
-    // Si ya había IPs precargadas (server-side), init DT
-    if ($('#inventoryBody tr').length > 0) {
+    // Si no hay subnet activa, limpiar cualquier dato server-side residual
+    if (!activeSubnet) {
+        clearTable('');
+        document.getElementById('emptyState').innerHTML = `
+            <i class="fas fa-sitemap" style="font-size:3rem; opacity:0.3; margin-bottom:1rem;"></i>
+            <h3 style="font-size:1rem; font-weight:700; margin-bottom:0.4rem;">Selecciona un segmento</h3>
+            <p style="font-size:0.8rem; color:var(--nw-text-muted);">
+                Elige un segmento del panel izquierdo<br>y presiona <strong>Scan</strong> para descubrir dispositivos.
+            </p>`;
+    } else if ($('#inventoryBody tr').length > 0) {
+        // Si hay datos server-side precargados para la subnet activa, mostrarlos
         initDT();
         document.getElementById('inventoryTable').style.display = '';
         document.getElementById('emptyState').style.display     = 'none';
+    } else {
+        // Hay subnet activa pero sin datos, mostrar prompt de scan
+        clearTable(activeSubnet);
     }
 
-    // Si hay subnet activa verificar si hay escaneo en curso
+    // Si hay subnet activa, verificar si hay escaneo en curso
     if (activeSubnet) {
         $.getJSON(URL_STATUS, function(res) {
             if (res.running && res.subnet === activeSubnet) {
                 showProgress();
-                pollProgress();
+                pollProgress(activeSubnet);
                 const btn = document.getElementById('btnStartScan');
                 btn.disabled = true;
                 btn.innerHTML = '<i class="fas fa-spinner fa-spin me-1"></i>Escaneando...';

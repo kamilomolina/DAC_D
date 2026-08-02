@@ -344,8 +344,10 @@ def mapa_red(request):
     if redirect:
         return redirect
 
+    segments = nw_get_segments()
     return render(request, 'netwatch/mapa_red.html', {
         **get_user_context(request),
+        'segments': segments,
     })
 
 
@@ -377,12 +379,19 @@ def get_topology_data(request):
     """
     API: Devuelve nodos y enlaces para el mapa de red (Vis.js).
     Formato: { nodes: [...], edges: [...] }
+    Parámetro opcional GET: subnet — filtra discovered IPs por segmento.
     Incluye también los dispositivos descubiertos por el escáner.
     """
     try:
+        subnet     = request.GET.get('subnet', '').strip()
         devices    = nw_get_devices(estado=1)
         links      = nw_get_links()
-        discovered = nw_get_discovered_ips()
+
+        # Si hay subnet filtramos los discovered; si no, traemos todos
+        if subnet:
+            discovered = nw_get_discovered_by_segment(subnet)
+        else:
+            discovered = nw_get_discovered_ips()
 
         # ── Nodos de dispositivos administrados ──────────────────────────────
         nodes = []
@@ -648,17 +657,40 @@ def nw_save_segment_layout(subnet, layout_json):
 
 
 def nw_get_discovered_by_segment(subnet):
-    """Retorna IPs descubiertas filtradas por el prefijo /24 del segmento."""
-    ips = []
+    """
+    Retorna IPs descubiertas filtradas estrictamente por el prefijo del segmento.
+    Usa siempre una conexión limpia y filtra en Python para mayor robustez.
+    """
+    # Extraer prefijo: '192.168.1.1-254' -> '192.168.1.'
+    # También soporta '192.168.1.0/24'
+    prefix = ''
+    try:
+        clean = subnet.strip().replace('/', '.').replace('-', '.')
+        parts = clean.split('.')
+        if len(parts) >= 3:
+            prefix = f"{parts[0]}.{parts[1]}.{parts[2]}."
+    except Exception:
+        pass
+
+    print(f"[NETWATCH] nw_get_discovered_by_segment: subnet={subnet!r} -> prefix={prefix!r}")
+
+    all_ips = []
     try:
         with connections[DB_NAME].cursor() as cursor:
-            cursor.callproc('NW_GET_DISCOVERED_BY_SEGMENT', [subnet])
+            cursor.callproc('NW_GET_DISCOVERED_IPS')
             cols = [desc[0] for desc in cursor.description]
-            for row in cursor.fetchall():
-                ips.append(dict(zip(cols, row)))
+            all_ips = [dict(zip(cols, row)) for row in cursor.fetchall()]
     except Exception as e:
-        print(f"[NETWATCH] Error en NW_GET_DISCOVERED_BY_SEGMENT: {e}")
-    return ips
+        print(f"[NETWATCH] Error en NW_GET_DISCOVERED_IPS: {e}")
+
+    print(f"[NETWATCH] Total IPs en BD: {len(all_ips)}")
+
+    if not prefix:
+        return all_ips
+
+    filtered = [ip for ip in all_ips if str(ip.get('ip_address', '')).startswith(prefix)]
+    print(f"[NETWATCH] IPs filtradas para prefix {prefix!r}: {len(filtered)}")
+    return filtered
 
 
 # ============================================================================
@@ -854,7 +886,7 @@ def _network_scan_worker(subnet_str):
 
     with _SCAN_LOCK:
         _SCAN_STATE.update({'running': True, 'subnet': subnet_str,
-                            'total': len(ips), 'done': 0})
+                            'total': len(ips), 'done': 0, 'percent': 0})
 
     print(f"[NETWATCH] Escaneando {len(ips)} IPs en {subnet_str} ...")
 
@@ -902,6 +934,15 @@ def start_network_scan(request):
     nw_upsert_segment(nombre, subnet)
 
     total = len(parse_subnet(subnet))
+
+    # Pre-marcar como running ANTES de lanzar el thread
+    # para que el primer poll del frontend ya vea running=True
+    with _SCAN_LOCK:
+        _SCAN_STATE.update({
+            'running': True, 'subnet': subnet,
+            'total': total, 'done': 0, 'percent': 0
+        })
+
     t = threading.Thread(target=_network_scan_worker, args=(subnet,))
     t.daemon = True
     t.start()
@@ -942,11 +983,16 @@ def inventario_ip(request):
 def get_discovered_api(request):
     """GET /netwatch/api/discovered/ — JSON de IPs descubiertas."""
     subnet = request.GET.get('subnet', '').strip()
-    ips    = nw_get_discovered_ips(subnet=subnet if subnet else None)
+    print(f"[NETWATCH] get_discovered_api: subnet recibido={subnet!r}")
+
+    ips = nw_get_discovered_ips(subnet=subnet if subnet else None)
+
     for ip in ips:
         if hasattr(ip.get('last_seen'), 'strftime'):
             ip['last_seen'] = ip['last_seen'].strftime('%Y-%m-%d %H:%M:%S')
-    return JsonResponse({'success': True, 'ips': ips})
+
+    print(f"[NETWATCH] get_discovered_api: devolviendo {len(ips)} IPs para subnet={subnet!r}")
+    return JsonResponse({'success': True, 'ips': ips, 'subnet': subnet, 'total': len(ips)})
 
 
 def manage_segments(request):
