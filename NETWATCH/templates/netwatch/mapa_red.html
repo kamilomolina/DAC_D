@@ -393,8 +393,13 @@
                 <div class="nw-detail-row"><span class="nw-detail-row-label">SNMP Community</span><span class="nw-detail-row-value" id="detailCommunity" style="font-family:'JetBrains Mono',monospace; font-size:0.75rem;">—</span></div>
             </div>
             <div class="nw-panel-actions">
-                <button class="nw-panel-btn nw-panel-btn-connect-node" onclick="startConnectFromPanel()">
+                <!-- Para nodos administrados -->
+                <button id="btnConnectNode" class="nw-panel-btn nw-panel-btn-connect-node" onclick="startConnectFromPanel()">
                     <i class="fas fa-link"></i> Conectar este nodo
+                </button>
+                <!-- Para nodos descubiertos -->
+                <button id="btnQuickSaveNode" class="nw-panel-btn btn btn-success w-100" style="display:none; color: white;" onclick="quickSaveFromPanel()">
+                    <i class="fas fa-microchip"></i> Registrar Dispositivo
                 </button>
             </div>
         </div>
@@ -937,13 +942,31 @@ function openDetailPanel(node) {
     document.getElementById('detailIcon').className = `nw-detail-device-icon ${status}`;
 
     // Badge de estado
-    const statusLabels = { online:'En Línea', offline:'Offline', unknown:'Sin Datos' };
-    const statusIcons  = { online:'fa-circle-check', offline:'fa-circle-xmark', unknown:'fa-circle' };
+    const statusLabels = { online:'En Línea', offline:'Offline', unknown:'Sin Datos', discovered:'Descubierto' };
+    const statusIcons  = { online:'fa-circle-check', offline:'fa-circle-xmark', unknown:'fa-circle', discovered:'fa-eye' };
     document.getElementById('detailStatusBadge').innerHTML =
         `<span class="nw-detail-status-badge ${status}">
             <i class="fas ${statusIcons[status] || 'fa-circle'}"></i>
             ${statusLabels[status] || 'Sin datos'}
          </span>`;
+
+    // Botones de acción
+    const btnConnect = document.getElementById('btnConnectNode');
+    const btnQuickSave = document.getElementById('btnQuickSaveNode');
+    const tabEdit = document.getElementById('tabEdit');
+    const tabConns = document.getElementById('tabConns');
+    
+    if (status === 'discovered') {
+        btnConnect.style.display = 'none';
+        btnQuickSave.style.display = 'flex';
+        tabEdit.style.display = 'none';
+        tabConns.style.display = 'none';
+    } else {
+        btnConnect.style.display = 'flex';
+        btnQuickSave.style.display = 'none';
+        tabEdit.style.display = 'block';
+        tabConns.style.display = 'block';
+    }
 
     // Campos de info
     document.getElementById('detailTipo').textContent      = node.tipo        || '—';
@@ -1033,6 +1056,26 @@ function saveDevice(e) {
         }
     })
     .catch(() => showToast('Error de red', 'error'));
+}
+
+function quickSaveFromPanel() {
+    if (!selectedNodeId) return;
+    const node = allNodes.get(selectedNodeId);
+    if (!node || node.status !== 'discovered') return;
+    
+    // node.modelo tiene la MAC de los nodos descubiertos y node.marca el vendor
+    const data = {
+        ip: node.ip,
+        mac: node.modelo,
+        hostname: node.label.split('\n')[0],
+        tipo: node.tipo,
+        vendor: node.marca
+    };
+    
+    openQuickSaveModal(data, function() {
+        closeDetailPanel();
+        refreshStatuses(); // Recargar el mapa para que aparezca como administrado
+    });
 }
 
 function deleteDeviceFromPanel() {
@@ -1127,6 +1170,7 @@ function refreshStatuses() {
         let online = 0, offline = 0;
 
         allNodes.forEach(function (node) {
+            if (node.status === 'discovered') return;
             let newStatus = statusMap[node.id] || 'unknown';
             const newImg  = buildSVG(node.tipo || 'OTRO', newStatus);
             allNodes.update({ id: node.id, status: newStatus, image: newImg });

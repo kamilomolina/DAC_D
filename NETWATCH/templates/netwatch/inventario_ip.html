@@ -352,7 +352,7 @@
                             <td style="font-size:0.75rem; color:var(--nw-text-muted);">{{ ip.last_seen|date:"Y-m-d H:i" }}</td>
                             <td class="text-end">
                                 <button class="btn btn-sm btn-outline-success" style="font-size:0.7rem; border-radius:6px;"
-                                    onclick="addToManaged('{{ ip.ip_address }}', '{{ ip.mac_address }}', '{{ ip.hostname }}', '{{ ip.tipo_dispositivo }}')">
+                                    onclick="openQuickSaveModal({ip: '{{ ip.ip_address }}', mac: '{{ ip.mac_address }}', hostname: '{{ ip.hostname }}', tipo: '{{ ip.tipo_dispositivo }}', vendor: '{{ ip.vendor|default:""|escapejs }}'}, refreshTable)">
                                     <i class="fas fa-plus me-1"></i>Gestionar
                                 </button>
                             </td>
@@ -518,7 +518,7 @@ function renderTable(ips) {
             <td style="font-size:0.75rem;color:var(--nw-text-muted);">${ip.last_seen || '—'}</td>
             <td class="text-end">
                 <button class="btn btn-sm btn-outline-success" style="font-size:0.7rem;border-radius:6px;"
-                    onclick="addToManaged('${ip.ip_address}','${ip.mac_address||''}','${ip.hostname||''}','${tipo}')">
+                    onclick="openQuickSaveModal({ip: '${ip.ip_address}', mac: '${ip.mac_address||''}', hostname: '${ip.hostname||''}', tipo: '${tipo}', vendor: '${ip.vendor||''}'}, refreshTable)">
                     <i class="fas fa-plus me-1"></i>Gestionar
                 </button>
             </td>
@@ -671,25 +671,7 @@ function saveSegment() {
     });
 }
 
-// ── Agregar a dispositivos administrados ──────────────────
-function addToManaged(ip, mac, hostname, tipo) {
-    Swal.fire({
-        title: 'Agregar a Dispositivos Administrados',
-        html: `<p>Vas a registrar formalmente:</p>
-               <b>${ip}</b>${hostname ? ' — ' + hostname : ''}<br>
-               <small class="text-muted">${mac || 'MAC desconocida'} | ${tipo || 'OTRO'}</small>`,
-        icon: 'question',
-        showCancelButton: true,
-        confirmButtonText: 'Ir al Panel de Administración',
-        cancelButtonText: 'Cancelar'
-    }).then((result) => {
-        if (result.isConfirmed) {
-            // Guardamos en sessionStorage para pre-llenar el form en la otra página
-            sessionStorage.setItem('nw_prefill', JSON.stringify({ ip, mac, hostname, tipo }));
-            window.location.href = "{% url 'admin_netwatch' %}";
-        }
-    });
-}
+// ── (addToManaged se eliminó, ahora usamos openQuickSaveModal del base) ──
 
 // ── Inicialización ────────────────────────────────────────
 $(document).ready(function() {

@@ -139,6 +139,165 @@
     })();
 </script>
 
+<!-- ====== MODAL: GUARDADO RÁPIDO ====== -->
+<div class="modal fade" id="modalQuickSave" tabindex="-1" aria-hidden="true">
+    <div class="modal-dialog modal-dialog-centered">
+        <div class="modal-content" style="background: var(--nw-surface); border: 1px solid var(--nw-border); border-radius: var(--nw-radius-md);">
+            <div class="modal-header" style="border-bottom-color: var(--nw-border); padding: 1rem 1.25rem;">
+                <h5 class="modal-title" style="font-size: 1.1rem; font-weight: 700; color: var(--nw-text-primary);">
+                    <i class="fas fa-microchip me-2" style="color: var(--nw-brand);"></i>Registrar Dispositivo
+                </h5>
+                <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal" aria-label="Close" style="opacity: 0.5;"></button>
+            </div>
+            <form id="formQuickSave" onsubmit="submitQuickSave(event)">
+                <div class="modal-body" style="padding: 1.25rem;">
+                    <!-- Campos pre-llenados ocultos o de solo lectura si se desea, aquí los dejaremos editables -->
+                    <div class="row g-3 mb-3">
+                        <div class="col-md-6">
+                            <label class="form-label" style="font-size: 0.8rem; font-weight: 600; color: var(--nw-text-muted);">Hostname / Nombre</label>
+                            <input type="text" class="form-control form-control-sm" id="qsHostname" name="hostname" style="background: var(--nw-bg-input); border-color: var(--nw-border); color: var(--nw-text-primary);">
+                        </div>
+                        <div class="col-md-6">
+                            <label class="form-label" style="font-size: 0.8rem; font-weight: 600; color: var(--nw-text-muted);">Dirección IP</label>
+                            <input type="text" class="form-control form-control-sm" id="qsIp" name="ip_address" required readonly style="background: rgba(0,0,0,0.2); border-color: var(--nw-border); color: var(--nw-text-muted);">
+                        </div>
+                    </div>
+                    
+                    <div class="mb-3">
+                        <label class="form-label" style="font-size: 0.8rem; font-weight: 600; color: var(--nw-text-muted);">MAC Address</label>
+                        <input type="text" class="form-control form-control-sm" id="qsMac" name="mac_address" readonly style="background: rgba(0,0,0,0.2); border-color: var(--nw-border); color: var(--nw-text-muted); font-family: monospace;">
+                    </div>
+
+                    <div class="row g-3 mb-3">
+                        <div class="col-md-6">
+                            <label class="form-label" style="font-size: 0.8rem; font-weight: 600; color: var(--nw-text-muted);">Tipo de Dispositivo</label>
+                            <select class="form-select form-select-sm" id="qsTipo" name="tipo_dispositivo" style="background: var(--nw-bg-input); border-color: var(--nw-border); color: var(--nw-text-primary);">
+                                <option value="SWITCH">Switch</option>
+                                <option value="ROUTER">Router</option>
+                                <option value="SERVIDOR">Servidor</option>
+                                <option value="AP">Access Point</option>
+                                <option value="PC">PC / Workstation</option>
+                                <option value="OTRO">Otro</option>
+                            </select>
+                        </div>
+                        <div class="col-md-6">
+                            <label class="form-label" style="font-size: 0.8rem; font-weight: 600; color: var(--nw-text-muted);">Fabricante</label>
+                            <input type="text" class="form-control form-control-sm" id="qsVendor" name="vendor" style="background: var(--nw-bg-input); border-color: var(--nw-border); color: var(--nw-text-primary);">
+                        </div>
+                    </div>
+
+                    <div class="row g-3">
+                        <div class="col-md-6">
+                            <label class="form-label" style="font-size: 0.8rem; font-weight: 600; color: var(--nw-text-muted);">Área</label>
+                            <input type="text" class="form-control form-control-sm" id="qsArea" name="area" placeholder="Ej: Sistemas" style="background: var(--nw-bg-input); border-color: var(--nw-border); color: var(--nw-text-primary);">
+                        </div>
+                        <div class="col-md-6">
+                            <label class="form-label" style="font-size: 0.8rem; font-weight: 600; color: var(--nw-text-muted);">Sucursal</label>
+                            <input type="text" class="form-control form-control-sm" id="qsSucursal" name="sucursal" placeholder="Ej: Principal" style="background: var(--nw-bg-input); border-color: var(--nw-border); color: var(--nw-text-primary);">
+                        </div>
+                    </div>
+                </div>
+                <div class="modal-footer" style="border-top-color: var(--nw-border); padding: 1rem 1.25rem;">
+                    <button type="button" class="btn btn-secondary btn-sm" data-bs-dismiss="modal">Cancelar</button>
+                    <button type="submit" class="btn btn-primary btn-sm" id="btnQuickSaveSubmit">
+                        <i class="fas fa-floppy-disk me-1"></i> Guardar
+                    </button>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>
+
+<script>
+    // ── LÓGICA DE QUICK SAVE GLOBAL ───────────────────────
+    let quickSaveModalInstance = null;
+    let quickSaveCallback = null; // Callback opcional al guardar exitosamente
+
+    function openQuickSaveModal(data, onSuccess = null) {
+        if (!quickSaveModalInstance) {
+            quickSaveModalInstance = new bootstrap.Modal(document.getElementById('modalQuickSave'));
+        }
+        quickSaveCallback = onSuccess;
+
+        // Prellenar datos
+        document.getElementById('qsHostname').value = data.hostname || '';
+        document.getElementById('qsIp').value       = data.ip || '';
+        document.getElementById('qsMac').value      = data.mac || '';
+        
+        // Auto-seleccionar tipo si existe, si no OTRO
+        const tipoSelect = document.getElementById('qsTipo');
+        const tipoUpper  = (data.tipo || '').toUpperCase();
+        let found = false;
+        for (let i=0; i<tipoSelect.options.length; i++) {
+            if (tipoSelect.options[i].value === tipoUpper) {
+                tipoSelect.selectedIndex = i;
+                found = true; break;
+            }
+        }
+        if (!found) tipoSelect.value = 'OTRO';
+
+        document.getElementById('qsVendor').value   = data.vendor || '';
+        document.getElementById('qsArea').value     = '';
+        document.getElementById('qsSucursal').value = '';
+
+        quickSaveModalInstance.show();
+    }
+
+    function submitQuickSave(e) {
+        e.preventDefault();
+        const form = e.target;
+        const fd = new FormData(form);
+        const btn = document.getElementById('btnQuickSaveSubmit');
+        
+        const originalHtml = btn.innerHTML;
+        btn.disabled = true;
+        btn.innerHTML = '<i class="fas fa-spinner fa-spin me-1"></i> Guardando...';
+
+        // Necesitamos CSRF token. Asumimos que la página que lo llama define getCookie('csrftoken') 
+        // o podemos extraerlo del documento si existe.
+        let csrf = null;
+        if (typeof getCookie === 'function') csrf = getCookie('csrftoken');
+        else {
+            const match = document.cookie.match('(^|;) ?csrftoken=([^;]*)(;|$)');
+            if (match) csrf = match[2];
+        }
+
+        fetch("{% url 'nw_quick_save' %}", {
+            method: 'POST',
+            headers: { 'X-CSRFToken': csrf },
+            body: fd
+        })
+        .then(r => r.json())
+        .then(res => {
+            btn.disabled = false;
+            btn.innerHTML = originalHtml;
+
+            if (res.success) {
+                quickSaveModalInstance.hide();
+                if (typeof showToast === 'function') {
+                    showToast('Dispositivo registrado correctamente', 'success');
+                } else if (typeof Swal !== 'undefined') {
+                    Swal.fire({ toast: true, position: 'top-end', icon: 'success', title: 'Dispositivo registrado', showConfirmButton: false, timer: 3000 });
+                }
+                
+                // Ejecutar callback si existe (ej. para recargar la tabla/mapa)
+                if (quickSaveCallback) quickSaveCallback(res.id_device);
+            } else {
+                if (typeof showToast === 'function') showToast(res.mensaje || 'Error al guardar', 'error');
+                else alert(res.mensaje || 'Error al guardar');
+            }
+        })
+        .catch(err => {
+            console.error(err);
+            btn.disabled = false;
+            btn.innerHTML = originalHtml;
+            if (typeof showToast === 'function') showToast('Error de red', 'error');
+            else alert('Error de red');
+        });
+    }
+</script>
+
+
 {% block extra_js %}{% endblock %}
 </body>
 </html>

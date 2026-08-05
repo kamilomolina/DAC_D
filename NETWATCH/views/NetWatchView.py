@@ -238,6 +238,40 @@ def nw_get_events(limit=50):
     return events
 
 
+def nw_find_device_by_mac(mac):
+    """
+    Busca un dispositivo administrado por su MAC address.
+    Retorna el dispositivo o None.
+    """
+    if not mac:
+        return None
+    try:
+        with connections[DB_NAME].cursor() as cursor:
+            cursor.callproc('NW_FIND_DEVICE_BY_MAC', [mac])
+            cols = [desc[0] for desc in cursor.description]
+            row  = cursor.fetchone()
+            return dict(zip(cols, row)) if row else None
+    except Exception as e:
+        print(f"[NETWATCH] Error en NW_FIND_DEVICE_BY_MAC: {e}")
+    return None
+
+
+def nw_update_device_ip(id_device, new_ip):
+    """
+    Actualiza solo la IP de un dispositivo administrado.
+    Retorna { lastID, guardado, mensaje }
+    """
+    try:
+        with connections[DB_NAME].cursor() as cursor:
+            cursor.callproc('NW_UPDATE_DEVICE_IP', [id_device, new_ip])
+            row = cursor.fetchone()
+            if row:
+                return {'lastID': row[0], 'guardado': row[1], 'mensaje': row[2]}
+    except Exception as e:
+        print(f"[NETWATCH] Error en NW_UPDATE_DEVICE_IP id={id_device}: {e}")
+    return {'lastID': 0, 'guardado': 0, 'mensaje': str(e) if 'e' in dir() else 'Error'}
+
+
 # ============================================================================
 # MOTOR DE PING + PERSISTENCIA DE ESTADO
 # ============================================================================
@@ -598,8 +632,59 @@ def manage_link(request):
             'mensaje': result['mensaje'],
         })
 
-    return JsonResponse({'success': False, 'error': 'Acción no reconocida'})
 
+def quick_save_device(request):
+    """
+    POST /netwatch/api/quick-save/
+    Crea un dispositivo administrado a partir de los datos del escáner.
+    Llamado desde el mapa (nodos descubiertos) y desde el inventario IP.
+    """
+    if request.method != 'POST':
+        return JsonResponse({'success': False, 'error': 'Método no permitido'})
+
+    p = request.POST
+
+    ip       = p.get('ip_address', '').strip()
+    mac      = p.get('mac_address', '').strip()
+    hostname = p.get('hostname', '').strip()
+    tipo     = p.get('tipo_dispositivo', 'OTRO').strip().upper()
+    vendor   = p.get('vendor', '').strip()
+    area     = p.get('area', '').strip()
+    sucursal = p.get('sucursal', '').strip()
+
+    if not ip:
+        return JsonResponse({'success': False, 'mensaje': 'IP requerida'})
+
+    # Nombre inteligente: hostname corto > IP
+    nombre = (hostname.split('.')[0] if hostname else '') or ip
+
+    result = nw_insert_device(
+        nombre           = nombre,
+        ip               = ip,
+        tipo             = tipo if tipo in ('ROUTER','SWITCH','SERVIDOR','AP','PC','OTRO') else 'OTRO',
+        marca            = vendor or '',
+        modelo           = mac or '',
+        sucursal         = sucursal or 'Principal',
+        area             = area or 'TI',
+        snmp_version     = 'v2c',
+        community        = 'public',
+        snmp_port        = 161,
+        estado_monitoreo = 1,
+    )
+
+    if result.get('guardado'):
+        # Registrar evento de alta
+        nw_log_event(
+            id_device   = result['lastID'],
+            tipo_evento = 'DEVICE_ADDED',
+            detalles    = f'Registrado desde escáner: IP={ip}, MAC={mac}, Vendor={vendor}'
+        )
+
+    return JsonResponse({
+        'success':   bool(result.get('guardado', 0)),
+        'id_device': result.get('lastID', 0),
+        'mensaje':   result.get('mensaje', 'Error al guardar'),
+    })
 
 def get_events(request):
     """
@@ -863,6 +948,26 @@ def _ping_and_discover(ip):
         tipo   = _guess_device_type(hostname, vendor, ttl)
 
         nw_upsert_discovered_ip(ip, mac, hostname, tipo, vendor, ttl)
+
+        # ── DETECCIÓN DE CAMBIO DE IP (pasivo, sin paquetes extra) ──
+        # Si esta MAC ya está registrada como dispositivo administrado
+        # con una IP diferente, actualizarla silenciosamente.
+        if mac:
+            try:
+                existing = nw_find_device_by_mac(mac)
+                if existing and existing.get('ip_address') != ip:
+                    old_ip = existing['ip_address']
+                    dev_id = existing['id_device']
+                    res    = nw_update_device_ip(dev_id, ip)
+                    if res.get('guardado', 0):
+                        nw_log_event(
+                            id_device  = dev_id,
+                            tipo_evento = 'IP_CHANGE',
+                            detalles   = f"IP cambió de {old_ip} a {ip} (MAC: {mac})"
+                        )
+                        print(f"[NETWATCH] IP_CHANGE detectado: {existing.get('nombre')} {old_ip} → {ip}")
+            except Exception as ex:
+                print(f"[NETWATCH] Error en detección IP_CHANGE para {ip}: {ex}")
 
     except subprocess.TimeoutExpired:
         pass

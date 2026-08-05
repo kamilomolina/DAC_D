@@ -21,6 +21,7 @@ urlpatterns = [
     path('api/scan/',         NetWatchView.start_network_scan, name='nw_start_scan'),
     path('api/scan/status/',  NetWatchView.get_scan_status,   name='nw_scan_status'),
     path('api/discovered/',   NetWatchView.get_discovered_api, name='nw_get_discovered'),
+    path('api/quick-save/',   NetWatchView.quick_save_device,  name='nw_quick_save'),
 
     # ── API — Segmentos de red ────────────────────────────────────────────────
     path('api/segments/',     NetWatchView.manage_segments,   name='nw_segments'),
