@@ -10,6 +10,11 @@ import threading
 import ipaddress
 import socket
 import re
+import sys
+import os
+
+# Integración SNMP
+from NETWATCH.utils.snmp_mapper import discover_topology, auto_discover_switches
 
 # ============================================================================
 # CONEXIÓN PRINCIPAL — Base de datos NETWATCH (kamilo_testing)
@@ -63,6 +68,7 @@ def nw_get_devices(estado=1, busqueda=''):
                     'snmp_port':     d.get('snmp_port', 161),
                     'estado_actual': d.get('estado_actual', 'unknown') or 'unknown',
                     'descripcion':   d.get('descripcion', ''),
+                    'ip_type':       d.get('ip_type', 'DESCONOCIDA') or 'DESCONOCIDA',
                 })
     except Exception as e:
         print(f"[NETWATCH] Error en NW_GET_DEVICES: {e}")
@@ -269,7 +275,54 @@ def nw_update_device_ip(id_device, new_ip):
                 return {'lastID': row[0], 'guardado': row[1], 'mensaje': row[2]}
     except Exception as e:
         print(f"[NETWATCH] Error en NW_UPDATE_DEVICE_IP id={id_device}: {e}")
-    return {'lastID': 0, 'guardado': 0, 'mensaje': str(e) if 'e' in dir() else 'Error'}
+    return {'lastID': 0, 'guardado': 0, 'mensaje': 'Error'}
+
+
+def nw_log_ip_change(id_device, ip_anterior, ip_nueva, motivo='Cambio detectado por scanner'):
+    """
+    Llama a NW_LOG_IP_CHANGE para registrar un cambio de IP en el historial.
+    """
+    try:
+        with connections[DB_NAME].cursor() as cursor:
+            cursor.callproc('NW_LOG_IP_CHANGE', [id_device, ip_anterior, ip_nueva, motivo])
+            row = cursor.fetchone()
+            return {'lastID': row[0], 'guardado': row[1], 'mensaje': row[2]} if row else {'guardado': 0}
+    except Exception as e:
+        print(f"[NETWATCH] Error en NW_LOG_IP_CHANGE id={id_device}: {e}")
+    return {'guardado': 0}
+
+
+def nw_get_ip_history(id_device):
+    """
+    Retorna el historial de IPs de un dispositivo.
+    """
+    history = []
+    try:
+        with connections[DB_NAME].cursor() as cursor:
+            cursor.callproc('NW_GET_IP_HISTORY', [id_device])
+            cols = [desc[0] for desc in cursor.description]
+            for row in cursor.fetchall():
+                entry = dict(zip(cols, row))
+                if hasattr(entry.get('fecha'), 'strftime'):
+                    entry['fecha'] = entry['fecha'].strftime('%Y-%m-%d %H:%M:%S')
+                history.append(entry)
+    except Exception as e:
+        print(f"[NETWATCH] Error en NW_GET_IP_HISTORY id={id_device}: {e}")
+    return history
+
+
+def nw_update_ip_type(id_device, ip_type):
+    """
+    Actualiza el tipo de IP de un dispositivo (FIJA / DHCP / DESCONOCIDA).
+    """
+    try:
+        with connections[DB_NAME].cursor() as cursor:
+            cursor.callproc('NW_UPDATE_IP_TYPE', [id_device, ip_type])
+            row = cursor.fetchone()
+            return {'lastID': row[0], 'guardado': row[1], 'mensaje': row[2]} if row else {'guardado': 0}
+    except Exception as e:
+        print(f"[NETWATCH] Error en NW_UPDATE_IP_TYPE id={id_device}: {e}")
+    return {'guardado': 0}
 
 
 # ============================================================================
@@ -535,6 +588,38 @@ def get_topology_data(request):
         return JsonResponse({'success': False, 'error': str(e), 'nodes': [], 'edges': []})
 
 
+def auto_map_topology(request):
+    """
+    API: Mapea la topología automáticamente usando SNMP en los switches.
+    """
+    if request.method != 'POST':
+        return JsonResponse({'success': False, 'mensaje': 'Método no permitido.'})
+
+    try:
+        # Obtener todos los dispositivos registrados
+        devices = nw_get_devices(estado=1)
+        
+        # Ejecutar descubrimiento
+        links_proposed = discover_topology(devices)
+        
+        # Limpiar o simplemente insertar los descubiertos?
+        # Para evitar duplicados, si el insert es idempotente (o manejado en DB) lo llamamos
+        # Asumiendo que nw_insert_link hace lo suyo o falla silenciosamente si ya existe.
+        
+        creados = 0
+        for lnk in links_proposed:
+            res = nw_insert_link(lnk['id_origen'], lnk['puerto_origen'], lnk['id_destino'], lnk['puerto_destino'], lnk['tipo_enlace'])
+            if res.get('guardado', 0) == 1:
+                creados += 1
+                
+        return JsonResponse({
+            'success': True, 
+            'mensaje': f'Auto-Mapeo completado. Se descubrieron/validaron {len(links_proposed)} conexiones. Nuevas añadidas: {creados}.'
+        })
+    except Exception as e:
+        return JsonResponse({'success': False, 'mensaje': str(e)})
+
+
 def manage_device(request):
     """
     API: CRUD de dispositivos.
@@ -569,10 +654,23 @@ def manage_device(request):
 
     # ── ACTUALIZAR ─────────────────────────────────────────────
     elif action == 'update':
+        id_dev       = p.get('id_device')
+        ip_nueva     = p.get('ip_address', '')
+        # Detectar cambio de IP si el dispositivo ya existe
+        existing = nw_get_device_by_id(id_dev)
+        if existing:
+            ip_anterior = existing.get('ip_address', '')
+            if ip_anterior and ip_nueva and ip_anterior != ip_nueva:
+                nw_log_ip_change(
+                    id_device   = id_dev,
+                    ip_anterior = ip_anterior,
+                    ip_nueva    = ip_nueva,
+                    motivo      = 'Actualización manual desde panel'
+                )
         result = nw_update_device(
-            id_device      = p.get('id_device'),
+            id_device      = id_dev,
             nombre         = p.get('nombre', ''),
-            ip             = p.get('ip_address', ''),
+            ip             = ip_nueva,
             tipo           = p.get('tipo_dispositivo', 'OTRO'),
             marca          = p.get('marca', ''),
             modelo         = p.get('modelo', ''),
@@ -583,11 +681,24 @@ def manage_device(request):
             snmp_port      = int(p.get('snmp_port', 161)),
             estado_monitoreo = int(p.get('estado_monitoreo', 1)),
         )
+        # Actualizar tipo IP si viene en el form
+        ip_type = p.get('ip_type', '').strip().upper()
+        if ip_type in ('FIJA', 'DHCP', 'DESCONOCIDA') and id_dev:
+            nw_update_ip_type(id_dev, ip_type)
         return JsonResponse({
             'success': bool(result['guardado']),
             'lastID':  result['lastID'],
             'mensaje': result['mensaje'],
         })
+
+    # ── ACTUALIZAR SOLO TIPO IP ────────────────────────────────
+    elif action == 'update_ip_type':
+        id_dev  = p.get('id_device')
+        ip_type = p.get('ip_type', '').strip().upper()
+        if ip_type not in ('FIJA', 'DHCP', 'DESCONOCIDA'):
+            return JsonResponse({'success': False, 'mensaje': 'Tipo de IP inválido'})
+        result = nw_update_ip_type(id_dev, ip_type)
+        return JsonResponse({'success': bool(result.get('guardado')), 'mensaje': 'Tipo de IP actualizado'})
 
     # ── BAJA LÓGICA ───────────────────────────────────────────
     elif action == 'delete':
@@ -599,7 +710,61 @@ def manage_device(request):
 
     return JsonResponse({'success': False, 'error': 'Acción no reconocida'})
 
+def auto_discover_switches_api(request):
+    """
+    API: Descubre qué nodos escaneados son switches y los registra automáticamente.
+    """
+    if request.method != 'POST':
+        return JsonResponse({'success': False, 'mensaje': 'Método no permitido.'})
 
+    try:
+        # Traer todos los nodos descubiertos que NO están en la DB aún
+        discovered = nw_get_discovered_ips()
+        
+        # Filtrar para evitar intentar descubrir IPs que ya registramos
+        managed_devices = nw_get_devices()
+        managed_ips = {d['ip'] for d in managed_devices}
+        
+        candidates = [d for d in discovered if d['ip_address'] not in managed_ips]
+        
+        if not candidates:
+            return JsonResponse({'success': True, 'switches_added': 0, 'mensaje': 'No hay nodos descubiertos nuevos para escanear.'})
+            
+        # Llamar a la lógica de descubrimiento SNMP (default 'public')
+        switches = auto_discover_switches(candidates, default_community='public')
+        
+        added_count = 0
+        for sw in switches:
+            ip = sw['ip_address']
+            mac = sw.get('mac_address', '')
+            nombre = sw.get('hostname', '') or f'SWITCH-{ip}'
+            
+            # Insertar como SWITCH
+            res = nw_insert_device(
+                nombre=nombre,
+                ip=ip,
+                tipo='SWITCH',
+                marca='Desconocida',
+                modelo=mac,  # Guardar MAC en modelo como en Quick Save
+                sucursal='',
+                area='',
+                snmp_version='v2c',
+                community='public',
+                snmp_port=161,
+                estado_monitoreo=1
+            )
+            if res.get('guardado'):
+                added_count += 1
+
+        return JsonResponse({
+            'success': True,
+            'switches_added': added_count,
+            'mensaje': f'Se escanearon {len(candidates)} nodos. Se registraron {added_count} switches.'
+        })
+    except Exception as e:
+        import traceback
+        traceback.print_exc()
+        return JsonResponse({'success': False, 'mensaje': str(e)})
 def manage_link(request):
     """
     API: Crear / Eliminar enlaces entre dispositivos en el mapa.
@@ -637,7 +802,7 @@ def quick_save_device(request):
     """
     POST /netwatch/api/quick-save/
     Crea un dispositivo administrado a partir de los datos del escáner.
-    Llamado desde el mapa (nodos descubiertos) y desde el inventario IP.
+    Si la MAC ya existe con una IP diferente, actualiza la IP y registra el historial.
     """
     if request.method != 'POST':
         return JsonResponse({'success': False, 'error': 'Método no permitido'})
@@ -655,7 +820,34 @@ def quick_save_device(request):
     if not ip:
         return JsonResponse({'success': False, 'mensaje': 'IP requerida'})
 
-    # Nombre inteligente: hostname corto > IP
+    # ── Detectar cambio de IP por MAC ────────────────────────────────────────
+    if mac:
+        existing = nw_find_device_by_mac(mac)
+        if existing:
+            ip_anterior = existing.get('ip_address', '')
+            if ip_anterior and ip_anterior != ip:
+                # IP cambió — registrar historial y actualizar silenciosamente
+                nw_log_ip_change(
+                    id_device   = existing['id_device'],
+                    ip_anterior = ip_anterior,
+                    ip_nueva    = ip,
+                    motivo      = 'Cambio detectado al registrar desde escáner'
+                )
+                return JsonResponse({
+                    'success':    True,
+                    'id_device':  existing['id_device'],
+                    'ip_changed': True,
+                    'mensaje':    f'IP actualizada: {ip_anterior} → {ip}',
+                })
+            else:
+                # Mismo dispositivo, misma IP — ya estaba registrado
+                return JsonResponse({
+                    'success':   True,
+                    'id_device': existing['id_device'],
+                    'mensaje':   'Dispositivo ya registrado con esta IP',
+                })
+
+    # ── Nombre inteligente: hostname corto > IP ─────────────────────────────
     nombre = (hostname.split('.')[0] if hostname else '') or ip
 
     result = nw_insert_device(
@@ -673,7 +865,6 @@ def quick_save_device(request):
     )
 
     if result.get('guardado'):
-        # Registrar evento de alta
         nw_log_event(
             id_device   = result['lastID'],
             tipo_evento = 'DEVICE_ADDED',
@@ -699,6 +890,15 @@ def get_events(request):
             e['fecha_evento'] = e['fecha_evento'].strftime('%Y-%m-%d %H:%M:%S')
 
     return JsonResponse({'events': events})
+
+
+def get_ip_history_api(request, id_device):
+    """
+    API: GET /netwatch/api/ip-history/<id_device>/
+    Retorna el historial de IPs de un dispositivo.
+    """
+    history = nw_get_ip_history(id_device)
+    return JsonResponse({'success': True, 'history': history})
 
 
 # ============================================================================
@@ -965,6 +1165,8 @@ def _ping_and_discover(ip):
                             tipo_evento = 'IP_CHANGE',
                             detalles   = f"IP cambió de {old_ip} a {ip} (MAC: {mac})"
                         )
+                        # Registrar el historial de IP
+                        nw_log_ip_change(dev_id, old_ip, ip, "Escáner Automático")
                         print(f"[NETWATCH] IP_CHANGE detectado: {existing.get('nombre')} {old_ip} → {ip}")
             except Exception as ex:
                 print(f"[NETWATCH] Error en detección IP_CHANGE para {ip}: {ex}")

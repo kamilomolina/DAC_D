@@ -353,7 +353,7 @@
                             <td class="text-end">
                                 <button class="btn btn-sm btn-outline-success" style="font-size:0.7rem; border-radius:6px;"
                                     onclick="openQuickSaveModal({ip: '{{ ip.ip_address }}', mac: '{{ ip.mac_address }}', hostname: '{{ ip.hostname }}', tipo: '{{ ip.tipo_dispositivo }}', vendor: '{{ ip.vendor|default:""|escapejs }}'}, refreshTable)">
-                                    <i class="fas fa-plus me-1"></i>Gestionar
+                                    <i class="fas fa-plus me-1"></i>Registrar
                                 </button>
                             </td>
                         </tr>
@@ -519,7 +519,7 @@ function renderTable(ips) {
             <td class="text-end">
                 <button class="btn btn-sm btn-outline-success" style="font-size:0.7rem;border-radius:6px;"
                     onclick="openQuickSaveModal({ip: '${ip.ip_address}', mac: '${ip.mac_address||''}', hostname: '${ip.hostname||''}', tipo: '${tipo}', vendor: '${ip.vendor||''}'}, refreshTable)">
-                    <i class="fas fa-plus me-1"></i>Gestionar
+                    <i class="fas fa-plus me-1"></i>Registrar
                 </button>
             </td>
         </tr>`;

@@ -11,6 +11,8 @@ urlpatterns = [
     # ── API — Monitoreo de estado ────────────────────────────────────────
     path('get/status/',      NetWatchView.get_network_status, name='get_network_status'),
     path('get/topology/',    NetWatchView.get_topology_data,  name='get_topology_data'),
+    path('api/discover-switches/', NetWatchView.auto_discover_switches_api, name='nw_discover_switches'),
+    path('api/map-topology/', NetWatchView.auto_map_topology, name='nw_auto_map_topology'),
     path('get/events/',      NetWatchView.get_events,         name='nw_get_events'),
 
     # ── API — CRUD dispositivos y enlaces ───────────────────────────────
@@ -25,4 +27,5 @@ urlpatterns = [
 
     # ── API — Segmentos de red ────────────────────────────────────────────────
     path('api/segments/',     NetWatchView.manage_segments,   name='nw_segments'),
+    path('api/ip-history/<int:id_device>/', NetWatchView.get_ip_history_api, name='nw_ip_history'),
 ]

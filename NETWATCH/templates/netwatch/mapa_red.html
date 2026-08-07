@@ -256,6 +256,14 @@
             <button class="nw-map-filter-btn f-offline" id="filterOffline" onclick="applyFilter('offline')">
                 <i class="fas fa-circle-xmark"></i> Offline</button>
             <div style="width:1px; height:20px; background:var(--nw-border); margin:0 0.4rem;"></div>
+            <!-- FUNCIONALIDADES SNMP DESHABILITADAS TEMPORALMENTE
+            <button class="nw-btn-connect" id="btnAutoDiscoverSwitches" onclick="startAutoDiscoverSwitches()" style="background-color: #00bcd4; color: white; margin-right: 0.5rem; border: none; border-radius: 8px; font-weight: 600; padding: 0.4rem 0.8rem;">
+                <i class="fas fa-search-location"></i> Buscar Switches
+            </button>
+            <button class="nw-btn-connect" id="btnAutoMap" onclick="startAutoMap()" style="background-color: var(--nw-brand); color: white; margin-right: 0.5rem; border: none; border-radius: 8px; font-weight: 600; padding: 0.4rem 0.8rem;">
+                <i class="fas fa-magic"></i> Auto-Conectar
+            </button>
+            -->
             <button class="nw-btn-connect" id="btnConnectMode" onclick="toggleConnectMode()">
                 <i class="fas fa-link"></i> Conectar
             </button>
@@ -392,6 +400,37 @@
                 <div class="nw-detail-row"><span class="nw-detail-row-label">Descripción</span><span class="nw-detail-row-value" id="detailDesc">—</span></div>
                 <div class="nw-detail-row"><span class="nw-detail-row-label">SNMP Community</span><span class="nw-detail-row-value" id="detailCommunity" style="font-family:'JetBrains Mono',monospace; font-size:0.75rem;">—</span></div>
             </div>
+
+            <!-- Sección IP con tipo -->
+            <div class="nw-detail-section" id="sectionIpInfo">
+                <div class="nw-detail-section-label">Dirección IP</div>
+                <div class="nw-detail-row" style="justify-content: space-between;">
+                    <span class="nw-detail-row-value" id="detailIp" style="font-family:'JetBrains Mono',monospace; font-size:0.85rem; font-weight:700;">—</span>
+                    <span id="detailIpTypeBadge" style="font-size:0.68rem; font-weight:800; padding:0.2em 0.6em; border-radius:20px; text-transform:uppercase;"></span>
+                </div>
+                <div style="display:flex; gap:0.4rem; margin-top:0.5rem;">
+                    <button onclick="setIpType('FIJA')" class="nw-panel-btn" style="flex:1; padding:0.3rem; font-size:0.68rem; background:rgba(16,185,129,0.1); border:1px solid rgba(16,185,129,0.3); color:#10b981; border-radius:6px;">
+                        <i class="fas fa-lock"></i> IP Fija
+                    </button>
+                    <button onclick="setIpType('DHCP')" class="nw-panel-btn" style="flex:1; padding:0.3rem; font-size:0.68rem; background:rgba(245,158,11,0.1); border:1px solid rgba(245,158,11,0.3); color:#f59e0b; border-radius:6px;">
+                        <i class="fas fa-rotate"></i> DHCP
+                    </button>
+                    <button onclick="setIpType('DESCONOCIDA')" class="nw-panel-btn" style="flex:1; padding:0.3rem; font-size:0.68rem; background:rgba(100,116,139,0.1); border:1px solid rgba(100,116,139,0.3); color:#94a3b8; border-radius:6px;">
+                        <i class="fas fa-question"></i> ??
+                    </button>
+                </div>
+            </div>
+
+            <!-- Historial de IPs -->
+            <div class="nw-detail-section" id="sectionIpHistory" style="display:none;">
+                <div class="nw-detail-section-label">
+                    <i class="fas fa-clock-rotate-left me-1"></i> Historial de IPs
+                </div>
+                <div id="ipHistoryList" style="max-height:160px; overflow-y:auto;">
+                    <div style="font-size:0.75rem; color:var(--nw-text-muted); text-align:center; padding:1rem;">Cargando...</div>
+                </div>
+            </div>
+
             <div class="nw-panel-actions">
                 <!-- Para nodos administrados -->
                 <button id="btnConnectNode" class="nw-panel-btn nw-panel-btn-connect-node" onclick="startConnectFromPanel()">
@@ -414,7 +453,7 @@
                 </div>
                 <div class="nw-panel-form-group">
                     <label class="nw-panel-form-label">Dirección IP *</label>
-                    <input type="text" class="nw-panel-form-input" id="editIp" name="ip" required placeholder="192.168.0.1">
+                    <input type="text" class="nw-panel-form-input" id="editIp" name="ip_address" required placeholder="192.168.0.1">
                 </div>
                 <div class="row g-2">
                     <div class="col-6">
@@ -977,6 +1016,31 @@ function openDetailPanel(node) {
     document.getElementById('detailDesc').textContent      = node.descripcion || '—';
     document.getElementById('detailCommunity').textContent = node.community   || '—';
 
+    // Sección IP con tipo y historial
+    const ipEl = document.getElementById('detailIp');
+    const ipBadge = document.getElementById('detailIpTypeBadge');
+    const ipSection = document.getElementById('sectionIpInfo');
+    const histSection = document.getElementById('sectionIpHistory');
+    ipEl.textContent = node.ip || '—';
+    if (status === 'discovered') {
+        ipSection.style.display = 'none';
+        histSection.style.display = 'none';
+    } else {
+        ipSection.style.display = '';
+        const ipType = node.ip_type || 'DESCONOCIDA';
+        const ipTypeStyles = {
+            'FIJA':       { bg: 'rgba(16,185,129,0.15)', color: '#10b981', text: '🔒 IP Fija' },
+            'DHCP':       { bg: 'rgba(245,158,11,0.15)', color: '#f59e0b', text: '🔄 DHCP' },
+            'DESCONOCIDA':{ bg: 'rgba(100,116,139,0.15)', color: '#94a3b8', text: '? Desconocida' },
+        };
+        const st = ipTypeStyles[ipType] || ipTypeStyles['DESCONOCIDA'];
+        ipBadge.textContent = st.text;
+        ipBadge.style.background = st.bg;
+        ipBadge.style.color = st.color;
+        // Cargar historial
+        loadIpHistory(node.id);
+    }
+
     // Prellenar formulario de edición
     document.getElementById('editDeviceId').value   = node.id;
     document.getElementById('editNombre').value     = node.label       || '';
@@ -1000,6 +1064,71 @@ function closeDetailPanel() {
     if (network) network.unselectAll();
 }
 
+// ── HISTORIAL DE IPs ───────────────────────────────────────
+function loadIpHistory(deviceId) {
+    const section = document.getElementById('sectionIpHistory');
+    const list    = document.getElementById('ipHistoryList');
+    list.innerHTML = '<div style="font-size:0.75rem;color:var(--nw-text-muted);text-align:center;padding:0.5rem;">Cargando...</div>';
+
+    const baseUrl = "{% url 'nw_ip_history' 0 %}".replace('0', deviceId);
+    fetch(baseUrl)
+        .then(r => r.json())
+        .then(data => {
+            if (!data.success || !data.history || data.history.length === 0) {
+                section.style.display = 'none';
+                return;
+            }
+            section.style.display = '';
+            list.innerHTML = data.history.map(h => `
+                <div style="display:flex;justify-content:space-between;align-items:center;padding:0.35rem 0;border-bottom:1px solid var(--nw-border);font-size:0.73rem;">
+                    <div>
+                        <span style="color:#ef4444;font-family:'JetBrains Mono',monospace;">${h.ip_anterior}</span>
+                        <i class="fas fa-arrow-right mx-1" style="color:var(--nw-text-muted);font-size:0.6rem;"></i>
+                        <span style="color:#10b981;font-family:'JetBrains Mono',monospace;">${h.ip_nueva}</span>
+                    </div>
+                    <span style="color:var(--nw-text-muted);font-size:0.68rem;">${h.fecha}</span>
+                </div>
+            `).join('');
+        })
+        .catch(() => { section.style.display = 'none'; });
+}
+
+function setIpType(ipType) {
+    if (!selectedNodeId || typeof selectedNodeId === 'string') return;
+    const fd = new FormData();
+    fd.append('action', 'update_ip_type');
+    fd.append('id_device', selectedNodeId);
+    fd.append('ip_type', ipType);
+    fetch("{% url 'manage_device' %}", {
+        method: 'POST',
+        headers: { 'X-CSRFToken': getCookie('csrftoken') },
+        body: fd,
+    })
+    .then(r => r.json())
+    .then(data => {
+        if (data.success) {
+            // Actualizar badge visualmente
+            const ipBadge = document.getElementById('detailIpTypeBadge');
+            const styles = {
+                'FIJA':       { bg: 'rgba(16,185,129,0.15)', color: '#10b981', text: '🔒 IP Fija' },
+                'DHCP':       { bg: 'rgba(245,158,11,0.15)', color: '#f59e0b', text: '🔄 DHCP' },
+                'DESCONOCIDA':{ bg: 'rgba(100,116,139,0.15)', color: '#94a3b8', text: '? Desconocida' },
+            };
+            const st = styles[ipType];
+            ipBadge.textContent = st.text;
+            ipBadge.style.background = st.bg;
+            ipBadge.style.color = st.color;
+            showToast(`Tipo de IP marcado como ${ipType}`, 'success');
+            // Actualizar el nodo en memoria
+            const curNode = allNodes.get(selectedNodeId);
+            if (curNode) allNodes.update({ ...curNode, ip_type: ipType });
+        } else {
+            showToast('Error al actualizar tipo de IP', 'error');
+        }
+    })
+    .catch(() => showToast('Error de red', 'error'));
+}
+
 // ── TABS DEL PANEL ─────────────────────────────────────────
 function switchTab(tab) {
     ['info','edit','conns'].forEach(t => {
@@ -1012,7 +1141,7 @@ function switchTab(tab) {
 function saveDevice(e) {
     e.preventDefault();
     const fd = new FormData(e.target);
-    fd.append('action', 'edit');
+    fd.append('action', 'update');
     fd.append('modelo', '');
     fd.append('snmp_version', 'v2c');
     fd.append('snmp_port', '161');
@@ -1282,5 +1411,78 @@ function startNetworkScan() {
         }
     });
 }
+
+// ── AUTO MAPEO SNMP ─────────────────────────────────────────
+function startAutoMap() {
+    Swal.fire({
+        title: 'Auto-Conectar Nodos',
+        text: 'Se consultarán las tablas MAC (FDB) de los switches vía SNMP para descubrir conexiones. ¿Deseas continuar?',
+        icon: 'question',
+        showCancelButton: true,
+        confirmButtonText: 'Sí, mapear',
+        cancelButtonText: 'Cancelar'
+    }).then((result) => {
+        if (result.isConfirmed) {
+            showScanOverlay(true, 'Consultando Switches vía SNMP...');
+            
+            $.ajax({
+                url: "{% url 'nw_auto_map_topology' %}",
+                type: "POST",
+                data: { csrfmiddlewaretoken: getCookie('csrftoken') },
+                success: function(res) {
+                    showScanOverlay(false);
+                    if (res.success) {
+                        Swal.fire('Completado', res.mensaje, 'success').then(() => {
+                            // Recargar el mapa para ver los nuevos enlaces
+                            onSegmentChange(activeMapSubnet);
+                        });
+                    } else {
+                        Swal.fire('Error', res.mensaje || 'Error desconocido', 'error');
+                    }
+                },
+                error: function() {
+                    showScanOverlay(false);
+                    Swal.fire('Error', 'No se pudo comunicar con el servidor', 'error');
+                }
+            });
+        }
+    });
+}
+
+function startAutoDiscoverSwitches() {
+    Swal.fire({
+        title: 'Buscar Switches',
+        text: 'Se escanearán los nodos descubiertos vía SNMP (public) para identificar y registrar switches administrables. ¿Deseas continuar?',
+        icon: 'info',
+        showCancelButton: true,
+        confirmButtonText: 'Sí, buscar',
+        cancelButtonText: 'Cancelar'
+    }).then((result) => {
+        if (result.isConfirmed) {
+            showScanOverlay(true, 'Buscando switches vía SNMP...');
+            
+            $.ajax({
+                url: "{% url 'nw_discover_switches' %}",
+                type: "POST",
+                data: { csrfmiddlewaretoken: getCookie('csrftoken') },
+                success: function(res) {
+                    showScanOverlay(false);
+                    if (res.success) {
+                        Swal.fire('Completado', res.mensaje, 'success').then(() => {
+                            onSegmentChange(activeMapSubnet);
+                        });
+                    } else {
+                        Swal.fire('Error', res.mensaje || 'Error desconocido', 'error');
+                    }
+                },
+                error: function() {
+                    showScanOverlay(false);
+                    Swal.fire('Error', 'No se pudo comunicar con el servidor', 'error');
+                }
+            });
+        }
+    });
+}
+
 </script>
 {% endblock %}
